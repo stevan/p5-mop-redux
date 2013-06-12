@@ -10,7 +10,7 @@ use Package::Stash;
 use Variable::Magic qw[ wizard cast ];
 
 BEGIN {
-    MRO::Define::register_mro('mop', sub { ['mop::internals::mro'] })
+    MRO::Define::register_mro('mop', sub { [ 'mop::internals::mro' ] })
 }
 
 my $method_name;
@@ -63,6 +63,7 @@ my $wiz = wizard(
         #warn join ", " => @_;
         ${ $_[1] } = $_[2];
         $_[2] = 'invoke_method';
+        mro::method_changed_in('UNIVERSAL');
         ();
     }
 );
