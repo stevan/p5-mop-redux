@@ -1,0 +1,23 @@
+
+This is going to be a layered system.
+
+[.] create a custom MRO (using MRO::Define) that dispatches to a set of methods and submethods
+[ ] create a syntax to support method and submethod
+[ ] build simple MOP on top of this
+    [ ] add attributes
+        [ ] accessors can be submethods for private
+        [ ] and regular accessors for ro/rw
+    [ ] allows access to methods and submethods
+        [ ] to support BUILDALL, DEMOLISHALL, etc.
+[ ] create base Object class
+    [ ] handles new, etc.
+
+Possible ideas:
+
+- attribute access as lexicals
+    - instead of PadWalker, compile it in with syntax module
+- first class Classes
+    - make the actual package be Thing::internal
+        - and make Thing a subroutine in package
+
+
