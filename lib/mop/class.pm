@@ -15,6 +15,7 @@ sub new {
         superclass => $args{'superclass'},
         attributes => {},
         methods    => {},
+        submethods => {},
     } => $class;
 }
 
@@ -57,6 +58,23 @@ sub get_method {
 sub has_method {
     my ($self, $name) = @_;
     exists $self->{'methods'}->{ $name };
+}
+
+# submethods
+
+sub add_submethod {
+    my ($self, $submethod) = @_;
+    $self->{'submethods'}->{ $submethod->name } = $submethod;
+}
+
+sub get_submethod {
+    my ($self, $name) = @_;
+    $self->{'submethods'}->{ $name }
+}
+
+sub has_submethod {
+    my ($self, $name) = @_;
+    exists $self->{'submethods'}->{ $name };
 }
 
 1;
