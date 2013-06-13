@@ -6,36 +6,30 @@ use warnings;
 use Test::More;
 use Test::Fatal;
 
+use mop;
+
 {
-    package Object;
+    package BaseObject;
     use strict;
     use warnings;
 
     sub hello { 'Object::hello' }
 }
 
-{
-    package Foo;
-    use strict;
-    use warnings;
-    use mop;
+BEGIN {
 
-    our @ISA = ('Object');
+    class Foo (extends => 'BaseObject') {
 
-    method bar { 'Foo::bar' }    
+        method bar { 'Foo::bar' }    
 
-    sub gorch { 'Foo::gorch' }
-}
+        submethod gorch { 'Foo::gorch' }
+    }
 
-{
-    package Bar;
-    use strict;
-    use warnings;    
-    use mop;
+    class Bar (extends => 'Foo') {
+        
+        method baz { 'Bar::baz' }    
+    }
 
-    our @ISA = ('Foo');
-    
-    method baz { 'Bar::baz' }    
 }
 
 

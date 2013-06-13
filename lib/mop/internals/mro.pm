@@ -22,10 +22,11 @@ sub invoke_method {
     my $class = Package::Stash->new( ref($caller) || $caller );
 
     # *sigh* Devel::Declare does this
-    if ( $method_name eq 'can' && $args[0] eq 'method' ) {
+    if ( $method_name eq 'can' && ($args[0] eq 'method' || $args[0] eq 'class') ) {
         return $class->name->UNIVERSAL::can( @args );
     }
 
+    my $has_looped = 0;
     my $method;
     while ($class) {
         #warn $class->name;
@@ -33,6 +34,10 @@ sub invoke_method {
             #warn "in meta";
             #warn "looking up $method_name in meta";
             my $meta = ${ $class->get_symbol('$META') };
+            if (not($has_looped) && $meta->has_submethod( $method_name )) {
+                $method = $meta->get_submethod( $method_name )->body;
+                last;
+            }
             if ($meta->has_method( $method_name )) {
                 $method = $meta->get_method( $method_name )->body;
                 last;
@@ -44,8 +49,19 @@ sub invoke_method {
             last;
         }
         
+
+        $has_looped++;
         #warn "looping";
-        if ($class->has_symbol('@ISA')) {
+        if ($class->has_symbol('$META')) {
+            my $meta = ${ $class->get_symbol('$META') };
+            if (my $super = $meta->superclass) {
+                $class = Package::Stash->new( $super )
+            }
+            else {
+                $class = undef;
+            }
+        }
+        elsif ($class->has_symbol('@ISA')) {
             $class = Package::Stash->new( $class->get_symbol('@ISA')->[0] )
         }
         else {
