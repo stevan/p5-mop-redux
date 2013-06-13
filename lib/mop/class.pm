@@ -1,4 +1,4 @@
-package mop::internals::class;
+package mop::class;
 
 use strict;
 use warnings;

@@ -1,4 +1,4 @@
-package mop::internals::attribute;
+package mop::attribute;
 
 use strict;
 use warnings;

@@ -6,8 +6,6 @@ use warnings;
 use Test::More;
 use Test::Fatal;
 
-use mop::internals::mro;
-
 {
     package Object;
     use strict;
@@ -25,7 +23,7 @@ use mop::internals::mro;
     our @ISA = ('Object');
 
     __PACKAGE__->meta->add_method(
-        mop::internals::method->new(
+        mop::method->new(
             name => 'bar', 
             body => sub { 'Foo::bar' }    
         )
@@ -43,7 +41,7 @@ use mop::internals::mro;
     our @ISA = ('Foo');
     
     __PACKAGE__->meta->add_method(
-        mop::internals::method->new(
+        mop::method->new(
             name => 'baz', 
             body => sub { 'Bar::baz' }    
         )

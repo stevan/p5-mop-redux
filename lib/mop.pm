@@ -3,20 +3,20 @@ package mop;
 use strict;
 use warnings;
 
-use Package::Stash;
+use mop::class;
+use mop::method;
+use mop::attribute;
 
+use mop::internals::package;
 use mop::internals::mro;
-use mop::internals::class;
-use mop::internals::method;
-use mop::internals::attribute;
 
 sub import {
     shift;
-    my $pkg = Package::Stash->new( scalar caller );
+    my $pkg = mop::internals::package->new( scalar caller );
 
     mro::set_mro( $pkg->name, 'mop' );
 
-    my $meta = mop::internals::class->new(
+    my $meta = mop::class->new(
         name       => $pkg->name,
         version    => $pkg->get_symbol('$VERSION'),
         authority  => $pkg->get_symbol('$AUTHORITY'),
