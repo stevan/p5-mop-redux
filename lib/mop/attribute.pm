@@ -3,6 +3,8 @@ package mop::attribute;
 use strict;
 use warnings;
 
+use parent 'mop::object';
+
 sub new {
     my $class = shift;
     my %args  = @_;
