@@ -8,6 +8,7 @@ use mro;
 use Package::Stash;
 use MRO::Define;
 use Variable::Magic qw[ wizard cast ];
+use Carp            qw[ confess ];
 
 BEGIN {
     MRO::Define::register_mro('mop', sub { [ 'mop::internals::mro' ] })
@@ -20,12 +21,17 @@ sub invoke_method {
 
     my $class = Package::Stash->new( ref($caller) || $caller );
 
+    # *sigh* Devel::Declare does this
+    if ( $method_name eq 'can' && $args[0] eq 'method' ) {
+        return $class->name->UNIVERSAL::can( @args );
+    }
+
     my $method;
     while ($class) {
         #warn $class->name;
         if ($class->has_symbol('$META')) {
             #warn "in meta";
-            # warn "looking up $method_name in meta";
+            #warn "looking up $method_name in meta";
             my $meta = ${ $class->get_symbol('$META') };
             if ($meta->has_method( $method_name )) {
                 $method = $meta->get_method( $method_name )->body;

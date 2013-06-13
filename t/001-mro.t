@@ -22,12 +22,7 @@ use Test::Fatal;
 
     our @ISA = ('Object');
 
-    __PACKAGE__->meta->add_method(
-        mop::method->new(
-            name => 'bar', 
-            body => sub { 'Foo::bar' }    
-        )
-    );
+    method bar { 'Foo::bar' }    
 
     sub gorch { 'Foo::gorch' }
 }
@@ -40,13 +35,7 @@ use Test::Fatal;
 
     our @ISA = ('Foo');
     
-    __PACKAGE__->meta->add_method(
-        mop::method->new(
-            name => 'baz', 
-            body => sub { 'Bar::baz' }    
-        )
-    );
-
+    method baz { 'Bar::baz' }    
 }
 
 

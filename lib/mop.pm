@@ -9,6 +9,7 @@ use mop::class;
 use mop::method;
 use mop::attribute;
 
+use mop::internals::syntax;
 use mop::internals::mro;
 
 sub import {
@@ -26,6 +27,7 @@ sub import {
     $pkg->add_symbol( '&meta' => sub { $meta } );
 
     mro::set_mro( $pkg->name, 'mop' );
+    mop::internals::syntax->setup_for( $pkg->name );
 }
 
 1;
