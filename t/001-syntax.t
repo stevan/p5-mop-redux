@@ -8,12 +8,10 @@ use Test::Fatal;
 
 use mop;
 
-BEGIN {
-    class Bar {
-        method baz { 'Foo::Bar::baz' }
-    }
+class Bar {
+    method baz { 'Bar::baz' }
 }
 
-diag(Bar->baz);
+is(Bar->baz, 'Bar::baz', '... simple test works');
 
 done_testing;

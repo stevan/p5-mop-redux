@@ -51,7 +51,10 @@ sub class_parser {
                    . ($proto ? (', ' . $proto) : '') 
                . ');'
                . 'local $::CLASS = $d->{"class"};'
-               . '$' . $pkg . '::META = $d->{"class"};'
+               . '{'
+                   . 'no warnings "once";'
+                   . '$' . $pkg . '::META = $d->{"class"};'
+               . '}'
                ;
     $self->inject_if_block( $inject );
 
