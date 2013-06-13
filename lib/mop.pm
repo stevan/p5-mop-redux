@@ -3,18 +3,17 @@ package mop;
 use strict;
 use warnings;
 
+use Package::Stash;
+
 use mop::class;
 use mop::method;
 use mop::attribute;
 
-use mop::internals::package;
 use mop::internals::mro;
 
 sub import {
     shift;
-    my $pkg = mop::internals::package->new( scalar caller );
-
-    mro::set_mro( $pkg->name, 'mop' );
+    my $pkg = Package::Stash->new( scalar caller );
 
     my $meta = mop::class->new(
         name       => $pkg->name,
@@ -25,6 +24,8 @@ sub import {
 
     $pkg->add_symbol( '$META' => \$meta );
     $pkg->add_symbol( '&meta' => sub { $meta } );
+
+    mro::set_mro( $pkg->name, 'mop' );
 }
 
 1;

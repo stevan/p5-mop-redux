@@ -5,6 +5,7 @@ use warnings;
 
 use mro;
 
+use Package::Stash;
 use MRO::Define;
 use Variable::Magic qw[ wizard cast ];
 
@@ -17,7 +18,7 @@ my $method_name;
 sub invoke_method {
     my ($caller, @args) = @_;
 
-    my $class = mop::internals::package->new( ref($caller) || $caller );
+    my $class = Package::Stash->new( ref($caller) || $caller );
 
     my $method;
     while ($class) {
@@ -39,7 +40,7 @@ sub invoke_method {
         
         #warn "looping";
         if ($class->has_symbol('@ISA')) {
-            $class = mop::internals::package->new( $class->get_symbol('@ISA')->[0] )
+            $class = Package::Stash->new( $class->get_symbol('@ISA')->[0] )
         }
         else {
             $class = undef;
