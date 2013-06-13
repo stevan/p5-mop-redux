@@ -8,7 +8,7 @@ use parent 'mop::object';
 sub new {
     my $class = shift;
     my %args  = @_;
-    bless {
+    $class->SUPER::new(
         name       => $args{'name'},
         version    => $args{'version'},        
         authority  => $args{'authority'},
@@ -16,7 +16,7 @@ sub new {
         attributes => {},
         methods    => {},
         submethods => {},
-    } => $class;
+    );
 }
 
 # identity

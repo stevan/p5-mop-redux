@@ -8,10 +8,10 @@ use parent 'mop::object';
 sub new {
     my $class = shift;
     my %args  = @_;
-    bless {
+    $class->SUPER::new(
         name    => $args{'name'},
         default => $args{'default'}
-    } => $class;
+    );
 }
 
 sub name { (shift)->{'name'} }
