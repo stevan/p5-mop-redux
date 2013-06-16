@@ -11,7 +11,7 @@ use Variable::Magic qw[ wizard cast ];
 use Carp            qw[ confess ];
 
 BEGIN {
-    MRO::Define::register_mro('mop', sub { [ 'mop::internals::mro' ] })
+    MRO::Define::register_mro('mop', sub { [ 'UNIVERSAL', 'mop::internals::mro' ] })
 }
 
 my $method_name;

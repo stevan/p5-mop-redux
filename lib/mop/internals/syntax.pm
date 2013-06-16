@@ -78,9 +78,20 @@ sub build_class {
 
     if ( exists $metadata{ 'extends' } ) {
         $metadata{ 'superclass' } = delete $metadata{ 'extends' };
+    } else {
+        $metadata{ 'superclass' } = 'mop::object';
     }
 
-    mop::class->new(%metadata);    
+    my $class = mop::class->new(%metadata);    
+
+    $class->add_submethod(
+        mop::method->new(
+            name => 'meta',
+            body => sub { $class }
+        )
+    );
+
+    $class;
 }
 
 sub generic_method_parser {
