@@ -1,4 +1,89 @@
 
+
+- mop MRO should use WALKCLASS, WALKMETH, NEXTMETHOD, etc. 
+    - these should support both MOP based dispatch and traditional based dispatch
+        - this can be determined by the type of instance
+
+- instance should hold class as well as instance data
+    - should be based on some kind of opaque scalar ref
+        - perhaps store the data as inside-out (fieldhashes)
+
+# This:
+
+class Foo {
+    has $bar;
+    has $baz;
+
+    method bar { ... }
+}
+
+# expands to this:
+package Foo {
+    # strict and warnings should be on
+    use strict;
+    use warnings;
+
+    # set the MRO to use the MOP based
+    # MRO, which will dispatch via the
+    # MOP instead of packages 
+    # (using MRO::Define)
+    use mro 'mop';
+
+    # initialize these varibles in the 
+    # scope of the class
+    my ($self, $class);
+
+    # for each attribute, make a fieldhash
+    # that corresponds to them.
+    fieldhash %bar;
+    fieldhash %baz;   
+
+    # create a constructor ...
+    sub new {
+        # insert constructor magic here ...
+        // QUESTION: HOW DO I deal with the superclass values?
+        // do I just pass onto super() or does it happen automagically?
+    } 
+
+    # methods get an automagically injected
+    # preamble to support a set of features 
+    sub bar {
+        # the invocant is set ...
+        $self  = shift;
+        # the class is set ...
+        $class = __PACKAGE__;
+
+        # create a local variable for each 
+        # of the attributes and ...
+        my $bar = $bar{ $self };
+        my $baz = $baz{ $self };
+
+        # cast Variable::Magic on it to 
+        # make any changes to the variable
+        # also store back in the fieldhash
+        cast $bar, $inside_out_wizards, \%bar;
+        cast $baz, $inside_out_wizards, \%baz;
+
+        # at this point, the rest of the 
+        # method body can be executed
+        ...
+    }
+
+    # finally create the metaclass 
+    # that we can use to access the 
+    # properties of this class
+    my $META = mop::class->new( %metadata_collected_during_compile );
+
+    # add an accessor to 
+    # the metaclass
+    sub meta { $META }
+}
+
+
+
+
+
+
 This is going to be a layered system.
 
 [.] create a custom MRO (using MRO::Define) that dispatches to a set of methods and submethods
