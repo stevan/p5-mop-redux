@@ -6,6 +6,9 @@ use warnings;
 use Test::More;
 use Test::Fatal;
 
+use Data::Dumper qw[ Dumper ];
+
+
 {
     package Foo;
     use strict;
@@ -36,7 +39,7 @@ use Test::Fatal;
     }
 }
 
-my $foo = bless \(my $x) => 'Foo';
+my $foo = bless \(my $y) => 'Foo';
 
 $foo->foo;
 $foo->dump;
@@ -44,7 +47,18 @@ $foo->dump;
 $foo->foo(10);
 $foo->dump;
 
-$foo->foo([ 2, 3, 4 ]);
+my $x = $foo->foo([ 2, 3, 4 ]);
 $foo->dump;
+
+# check to make sure altering 
+# the value outside of the object
+# still works as expected.
+warn Dumper $x;
+push @$x => 10;
+warn Dumper $x;
+
+$foo->dump;
+
+pass("IT WORKED!");
 
 done_testing;
