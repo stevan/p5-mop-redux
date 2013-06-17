@@ -40,9 +40,14 @@ package Foo {
 
     # create a constructor ...
     sub new {
-        # insert constructor magic here ...
-        // QUESTION: HOW DO I deal with the superclass values?
-        // do I just pass onto super() or does it happen automagically?
+        # insert constructor magic here 
+        # to assemble the class from the 
+        # parameters passed in
+
+        # can reliably bless into __PACKAGE__
+        # because we will generate a constructor 
+        # for every class (maybe, think about it)
+        bless \(my $x) => __PACKAGE__;
     } 
 
     # methods get an automagically injected
