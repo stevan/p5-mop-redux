@@ -28,6 +28,8 @@ sub superclass { (shift)->{'superclass'} }
 
 # attributes
 
+sub attributes { (shift)->{'attributes'} }
+
 sub add_attribute {
     my ($self, $attr) = @_;
     $self->{'attributes'}->{ $attr->name } = $attr;
@@ -45,6 +47,8 @@ sub has_attribute {
 
 # methods
 
+sub methods { (shift)->{'methods'} }
+
 sub add_method {
     my ($self, $method) = @_;
     $self->{'methods'}->{ $method->name } = $method;
@@ -61,6 +65,8 @@ sub has_method {
 }
 
 # submethods
+
+sub submethods { (shift)->{'submethods'} }
 
 sub add_submethod {
     my ($self, $submethod) = @_;
