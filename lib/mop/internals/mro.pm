@@ -30,10 +30,10 @@ sub invoke_method {
     my $method;
     while ($class) {
         #warn $class->name;
-        if ($class->has_symbol('$META')) {
+        if ($class->has_symbol('$__META__')) {
             #warn "in meta";
             #warn "looking up $method_name in meta";
-            my $meta = ${ $class->get_symbol('$META') };
+            my $meta = ${ $class->get_symbol('$__META__') };
             if (not($has_looped) && $meta->has_submethod( $method_name )) {
                 $method = $meta->get_submethod( $method_name )->body;
                 last;
@@ -52,8 +52,8 @@ sub invoke_method {
 
         $has_looped++;
         #warn "looping";
-        if ($class->has_symbol('$META')) {
-            my $meta = ${ $class->get_symbol('$META') };
+        if ($class->has_symbol('$__META__')) {
+            my $meta = ${ $class->get_symbol('$__META__') };
             if (my $super = $meta->superclass) {
                 $class = Package::Stash->new( $super )
             }
