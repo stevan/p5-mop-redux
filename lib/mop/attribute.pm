@@ -13,7 +13,8 @@ sub new {
     my %args  = @_;
     $class->SUPER::new(
         name    => $args{'name'},
-        default => $args{'default'}
+        default => $args{'default'},
+        storage => $args{'storage'},
     );
 }
 
@@ -24,26 +25,29 @@ sub key_name {
     substr( $self->name, 1, length $self->name )
 }
 
-sub has_default { defined (shift)->{'default'} }
+sub has_default { defined((shift)->{'default'}) }
 sub get_default { (shift)->{'default'}->()     }
 
-our $__META__;
+sub storage { (shift)->{'storage'} }
+
+our $METACLASS;
 
 sub meta {
-    return $__META__ if defined $__META__;
+    return $METACLASS if defined $METACLASS;
     require mop::class;
-    $__META__ = mop::class->new(
+    $METACLASS = mop::class->new(
         name       => 'mop::attribute',
         version    => $VERSION,
         authrority => $AUTHORITY,
         superclass => 'mop::object'
     );
-    $__META__->add_method( mop::method->new( name => 'new',         body => \&new         ) );
-    $__META__->add_method( mop::method->new( name => 'name',        body => \&name        ) );
-    $__META__->add_method( mop::method->new( name => 'key_name',    body => \&key_name    ) );   
-    $__META__->add_method( mop::method->new( name => 'has_default', body => \&has_default ) );
-    $__META__->add_method( mop::method->new( name => 'get_default', body => \&get_default ) );
-    $__META__;
+    $METACLASS->add_method( mop::method->new( name => 'new',         body => \&new         ) );
+    $METACLASS->add_method( mop::method->new( name => 'name',        body => \&name        ) );
+    $METACLASS->add_method( mop::method->new( name => 'key_name',    body => \&key_name    ) );   
+    $METACLASS->add_method( mop::method->new( name => 'has_default', body => \&has_default ) );
+    $METACLASS->add_method( mop::method->new( name => 'get_default', body => \&get_default ) );
+    $METACLASS->add_method( mop::method->new( name => 'storage',     body => \&storage     ) );
+    $METACLASS;
 }
 
 1;

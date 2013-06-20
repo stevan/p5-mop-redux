@@ -34,11 +34,11 @@ isa_ok($foo, 'Foo');
 is($foo->bar, 'Foo::bar', '... simple test works');
 is($foo->baz('hi'), $foo . '::baz::hi', '... another test works');
 
-warn $foo->test(10);
-warn $foo->test;
-warn $foo->test(20);
-warn $foo->test;
-warn $foo->test([ 1, 2, 3 ]);
-warn $foo->test;
+is($foo->test(10), 10, '... got the right value');
+is($foo->test, 10, '... got the right value');
+is($foo->test(20), 20, '... got the right value');
+is($foo->test, 20, '... got the right value');
+is_deeply($foo->test([ 1, 2, 3 ]), [ 1, 2, 3 ], '... got the right value');
+is_deeply($foo->test, [ 1, 2, 3 ], '... got the right value');
 
 done_testing;

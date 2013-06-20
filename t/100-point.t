@@ -8,8 +8,8 @@ use Test::More;
 use mop;
 
 class Point {
-    has $x;
-    has $y;
+    has $x = 0;
+    has $y = 0;
 
     method x { $x }
     method y { $y }
@@ -34,7 +34,7 @@ class Point {
 # ... subclass it ...
 
 class Point3D (extends => 'Point') {
-    has $z;
+    has $z = 0;
 
     method z { $z }
 
@@ -48,33 +48,40 @@ class Point3D (extends => 'Point') {
 }
  
 ## Test an instance
+{
+    my $p = Point->new;
+    isa_ok($p, 'Point');
 
-my $p = Point->new;
-isa_ok($p, 'Point');
+    is $p->x, 0, '... got the default value for x';
+    is $p->y, 0, '... got the default value for y';
 
-$p->set_x(10);
-is $p->x, 10, '... got the right value for x';
+    $p->set_x(10);
+    is $p->x, 10, '... got the right value for x';
 
-$p->set_y(320);
-is $p->y, 320, '... got the right value for y';
+    $p->set_y(320);
+    is $p->y, 320, '... got the right value for y';
 
-is_deeply $p->dump, { x => 10, y => 320 }, '... got the right value from dump';
+    is_deeply $p->dump, { x => 10, y => 320 }, '... got the right value from dump';
+}
 
 ## Test the instance
+{
+    my $p3d = Point3D->new();
+    isa_ok($p3d, 'Point3D');
 
-my $p3d = Point3D->new();
-isa_ok($p3d, 'Point3D');
+    is $p3d->z, 0, '... got the default value for z';
 
-$p3d->set_x(10);
-is $p3d->x, 10, '... got the right value for x';
+    $p3d->set_x(10);
+    is $p3d->x, 10, '... got the right value for x';
 
-$p3d->set_y(320);
-is $p3d->y, 320, '... got the right value for y';
+    $p3d->set_y(320);
+    is $p3d->y, 320, '... got the right value for y';
 
-$p3d->set_z(30);
-is $p3d->z, 30, '... got the right value for z';
+    $p3d->set_z(30);
+    is $p3d->z, 30, '... got the right value for z';
 
-is_deeply $p3d->dump, { x => 10, y => 320, z => 30 }, '... got the right value from dump';
+    is_deeply $p3d->dump, { x => 10, y => 320, z => 30 }, '... got the right value from dump';
+}
 
 done_testing;
 

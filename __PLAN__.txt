@@ -1,4 +1,37 @@
 
+MOP plans:
+
+- write it entirely within simple Pure Perl
+    - the mro will work to inherit from it
+        - all should be well
+
+------------------------------------------------------
+
+Compilation plan:
+
+For the class itself, delay this for the moment:
+
+    push @PLAN => 'package ' . $class->name;
+    push @PLAN => 'use strict';
+    push @PLAN => 'use warnings';
+    push @PLAN => 'use mro';
+    push @PLAN => 'mro::set_mro(q[' . $class->name . '], q[mop])';
+    push @PLAN => 'use Variable::Magic qw[ wizard cast ]';
+    push @PLAN => 'use Hash::Util::FieldHash qw[ fieldhash ]';
+    push @PLAN => q/my $__wiz__ = wizard(
+        data => sub { $_[1] },
+        set  => sub { $_[1]->[0]->{ $_[1]->[1] } = $_[0] },
+    )/;
+
+Collect for each attribute:
+
+    push @PLAN => 'fieldhash my %' . $attr->key_name;
+
+The first time we see a method, we need to eval the plan:
+
+
+
+------------------------------------------------------
 
 - mop MRO should use WALKCLASS, WALKMETH, NEXTMETHOD, etc. 
     - these should support both MOP based dispatch and traditional based dispatch
@@ -29,10 +62,6 @@ package Foo {
     # (using MRO::Define)
     use mro 'mop';
 
-    # initialize these varibles in the 
-    # scope of the class
-    my ($self, $class);
-
     # for each attribute, make a fieldhash
     # that corresponds to them.
     fieldhash %bar;
@@ -54,9 +83,9 @@ package Foo {
     # preamble to support a set of features 
     sub bar {
         # the invocant is set ...
-        $self  = shift;
+        my $self  = shift;
         # the class is set ...
-        $class = __PACKAGE__;
+        my $class = __PACKAGE__;
 
         # create a local variable for each 
         # of the attributes and ...

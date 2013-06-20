@@ -13,6 +13,8 @@ use mop;
     use strict;
     use warnings;
 
+    sub new { bless {} => shift }
+
     sub hello { 'Object::hello' }
 }
 
@@ -31,14 +33,14 @@ class Bar (extends => 'Foo') {
 
 
 
-my $foo = bless {} => 'Foo';
+my $foo = Foo->new;
 is($foo->bar, 'Foo::bar', '... got the value we expected from $foo->bar');
 is($foo->gorch, 'Foo::gorch', '... got the value we expected from $foo->gorch');
 
 is(Foo->bar, 'Foo::bar', '... got the value we expected from Foo->bar');
 is(Foo->gorch, 'Foo::gorch', '... got the value we expected from Foo->gorch');
 
-my $bar = bless {} => 'Bar';
+my $bar = Bar->new;
 is($bar->baz, 'Bar::baz', '... got the value we expected from $bar->baz');
 is($bar->bar, 'Foo::bar', '... got the value we expected from $bar->bar');
 like(exception { $bar->gorch }, qr/^Could not find gorch in/, '... cannot call gorch with $bar');

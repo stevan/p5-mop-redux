@@ -14,7 +14,6 @@ use Data::Dumper qw[ Dumper ];
     use strict;
     use warnings;
 
-    use Data::Dumper          qw[ Dumper ];
     use Variable::Magic       qw[ wizard cast ];
     use Hash::Util::FieldHash qw[ fieldhash ];
 
@@ -25,40 +24,37 @@ use Data::Dumper qw[ Dumper ];
         set  => sub { $_[1]->[0]->{ $_[1]->[1] } = $_[0] },
     );
 
+    sub new { bless \(my $y) => shift }
+
     sub foo {
         my $self = shift;
-        my $foo  = $foo{$self};
+        my $foo  = ${ $foo{$self} || \(undef) };
         cast $foo, $wiz, [ \%foo, $self ]; 
 
         $foo = shift if @_;
         $foo;
     }
 
-    sub dump {
-        warn Dumper \%foo;
-    }
 }
 
-my $foo = bless \(my $y) => 'Foo';
+my $foo = Foo->new;
 
-$foo->foo;
-$foo->dump;
+is($foo->foo, undef, '... got nothing yet');
 
-$foo->foo(10);
-$foo->dump;
+is($foo->foo(10), 10, '... got the value we expected');
+is($foo->foo, 10, '... got the value we expected');
 
 my $x = $foo->foo([ 2, 3, 4 ]);
-$foo->dump;
+
+is_deeply($x, [ 2, 3, 4 ], '... got the value we expected');
+is_deeply($foo->foo, [ 2, 3, 4 ], '... got the value we expected');
 
 # check to make sure altering 
 # the value outside of the object
 # still works as expected.
-warn Dumper $x;
 push @$x => 10;
-warn Dumper $x;
 
-$foo->dump;
-
-pass("IT WORKED!");
+is_deeply($x, [ 2, 3, 4, 10 ], '... got the value we expected');
+is_deeply($foo->foo, [ 2, 3, 4, 10 ], '... got the value we expected');
 
 done_testing;

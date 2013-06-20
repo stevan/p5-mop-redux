@@ -5,11 +5,31 @@ use warnings;
 
 use base 'Devel::Declare::Context::Simple';
 
-use Sub::Name             ();
-use Devel::Declare        ();
-use Hash::Util::FieldHash ();
-use Variable::Magic       ();
+use Hash::Util::FieldHash qw[ fieldhash ];
+use Variable::Magic       qw[ wizard ];
+
+use Sub::Name      ();
+use Devel::Declare ();
 use B::Hooks::EndOfScope;
+
+# Keep a list of attributes currently 
+# being compiled in the class because 
+# we need to alias them in the method 
+# preamble.
+fieldhash my %CURRENT_ATTRIBUTE_LIST;
+
+# So this will apply magic to the aliased
+# attributes that we put in the method 
+# preamble. For `data`, it takes an ARRAY-ref
+# containing the invocant and a ref for the 
+# fieldhash that stores our data. Then
+# when our attribute variable is written to
+# it will also write that same data back to 
+# the fieldhash storage.
+our $WIZARD = Variable::Magic::wizard(
+    data => sub { $_[1] },
+    set  => sub { $_[1]->[1]->{ $_[1]->[0] } = $_[0] },
+);
 
 sub setup_for {
     my $class = shift;
@@ -34,9 +54,6 @@ sub setup_for {
     );
 }
 
-my $CLASS;
-my @ATTRIBUTES;
-
 sub class_parser {
     my $self = shift;
 
@@ -49,39 +66,29 @@ sub class_parser {
     my $caller = $self->get_curstash_name;
     my $pkg    = ($caller eq 'main' ? $name : (join "::" => $caller, $name));
 
-    $CLASS = $pkg;
+    $CURRENT_ATTRIBUTE_LIST{$self} = [];
 
-    my (@PLAN, @EVAL);
-    push @EVAL => 'package ' . $pkg .';';
-    push @EVAL => 'use strict;';
-    push @EVAL => 'use warnings;';
-
-    push @PLAN => 'eval(q[' . (join '' => @EVAL) . ']);';
-    push @PLAN => 'mro::set_mro(q[' . $pkg . '], q[mop]);';
-    push @PLAN => '$' . $pkg . '::__WIZARD__ = Variable::Magic::wizard('
-        . 'data => sub { $_[1] },'
-        . 'set  => sub { $_[1]->[0]->{ $_[1]->[1] } = $_[0] },'
-    . ');';
-    push @PLAN => '$' . $pkg . '::__META__ = ' . __PACKAGE__ . '->build_class('
-        . 'name => q[' . $pkg . ']' 
-        . ($proto ? (', ' . $proto) : '') 
-    . ');';
-    push @PLAN => 'local $::CLASS = $' . $pkg . '::__META__;';
-
-    my $inject = $self->scope_injector_call . join "" => @PLAN;
+    # The class preamble is pretty simple, we 
+    # evaluate the package into existence, then
+    # set it to use our custom MRO, then build
+    # our metaclass.
+    my $inject = $self->scope_injector_call
+        . 'eval(q[package ' . $pkg .';use strict;use warnings;]);'
+        . 'mro::set_mro(q[' . $pkg . '], q[mop]);'
+        . '$' . $pkg . '::METACLASS = ' . __PACKAGE__ . '->build_class('
+            . 'name => q[' . $pkg . ']' 
+            . ($proto ? (', ' . $proto) : '') 
+        . ');'
+        . 'local $::CLASS = $' . $pkg . '::METACLASS;'
+    ;
 
     $self->inject_if_block( $inject );
 
     $self->shadow(sub (&@) {
         my $body = shift;
-
         $body->();
-
         return;
     });
-
-    #$CLASS      = undef;
-    @ATTRIBUTES = ();
 
     return;
 }
@@ -126,16 +133,33 @@ sub generic_method_parser {
         $inject .= 'my ($self) = @_;';
     }
 
-    foreach my $attr (@ATTRIBUTES) {
-        my $key_name = substr( $attr, 1, length $attr );
-        $inject .= 'my ' . $attr . ' = ${ ' . $attr . '{$self} || \(undef) };';
-        $inject .= 'Variable::Magic::cast(' . $attr . ', $' . $CLASS . '::__WIZARD__, [ \%' . $key_name . ', $self ]);'; 
+    # this is our method preamble, it
+    # basically creates a method local
+    # variable for each attribute, then 
+    # it will cast the magic on it to 
+    # make sure that any change in value
+    # is stored in the fieldhash storage
+    foreach my $attr (@{ $CURRENT_ATTRIBUTE_LIST{$self} }) {
+        my $key_name = $self->_get_storage_name_for_attribute($attr);
+        $inject .= 'my ' . $attr . ' = ${ $' . $key_name . '{$self} || \(undef) };'
+                . 'Variable::Magic::cast(' 
+                    . $attr . ', '
+                    . '$' . __PACKAGE__ . '::WIZARD, '
+                    . '[ $self, \%' . $key_name . ' ]' 
+                . ');'
+                ; 
     }
     
     $self->inject_if_block( $inject );
     $self->shadow($callback->($name));
 
     return;
+}
+
+sub _get_storage_name_for_attribute {
+    my ($self, $attr) = @_;
+    my $key = substr( $attr, 1, length $attr );
+    '__' . $key . '_STORAGE'
 }
 
 sub method_parser {
@@ -209,40 +233,30 @@ sub attribute_parser {
             }
         }
 
-        substr( $linestr, $old_offset, $full_length ) = '(q[' . $name . '])' . ( $proto ? (', (' . $proto) : '');
+        my $key_name  = $self->_get_storage_name_for_attribute($name);
 
-        my $key_name  = substr( $name, 1, length $name );
-        my $fieldhash = 'Hash::Util::FieldHash::fieldhash(my %' . $key_name . ');';
-        $full_length += length($fieldhash);
-
-        substr( $linestr, length($linestr) - 1, $full_length ) = $fieldhash;
-
+        substr( $linestr, $old_offset, $full_length ) = '(Hash::Util::FieldHash::fieldhash(my %' . $key_name . '))' . ( $proto ? (', (' . $proto) : '');
+        
         $self->set_linestr( $linestr );
         $self->inc_offset( $full_length );
     }
 
-    push @ATTRIBUTES => $name; 
+    push @{ $CURRENT_ATTRIBUTE_LIST{$self} } => $name; 
 
     $self->shadow(sub ($@) : lvalue {
-        shift;
-        my %metadata = @_;
+        my ($storage, %metadata) = @_;
         my $initial_value;
         $::CLASS->add_attribute(
             mop::attribute->new(
                 name    => $name,
                 default => sub { $initial_value },
+                storage => $storage
             )
         );
         $initial_value
     });
 
     return;
-}
-
-sub scope_injector_call {
-  my $self = shift;
-  my $inject = shift || '';
-  return ' BEGIN { ' . ref($self) . "->inject_scope('${inject}') }; ";
 }
 
 sub inject_scope {

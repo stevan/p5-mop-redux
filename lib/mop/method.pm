@@ -21,21 +21,21 @@ sub name { (shift)->{'name'} }
 sub body { (shift)->{'body'} }
 
 
-our $__META__;
+our $METACLASS;
 
 sub meta {
-    return $__META__ if defined $__META__;
+    return $METACLASS if defined $METACLASS;
     require mop::class;
-    $__META__ = mop::class->new( 
+    $METACLASS = mop::class->new( 
         name       => 'mop::method',
         version    => $VERSION,
         authrority => $AUTHORITY,        
         superclass => 'mop::object'
     );
-    $__META__->add_method( mop::method->new( name => 'new',  body => \&new ) );
-    $__META__->add_method( mop::method->new( name => 'name', body => \&name ) );
-    $__META__->add_method( mop::method->new( name => 'body', body => \&body ) );
-    $__META__;
+    $METACLASS->add_method( mop::method->new( name => 'new',  body => \&new ) );
+    $METACLASS->add_method( mop::method->new( name => 'name', body => \&name ) );
+    $METACLASS->add_method( mop::method->new( name => 'body', body => \&body ) );
+    $METACLASS;
 }
 
 1;
