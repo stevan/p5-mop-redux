@@ -10,6 +10,7 @@ BEGIN {
     $::CLASS = shift;
 }
 
+use mop::object;
 use mop::class;
 use mop::method;
 use mop::attribute;
@@ -20,6 +21,7 @@ use mop::internals::mro;
 sub import {
     shift;
     mop::internals::syntax->setup_for( caller );
+    bootstrap();
 }
 
 sub bootstrap {
@@ -30,8 +32,6 @@ sub bootstrap {
         mop::method
     ];
 }
-
-bootstrap;
 
 1;
 
