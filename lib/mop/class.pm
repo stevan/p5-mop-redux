@@ -88,7 +88,7 @@ sub has_submethod {
 
 our $METACLASS;
 
-sub meta {
+sub metaclass {
     return $METACLASS if defined $METACLASS;
     require mop::class;
     $METACLASS = mop::class->new(
