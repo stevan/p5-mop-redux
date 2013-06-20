@@ -61,7 +61,7 @@ sub invoke_method {
                 $class = undef;
             }
         }
-        elsif ($class->has_symbol('@ISA')) {
+        elsif ($class->has_symbol('@ISA') && scalar @{ $class->get_symbol('@ISA') }) {
             $class = Package::Stash->new( $class->get_symbol('@ISA')->[0] )
         }
         else {
