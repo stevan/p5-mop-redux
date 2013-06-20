@@ -145,7 +145,7 @@ sub generic_method_parser {
                 . 'Variable::Magic::cast(' 
                     . $attr . ', '
                     . '$' . __PACKAGE__ . '::WIZARD, '
-                    . '[ $self, \%' . $key_name . ' ]' 
+                    . '[ Hash::Util::FieldHash::id($self), \%' . $key_name . ' ]' 
                 . ');'
                 ; 
     }
