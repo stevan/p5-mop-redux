@@ -107,7 +107,7 @@ sub build_class {
 
     $class->add_submethod(
         mop::method->new(
-            name => 'meta',
+            name => 'metaclass',
             body => sub { $class }
         )
     );
