@@ -8,6 +8,12 @@ use Test::Fatal;
 
 use Data::Dumper qw[ Dumper ];
 
+=pod
+
+This was just a proof of concept for how 
+we are going about handling attributes.
+
+=cut
 
 {
     package Foo;
