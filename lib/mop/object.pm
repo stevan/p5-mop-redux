@@ -26,8 +26,12 @@ sub new {
         } reverse @{ get_mro_for($class) };
 
         foreach my $attr (values %attributes) { 
-            $attr->storage->{ $self } = \($attr->get_default) 
-                if $attr->has_default
+            if ( exists $args{ $attr->key_name }) {
+                $attr->storage->{ $self } = \($args{ $attr->key_name });
+            } else {
+                $attr->storage->{ $self } = \($attr->get_default) 
+                    if $attr->has_default
+            }
         }
 
         #use Data::Dumper 'Dumper';
