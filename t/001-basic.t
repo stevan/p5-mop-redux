@@ -23,6 +23,8 @@ class Foo {
         $foo = $x if $x;
         $foo;
     }
+
+    method test_bar { $self->bar . "x2" }
 }
 
 is(Foo->bar, 'Foo::bar', '... simple test works');
@@ -40,5 +42,7 @@ is($foo->test(20), 20, '... got the right value');
 is($foo->test, 20, '... got the right value');
 is_deeply($foo->test([ 1, 2, 3 ]), [ 1, 2, 3 ], '... got the right value');
 is_deeply($foo->test, [ 1, 2, 3 ], '... got the right value');
+
+is($foo->test_bar, 'Foo::barx2', '... got the value we expected');
 
 done_testing;
