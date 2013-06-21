@@ -18,37 +18,48 @@ my $method_name;
 
 sub invoke_method {
     my ($caller, @args) = @_;
+    call_method($caller, $method_name, \@args);
+}
+
+sub call_method {
+    my ($caller, $meth_name, $args, %opts) = @_;
 
     my $class = Package::Stash->new( ref($caller) || $caller );
 
     # *sigh* Devel::Declare does this
-    if ( $method_name eq 'can' && ($args[0] eq 'method' || $args[0] eq 'class') ) {
-        return $class->name->UNIVERSAL::can( @args );
+    if ( $meth_name eq 'can' && ($args->[0] eq 'method' || $args->[0] eq 'class') ) {
+        return $class->name->UNIVERSAL::can( @$args );
     }
 
     my $has_looped = 0;
     my $method;
     while ($class) {
         #warn $class->name;
-        if ($class->has_symbol('$METACLASS')) {
-            #warn "in meta";
-            #warn "looking up $method_name in meta";
-            my $meta = ${ $class->get_symbol('$METACLASS') };
-            if (not($has_looped) && $meta->has_submethod( $method_name )) {
-                $method = $meta->get_submethod( $method_name )->body;
-                last;
+
+        if (!$opts{'super'}) {
+            if ($class->has_symbol('$METACLASS')) {
+                #warn "in meta";
+                #warn "looking up $meth_name in meta";
+                my $meta = ${ $class->get_symbol('$METACLASS') };
+                if (not($has_looped) && $meta->has_submethod( $meth_name )) {
+                    $method = $meta->get_submethod( $meth_name )->body;
+                    last;
+                }
+                if ($meta->has_method( $meth_name )) {
+                    $method = $meta->get_method( $meth_name )->body;
+                    last;
+                }
             }
-            if ($meta->has_method( $method_name )) {
-                $method = $meta->get_method( $method_name )->body;
+            elsif ($class->has_symbol('&' . $meth_name)) {
+                #warn "looking up old fashioned symbol";
+                $method = $class->get_symbol('&' . $meth_name);
                 last;
             }
         }
-        elsif ($class->has_symbol('&' . $method_name)) {
-            #warn "looking up old fashioned symbol";
-            $method = $class->get_symbol('&' . $method_name);
-            last;
+        else {
+            #warn "calling super method $meth_name ...";
+            $opts{'super'} = 0;
         }
-        
 
         $has_looped++;
         #warn "looping";
@@ -69,9 +80,9 @@ sub invoke_method {
         }
     }
     
-    die "Could not find $method_name in " . $caller unless defined $method;
+    die "Could not find $meth_name in " . $caller unless defined $method;
     
-    $method->($caller, @args);
+    $method->($caller, @$args);
 }
 
 my $wiz = wizard(
@@ -91,6 +102,14 @@ my $wiz = wizard(
 );
 
 cast %::mop::internals::mro::, $wiz;
+
+package mop::next;
+
+sub method {
+    my ($invocant, @args) = @_;
+    my $method_name = (split '::' => (caller(1))[3])[-1];
+    mop::internals::mro::call_method($invocant, $method_name, \@args, super => 1);
+}
 
 1;
 
