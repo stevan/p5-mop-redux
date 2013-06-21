@@ -14,11 +14,31 @@ BEGIN {
     MRO::Define::register_mro('mop', sub { [ 'UNIVERSAL', 'mop::internals::mro' ] })
 }
 
-my $method_name;
+{
+    my $method_name;
 
-sub invoke_method {
-    my ($caller, @args) = @_;
-    call_method($caller, $method_name, \@args);
+    sub invoke_method {
+        my ($caller, @args) = @_;
+        call_method($caller, $method_name, \@args);
+    }
+
+    my $wiz = wizard(
+        data  => sub { \$method_name },
+        fetch => sub {
+            return if $_[2] =~ /^\(/      # no overloaded methods
+                   || $_[2] eq 'DESTROY'  # no DESTROY (for now)
+                   || $_[2] eq 'AUTOLOAD' # no AUTOLOAD (never!!)
+                   || $_[2] eq 'import'   # classes don't import
+                   || $_[2] eq 'export';  # and they certainly don't export
+            #warn join ", " => @_;
+            ${ $_[1] } = $_[2];
+            $_[2] = 'invoke_method';
+            mro::method_changed_in('UNIVERSAL');
+            ();
+        }
+    );
+
+    cast %::mop::internals::mro::, $wiz;
 }
 
 sub call_method {
@@ -85,23 +105,6 @@ sub call_method {
     $method->($caller, @$args);
 }
 
-my $wiz = wizard(
-    data  => sub { \$method_name },
-    fetch => sub {
-        return if $_[2] =~ /^\(/      # no overloaded methods
-               || $_[2] eq 'DESTROY'  # no DESTROY (for now)
-               || $_[2] eq 'AUTOLOAD' # no AUTOLOAD (never!!)
-               || $_[2] eq 'import'   # classes don't import
-               || $_[2] eq 'export';  # and they certainly don't export
-        #warn join ", " => @_;
-        ${ $_[1] } = $_[2];
-        $_[2] = 'invoke_method';
-        mro::method_changed_in('UNIVERSAL');
-        ();
-    }
-);
-
-cast %::mop::internals::mro::, $wiz;
 
 package mop::next;
 
