@@ -43,7 +43,9 @@ class Point3D (extends => 'Point') {
     }
 
     method dump {
-        +{ x => $self->x, y => $self->y, z => $self->z }
+        my $data = $self->mop::next::method;
+        $data->{z} = $z;
+        $data;
     }
 }
  
