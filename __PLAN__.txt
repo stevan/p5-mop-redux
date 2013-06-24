@@ -1,4 +1,48 @@
 
+Core Features Needed:
+
+- pluggable MRO
+    - current the MRO only supports the two 
+      built ins (c3 and dfs)
+    - MRO needs an API such that it is possible
+      to register and write one either in Perl 
+      or in C
+
+MOP plan:
+
+- the pluggable MRO handles any custom dispatch needed
+    - when a old-style class is encountered
+        - fall back to the old style dispatch
+- the syntax is fixed (class, has, method, submethod)
+    - the implementation is semi-fixed
+        - 'has' creates attributes 
+            - it passes a storage fieldhash to 'has'
+                - using fieldhash as storage means
+                    - we don't care about instance type
+                    - we can easily wrap old style classes and instances
+            - it passes metadata to 'has'
+        - 'method' creates methods
+            - methods accept simple parameters
+                - positional & positional w/default
+            - the method has a pre-amble that ...
+                - creates $self
+                - aliases attribute variables 
+                    - with setter magic to write back to storage fieldhash
+        - 'submethod' creates method
+            - MRO decides how this is handled
+                - should act as a private method
+        - 'class' creates metaclass
+            - can control the metaclasses used for 'has', 'method', 'submethod'
+            - gets metadata 
+- the mop should be simple
+    - bootstrapping just adds a lot of complexity overhead
+        - manual bootstrapping is tedious, but easier to maintain
+    - the mop should have some simple events
+        - these can be used to generate accessors, etc.
+        - subclasses can override events to add behaviors
+
+------------------------------------------------------
+
 MOP plans:
 
 - write it entirely within simple Pure Perl
