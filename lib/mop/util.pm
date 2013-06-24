@@ -3,6 +3,7 @@ package mop::util;
 use strict;
 use warnings;
 
+use mro;
 use Package::Stash;
 
 use Sub::Exporter -setup => {
