@@ -54,6 +54,12 @@ class Point3D (extends => 'Point') {
     my $p = Point->new;
     isa_ok($p, 'Point');
 
+    is_deeply(
+        mop::mro::get_linear_isa('Point'),
+        [ 'Point', 'mop::object' ],
+        '... got the expected linear isa'
+    );
+
     is $p->x, 0, '... got the default value for x';
     is $p->y, 0, '... got the default value for y';
 
@@ -71,6 +77,12 @@ class Point3D (extends => 'Point') {
     my $p3d = Point3D->new();
     isa_ok($p3d, 'Point3D');
 
+    is_deeply(
+        mop::mro::get_linear_isa('Point3D'),
+        [ 'Point3D', 'Point', 'mop::object' ],
+        '... got the expected linear isa'
+    );
+
     is $p3d->z, 0, '... got the default value for z';
 
     $p3d->set_x(10);
@@ -84,6 +96,7 @@ class Point3D (extends => 'Point') {
 
     is_deeply $p3d->dump, { x => 10, y => 320, z => 30 }, '... got the right value from dump';
 }
+
 
 done_testing;
 

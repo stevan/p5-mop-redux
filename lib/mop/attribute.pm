@@ -1,6 +1,6 @@
 package mop::attribute;
 
-use strict;
+use v5.16;
 use warnings;
 
 our $VERSION   = '0.01';
@@ -30,6 +30,17 @@ sub get_default { (shift)->{'default'}->()     }
 
 sub storage { (shift)->{'storage'} }
 
+sub store_data_in_slot_for {
+    my ($self, $instance, $data) = @_;
+    $self->storage->{ $instance } = \$data;
+}
+
+sub store_default_in_slot_for {
+    my ($self, $instance) = @_;
+    $self->storage->{ $instance } = \($self->get_default)
+        if $self->has_default;
+}
+
 our $METACLASS;
 
 sub metaclass {
@@ -47,6 +58,9 @@ sub metaclass {
     $METACLASS->add_method( mop::method->new( name => 'has_default', body => \&has_default ) );
     $METACLASS->add_method( mop::method->new( name => 'get_default', body => \&get_default ) );
     $METACLASS->add_method( mop::method->new( name => 'storage',     body => \&storage     ) );
+
+    $METACLASS->add_method( mop::method->new( name => 'store_data_in_slot_for',    body => \&store_data_in_slot_for    ) );
+    $METACLASS->add_method( mop::method->new( name => 'store_default_in_slot_for', body => \&store_default_in_slot_for ) );
     $METACLASS;
 }
 

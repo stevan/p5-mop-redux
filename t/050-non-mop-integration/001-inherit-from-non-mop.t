@@ -31,8 +31,6 @@ class Bar (extends => 'Foo') {
     method baz { 'Bar::baz' }    
 }
 
-
-
 my $foo = Foo->new;
 is($foo->bar, 'Foo::bar', '... got the value we expected from $foo->bar');
 is($foo->gorch, 'Foo::gorch', '... got the value we expected from $foo->gorch');
@@ -51,6 +49,18 @@ like(exception { Bar->gorch }, qr/^Could not find gorch in/, '... cannot call go
 
 is(Bar->hello, 'Object::hello', '... got the value we expected from Bar->hello');
 is(Foo->hello, 'Object::hello', '... got the value we expected from Foo->hello');
+
+is_deeply(
+    mop::mro::get_linear_isa('Foo'),
+    [ 'Foo', 'BaseObject' ],
+    '... got the expected linear isa'
+);
+
+is_deeply(
+    mop::mro::get_linear_isa('Bar'),
+    [ 'Bar', 'Foo', 'BaseObject' ],
+    '... got the expected linear isa'
+);
 
 done_testing;
 

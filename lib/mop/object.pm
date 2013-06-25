@@ -1,9 +1,9 @@
 package mop::object;
 
-use strict;
+use v5.16;
 use warnings;
 
-use mop::util qw[ find_meta get_mro_for ];
+use mop::util qw[ find_meta ];
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -16,26 +16,19 @@ sub new {
     } else {
         my $self = bless \(my $x) => $class;
 
-        #warn "GOT CLASS: " . $class;
-
         my %attributes = map { 
-            #warn $_;
             if (my $m = find_meta($_)) {
                 %{ $m->attributes }
             }
-        } reverse @{ get_mro_for($class) };
+        } reverse @{ mop::mro::get_linear_isa($class) };
 
         foreach my $attr (values %attributes) { 
             if ( exists $args{ $attr->key_name }) {
-                $attr->storage->{ $self } = \($args{ $attr->key_name });
+                $attr->store_data_in_slot_for( $self, $args{ $attr->key_name } )
             } else {
-                $attr->storage->{ $self } = \($attr->get_default) 
-                    if $attr->has_default
+                $attr->store_default_in_slot_for( $self );
             }
         }
-
-        #use Data::Dumper 'Dumper';
-        #warn "Hi - " . Dumper\%attributes;
 
         $self;
     }

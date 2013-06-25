@@ -1,35 +1,98 @@
 package mop::internals::mro;
 
-use strict;
+use v5.16;
 use warnings;
 
-use mro;
+use mop::util qw[ 
+    has_meta 
+    find_meta 
+    get_stash_for 
+];
 
-use Package::Stash;
 use MRO::Define;
+use Scalar::Util    qw[ blessed ];
 use Variable::Magic qw[ wizard cast ];
-use Carp            qw[ confess ];
 
 BEGIN {
-    MRO::Define::register_mro('mop', sub { [ 'UNIVERSAL', 'mop::internals::mro' ] })
+    MRO::Define::register_mro(
+        'mop', 
+        sub { [ 'UNIVERSAL', 'mop::internals::mro' ] }
+    )
 }
 
+sub find_method {
+    my ($invocant, $method_name, %opts) = @_;
+
+    my @mro = @{ mop::mro::get_linear_isa( $invocant ) };
+
+    shift( @mro ) if exists $opts{'super'};
+
+    foreach my $class ( @mro ) {
+        if ( has_meta( $class ) ) {
+            my $meta = find_meta( $class );
+            return $meta->get_method( $method_name )
+                if $meta->has_method( $method_name );
+        } else {
+            my $stash = get_stash_for( $class );
+            return $stash->get_symbol( '&' . $method_name )
+                if $stash->has_symbol( '&' . $method_name );
+        }
+    }
+
+    return;
+}
+
+sub find_submethod {
+    my ($invocant, $method_name, %opts) = @_;
+
+    if ( has_meta( $invocant ) ) {
+        my $meta = find_meta( $invocant );
+        return $meta->get_submethod( $method_name )
+            if $meta->has_submethod( $method_name );
+    }
+
+    return;
+}
+
+sub call_method {
+    my ($invocant, $method_name, $args, %opts) = @_;
+
+    my $class  = get_stash_for( $invocant );
+    my $method = find_submethod( $invocant, $method_name, %opts );
+    $method    = find_method( $invocant, $method_name, %opts )
+        unless defined $method;
+    
+    die "Could not find $method_name in " . $invocant 
+        unless defined $method;
+    
+    if ( ref $method eq 'CODE' ) {
+        return $method->($invocant, @$args);
+    } elsif ( blessed $method && $method->isa('mop::method') ) {
+        return $method->execute( $invocant, $args );
+    } else {
+        die "Unrecognized method type: $method";
+    }
+}
+
+# Here is where things get a little ugly, 
+# we need to wrap the stash in magic so 
+# that we can capture calls to it
 {
-    my $method_name;
+    my $method_called;
 
     sub invoke_method {
         my ($caller, @args) = @_;
-        call_method($caller, $method_name, \@args);
+        call_method($caller, $method_called, \@args);
     }
 
     my $wiz = wizard(
-        data  => sub { \$method_name },
+        data  => sub { \$method_called },
         fetch => sub {
             return if $_[2] =~ /^\(/      # no overloaded methods
                    || $_[2] eq 'DESTROY'  # no DESTROY (for now)
                    || $_[2] eq 'AUTOLOAD' # no AUTOLOAD (never!!)
                    || $_[2] eq 'import'   # classes don't import
-                   || $_[2] eq 'export';  # and they certainly don't export
+                   || $_[2] eq 'unimport';  # and they certainly don't export
             #warn join ", " => @_;
             ${ $_[1] } = $_[2];
             $_[2] = 'invoke_method';
@@ -39,79 +102,6 @@ BEGIN {
     );
 
     cast %::mop::internals::mro::, $wiz;
-}
-
-sub call_method {
-    my ($caller, $meth_name, $args, %opts) = @_;
-
-    my $class = Package::Stash->new( ref($caller) || $caller );
-
-    # *sigh* Devel::Declare does this
-    if ( $meth_name eq 'can' && ($args->[0] eq 'method' || $args->[0] eq 'class') ) {
-        return $class->name->UNIVERSAL::can( @$args );
-    }
-
-    my $has_looped = 0;
-    my $method;
-    while ($class) {
-        #warn $class->name;
-
-        if (!$opts{'super'}) {
-            if ($class->has_symbol('$METACLASS')) {
-                #warn "in meta";
-                #warn "looking up $meth_name in meta";
-                my $meta = ${ $class->get_symbol('$METACLASS') };
-                if (not($has_looped) && $meta->has_submethod( $meth_name )) {
-                    $method = $meta->get_submethod( $meth_name )->body;
-                    last;
-                }
-                if ($meta->has_method( $meth_name )) {
-                    $method = $meta->get_method( $meth_name )->body;
-                    last;
-                }
-            }
-            elsif ($class->has_symbol('&' . $meth_name)) {
-                #warn "looking up old fashioned symbol";
-                $method = $class->get_symbol('&' . $meth_name);
-                last;
-            }
-        }
-        else {
-            #warn "calling super method $meth_name ...";
-            $opts{'super'} = 0;
-        }
-
-        $has_looped++;
-        #warn "looping";
-        if ($class->has_symbol('$METACLASS')) {
-            my $meta = ${ $class->get_symbol('$METACLASS') };
-            if (my $super = $meta->superclass) {
-                $class = Package::Stash->new( $super )
-            }
-            else {
-                $class = undef;
-            }
-        }
-        elsif ($class->has_symbol('@ISA') && scalar @{ $class->get_symbol('@ISA') }) {
-            $class = Package::Stash->new( $class->get_symbol('@ISA')->[0] )
-        }
-        else {
-            $class = undef;
-        }
-    }
-    
-    die "Could not find $meth_name in " . $caller unless defined $method;
-    
-    $method->($caller, @$args);
-}
-
-
-package mop::next;
-
-sub method {
-    my ($invocant, @args) = @_;
-    my $method_name = (split '::' => (caller(1))[3])[-1];
-    mop::internals::mro::call_method($invocant, $method_name, \@args, super => 1);
 }
 
 1;

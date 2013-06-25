@@ -1,13 +1,15 @@
 package mop;
 
-use strict;
+use v5.16;
+use mro;
 use warnings;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
 BEGIN {
-    $::CLASS = shift;
+    $::CLASS = undef;
+    $::SELF  = undef;
 }
 
 use mop::object;

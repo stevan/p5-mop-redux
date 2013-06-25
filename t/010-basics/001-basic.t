@@ -27,6 +27,12 @@ class Foo {
     method test_bar { $self->bar . "x2" }
 }
 
+is_deeply(
+    mop::mro::get_linear_isa('Foo'),
+    [ 'Foo', 'mop::object' ],
+    '... got the expected linear isa'
+);
+
 is(Foo->bar, 'Foo::bar', '... simple test works');
 is(Foo->baz('hi'), 'Foo::baz::hi', '... another test works');
 

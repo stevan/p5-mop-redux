@@ -1,6 +1,6 @@
 package mop::internals::syntax;
 
-use strict;
+use v5.16;
 use warnings;
 
 use base 'Devel::Declare::Context::Simple';
@@ -132,6 +132,9 @@ sub generic_method_parser {
     else {
         $inject .= 'my ($self) = @_;';
     }
+
+    # localize $::SELF here too 
+    $inject .= 'local $::SELF = $self;';
 
     # this is our method preamble, it
     # basically creates a method local

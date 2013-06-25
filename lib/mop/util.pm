@@ -1,38 +1,57 @@
 package mop::util;
 
-use strict;
+use v5.16;
 use warnings;
 
-use mro;
+our $VERSION   = '0.01';
+our $AUTHORITY = 'cpan:STEVAN';
+
 use Package::Stash;
 
 use Sub::Exporter -setup => {
     exports => [qw[
         find_meta
-        get_mro_for
-        WALKCLASS
+        has_meta
+        get_stash_for
     ]]
 };
 
-sub find_meta {
-    ${ Package::Stash->new(shift)->get_symbol('$METACLASS') }
+sub find_meta { ${ get_stash_for( shift )->get_symbol('$METACLASS') || \undef } }
+sub has_meta  {    get_stash_for( shift )->has_symbol('$METACLASS')   }
+
+sub get_stash_for { 
+    state %STASHES;
+    my $class = ref($_[0]) || $_[0];
+    $STASHES{ $class } //= Package::Stash->new( $class ) 
 }
 
-sub get_mro_for {
+package mop::mro;
+
+use strict;
+use warnings;
+
+sub get_linear_isa {
     my $class = shift;
-    if (my $meta = find_meta($class)) {
+    if (my $meta = mop::util::find_meta($class)) {
         if (my $super = $meta->superclass) {
-            return [ $class, @{ get_mro_for($super) || [] } ];
+            return [ $class, @{ get_linear_isa($super) || [] } ];
+        } else {
+            return [ $class ];
         }
     } else {
         return mro::get_linear_isa($class);
     }
 }
 
-sub WALKCLASS {
-    my $c = shift;
-    my $f = shift;
-    map { $f->($_) } get_mro_for($c); 
+package mop::next;
+
+use strict;
+use warnings;
+
+sub method {
+    my ($invocant, @args) = @_;
+    my $method_name = (split '::' => (caller(1))[3])[-1];
+    mop::internals::mro::call_method($invocant, $method_name, \@args, super => 1);
 }
 
 1;

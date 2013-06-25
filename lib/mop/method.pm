@@ -1,6 +1,6 @@
 package mop::method;
 
-use strict;
+use v5.16;
 use warnings;
 
 our $VERSION   = '0.01';
@@ -20,6 +20,10 @@ sub new {
 sub name { (shift)->{'name'} }
 sub body { (shift)->{'body'} }
 
+sub execute {
+    my ($self, $invocant, $args) = @_;
+    $self->body->( $invocant, @$args );
+}
 
 our $METACLASS;
 
@@ -32,9 +36,10 @@ sub metaclass {
         authrority => $AUTHORITY,        
         superclass => 'mop::object'
     );
-    $METACLASS->add_method( mop::method->new( name => 'new',  body => \&new ) );
-    $METACLASS->add_method( mop::method->new( name => 'name', body => \&name ) );
-    $METACLASS->add_method( mop::method->new( name => 'body', body => \&body ) );
+    $METACLASS->add_method( mop::method->new( name => 'new',     body => \&new     ) );
+    $METACLASS->add_method( mop::method->new( name => 'name',    body => \&name    ) );
+    $METACLASS->add_method( mop::method->new( name => 'body',    body => \&body    ) );
+    $METACLASS->add_method( mop::method->new( name => 'execute', body => \&execute ) );
     $METACLASS;
 }
 
