@@ -17,11 +17,13 @@ sub new {
     } else {
         my $self = bless \(my $x) => $class;
 
+        my @mro = @{ mop::mro::get_linear_isa($class) };
+
         my %attributes = map { 
             if (my $m = find_meta($_)) {
                 %{ $m->attributes }
             }
-        } reverse @{ mop::mro::get_linear_isa($class) };
+        } reverse @mro;
 
         foreach my $attr (values %attributes) { 
             if ( exists $args{ $attr->key_name }) {
@@ -31,8 +33,25 @@ sub new {
             }
         }
 
+        foreach my $class (reverse @mro) {
+            if (my $m = find_meta($class)) {
+                $m->get_submethod('BUILD')->execute($self, [ \%args ]) 
+                    if $m->has_submethod('BUILD');
+            }
+        }
+
         $self;
     }
+}
+
+sub DESTROY {
+    my $self = shift;
+    foreach my $class (@{ mop::mro::get_linear_isa($self) }) {
+        if (my $m = find_meta($class)) {
+            $m->get_submethod('DEMOLISH')->execute($self, []) 
+                if $m->has_submethod('DEMOLISH');
+        }
+    }    
 }
 
 our $METACLASS;
@@ -63,6 +82,7 @@ sub metaclass {
             }
         } 
     ));
+    $METACLASS->add_method( mop::method->new( name => 'DESTROY', body => \&DESTROY ) );
     $METACLASS;
 }
 
