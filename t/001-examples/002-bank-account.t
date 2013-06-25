@@ -54,7 +54,7 @@ my $checking = CheckingAccount->new(
     overdraft_account => $savings,
 );
 isa_ok($checking, 'CheckingAccount');
-#isa_ok($checking, 'BankAccount');
+isa_ok($checking, 'BankAccount');
 
 is $checking->balance, 0, '... got the checking balance we expected';
 

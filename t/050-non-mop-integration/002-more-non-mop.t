@@ -40,11 +40,11 @@ class Employee (extends => 'Person') {
 
 my $e = Employee->new;
 isa_ok($e, 'Employee');
-#isa_ok($e, 'Person');
+isa_ok($e, 'Person');
 
-can_ok($e, 'first_name');
-can_ok($e, 'last_name');
-can_ok($e, 'manager');
+ok($e->can('first_name'), '... $e can call first_name');
+ok($e->can('last_name'), '... $e can call last_name');
+ok($e->can('manager'), '... $e can call manager');
 
 is($e->first_name, 'stevan', '... got the expected default value');
 is($e->last_name, 'little', '... got the expected default value');

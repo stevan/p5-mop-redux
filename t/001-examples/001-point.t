@@ -76,6 +76,7 @@ class Point3D (extends => 'Point') {
 {
     my $p3d = Point3D->new();
     isa_ok($p3d, 'Point3D');
+    isa_ok($p3d, 'Point');
 
     is_deeply(
         mop::mro::get_linear_isa('Point3D'),
