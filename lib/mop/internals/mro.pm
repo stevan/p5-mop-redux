@@ -16,7 +16,7 @@ use Variable::Magic qw[ wizard cast ];
 BEGIN {
     MRO::Define::register_mro(
         'mop', 
-        sub { [ 'UNIVERSAL', 'mop::internals::mro' ] }
+        sub { [ 'mop::internals::mro' ] }
     )
 }
 
@@ -39,6 +39,15 @@ sub find_method {
         }
     }
 
+    # this is just because 
+    # UNIVERSAL never shows
+    # up in the mro and so
+    # we have to look for 
+    # these explicitly
+    if ($method_name eq 'can' || $method_name eq 'isa') {
+        return find_meta('mop::object')->get_method( $method_name );
+    }
+
     return;
 }
 
@@ -57,7 +66,13 @@ sub find_submethod {
 sub call_method {
     my ($invocant, $method_name, $args, %opts) = @_;
 
-    my $class  = get_stash_for( $invocant );
+    my $class = get_stash_for( $invocant );
+
+    # *sigh* Devel::Declare does this and we need to ignore it
+    if ( $method_name eq 'can' && ($args->[0] eq 'method' || $args->[0] eq 'class') ) {
+        return $class->name->UNIVERSAL::can( @$args );
+    }
+
     my $method = find_submethod( $invocant, $method_name, %opts );
     $method    = find_method( $invocant, $method_name, %opts )
         unless defined $method;
