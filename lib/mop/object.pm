@@ -3,7 +3,8 @@ package mop::object;
 use v5.16;
 use warnings;
 
-use mop::util qw[ find_meta ];
+use mop::util    qw[ find_meta ];
+use Scalar::Util qw[ blessed ];
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -44,7 +45,24 @@ sub metaclass {
         version    => $VERSION,
         authrority => $AUTHORITY,
     );
-    $METACLASS->add_method( mop::method->new( name => 'new', body => \&new ) );
+    $METACLASS->add_method( mop::method->new( name => 'new',       body => \&new ) );
+    $METACLASS->add_method( mop::method->new( name => 'metaclass', body => \&metaclass ) );
+    $METACLASS->add_method( mop::method->new( 
+        name => 'isa', 
+        body => sub {
+            my ($self, $class) = @_;
+            scalar grep { $class eq $_ } @{ mop::mro::get_linear_isa($self) }
+        } 
+    ));
+    $METACLASS->add_method( mop::method->new( 
+        name => 'can', 
+        body => sub {
+            my ($self, $method_name) = @_;
+            if (my $method = mop::internals::mro::find_method($self, $method_name)) {
+                return blessed($method) ? $method->body : $method;
+            }
+        } 
+    ));
     $METACLASS;
 }
 
