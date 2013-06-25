@@ -8,7 +8,6 @@ use base 'Devel::Declare::Context::Simple';
 use Hash::Util::FieldHash qw[ fieldhash ];
 use Variable::Magic       qw[ wizard ];
 
-use Clone          ();
 use Sub::Name      ();
 use Devel::Declare ();
 use B::Hooks::EndOfScope;
@@ -253,27 +252,7 @@ sub attribute_parser {
         $::CLASS->add_attribute(
             mop::attribute->new(
                 name    => $name,
-                default => sub { 
-                    # NOTE:
-                    # this is kind of ugly to put here
-                    # but we should be able to fix this
-                    # in the syntax layer for the real 
-                    # thing. If not then we can move 
-                    # this into mop::attribute later.
-                    # - SL
-                    if ( ref $initial_value  ) {
-                        if ( ref $initial_value  eq 'ARRAY' || ref $initial_value  eq 'HASH' ) {
-                            $initial_value  = Clone::clone( $initial_value  );
-                        }
-                        elsif ( ref $initial_value  eq 'CODE' ) {
-                            $initial_value  = $initial_value ->();
-                        }
-                        else {
-                            die "References of type(" . ref $initial_value  . ") are not supported";
-                        }
-                    }
-                    $initial_value 
-                },
+                default => \$initial_value,
                 storage => $storage
             )
         );

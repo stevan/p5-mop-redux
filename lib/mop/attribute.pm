@@ -3,6 +3,8 @@ package mop::attribute;
 use v5.16;
 use warnings;
 
+use Clone ();
+
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
@@ -26,7 +28,22 @@ sub key_name {
 }
 
 sub has_default { defined((shift)->{'default'}) }
-sub get_default { (shift)->{'default'}->()     }
+sub get_default {
+    my $self  = shift;
+    my $value = ${ $self->{'default'} };
+    if ( ref $value  ) {
+        if ( ref $value  eq 'ARRAY' || ref $value  eq 'HASH' ) {
+            $value  = Clone::clone( $value  );
+        }
+        elsif ( ref $value  eq 'CODE' ) {
+            $value  = $value ->();
+        }
+        else {
+            die "References of type(" . ref $value  . ") are not supported";
+        }
+    }
+    $value 
+}
 
 sub storage { (shift)->{'storage'} }
 
