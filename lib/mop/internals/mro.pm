@@ -9,6 +9,7 @@ use mop::util qw[
     get_stash_for 
 ];
 
+use Devel::GlobalDestruction;
 use MRO::Define;
 use Scalar::Util    qw[ blessed ];
 use Variable::Magic qw[ wizard cast ];
@@ -104,10 +105,10 @@ sub call_method {
         data  => sub { \$method_called },
         fetch => sub {
             return if $_[2] =~ /^\(/      # no overloaded methods
-                   || $_[2] eq 'DESTROY'  # no DESTROY (for now)
                    || $_[2] eq 'AUTOLOAD' # no AUTOLOAD (never!!)
                    || $_[2] eq 'import'   # classes don't import
                    || $_[2] eq 'unimport';  # and they certainly don't export
+            return if $_[2] eq 'DESTROY' && in_global_destruction;
             #warn join ", " => @_;
             ${ $_[1] } = $_[2];
             $_[2] = 'invoke_method';
