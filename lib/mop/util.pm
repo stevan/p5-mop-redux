@@ -34,9 +34,9 @@ sub get_linear_isa {
     my $class = shift;
     if (my $meta = mop::util::find_meta($class)) {
         if (my $super = $meta->superclass) {
-            return [ $class, @{ get_linear_isa($super) || [] } ];
+            return [ $meta->name, @{ get_linear_isa($super) || [] } ];
         } else {
-            return [ $class ];
+            return [ $meta->name ];
         }
     } else {
         return mro::get_linear_isa($class);
