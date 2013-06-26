@@ -12,6 +12,9 @@ use Sub::Name      ();
 use Devel::Declare ();
 use B::Hooks::EndOfScope;
 
+# keep the local package name around
+fieldhash my %CURRENT_CLASS_NAME;
+
 # Keep a list of attributes currently 
 # being compiled in the class because 
 # we need to alias them in the method 
@@ -66,6 +69,7 @@ sub class_parser {
     my $caller = $self->get_curstash_name;
     my $pkg    = ($caller eq 'main' ? $name : (join "::" => $caller, $name));
 
+    $CURRENT_CLASS_NAME{$self}     = $pkg;
     $CURRENT_ATTRIBUTE_LIST{$self} = [];
 
     # The class preamble is pretty simple, we 
@@ -132,6 +136,11 @@ sub generic_method_parser {
     else {
         $inject .= 'my ($self) = @_;';
     }
+
+    # create a $class variable, which
+    # actually points to the class name
+    # and not the metaclass object
+    $inject .= 'my $class = $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS->name;';
 
     # localize $::SELF here too 
     $inject .= 'local $::SELF = $self;';
