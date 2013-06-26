@@ -144,6 +144,9 @@ sub generic_method_parser {
 
     # localize $::SELF here too 
     $inject .= 'local $::SELF = $self;';
+    
+    # and localize the $::CLASS here
+    $inject .= 'local $::CLASS = $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS;';
 
     # this is our method preamble, it
     # basically creates a method local

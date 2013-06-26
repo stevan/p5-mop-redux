@@ -31,7 +31,6 @@ ok( $foo->isa( 'FooBar' ), '... the object is from class FooBar' );
 ok( $foo->isa( 'Foo' ), '... the object is from class Foo' );
 ok( $foo->isa( 'mop::object' ), '... the object is derived from class Object' );
 
-# next::method is not working the way it should ...
-# is( $foo->foo, 'FOO-FOOBAR-FOOBARBAZ-FOOBARBAZGORCH', '... got the chained super calls as expected');
+is( $foo->foo, 'FOO-FOOBAR-FOOBARBAZ-FOOBARBAZGORCH', '... got the chained super calls as expected');
 
 done_testing;

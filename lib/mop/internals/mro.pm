@@ -26,7 +26,27 @@ sub find_method {
 
     my @mro = @{ mop::mro::get_linear_isa( $invocant ) };
 
-    shift( @mro ) if exists $opts{'super'};
+    # NOTE: 
+    # this is ugly, needs work 
+    # - SL
+    if ( exists $opts{'super_of'} ) {
+        #warn "got super-of";
+        #warn "MRO: " . $mro[0];
+        #warn "SUPEROF: " . $opts{'super_of'}->name;
+        if ( $mro[0] eq $opts{'super_of'}->name ) {
+            #warn "got match, shifting";
+            shift( @mro );
+        } else {
+            #warn "no match, looking"; 
+            while ( $mro[0] ne $opts{'super_of'}->name ) {
+                #warn "no match, shifting until we find it";
+                shift( @mro );
+            }    
+            #warn "got it, shifting";
+            shift( @mro );
+        }
+
+    }
 
     foreach my $class ( @mro ) {
         if ( has_meta( $class ) ) {
