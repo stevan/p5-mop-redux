@@ -66,7 +66,7 @@ sub metaclass {
     $METACLASS = mop::class->new(
         name       => 'mop::attribute',
         version    => $VERSION,
-        authrority => $AUTHORITY,
+        authority  => $AUTHORITY,
         superclass => 'mop::object'
     );
     $METACLASS->add_method( mop::method->new( name => 'new',         body => \&new         ) );

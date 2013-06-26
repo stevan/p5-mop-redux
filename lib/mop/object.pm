@@ -60,9 +60,9 @@ sub metaclass {
     return $METACLASS if defined $METACLASS;
     require mop::class;
     $METACLASS = mop::class->new( 
-        name       => 'mop::object',
-        version    => $VERSION,
-        authrority => $AUTHORITY,
+        name      => 'mop::object',
+        version   => $VERSION,
+        authority => $AUTHORITY,
     );
     $METACLASS->add_method( mop::method->new( name => 'new',       body => \&new ) );
     $METACLASS->add_method( mop::method->new( name => 'metaclass', body => \&metaclass ) );
