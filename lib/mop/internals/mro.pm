@@ -105,6 +105,10 @@ sub call_method {
     my $method = find_submethod( $invocant, $method_name, %opts );
     $method    = find_method( $invocant, $method_name, %opts )
         unless defined $method;
+    $method = do {
+        my $real = UNIVERSAL->can("frobnicate");
+        eval q{ sub () { goto $real } };
+    } unless defined $method;
 
     # XXX 
     # this is f-ing stupid, but under `make test`
