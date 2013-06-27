@@ -73,8 +73,8 @@ sub find_method {
     # built-in methods such
     # as DOES, VERSION and
     # potentially others
-    if (my $universally = 'UNIVERSAL'->UNIVERSAL::can($method_name)) {
-        return $universally if ref($universally) eq q(CODE);
+    if (my $universally = 'UNIVERSAL'->can($method_name)) {
+        return $universally;
     }
 
     return;
@@ -105,10 +105,6 @@ sub call_method {
     my $method = find_submethod( $invocant, $method_name, %opts );
     $method    = find_method( $invocant, $method_name, %opts )
         unless defined $method;
-    $method = do {
-        my $real = UNIVERSAL->can("frobnicate");
-        eval q{ sub () { goto $real } };
-    } unless defined $method;
 
     # XXX 
     # this is f-ing stupid, but under `make test`
