@@ -73,7 +73,7 @@ sub find_method {
     # built-in methods such
     # as DOES, VERSION and
     # potentially others
-    if (my $universally = UNIVERSAL::can("UNIVERSAL", $method_name)) {
+    if (my $universally = 'UNIVERSAL'->UNIVERSAL::can($method_name)) {
         return $universally if ref($universally) eq q(CODE);
     }
 
