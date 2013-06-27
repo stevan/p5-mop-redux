@@ -23,6 +23,7 @@ sub my_die  { push @FATALS   => join "" => @_ }
 
 class Logger {
     method log ( $level, $msg ) {
+        no if $] >= 5.017011, warnings => 'experimental::smartmatch';
         given ( $level ) {
             when ( 'info'  ) { my_warn( '[info] ',    $msg ) }
             when ( 'warn'  ) { my_warn( '[warning] ', $msg ) }
@@ -37,6 +38,7 @@ class Logger {
 
 class MyLogger ( extends => 'Logger' ) {
     method log ( $level, $msg ) {
+        no if $] >= 5.017011, warnings => 'experimental::smartmatch';
         given ( $level ) {
             when ( 'info'  ) { my_warn( '<info> ', $msg ) }
             default {
