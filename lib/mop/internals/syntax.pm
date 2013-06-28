@@ -109,13 +109,18 @@ sub build_class {
     shift;
     my %metadata = @_;
 
+    my $class_Class = 'mop::class';
+    if ( exists $metadata{ 'metaclass' } ) {
+        $class_Class = delete $metadata{ 'metaclass' };
+    }
+
     if ( exists $metadata{ 'extends' } ) {
         $metadata{ 'superclass' } = delete $metadata{ 'extends' };
     } else {
         $metadata{ 'superclass' } = 'mop::object';
     }
 
-    my $class = mop::class->new(%metadata);    
+    my $class = $class_Class->new(%metadata);    
 
     $class->add_submethod(
         mop::method->new(
