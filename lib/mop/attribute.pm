@@ -15,23 +15,23 @@ sub new {
     my $class = shift;
     my %args  = @_;
     $class->SUPER::new(
-        name    => $args{'name'},
-        default => $args{'default'},
-        storage => $args{'storage'},
+        '$name'    => $args{'name'},
+        '$default' => $args{'default'},
+        '$storage' => $args{'storage'},
     );
 }
 
-sub name { (shift)->{'name'} }
+sub name { (shift)->{'$name'} }
 
 sub key_name {
     my $self = shift;
     substr( $self->name, 1, length $self->name )
 }
 
-sub has_default { defined((shift)->{'default'}) }
+sub has_default { defined((shift)->{'$default'}) }
 sub get_default {
     my $self  = shift;
-    my $value = ${ $self->{'default'} };
+    my $value = ${ $self->{'$default'} };
     if ( ref $value  ) {
         if ( ref $value  eq 'ARRAY' || ref $value  eq 'HASH' ) {
             $value  = Clone::clone( $value  );
@@ -46,7 +46,7 @@ sub get_default {
     $value 
 }
 
-sub storage { (shift)->{'storage'} }
+sub storage { (shift)->{'$storage'} }
 
 sub fetch_data_in_slot_for {
     my ($self, $instance) = @_;

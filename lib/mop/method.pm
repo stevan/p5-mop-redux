@@ -14,13 +14,13 @@ sub new {
     my $class = shift;
     my %args  = @_;
     $class->SUPER::new(
-        name => $args{'name'},
-        body => $args{'body'}
+        '$name' => $args{'name'},
+        '$body' => $args{'body'}
     );
 }
 
-sub name { (shift)->{'name'} }
-sub body { (shift)->{'body'} }
+sub name { (shift)->{'$name'} }
+sub body { (shift)->{'$body'} }
 
 sub execute {
     my ($self, $invocant, $args) = @_;
