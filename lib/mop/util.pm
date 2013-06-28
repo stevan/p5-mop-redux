@@ -15,6 +15,7 @@ use Sub::Exporter -setup => {
         has_meta
         get_stash_for
         init_attribute_storage
+        get_object_id
     ]]
 };
 
@@ -26,6 +27,8 @@ sub get_stash_for {
     my $class = ref($_[0]) || $_[0];
     $STASHES{ $class } //= Package::Stash->new( $class ) 
 }
+
+sub get_object_id { Hash::Util::FieldHash::id( $_[0] ) }
 
 sub init_attribute_storage (\%) {
     &Hash::Util::FieldHash::fieldhash( $_[0] )

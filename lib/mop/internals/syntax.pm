@@ -160,7 +160,7 @@ sub generic_method_parser {
                 . 'Variable::Magic::cast(' 
                     . $attr . ', '
                     . '$' . __PACKAGE__ . '::WIZARD, '
-                    . '[ Hash::Util::FieldHash::id($self), \%' . $key_name . ' ]' 
+                    . '[ mop::util::get_object_id($self), \%' . $key_name . ' ]'
                 . ');'
                 ; 
     }
