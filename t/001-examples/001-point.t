@@ -26,7 +26,7 @@ class Point {
         ($x, $y) = (0, 0);
     }
 
-    method dump {
+    method pack {
         +{ x => $self->x, y => $self->y }
     }
 }
@@ -42,7 +42,7 @@ class Point3D (extends => 'Point') {
         $z = $new_z;
     }
 
-    method dump {
+    method pack {
         my $data = $self->mop::next::method;
         $data->{z} = $z;
         $data;
@@ -69,7 +69,7 @@ class Point3D (extends => 'Point') {
     $p->set_y(320);
     is $p->y, 320, '... got the right value for y';
 
-    is_deeply $p->dump, { x => 10, y => 320 }, '... got the right value from dump';
+    is_deeply $p->pack, { x => 10, y => 320 }, '... got the right value from pack';
 }
 
 ## Test the instance
@@ -95,7 +95,7 @@ class Point3D (extends => 'Point') {
     $p3d->set_z(30);
     is $p3d->z, 30, '... got the right value for z';
 
-    is_deeply $p3d->dump, { x => 10, y => 320, z => 30 }, '... got the right value from dump';
+    is_deeply $p3d->pack, { x => 10, y => 320, z => 30 }, '... got the right value from pack';
 }
 
 
