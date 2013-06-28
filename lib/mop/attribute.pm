@@ -11,27 +11,39 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use parent 'mop::object';
 
+init_attribute_storage(my %__name_STORAGE);
+init_attribute_storage(my %__default_STORAGE);
+init_attribute_storage(my %__storage_STORAGE);
+
 sub new {
     my $class = shift;
     my %args  = @_;
-    $class->SUPER::new(
-        '$name'    => $args{'name'},
-        '$default' => $args{'default'},
-        '$storage' => $args{'storage'},
-    );
+    my $self = $class->SUPER::new;
+    $__name_STORAGE{ $self }    = \($args{'name'});
+    $__default_STORAGE{ $self } = \($args{'default'}) if exists $args{'default'};
+    $__storage_STORAGE{ $self } = \($args{'storage'});
+    $self
 }
 
-sub name { (shift)->{'$name'} }
+sub name { ${ $__name_STORAGE{ $_[0] } } }
 
 sub key_name {
     my $self = shift;
     substr( $self->name, 1, length $self->name )
 }
 
-sub has_default { defined((shift)->{'$default'}) }
+sub has_default { defined( ${ $__default_STORAGE{ $_[0] } }) }
 sub get_default {
     my $self  = shift;
-    my $value = ${ $self->{'$default'} };
+    # NOTE:
+    # need to do a double de-ref here
+    # first is to access the value from
+    # the attribute, the second is to 
+    # actually dereference the default 
+    # value (which is stored as a ref
+    # of whatever the default is)
+    # - SL
+    my $value = ${ ${ $__default_STORAGE{ $self } } };
     if ( ref $value  ) {
         if ( ref $value  eq 'ARRAY' || ref $value  eq 'HASH' ) {
             $value  = Clone::clone( $value  );
@@ -46,11 +58,11 @@ sub get_default {
     $value 
 }
 
-sub storage { (shift)->{'$storage'} }
+sub storage { ${ $__storage_STORAGE{ $_[0] } } }
 
 sub fetch_data_in_slot_for {
     my ($self, $instance) = @_;
-    ${ $self->storage->{ $instance } };
+    ${ $self->storage->{ $instance } || \undef };
 }
 
 sub store_data_in_slot_for {
@@ -78,17 +90,17 @@ sub metaclass {
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$name', 
-        storage => init_attribute_storage(my %name)
+        storage => \%__name_STORAGE
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$default', 
-        storage => init_attribute_storage(my %default)
+        storage => \%__default_STORAGE
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$storage', 
-        storage => init_attribute_storage(my %storage)
+        storage => \%__storage_STORAGE
     ));
 
     $METACLASS->add_method( mop::method->new( name => 'new',         body => \&new         ) );

@@ -10,30 +10,38 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use parent 'mop::object';
 
+init_attribute_storage(my %__name_STORAGE);
+init_attribute_storage(my %__version_STORAGE);
+init_attribute_storage(my %__authority_STORAGE);
+init_attribute_storage(my %__superclass_STORAGE);
+init_attribute_storage(my %__attributes_STORAGE);
+init_attribute_storage(my %__methods_STORAGE);
+init_attribute_storage(my %__submethods_STORAGE);
+
 sub new {
     my $class = shift;
     my %args  = @_;
-    $class->SUPER::new(
-        '$name'       => $args{'name'},
-        '$version'    => $args{'version'},        
-        '$authority'  => $args{'authority'},
-        '$superclass' => $args{'superclass'},
-        '$attributes' => {},
-        '$methods'    => {},
-        '$submethods' => {},
-    );
+    my $self = $class->SUPER::new;
+    $__name_STORAGE{ $self }       = \($args{'name'});
+    $__version_STORAGE{ $self }    = \($args{'version'});
+    $__authority_STORAGE{ $self }  = \($args{'authority'});
+    $__superclass_STORAGE{ $self } = \($args{'superclass'});
+    $__attributes_STORAGE{ $self } = \({});
+    $__methods_STORAGE{ $self }    = \({});
+    $__submethods_STORAGE{ $self } = \({});
+    $self;
 }
 
 # identity
 
-sub name       { (shift)->{'$name'}       }
-sub version    { (shift)->{'$version'}    }
-sub authority  { (shift)->{'$authority'}  }
-sub superclass { (shift)->{'$superclass'} }
+sub name       { ${ $__name_STORAGE{ $_[0] } } }
+sub version    { ${ $__version_STORAGE{ $_[0] } } }
+sub authority  { ${ $__authority_STORAGE{ $_[0] } } }
+sub superclass { ${ $__superclass_STORAGE{ $_[0] } } }
 
 # attributes
 
-sub attributes { (shift)->{'$attributes'} }
+sub attributes { ${ $__attributes_STORAGE{ $_[0] } } }
 
 sub add_attribute {
     my ($self, $attr) = @_;
@@ -52,7 +60,7 @@ sub has_attribute {
 
 # methods
 
-sub methods { (shift)->{'$methods'} }
+sub methods { ${ $__methods_STORAGE{ $_[0] } } }
 
 sub add_method {
     my ($self, $method) = @_;
@@ -71,7 +79,7 @@ sub has_method {
 
 # submethods
 
-sub submethods { (shift)->{'$submethods'} }
+sub submethods { ${ $__submethods_STORAGE{ $_[0] } } }
 
 sub add_submethod {
     my ($self, $submethod) = @_;
@@ -106,39 +114,39 @@ sub metaclass {
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$name', 
-        storage => init_attribute_storage(my %name)
+        storage => \%__name_STORAGE
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$version', 
-        storage => init_attribute_storage(my %version)
+        storage => \%__version_STORAGE
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$authority', 
-        storage => init_attribute_storage(my %authority)
+        storage => \%__authority_STORAGE
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$superclass', 
-        storage => init_attribute_storage(my %superclass)
+        storage => \%__superclass_STORAGE
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$attributes', 
-        storage => init_attribute_storage(my %attributes),
+        storage => \%__attributes_STORAGE,
         default => \({})
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$methods', 
-        storage => init_attribute_storage(my %methods),
+        storage => \%__methods_STORAGE,
         default => \({})
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$submethods', 
-        storage => init_attribute_storage(my %submethods),
+        storage => \%__submethods_STORAGE,
         default => \({})
     ));
 
