@@ -88,6 +88,10 @@ sub has_submethod {
     exists $self->{'submethods'}->{ $name };
 }
 
+# events
+
+sub FINALIZE {}
+
 our $METACLASS;
 
 sub metaclass {
@@ -158,6 +162,8 @@ sub metaclass {
     $METACLASS->add_method( mop::method->new( name => 'get_submethod', body => \&get_submethod ) );
     $METACLASS->add_method( mop::method->new( name => 'add_submethod', body => \&add_submethod ) );
     $METACLASS->add_method( mop::method->new( name => 'has_submethod', body => \&has_submethod ) );
+
+    $METACLASS->add_method( mop::method->new( name => 'FINALIZE', body => \&FINALIZE ) );
 
     $METACLASS;
 }

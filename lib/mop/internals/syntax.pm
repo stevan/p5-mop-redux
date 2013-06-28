@@ -77,20 +77,28 @@ sub class_parser {
     # set it to use our custom MRO, then build
     # our metaclass.
     my $inject = $self->scope_injector_call
+        . 'my $d = shift;'
         . 'eval(q[package ' . $pkg .';use strict;use warnings;]);'
         . 'mro::set_mro(q[' . $pkg . '], q[mop]);'
         . '$' . $pkg . '::METACLASS = ' . __PACKAGE__ . '->build_class('
             . 'name => q[' . $pkg . ']' 
             . ($proto ? (', ' . $proto) : '') 
         . ');'
-        . 'local $::CLASS = $' . $pkg . '::METACLASS;'
+        . '$d->{q[CLASS]} = $' . $pkg . '::METACLASS;'
+        . 'local $::CLASS = $d->{q[CLASS]};'
     ;
 
     $self->inject_if_block( $inject );
 
     $self->shadow(sub (&@) {
         my $body = shift;
-        $body->();
+        my $data = {};
+
+        $body->( $data );
+
+        my $class = $data->{'CLASS'};
+        $class->FINALIZE;
+
         return;
     });
 
@@ -160,7 +168,7 @@ sub generic_method_parser {
                 . 'Variable::Magic::cast(' 
                     . $attr . ', '
                     . '$' . __PACKAGE__ . '::WIZARD, '
-                    . '[ mop::util::get_object_id($self), \%' . $key_name . ' ]'
+                    . '[ mop::util::get_object_id($self), \%' . $key_name . ' ]' 
                 . ');'
                 ; 
     }
