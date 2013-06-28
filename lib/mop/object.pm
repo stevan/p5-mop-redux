@@ -17,21 +17,21 @@ sub new {
 
     # NOTE:
     # prior to the bootstrapping being
-    # finished, we need to not try and
+    # finished, we need to not try and 
     # build classes, it will all be done
     # manually in the mop:: classes.
     # - SL
     return $self unless $mop::BOOTSTRAPPED;
-
+    
     my @mro = @{ mop::mro::get_linear_isa($class) };
 
-    my %attributes = map {
+    my %attributes = map { 
         if (my $m = find_meta($_)) {
             %{ $m->attributes }
         }
     } reverse @mro;
 
-    foreach my $attr (values %attributes) {
+    foreach my $attr (values %attributes) { 
         if ( exists $args{ $attr->key_name }) {
             $attr->store_data_in_slot_for( $self, $args{ $attr->key_name } )
         } else {
@@ -41,7 +41,7 @@ sub new {
 
     foreach my $class (reverse @mro) {
         if (my $m = find_meta($class)) {
-            $m->get_submethod('BUILD')->execute($self, [ \%args ])
+            $m->get_submethod('BUILD')->execute($self, [ \%args ]) 
                 if $m->has_submethod('BUILD');
         }
     }
@@ -69,9 +69,9 @@ sub dump {
         if ($attr->name eq '$storage') {
             $temp->{ $attr->name } = '__INTERNAL_DETAILS__';
         } else {
-            $temp->{ $attr->name } = _dumper(
+            $temp->{ $attr->name } = _dumper( 
                 $attr->fetch_data_in_slot_for( $self )
-            );
+            );    
         }
     }
 
@@ -81,17 +81,17 @@ sub dump {
 sub _dumper {
     my ($data) = @_;
     if (blessed($data)) {
-        return $data->dump;
+        return $data->dump;            
     } elsif (ref $data) {
         if (ref $data eq 'ARRAY') {
             return [ map { _dumper( $_ ) } @$data ];
         } elsif (ref $data eq 'HASH') {
-            return { map { $_ => _dumper( $data->{$_} ) } keys %$data };
+            return { map { $_ => _dumper( $data->{$_} ) } keys %$data };     
         } else {
-            return $data;
+            return $data;            
         }
     } else {
-        return $data;
+        return $data;            
     }
 }
 
