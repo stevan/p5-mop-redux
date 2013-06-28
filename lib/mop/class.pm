@@ -41,6 +41,8 @@ sub superclass { ${ $__superclass_STORAGE{ $_[0] } } }
 
 # attributes
 
+sub attribute_class { 'mop::attribute' }
+
 sub attributes { ${ $__attributes_STORAGE{ $_[0] } } }
 
 sub add_attribute {
@@ -60,6 +62,8 @@ sub has_attribute {
 
 # methods
 
+sub method_class { 'mop::method' }
+
 sub methods { ${ $__methods_STORAGE{ $_[0] } } }
 
 sub add_method {
@@ -78,6 +82,8 @@ sub has_method {
 }
 
 # submethods
+
+sub submethod_class { 'mop::method' }
 
 sub submethods { ${ $__submethods_STORAGE{ $_[0] } } }
 
@@ -160,20 +166,24 @@ sub metaclass {
     $METACLASS->add_method( mop::method->new( name => 'authority',  body => \&authority  ) );
     $METACLASS->add_method( mop::method->new( name => 'superclass', body => \&superclass ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'attributes',    body => \&attributes    ) );
-    $METACLASS->add_method( mop::method->new( name => 'get_attribute', body => \&get_attribute ) );
-    $METACLASS->add_method( mop::method->new( name => 'add_attribute', body => \&add_attribute ) );
-    $METACLASS->add_method( mop::method->new( name => 'has_attribute', body => \&has_attribute ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'methods',    body => \&methods    ) );
-    $METACLASS->add_method( mop::method->new( name => 'get_method', body => \&get_method ) );
-    $METACLASS->add_method( mop::method->new( name => 'add_method', body => \&add_method ) );
-    $METACLASS->add_method( mop::method->new( name => 'has_method', body => \&has_method ) );
+    $METACLASS->add_method( mop::method->new( name => 'attribute_class', body => \&attribute_class    ) );
+    $METACLASS->add_method( mop::method->new( name => 'attributes',      body => \&attributes    ) );
+    $METACLASS->add_method( mop::method->new( name => 'get_attribute',   body => \&get_attribute ) );
+    $METACLASS->add_method( mop::method->new( name => 'add_attribute',   body => \&add_attribute ) );
+    $METACLASS->add_method( mop::method->new( name => 'has_attribute',   body => \&has_attribute ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'submethods',    body => \&submethods    ) );
-    $METACLASS->add_method( mop::method->new( name => 'get_submethod', body => \&get_submethod ) );
-    $METACLASS->add_method( mop::method->new( name => 'add_submethod', body => \&add_submethod ) );
-    $METACLASS->add_method( mop::method->new( name => 'has_submethod', body => \&has_submethod ) );
+    $METACLASS->add_method( mop::method->new( name => 'method_class', body => \&method_class    ) );
+    $METACLASS->add_method( mop::method->new( name => 'methods',      body => \&methods    ) );
+    $METACLASS->add_method( mop::method->new( name => 'get_method',   body => \&get_method ) );
+    $METACLASS->add_method( mop::method->new( name => 'add_method',   body => \&add_method ) );
+    $METACLASS->add_method( mop::method->new( name => 'has_method',   body => \&has_method ) );
+
+    $METACLASS->add_method( mop::method->new( name => 'submethod_class', body => \&submethod_class    ) );
+    $METACLASS->add_method( mop::method->new( name => 'submethods',      body => \&submethods    ) );
+    $METACLASS->add_method( mop::method->new( name => 'get_submethod',   body => \&get_submethod ) );
+    $METACLASS->add_method( mop::method->new( name => 'add_submethod',   body => \&add_submethod ) );
+    $METACLASS->add_method( mop::method->new( name => 'has_submethod',   body => \&has_submethod ) );
 
     $METACLASS->add_method( mop::method->new( name => 'FINALIZE', body => \&FINALIZE ) );
 
