@@ -123,7 +123,7 @@ sub build_class {
     my $class = $class_Class->new(%metadata);    
 
     $class->add_submethod(
-        mop::method->new(
+        $class->method_class->new(
             name => 'metaclass',
             body => sub { $class }
         )
@@ -197,7 +197,7 @@ sub method_parser {
         return sub (&) {
             my $body = shift;
             $::CLASS->add_method(
-                mop::method->new(
+                $::CLASS->method_class->new(
                     name => $name,
                     body => Sub::Name::subname( $name, $body )
                 )
@@ -213,7 +213,7 @@ sub submethod_parser {
         return sub (&) {
             my $body = shift;
             $::CLASS->add_submethod(
-                mop::method->new(
+                $::CLASS->submethod_class->new(
                     name => $name,
                     body => Sub::Name::subname( $name, $body )
                 )
@@ -275,10 +275,11 @@ sub attribute_parser {
         my ($storage, %metadata) = @_;
         my $initial_value;
         $::CLASS->add_attribute(
-            mop::attribute->new(
+            $::CLASS->attribute_class->new(
                 name    => $name,
                 default => \$initial_value,
-                storage => $storage
+                storage => $storage,
+                %metadata
             )
         );
         $initial_value
