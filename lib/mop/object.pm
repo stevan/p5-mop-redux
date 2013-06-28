@@ -44,6 +44,28 @@ sub new {
     }
 }
 
+sub dump {
+    my $self = shift;
+
+    my %attributes = map {
+        if (my $m = find_meta($_)) {
+            %{ $m->attributes }
+        }
+    } reverse @{ mop::mro::get_linear_isa($self) };
+
+    my $temp = {
+        __CLASS__ => find_meta($self)->name
+    };
+
+    foreach my $attr (values %attributes) {
+        my $data = $attr->fetch_data_in_slot_for( $self );
+        $temp->{ $attr->name } = blessed($data) && $data->isa('mop::object')
+            ? $data->dump : $data;
+    }
+
+    $temp;
+}
+
 sub DESTROY {
     my $self = shift;
     foreach my $class (@{ mop::mro::get_linear_isa($self) }) {
@@ -65,6 +87,7 @@ sub metaclass {
         authority => $AUTHORITY,
     );
     $METACLASS->add_method( mop::method->new( name => 'new',       body => \&new ) );
+    $METACLASS->add_method( mop::method->new( name => 'dump',      body => \&dump ) );
     $METACLASS->add_method( mop::method->new( name => 'metaclass', body => \&metaclass ) );
     $METACLASS->add_method( mop::method->new( 
         name => 'isa', 
