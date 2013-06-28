@@ -3,7 +3,7 @@ package mop::object;
 use v5.16;
 use warnings;
 
-use mop::util    qw[ find_meta ];
+use mop::util    qw[ find_meta get_object_id ];
 use Scalar::Util qw[ blessed ];
 
 our $VERSION   = '0.01';
@@ -12,6 +12,10 @@ our $AUTHORITY = 'cpan:STEVAN';
 sub new {
     my $class = shift;
     my %args  = @_;
+    # NOTE:
+    # yes, this conditional is ugly, 
+    # I know it, so sue me.
+    # - SL
     if ($class =~ /^mop::/) {
         bless \%args => $class;    
     } else {
@@ -44,10 +48,12 @@ sub new {
     }
 }
 
+sub id { get_object_id( shift ) }
+
 sub dump {
     my $self = shift;
 
-    my %attributes = map {
+    my %attributes = map { 
         if (my $m = find_meta($_)) {
             %{ $m->attributes }
         }
@@ -57,9 +63,9 @@ sub dump {
         __CLASS__ => find_meta($self)->name
     };
 
-    foreach my $attr (values %attributes) {
+    foreach my $attr (values %attributes) { 
         my $data = $attr->fetch_data_in_slot_for( $self );
-        $temp->{ $attr->name } = blessed($data) && $data->isa('mop::object')
+        $temp->{ $attr->name } = blessed($data) && $data->isa('mop::object') 
             ? $data->dump : $data;
     }
 
@@ -87,6 +93,7 @@ sub metaclass {
         authority => $AUTHORITY,
     );
     $METACLASS->add_method( mop::method->new( name => 'new',       body => \&new ) );
+    $METACLASS->add_method( mop::method->new( name => 'id',        body => \&id ) );
     $METACLASS->add_method( mop::method->new( name => 'dump',      body => \&dump ) );
     $METACLASS->add_method( mop::method->new( name => 'metaclass', body => \&metaclass ) );
     $METACLASS->add_method( mop::method->new( 
