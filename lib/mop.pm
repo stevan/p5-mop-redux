@@ -12,6 +12,8 @@ BEGIN {
     $::SELF  = undef;
 }
 
+our $BOOTSTRAPPED = 0;
+
 use mop::object;
 use mop::class;
 use mop::method;
@@ -33,6 +35,7 @@ sub bootstrap {
         mop::attribute
         mop::method
     ];
+    $BOOTSTRAPPED = 1;
 }
 
 1;
