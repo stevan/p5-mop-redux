@@ -69,6 +69,14 @@ sub find_method {
         return find_meta('mop::object')->get_method( $method_name );
     }
 
+    # UNIVERSAL has other
+    # built-in methods such
+    # as DOES, VERSION and
+    # potentially others
+    if (my $universally = 'UNIVERSAL'->can($method_name)) {
+        return $universally;
+    }
+
     return;
 }
 
