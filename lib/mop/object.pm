@@ -66,12 +66,33 @@ sub dump {
     };
 
     foreach my $attr (values %attributes) { 
-        my $data = $attr->fetch_data_in_slot_for( $self );
-        $temp->{ $attr->name } = blessed($data) && $data->isa('mop::object') 
-            ? $data->dump : $data;
+        if ($attr->name eq '$storage') {
+            $temp->{ $attr->name } = '__INTERNAL_DETAILS__';
+        } else {
+            $temp->{ $attr->name } = _dumper(
+                $attr->fetch_data_in_slot_for( $self )
+            );
+        }
     }
 
     $temp;
+}
+
+sub _dumper {
+    my ($data) = @_;
+    if (blessed($data)) {
+        return $data->dump;
+    } elsif (ref $data) {
+        if (ref $data eq 'ARRAY') {
+            return [ map { _dumper( $_ ) } @$data ];
+        } elsif (ref $data eq 'HASH') {
+            return { map { $_ => _dumper( $data->{$_} ) } keys %$data };
+        } else {
+            return $data;
+        }
+    } else {
+        return $data;
+    }
 }
 
 sub DESTROY {
