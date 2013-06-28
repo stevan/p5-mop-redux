@@ -3,6 +3,8 @@ package mop::class;
 use v5.16;
 use warnings;
 
+use mop::util qw[ init_attribute_storage ];
+
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
@@ -97,6 +99,45 @@ sub metaclass {
         authority  => $AUTHORITY,        
         superclass => 'mop::object'
     );
+
+    $METACLASS->add_attribute(mop::attribute->new( 
+        name    => '$name', 
+        storage => init_attribute_storage(my %name)
+    ));
+
+    $METACLASS->add_attribute(mop::attribute->new( 
+        name    => '$version', 
+        storage => init_attribute_storage(my %version)
+    ));
+
+    $METACLASS->add_attribute(mop::attribute->new( 
+        name    => '$authority', 
+        storage => init_attribute_storage(my %authority)
+    ));
+
+    $METACLASS->add_attribute(mop::attribute->new( 
+        name    => '$superclass', 
+        storage => init_attribute_storage(my %superclass)
+    ));
+
+    $METACLASS->add_attribute(mop::attribute->new( 
+        name    => '$attributes', 
+        storage => init_attribute_storage(my %attributes),
+        default => \({})
+    ));
+
+    $METACLASS->add_attribute(mop::attribute->new( 
+        name    => '$methods', 
+        storage => init_attribute_storage(my %methods),
+        default => \({})
+    ));
+
+    $METACLASS->add_attribute(mop::attribute->new( 
+        name    => '$submethods', 
+        storage => init_attribute_storage(my %submethods),
+        default => \({})
+    ));
+
     $METACLASS->add_method( mop::method->new( name => 'new',        body => \&new        ) );
     $METACLASS->add_method( mop::method->new( name => 'name',       body => \&name       ) );
     $METACLASS->add_method( mop::method->new( name => 'version',    body => \&version    ) );   

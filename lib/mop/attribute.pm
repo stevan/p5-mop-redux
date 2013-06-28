@@ -3,6 +3,7 @@ package mop::attribute;
 use v5.16;
 use warnings;
 
+use mop::util qw[ init_attribute_storage ];
 use Clone ();
 
 our $VERSION   = '0.01';
@@ -69,6 +70,22 @@ sub metaclass {
         authority  => $AUTHORITY,
         superclass => 'mop::object'
     );
+
+    $METACLASS->add_attribute(mop::attribute->new( 
+        name    => '$name', 
+        storage => init_attribute_storage(my %name)
+    ));
+
+    $METACLASS->add_attribute(mop::attribute->new( 
+        name    => '$default', 
+        storage => init_attribute_storage(my %default)
+    ));
+
+    $METACLASS->add_attribute(mop::attribute->new( 
+        name    => '$storage', 
+        storage => init_attribute_storage(my %storage)
+    ));
+
     $METACLASS->add_method( mop::method->new( name => 'new',         body => \&new         ) );
     $METACLASS->add_method( mop::method->new( name => 'name',        body => \&name        ) );
     $METACLASS->add_method( mop::method->new( name => 'key_name',    body => \&key_name    ) );   
