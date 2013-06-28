@@ -7,12 +7,14 @@ our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
 use Package::Stash;
+use Hash::Util::FieldHash;
 
 use Sub::Exporter -setup => {
     exports => [qw[
         find_meta
         has_meta
         get_stash_for
+        init_attribute_storage
     ]]
 };
 
@@ -23,6 +25,10 @@ sub get_stash_for {
     state %STASHES;
     my $class = ref($_[0]) || $_[0];
     $STASHES{ $class } //= Package::Stash->new( $class ) 
+}
+
+sub init_attribute_storage (\%) {
+    &Hash::Util::FieldHash::fieldhash( $_[0] )
 }
 
 package mop::mro;

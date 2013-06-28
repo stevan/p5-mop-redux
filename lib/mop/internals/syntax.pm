@@ -250,7 +250,7 @@ sub attribute_parser {
 
         my $key_name  = $self->_get_storage_name_for_attribute($name);
 
-        substr( $linestr, $old_offset, $full_length ) = '(Hash::Util::FieldHash::fieldhash(my %' . $key_name . '))' . ( $proto ? (', (' . $proto) : '');
+        substr( $linestr, $old_offset, $full_length ) = '(mop::util::init_attribute_storage(my %' . $key_name . '))' . ( $proto ? (', (' . $proto) : '');
         
         $self->set_linestr( $linestr );
         $self->inc_offset( $full_length );
