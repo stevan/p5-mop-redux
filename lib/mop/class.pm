@@ -150,7 +150,11 @@ sub metaclass {
         default => \({})
     ));
 
-    $METACLASS->add_method( mop::method->new( name => 'new',        body => \&new        ) );
+    # NOTE:
+    # we do not include the new method, because
+    # we want all meta-extensions to use the one
+    # from mop::object.
+    # - SL
     $METACLASS->add_method( mop::method->new( name => 'name',       body => \&name       ) );
     $METACLASS->add_method( mop::method->new( name => 'version',    body => \&version    ) );   
     $METACLASS->add_method( mop::method->new( name => 'authority',  body => \&authority  ) );

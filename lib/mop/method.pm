@@ -52,7 +52,11 @@ sub metaclass {
         storage => \%__body_STORAGE
     ));
 
-    $METACLASS->add_method( mop::method->new( name => 'new',     body => \&new     ) );
+    # NOTE:
+    # we do not include the new method, because
+    # we want all meta-extensions to use the one
+    # from mop::object.
+    # - SL
     $METACLASS->add_method( mop::method->new( name => 'name',    body => \&name    ) );
     $METACLASS->add_method( mop::method->new( name => 'body',    body => \&body    ) );
     $METACLASS->add_method( mop::method->new( name => 'execute', body => \&execute ) );
