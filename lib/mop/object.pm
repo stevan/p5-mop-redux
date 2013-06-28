@@ -60,6 +60,7 @@ sub dump {
     } reverse @{ mop::mro::get_linear_isa($self) };
 
     my $temp = {
+        __ID__    => get_object_id($self),
         __CLASS__ => find_meta($self)->name
     };
 
