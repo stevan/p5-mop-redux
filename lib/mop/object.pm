@@ -12,40 +12,41 @@ our $AUTHORITY = 'cpan:STEVAN';
 sub new {
     my $class = shift;
     my %args  = @_;
+
+    my $self = bless \(my $x) => $class;
+
     # NOTE:
-    # yes, this conditional is ugly, 
-    # I know it, so sue me.
+    # prior to the bootstrapping being
+    # finished, we need to not try and
+    # build classes, it will all be done
+    # manually in the mop:: classes.
     # - SL
-    if ($class =~ /^mop::/) {
-        bless \%args => $class;    
-    } else {
-        my $self = bless \(my $x) => $class;
+    return $self unless $mop::BOOTSTRAPPED;
 
-        my @mro = @{ mop::mro::get_linear_isa($class) };
+    my @mro = @{ mop::mro::get_linear_isa($class) };
 
-        my %attributes = map { 
-            if (my $m = find_meta($_)) {
-                %{ $m->attributes }
-            }
-        } reverse @mro;
-
-        foreach my $attr (values %attributes) { 
-            if ( exists $args{ $attr->key_name }) {
-                $attr->store_data_in_slot_for( $self, $args{ $attr->key_name } )
-            } else {
-                $attr->store_default_in_slot_for( $self );
-            }
+    my %attributes = map {
+        if (my $m = find_meta($_)) {
+            %{ $m->attributes }
         }
+    } reverse @mro;
 
-        foreach my $class (reverse @mro) {
-            if (my $m = find_meta($class)) {
-                $m->get_submethod('BUILD')->execute($self, [ \%args ]) 
-                    if $m->has_submethod('BUILD');
-            }
+    foreach my $attr (values %attributes) {
+        if ( exists $args{ $attr->key_name }) {
+            $attr->store_data_in_slot_for( $self, $args{ $attr->key_name } )
+        } else {
+            $attr->store_default_in_slot_for( $self );
         }
-
-        $self;
     }
+
+    foreach my $class (reverse @mro) {
+        if (my $m = find_meta($class)) {
+            $m->get_submethod('BUILD')->execute($self, [ \%args ])
+                if $m->has_submethod('BUILD');
+        }
+    }
+
+    $self;
 }
 
 sub id { get_object_id( shift ) }
