@@ -48,6 +48,11 @@ sub get_default {
 
 sub storage { (shift)->{'storage'} }
 
+sub fetch_data_in_slot_for {
+    my ($self, $instance) = @_;
+    ${ $self->storage->{ $instance } };
+}
+
 sub store_data_in_slot_for {
     my ($self, $instance, $data) = @_;
     $self->storage->{ $instance } = \$data;
