@@ -29,9 +29,8 @@ class Tree {
 
     method traverse ($indent) {
        $indent ||= '';
-       # say $indent, $node, ' => ', $self, ' => ', $::SELF;
        push @lexical, $self;
-       push @global, $::SELF;
+       push @global, ${^SELF};
        foreach my $t ( @$children ) {
            # warn $t, ' => ', $t->node;
            $t->traverse( $indent . '  ' );

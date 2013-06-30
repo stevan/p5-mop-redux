@@ -23,14 +23,14 @@ class MetaWithData (extends => 'mop::class') {
 # create a class (using our meta-class)
 class Foo (metaclass => 'MetaWithData') {
     method get_meta_data {
-        $::CLASS->get_data
+        ${^CLASS}->get_data
     }
 }
 
 # create a class (using our meta-class and extra data)
 class Bar (metaclass => 'MetaWithData', data => [ 1, 2, 3 ]) {
     method get_meta_data {
-        $::CLASS->get_data
+        ${^CLASS}->get_data
     }
 }
 

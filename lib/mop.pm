@@ -7,11 +7,6 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-BEGIN {
-    $::CLASS = undef;
-    $::SELF  = undef;
-}
-
 our $BOOTSTRAPPED = 0;
 
 use mop::object;
