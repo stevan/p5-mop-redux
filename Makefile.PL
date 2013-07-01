@@ -14,6 +14,7 @@ requires 'Devel::GlobalDestruction' => 0;
 requires 'Hash::Util::FieldHash'    => 0;
 requires 'Variable::Magic'          => 0;
 requires 'Package::Stash'           => 0;
+requires 'List::AllUtils'           => 0;
 requires 'Carp'                     => 0;
 requires 'Clone'                    => 0;
 requires 'Scalar::Util'             => 0;
