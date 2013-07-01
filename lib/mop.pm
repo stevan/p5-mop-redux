@@ -36,6 +36,7 @@ sub bootstrap {
     # is correct. And the following
     #   - Class does Role 
     #   - Role is instance of Class
+    #   - Role does Role
     # is true.
     mop::role->metaclass->compose_into( mop::class->metaclass );
     {  
