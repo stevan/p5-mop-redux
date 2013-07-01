@@ -23,6 +23,9 @@ requires 'parent'                   => 0;
 build_requires 'Test::More'     => 0;
 build_requires 'Test::Fatal'    => 0;
 build_requires 'Test::Warnings' => 0;
+build_requires 'Test::Warn'     => 0;
+build_requires 'Test::Moose'    => 0;
+build_requires 'Path::Class'    => 0;
 
 tests('t/*.t t/*/*.t t/300-ext/*/*.t');
 
