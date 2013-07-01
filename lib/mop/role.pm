@@ -111,6 +111,23 @@ sub add_required_method {
     push @{ $self->required_methods } => $required_method;
 }
 
+# composition
+
+sub compose_into {
+    my ($self, $other) = @_;
+    $other->add_role( $self );
+
+    foreach my $attribute (values %{ $self->attributes }) {
+        $other->add_attribute( $attribute )
+            unless $other->has_attribute( $attribute->name );
+    }
+
+    foreach my $method (values %{ $self->methods }) {
+        $other->add_method( $method )
+            unless $other->has_method( $method->name );
+    }
+}
+
 # events
 
 sub FINALIZE {}
@@ -193,6 +210,8 @@ sub metaclass {
 
     $METACLASS->add_method( mop::method->new( name => 'required_methods',      body => \&required_methods    ) );
     $METACLASS->add_method( mop::method->new( name => 'add_required_method',   body => \&add_required_method ) );
+
+    $METACLASS->add_method( mop::method->new( name => 'compose_into', body => \&compose_into ) );
 
     $METACLASS->add_method( mop::method->new( name => 'FINALIZE', body => \&FINALIZE ) );
 
