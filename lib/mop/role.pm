@@ -51,6 +51,15 @@ sub add_role {
     push @{ $self->roles } => $role;
 }
 
+sub does_role {
+    my ($self, $name) = @_;
+    foreach my $role ( @{ $self->roles } ) {
+        return 1 if $role->name eq $name
+                 || $role->does_role( $name );
+    }
+    return 0;
+}
+
 # attributes
 
 sub attribute_class { 'mop::attribute' }
@@ -166,8 +175,9 @@ sub metaclass {
     $METACLASS->add_method( mop::method->new( name => 'version',    body => \&version    ) );   
     $METACLASS->add_method( mop::method->new( name => 'authority',  body => \&authority  ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'roles',      body => \&roles    ) );
-    $METACLASS->add_method( mop::method->new( name => 'add_role',   body => \&add_role ) );
+    $METACLASS->add_method( mop::method->new( name => 'roles',     body => \&roles     ) );
+    $METACLASS->add_method( mop::method->new( name => 'add_role',  body => \&add_role  ) );
+    $METACLASS->add_method( mop::method->new( name => 'does_role', body => \&does_role ) );
 
     $METACLASS->add_method( mop::method->new( name => 'attribute_class', body => \&attribute_class ) );
     $METACLASS->add_method( mop::method->new( name => 'attributes',      body => \&attributes      ) );
