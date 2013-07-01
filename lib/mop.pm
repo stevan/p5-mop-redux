@@ -38,6 +38,7 @@ sub bootstrap {
     #   - Role is instance of Class
     #   - Role does Role
     # is true.
+    mop::class->metaclass->add_role( mop::role->metaclass );
     mop::role->metaclass->compose_into( mop::class->metaclass );
     {  
         # NOTE:
@@ -45,7 +46,7 @@ sub bootstrap {
         # it to set the record straight 
         # and make sure that the relationship
         # between mop::class and mop::role 
-        # are correct
+        # are correct and code is reused.
         # - SL
         my $classClass = mop::util::get_stash_for('mop::class');
         foreach my $method ( values %{ mop::role->metaclass->methods }) {

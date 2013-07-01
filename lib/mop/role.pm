@@ -115,7 +115,6 @@ sub add_required_method {
 
 sub compose_into {
     my ($self, $other) = @_;
-    $other->add_role( $self );
 
     foreach my $attribute (values %{ $self->attributes }) {
         $other->add_attribute( $attribute )
