@@ -15,6 +15,9 @@ use B::Hooks::EndOfScope;
 # keep the local package name around
 fieldhash my %CURRENT_CLASS_NAME;
 
+# keep the local type (CLASS or ROLE)
+fieldhash my %CURRENT_TYPE;
+
 # Keep a list of attributes currently 
 # being compiled in the class because 
 # we need to alias them in the method 
@@ -40,6 +43,7 @@ sub setup_for {
     {
         no strict 'refs';
         *{ $pkg . '::class'     } = sub (&@) {};
+        *{ $pkg . '::role'      } = sub (&@) {};
         *{ $pkg . '::has'       } = sub ($@) {};        
         *{ $pkg . '::method'    } = sub (&)  {};
         *{ $pkg . '::submethod' } = sub (&)  {};
@@ -50,6 +54,7 @@ sub setup_for {
         $pkg,
         {
             'class'     => { const => sub { $context->class_parser( @_ )     } },
+            'role'      => { const => sub { $context->role_parser( @_ )      } },
             'has'       => { const => sub { $context->attribute_parser( @_ ) } },
             'method'    => { const => sub { $context->method_parser( @_ )    } },
             'submethod' => { const => sub { $context->submethod_parser( @_ ) } },
@@ -57,10 +62,21 @@ sub setup_for {
     );
 }
 
+sub role_parser {
+    my $self = shift;
+    $self->init( @_ );
+    $self->_namespace_parser('ROLE', 'build_role');
+}
+
 sub class_parser {
     my $self = shift;
-
     $self->init( @_ );
+    $self->_namespace_parser('CLASS', 'build_class');
+}
+
+sub _namespace_parser {
+    my $self = shift;
+    my ($type, $builder_method) = @_;
 
     $self->skip_declarator;
 
@@ -69,6 +85,7 @@ sub class_parser {
     my $caller = $self->get_curstash_name;
     my $pkg    = ($caller eq 'main' ? $name : (join "::" => $caller, $name));
 
+    $CURRENT_TYPE{$self}           = $type;
     $CURRENT_CLASS_NAME{$self}     = $pkg;
     $CURRENT_ATTRIBUTE_LIST{$self} = [];
 
@@ -80,12 +97,13 @@ sub class_parser {
         . 'my $d = shift;'
         . 'eval(q[package ' . $pkg .';use strict;use warnings;]);'
         . 'mro::set_mro(q[' . $pkg . '], q[mop]);'
-        . '$' . $pkg . '::METACLASS = ' . __PACKAGE__ . '->build_class('
+        . '$' . $pkg . '::METACLASS = ' . __PACKAGE__ . '->' . $builder_method . '('
             . 'name => q[' . $pkg . ']' 
             . ($proto ? (', ' . $proto) : '') 
         . ');'
-        . '$d->{q[CLASS]} = $' . $pkg . '::METACLASS;'
-        . 'local ${^CLASS} = $d->{q[CLASS]};'
+        . '$d->{q[' . $type. ']} = $' . $pkg . '::METACLASS;'
+        . 'local ${^' . $type. '} = $d->{q[' . $type. ']};'
+        . 'local ${^META} = $d->{q[' . $type. ']};' # mostly for internal use
     ;
 
     $self->inject_if_block( $inject );
@@ -96,7 +114,7 @@ sub class_parser {
 
         $body->( $data );
 
-        my $class = $data->{'CLASS'};
+        my $class = $data->{$type};
         $class->FINALIZE;
 
         return;
@@ -104,7 +122,6 @@ sub class_parser {
 
     return;
 }
-
 sub build_class {
     shift;
     my %metadata = @_;
@@ -120,6 +137,10 @@ sub build_class {
         $metadata{ 'superclass' } = 'mop::object';
     }
 
+    if ( exists $metadata{ 'does' } ) {
+        $metadata{ 'roles' } = map { mop::util::find_meta($_) } @{ delete $metadata{ 'does' } };
+    }
+
     my $class = $class_Class->new(%metadata);    
 
     $class->add_submethod(
@@ -132,6 +153,26 @@ sub build_class {
     $class;
 }
 
+sub build_role {
+    shift;
+    my %metadata = @_;
+    
+    if ( exists $metadata{ 'does' } ) {
+        $metadata{ 'roles' } = map { mop::util::find_meta($_) } @{ delete $metadata{ 'does' } };
+    }
+
+    my $role = mop::role->new(%metadata);    
+
+    $role->add_submethod(
+        $role->method_class->new(
+            name => 'metaclass',
+            body => sub { $role }
+        )
+    );
+
+    $role;
+}
+
 sub generic_method_parser {
     my $self     = shift;
     my $callback = shift;
@@ -140,8 +181,17 @@ sub generic_method_parser {
 
     $self->skip_declarator;
 
-    my $name   = $self->strip_name;
-    my $proto  = $self->strip_proto;
+    my $name  = $self->strip_name;
+    my $proto = $self->strip_proto;
+
+    $self->skipspace;
+    if (substr($self->get_linestr, $self->offset, 1) eq ';') {
+        $self->shadow(sub {
+            ${^META}->add_required_method( $name );
+        });
+        return;
+    }
+
     my $inject = $self->scope_injector_call;
     if ($proto) {
         $inject .= 'my ($self, ' . $proto . ') = @_;';    
@@ -159,7 +209,7 @@ sub generic_method_parser {
     $inject .= 'local ${^SELF} = $self;';
     
     # and localize the ${^CLASS} here
-    $inject .= 'local ${^CLASS} = $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS;';
+    $inject .= 'local ${^' . $CURRENT_TYPE{$self} . '} = $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS;';
 
     # this is our method preamble, it
     # basically creates a method local
@@ -196,8 +246,8 @@ sub method_parser {
         my $name = shift;
         return sub (&) {
             my $body = shift;
-            ${^CLASS}->add_method(
-                ${^CLASS}->method_class->new(
+            ${^META}->add_method(
+                ${^META}->method_class->new(
                     name => $name,
                     body => Sub::Name::subname( $name, $body )
                 )
@@ -212,8 +262,8 @@ sub submethod_parser {
         my $name = shift;
         return sub (&) {
             my $body = shift;
-            ${^CLASS}->add_submethod(
-                ${^CLASS}->submethod_class->new(
+            ${^META}->add_submethod(
+                ${^META}->submethod_class->new(
                     name => $name,
                     body => Sub::Name::subname( $name, $body )
                 )
@@ -274,8 +324,8 @@ sub attribute_parser {
     $self->shadow(sub ($@) : lvalue {
         my ($storage, %metadata) = @_;
         my $initial_value;
-        ${^CLASS}->add_attribute(
-            ${^CLASS}->attribute_class->new(
+        ${^META}->add_attribute(
+            ${^META}->attribute_class->new(
                 name    => $name,
                 default => \$initial_value,
                 storage => $storage, 
