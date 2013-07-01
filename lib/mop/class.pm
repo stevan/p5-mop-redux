@@ -85,7 +85,8 @@ sub metaclass {
     # we want all meta-extensions to use the one
     # from mop::object.
     # - SL
-    $METACLASS->add_method( mop::method->new( name => 'superclass', body => \&superclass ) );
+    $METACLASS->add_method( mop::method->new( name => 'superclass',  body => \&superclass ) );
+    $METACLASS->add_method( mop::method->new( name => 'is_abstract', body => \&is_abstract ) );
 
     $METACLASS->add_method( mop::method->new( name => 'new_instance', body => \&new_instance ) );
 
