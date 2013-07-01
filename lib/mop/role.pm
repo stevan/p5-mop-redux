@@ -30,7 +30,7 @@ sub new {
     $__version_STORAGE{ $self }    = \($args{'version'});
     $__authority_STORAGE{ $self }  = \($args{'authority'});
 
-    $__roles_STORAGE{ $self }            = \([]);
+    $__roles_STORAGE{ $self }            = \($args{'roles'} || []);
     $__attributes_STORAGE{ $self }       = \({});
     $__methods_STORAGE{ $self }          = \({});
     $__required_methods_STORAGE{ $self } = \([]);
