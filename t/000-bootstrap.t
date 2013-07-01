@@ -16,7 +16,7 @@ isa_ok('mop::attribute', 'mop::object');
 
 is_deeply(
     mop::mro::get_linear_isa('mop::class'),
-    [ 'mop::class', 'mop::object' ],
+    [ 'mop::class', 'mop::role', 'mop::object' ],
     '... got the expected mro'
 );
 

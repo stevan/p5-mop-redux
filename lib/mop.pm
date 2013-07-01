@@ -26,6 +26,7 @@ sub import {
 sub bootstrap {
     $_->metaclass for qw[
         mop::object
+        mop::role
         mop::class
         mop::attribute
         mop::method
