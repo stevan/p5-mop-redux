@@ -137,13 +137,13 @@ sub build_class {
         $metadata{ 'superclass' } = 'mop::object';
     }
 
-    if ( exists $metadata{ 'does' } ) {
-        $metadata{ 'roles' } = map { mop::util::find_meta($_) } @{ delete $metadata{ 'does' } };
+    if ( exists $metadata{ 'with' } ) {
+        $metadata{ 'roles' } = [ map { mop::util::find_meta($_) } @{ delete $metadata{ 'with' } } ];
     }
 
     my $class = $class_Class->new(%metadata);    
 
-    $class->add_submethod(
+    $class->add_method(
         $class->method_class->new(
             name => 'metaclass',
             body => sub { $class }
@@ -157,13 +157,13 @@ sub build_role {
     shift;
     my %metadata = @_;
     
-    if ( exists $metadata{ 'does' } ) {
-        $metadata{ 'roles' } = map { mop::util::find_meta($_) } @{ delete $metadata{ 'does' } };
+    if ( exists $metadata{ 'with' } ) {      
+        $metadata{ 'roles' } = [ map { mop::util::find_meta($_) } @{ delete $metadata{ 'with' } } ];
     }
 
     my $role = mop::role->new(%metadata);    
 
-    $role->add_submethod(
+    $role->add_method(
         $role->method_class->new(
             name => 'metaclass',
             body => sub { $role }
