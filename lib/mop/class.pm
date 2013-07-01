@@ -66,7 +66,7 @@ sub metaclass {
         name       => 'mop::class',
         version    => $VERSION,
         authority  => $AUTHORITY,        
-        superclass => 'mop::role'
+        superclass => 'mop::object'
     );
 
     $METACLASS->add_attribute(mop::attribute->new( 

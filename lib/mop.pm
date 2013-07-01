@@ -31,6 +31,27 @@ sub bootstrap {
         mop::attribute
         mop::method
     ];
+    # At this point the metaclass
+    # layer class to role relationship
+    # is correct. And the following
+    #   - Class does Role 
+    #   - Role is instance of Class
+    # is true.
+    mop::role->metaclass->compose_into( mop::class->metaclass );
+    {  
+        # NOTE:
+        # This is ugly, but we need to do
+        # it to set the record straight 
+        # and make sure that the relationship
+        # between mop::class and mop::role 
+        # are correct
+        # - SL
+        my $classClass = mop::util::get_stash_for('mop::class');
+        foreach my $method ( values %{ mop::role->metaclass->methods }) {
+            $classClass->add_symbol( '&' . $method->name, $method->body );
+        }
+        @{ $classClass->get_symbol('@ISA') } = ('mop::object');
+    }
     $BOOTSTRAPPED = 1;
 }
 
