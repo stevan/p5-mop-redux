@@ -22,6 +22,11 @@ sub new {
     # manually in the mop:: classes.
     # - SL
     return $self unless $mop::BOOTSTRAPPED;
+
+    my $meta = find_meta($class);
+
+    die 'Cannot instantiate abstract class (' . $class . ')' 
+        if $meta->is_abstract;
     
     my @mro = @{ mop::mro::get_linear_isa($class) };
 
