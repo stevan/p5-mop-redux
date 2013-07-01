@@ -111,6 +111,11 @@ sub add_required_method {
     push @{ $self->required_methods } => $required_method;
 }
 
+sub has_required_method {
+    my ($self, $name) = @_;
+    scalar grep { $_ eq $name } @{ $self->required_methods };
+}
+
 # composition
 
 sub compose_into {
