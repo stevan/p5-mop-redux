@@ -95,6 +95,11 @@ sub _dumper {
     }
 }
 
+sub does {
+    my ($self, $role) = @_;
+    scalar grep { find_meta($_)->does_role($role) } @{ mop::mro::get_linear_isa($self) }
+}
+
 sub DESTROY {
     my $self = shift;
     foreach my $class (@{ mop::mro::get_linear_isa($self) }) {
@@ -119,6 +124,7 @@ sub metaclass {
     $METACLASS->add_method( mop::method->new( name => 'id',        body => \&id ) );
     $METACLASS->add_method( mop::method->new( name => 'dump',      body => \&dump ) );
     $METACLASS->add_method( mop::method->new( name => 'metaclass', body => \&metaclass ) );
+    $METACLASS->add_method( mop::method->new( name => 'does',      body => \&does ) );
     $METACLASS->add_method( mop::method->new( 
         name => 'isa', 
         body => sub {
