@@ -12,7 +12,7 @@ class Foo {
     method bar;
 }
 
-ok(Foo->metaclass->has_required_method('bar'), '... bar is a required method');
+ok(Foo->metaclass->requires_method('bar'), '... bar is a required method');
 ok(Foo->metaclass->is_abstract, '... Foo is an abstract class');
 
 like(
@@ -25,7 +25,7 @@ class Bar (extends => 'Foo') {
     method bar { 'Bar::bar' }
 }
 
-ok(!Bar->metaclass->has_required_method('bar'), '... bar is a not required method');
+ok(!Bar->metaclass->requires_method('bar'), '... bar is a not required method');
 ok(!Bar->metaclass->is_abstract, '... Bar is not an abstract class');
 
 {
@@ -39,8 +39,8 @@ class Baz (extends => 'Bar') {
     method baz;
 }
 
-ok(!Baz->metaclass->has_required_method('bar'), '... bar is a not required method');
-ok(Baz->metaclass->has_required_method('baz'), '... baz is a required method');
+ok(!Baz->metaclass->requires_method('bar'), '... bar is a not required method');
+ok(Baz->metaclass->requires_method('baz'), '... baz is a required method');
 ok(Baz->metaclass->is_abstract, '... Baz is an abstract class');
 
 like(
@@ -51,7 +51,7 @@ like(
 
 class Gorch (extends => 'Foo') {}
 
-ok(Gorch->metaclass->has_required_method('bar'), '... bar is a required method');
+ok(Gorch->metaclass->requires_method('bar'), '... bar is a required method');
 ok(Gorch->metaclass->is_abstract, '... Gorch is an abstract class');
 
 like(

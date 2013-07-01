@@ -113,7 +113,7 @@ sub add_required_method {
     push @{ $self->required_methods } => $required_method;
 }
 
-sub has_required_method {
+sub requires_method {
     my ($self, $name) = @_;
     scalar grep { $_ eq $name } @{ $self->required_methods };
 }
@@ -232,9 +232,9 @@ sub metaclass {
     $METACLASS->add_method( mop::method->new( name => 'add_method',   body => \&add_method   ) );
     $METACLASS->add_method( mop::method->new( name => 'has_method',   body => \&has_method   ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'required_methods',      body => \&required_methods    ) );
-    $METACLASS->add_method( mop::method->new( name => 'add_required_method',   body => \&add_required_method ) );
-    $METACLASS->add_method( mop::method->new( name => 'has_required_method',   body => \&has_required_method ) );
+    $METACLASS->add_method( mop::method->new( name => 'required_methods',    body => \&required_methods    ) );
+    $METACLASS->add_method( mop::method->new( name => 'add_required_method', body => \&add_required_method ) );
+    $METACLASS->add_method( mop::method->new( name => 'requires_method',     body => \&requires_method     ) );
 
 
     $METACLASS->add_method( mop::method->new( name => 'compose_into', body => \&compose_into ) );
