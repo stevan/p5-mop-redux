@@ -5,6 +5,8 @@ use warnings;
 
 use mop::util qw[ init_attribute_storage ];
 
+use List::AllUtils qw[ uniq ];
+
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
@@ -130,11 +132,29 @@ sub compose_into {
         $other->add_method( $method )
             unless $other->has_method( $method->name );
     }
+
+    # merge required methods ...
+    @{ $other->required_methods } = uniq(
+        @{ $self->required_methods }, 
+        @{ $other->required_methods }
+    );
 }
 
 # events
 
-sub FINALIZE {}
+sub FINALIZE {
+    my $self = shift;
+
+    foreach my $role ( @{ $self->roles } ) {
+        $role->compose_into( $self );
+    }
+
+    # rectify required methods 
+    # after composition
+    @{ $self->required_methods } = grep { 
+        !$self->has_method( $_ )
+    } @{ $self->required_methods };
+}
 
 our $METACLASS;
 

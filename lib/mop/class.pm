@@ -3,7 +3,9 @@ package mop::class;
 use v5.16;
 use warnings;
 
-use mop::util qw[ init_attribute_storage ];
+use mop::util qw[ init_attribute_storage find_meta ];
+
+use List::AllUtils qw[ uniq ];
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -55,7 +57,24 @@ sub has_submethod {
 
 # events
 
-sub FINALIZE {}
+sub FINALIZE {
+    my $self = shift;
+
+    # inherit required methods ...
+    if (my $super = $self->superclass) {
+        if (my $meta = find_meta($super)) {
+            if (scalar @{ $meta->required_methods }) {
+                # merge required methods with superclass
+                @{ $self->required_methods } = uniq(
+                    @{ $self->required_methods },
+                    @{ $meta->required_methods }
+                );  
+            }
+        }
+    }
+
+    $self->mop::role::FINALIZE;
+}
 
 our $METACLASS;
 
