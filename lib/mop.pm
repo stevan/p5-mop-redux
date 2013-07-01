@@ -50,7 +50,8 @@ sub bootstrap {
         # - SL
         my $classClass = mop::util::get_stash_for('mop::class');
         foreach my $method ( values %{ mop::role->metaclass->methods }) {
-            $classClass->add_symbol( '&' . $method->name, $method->body );
+            $classClass->add_symbol( '&' . $method->name, $method->body )
+                unless $classClass->has_symbol( '&' . $method->name );
         }
         @{ $classClass->get_symbol('@ISA') } = ('mop::object');
     }
