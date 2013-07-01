@@ -85,6 +85,11 @@ sub find_submethod {
 
     if ( has_meta( $invocant ) ) {
         my $meta = find_meta( $invocant );
+        # NOTE:
+        # we need to bail on this if 
+        # the metaclass is a role
+        # - SL
+        return if $meta->isa('mop::role');
         return $meta->get_submethod( $method_name )
             if $meta->has_submethod( $method_name );
     }
