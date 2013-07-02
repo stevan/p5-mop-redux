@@ -74,7 +74,6 @@ class WithReason ( extends => 'Test::BuilderX::Test::Base' ) {
     method reason { $reason }
 
     method status {
-        # FIXME
         my $status = $self->mop::next::method;
         $status->{'reason'} = $reason;
         $status;
@@ -88,7 +87,6 @@ class Skip ( extends => 'Test::BuilderX::Test::WithReason' ) {
     }
 
     method status {
-        # FIXME
         my $status = $self->mop::next::method;
         $status->{'skip'} = 1;
         $status;
@@ -104,7 +102,6 @@ class TODO ( extends => 'Test::BuilderX::Test::WithReason' ) {
     }
 
     method status {
-        # FIXME
         my $status = $self->mop::next::method;
         $status->{'TODO'}          = 1;
         $status->{'passed'}        = 1;
