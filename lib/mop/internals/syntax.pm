@@ -138,6 +138,7 @@ sub build_class {
     }
 
     if ( exists $metadata{ 'with' } ) {
+        $metadata{ 'with' }  = [ $metadata{ 'with' } ] unless ref($metadata{ 'with' }) eq q(ARRAY);
         $metadata{ 'roles' } = [ map { mop::util::find_meta($_) } @{ delete $metadata{ 'with' } } ];
     }
 
@@ -158,6 +159,7 @@ sub build_role {
     my %metadata = @_;
     
     if ( exists $metadata{ 'with' } ) {      
+        $metadata{ 'with' }  = [ $metadata{ 'with' } ] unless ref($metadata{ 'with' }) eq q(ARRAY);
         $metadata{ 'roles' } = [ map { mop::util::find_meta($_) } @{ delete $metadata{ 'with' } } ];
     }
 
