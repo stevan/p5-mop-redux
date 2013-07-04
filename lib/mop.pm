@@ -53,6 +53,12 @@ sub bootstrap {
             $classClass->add_symbol( '&' . $method->name, $method->body )
                 unless $classClass->has_symbol( '&' . $method->name );
         }
+        # Here we finalize the rest of the 
+        # metaclass layer so that the following:
+        #   - Class is an instance of Class
+        #   - Object is an instance of Class
+        #   - Class is a subclass of Object
+        # is true.
         @{ $classClass->get_symbol('@ISA') } = ('mop::object');
     }
     $BOOTSTRAPPED = 1;
