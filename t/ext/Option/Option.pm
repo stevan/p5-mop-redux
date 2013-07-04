@@ -40,7 +40,7 @@ class Some (extends => 'Option') {
     method is_empty         { 0 }
     method map         ($f) { $class->new( x => $f->( $x ) ) }
     method flatmap     ($f) { $f->( $x ) }
-    method flatten     ($f) { $class->new( x => $x ) }
+    method flatten          { $class->new( x => $x ) }
     method foreach     ($f) { $f->( $x ) }
     method forall      ($f) { $f->( $x ) }
     method exists      ($f) { $f->( $x ) }
@@ -89,9 +89,9 @@ __END__
     case Some(_) => false
   }
 
-=item C<map';
-  option match>
+=item C<map>
 
+  option match {
     case None    => None
     case Some(x) => Some(foo(x))
   }
