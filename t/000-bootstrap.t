@@ -51,11 +51,16 @@ is_deeply(
 );
 
 {
-    my $class = mop::class->metaclass;
-    my $role  = mop::role->metaclass;
+    my $class  = mop::class->metaclass;
+    my $object = mop::object->metaclass;
+    my $role   = mop::role->metaclass;
+
+    ok($class->isa('mop::class'), '... class is an instance of class');
+    ok($object->isa('mop::class'), '... object is an instance of class');
+    ok($class->isa('mop::object'), '... class is a subclass of object');
 
     ok($class->does_role('mop::role'), '... class does role');
-    ok($role->isa('mop::class'), '... class does role');
+    ok($role->isa('mop::class'), '... role is an instance of class');
     ok($role->does('mop::role'), '... role does role');
 
     ok($class->has_method('name'), '... mop::class does have the name method that was composed into it');
