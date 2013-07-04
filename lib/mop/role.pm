@@ -10,8 +10,6 @@ use List::AllUtils qw[ uniq ];
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use parent 'mop::object';
-
 init_attribute_storage(my %__name_STORAGE);
 init_attribute_storage(my %__version_STORAGE);
 init_attribute_storage(my %__authority_STORAGE);
@@ -24,7 +22,23 @@ init_attribute_storage(my %__required_methods_STORAGE);
 sub new {
     my $class = shift;
     my %args  = @_;
-    my $self = $class->SUPER::new;
+
+    # NOTE:
+    # the only method from mop::object
+    # that we actually used was the 
+    # part of &mop::object::new that 
+    # created the instance. So since 
+    # we really didn't need mop::role
+    # to be a subclass of mop::object, 
+    # it was easier to just do this 
+    # here. 
+    # If for some reason, at a later
+    # date, this does not work out,
+    # we can simply restore the isa
+    # relationship, but for now, the 
+    # tests pass and it feels right.
+    # - SL
+    my $self = bless \(my $x) => $class; 
 
     $__name_STORAGE{ $self }       = \($args{'name'});
     $__version_STORAGE{ $self }    = \($args{'version'});
