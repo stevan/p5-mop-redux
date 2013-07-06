@@ -38,4 +38,9 @@ is_deeply(Baz->metaclass->required_methods, [], '... no method conflict between 
 ok(Foo->metaclass->has_method('foo'), '... Foo still has the foo method');
 is(Baz->new->foo, 'Baz::foo', '... got the right method');
 
+class Gorch (with => ['Foo', 'Bar']) {}
+
+ok(Gorch->metaclass->is_abstract, '... method conflict between roles results in required method (and an abstract class)');
+is_deeply(Gorch->metaclass->required_methods, ['foo'], '... method conflict between roles results in required method');
+
 done_testing;
