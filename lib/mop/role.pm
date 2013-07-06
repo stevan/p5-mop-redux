@@ -183,9 +183,15 @@ sub compose_into {
 sub FINALIZE {
     my $self = shift;
 
+    my $composite = mop::role->new( 
+        name => 'COMPOSITE::' . (join '->' => map { $_->name } @{ $self->roles })
+    );
+
     foreach my $role ( @{ $self->roles } ) {
-        $role->compose_into( $self );
+        $role->compose_into( $composite );
     }
+
+    $composite->compose_into( $self );
 
     # rectify required methods 
     # after composition
