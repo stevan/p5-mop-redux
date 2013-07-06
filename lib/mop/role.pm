@@ -154,8 +154,7 @@ sub compose_into {
         # that need to be fixed. But for now
         # we can just punt.
         # - SL
-        next if $method->name eq 'metaclass'
-             || $method->name eq 'FINALIZE'; 
+        next if $method->name eq 'FINALIZE'; 
 
         if ($other->isa('mop::role')) {
             if ($other->has_method( $method->name )) {
@@ -202,7 +201,7 @@ sub FINALIZE {
 
 our $METACLASS;
 
-sub metaclass {
+sub __INIT_METACLASS__ {
     return $METACLASS if defined $METACLASS;
     require mop::class;
     $METACLASS = mop::class->new(

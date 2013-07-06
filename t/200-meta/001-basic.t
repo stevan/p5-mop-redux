@@ -33,7 +33,7 @@ ok(FooMeta->isa( 'FooMeta' ), '... FooMeta is a Class');
 
 ok(Foo->isa( 'mop::object' ), '... Foo is an Object');
 
-is(Foo->metaclass->static_method, 'STATIC', '... called the static method on Foo');
+is(mop::get_meta('Foo')->static_method, 'STATIC', '... called the static method on Foo');
 
 # create an instance ...
 my $foo = Foo->new;

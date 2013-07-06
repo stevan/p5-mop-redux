@@ -122,7 +122,7 @@ sub DESTROY {
 
 our $METACLASS;
 
-sub metaclass {
+sub __INIT_METACLASS__ {
     return $METACLASS if defined $METACLASS;
     require mop::class;
     $METACLASS = mop::class->new( 
@@ -133,7 +133,6 @@ sub metaclass {
     $METACLASS->add_method( mop::method->new( name => 'new',       body => \&new ) );
     $METACLASS->add_method( mop::method->new( name => 'id',        body => \&id ) );
     $METACLASS->add_method( mop::method->new( name => 'dump',      body => \&dump ) );
-    $METACLASS->add_method( mop::method->new( name => 'metaclass', body => \&metaclass ) );
     $METACLASS->add_method( mop::method->new( name => 'does',      body => \&does ) );
     $METACLASS->add_method( mop::method->new( name => 'DOES',      body => \&DOES ) );
     $METACLASS->add_method( mop::method->new( 

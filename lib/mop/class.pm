@@ -78,7 +78,7 @@ sub FINALIZE {
 
 our $METACLASS;
 
-sub metaclass {
+sub __INIT_METACLASS__ {
     return $METACLASS if defined $METACLASS;
     require mop::class;
     $METACLASS = mop::class->new(

@@ -37,8 +37,8 @@ class Foo (metaclass => 'ClassAccessorMeta') {
     has $baz;
 }
 
-ok(Foo->metaclass->has_method('bar'), '... the bar method was generated for us');
-ok(Foo->metaclass->has_method('baz'), '... the baz method was generated for us');
+ok(mop::get_meta('Foo')->has_method('bar'), '... the bar method was generated for us');
+ok(mop::get_meta('Foo')->has_method('baz'), '... the baz method was generated for us');
 
 {
     my $foo = Foo->new;

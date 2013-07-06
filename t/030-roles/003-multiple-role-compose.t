@@ -23,26 +23,26 @@ role Baz ( with => [ 'Foo', 'Bar' ] ) {
 
 class Gorch ( with => ['Baz'] ) {}
 
-ok( Baz->metaclass->does_role( 'Foo' ), '... Baz does the Foo role');
-ok( Baz->metaclass->does_role( 'Bar' ), '... Baz does the Foo role');
+ok( mop::get_meta('Baz')->does_role( 'Foo' ), '... Baz does the Foo role');
+ok( mop::get_meta('Baz')->does_role( 'Bar' ), '... Baz does the Foo role');
 
-my $bar_method = Baz->metaclass->get_method('bar');
+my $bar_method = mop::get_meta('Baz')->get_method('bar');
 ok( $bar_method->isa( 'mop::method' ), '... got a method object' );
 is( $bar_method->name, 'bar', '... got the method we expected' );
 
-my $bar_attribute = Baz->metaclass->get_attribute('$bar');
+my $bar_attribute = mop::get_meta('Baz')->get_attribute('$bar');
 ok( $bar_attribute->isa( 'mop::attribute' ), '... got an attribute object' );
 is( $bar_attribute->name, '$bar', '... got the attribute we expected' );
 
-my $foo_method = Baz->metaclass->get_method('foo');
+my $foo_method = mop::get_meta('Baz')->get_method('foo');
 ok( $foo_method->isa( 'mop::method' ), '... got a method object' );
 is( $foo_method->name, 'foo', '... got the method we expected' );
 
-my $foo_attribute = Baz->metaclass->get_attribute('$foo');
+my $foo_attribute = mop::get_meta('Baz')->get_attribute('$foo');
 ok( $foo_attribute->isa( 'mop::attribute' ), '... got an attribute object' );
 is( $foo_attribute->name, '$foo', '... got the attribute we expected' );
 
-my $baz_method = Baz->metaclass->get_method('baz');
+my $baz_method = mop::get_meta('Baz')->get_method('baz');
 ok( $baz_method->isa( 'mop::method' ), '... got a method object' );
 is( $baz_method->name, 'baz', '... got the method we expected' );
 

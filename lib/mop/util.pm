@@ -20,7 +20,7 @@ use Sub::Exporter -setup => {
 };
 
 sub find_meta { ${ get_stash_for( shift )->get_symbol('$METACLASS') || \undef } }
-sub has_meta  {    get_stash_for( shift )->has_symbol('$METACLASS')   }
+sub has_meta  {    get_stash_for( shift )->has_symbol('$METACLASS')  }
 
 sub get_stash_for { 
     state %STASHES;

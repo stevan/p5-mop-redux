@@ -13,10 +13,10 @@ class Foo {
 }
 
 #use Data::Dumper;
-#warn Dumper(Foo->metaclass->dump);
+#warn Dumper(mop::get_meta('Foo')->dump);
 
 {
-    my $foo = Foo->metaclass->new_instance;
+    my $foo = mop::get_meta('Foo')->new_instance;
     ok($foo->isa('Foo'), '... it is an instance of Foo');
     ok(!$foo->isa('mop::class'), '... it is not an instance of mop::class');
 
@@ -25,7 +25,7 @@ class Foo {
 }
 
 {
-    my $foo = Foo->metaclass->new_instance( bar => 10 );
+    my $foo = mop::get_meta('Foo')->new_instance( bar => 10 );
     ok($foo->isa('Foo'), '... it is an instance of Foo');
     ok(!$foo->isa('mop::class'), '... it is not an instance of mop::class');
 

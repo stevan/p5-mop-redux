@@ -18,17 +18,17 @@ role Baz ( with => [ 'Foo' ] ) {
 
 class Gorch ( with => ['Baz'] ) {}
 
-ok( Baz->metaclass->does_role( 'Foo' ), '... Baz does the Foo role');
+ok( mop::get_meta('Baz')->does_role( 'Foo' ), '... Baz does the Foo role');
 
-my $bar_method = Baz->metaclass->get_method('bar');
+my $bar_method = mop::get_meta('Baz')->get_method('bar');
 ok( $bar_method->isa( 'mop::method' ), '... got a method object' );
 is( $bar_method->name, 'bar', '... got the method we expected' );
 
-my $bar_attribute = Baz->metaclass->get_attribute('$bar');
+my $bar_attribute = mop::get_meta('Baz')->get_attribute('$bar');
 ok( $bar_attribute->isa( 'mop::attribute' ), '... got an attribute object' );
 is( $bar_attribute->name, '$bar', '... got the attribute we expected' );
 
-my $baz_method = Baz->metaclass->get_method('baz');
+my $baz_method = mop::get_meta('Baz')->get_method('baz');
 ok( $baz_method->isa( 'mop::method' ), '... got a method object' );
 is( $baz_method->name, 'baz', '... got the method we expected' );
 

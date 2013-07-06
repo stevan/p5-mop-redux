@@ -78,7 +78,7 @@ sub store_default_in_slot_for {
 
 our $METACLASS;
 
-sub metaclass {
+sub __INIT_METACLASS__ {
     return $METACLASS if defined $METACLASS;
     require mop::class;
     $METACLASS = mop::class->new(

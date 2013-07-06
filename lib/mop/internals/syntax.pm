@@ -142,16 +142,7 @@ sub build_class {
         $metadata{ 'roles' } = [ map { mop::util::find_meta($_) } @{ delete $metadata{ 'with' } } ];
     }
 
-    my $class = $class_Class->new(%metadata);    
-
-    $class->add_method(
-        $class->method_class->new(
-            name => 'metaclass',
-            body => sub { $class }
-        )
-    );
-
-    $class;
+    $class_Class->new(%metadata);    
 }
 
 sub build_role {
@@ -163,16 +154,7 @@ sub build_role {
         $metadata{ 'roles' } = [ map { mop::util::find_meta($_) } @{ delete $metadata{ 'with' } } ];
     }
 
-    my $role = mop::role->new(%metadata);    
-
-    $role->add_method(
-        $role->method_class->new(
-            name => 'metaclass',
-            body => sub { $role }
-        )
-    );
-
-    $role;
+    mop::role->new(%metadata);    
 }
 
 sub generic_method_parser {
