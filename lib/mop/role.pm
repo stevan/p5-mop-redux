@@ -149,8 +149,13 @@ sub compose_into {
     }
 
     foreach my $method (values %{ $self->methods }) {
+        # FIXME:
+        # These are bootstrap special cases 
+        # that need to be fixed. But for now
+        # we can just punt.
+        # - SL
         next if $method->name eq 'metaclass'
-             || $method->name eq 'FINALIZE'; # special cases that needs to be fixed
+             || $method->name eq 'FINALIZE'; 
 
         if ($other->isa('mop::role')) {
             if ($other->has_method( $method->name )) {

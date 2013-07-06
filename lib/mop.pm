@@ -149,6 +149,7 @@ __END__
       method add_method ($attr) { ... }
       method get_method ($name) { ... }
       method has_method ($name) { ... }
+      method remove_method ($name) { ... }
   
       method required_methods { $required_methods }
   
