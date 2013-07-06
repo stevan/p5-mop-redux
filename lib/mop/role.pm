@@ -184,7 +184,7 @@ sub FINALIZE {
     my $self = shift;
 
     my $composite = mop::role->new( 
-        name => 'COMPOSITE::' . (join '->' => map { $_->name } @{ $self->roles })
+        name => 'COMPOSITE::OF::[' . (join ', ' => map { $_->name } @{ $self->roles }) . ']'
     );
 
     foreach my $role ( @{ $self->roles } ) {
