@@ -32,18 +32,18 @@ class None (extends => 'Option') {
 }
 
 class Some (extends => 'Option') {
-    has $x;
-    method get              { $x }
-    method get_or_else ($f) { $x }
-    method or_else     ($f) { $class->new( x => $x ) }
+    has $val;
+    method get              { $val }
+    method get_or_else ($f) { $val }
+    method or_else     ($f) { $class->new( val => $val ) }
     method is_defined       { 1 }
     method is_empty         { 0 }
-    method map         ($f) { $class->new( x => $f->( $x ) ) }
-    method flatmap     ($f) { $f->( $x ) }
-    method flatten          { $class->new( x => $x ) }
-    method foreach     ($f) { $f->( $x ) }
-    method forall      ($f) { $f->( $x ) }
-    method exists      ($f) { $f->( $x ) }
+    method map         ($f) { $class->new( val => $f->( $val ) ) }
+    method flatmap     ($f) { $f->( $val ) }
+    method flatten          { $class->new( val => $val ) }
+    method foreach     ($f) { $f->( $val ) }
+    method forall      ($f) { $f->( $val ) }
+    method exists      ($f) { $f->( $val ) }
 }
 
 1;

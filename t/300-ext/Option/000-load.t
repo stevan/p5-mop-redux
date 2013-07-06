@@ -15,7 +15,7 @@ BEGIN {
 sub number_under_ten {
     my $num = shift;
     if ($num < 10) {
-        Some->new(x => $num);
+        Some->new(val => $num);
     } else {
         None->new;
     }
