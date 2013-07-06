@@ -24,6 +24,7 @@ sub import {
 }
 
 sub bootstrap {
+    return if $BOOTSTRAPPED;
     $_->metaclass for qw[
         mop::object
         mop::role
