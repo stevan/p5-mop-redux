@@ -118,6 +118,11 @@ sub has_method {
     exists $self->methods->{ $name };
 }
 
+sub remove_method {
+    my ($self, $name) = @_;
+    delete $self->methods->{ $name };
+}
+
 # required methods
 
 sub required_methods { ${ $__required_methods_STORAGE{ $_[0] } } }
@@ -138,13 +143,27 @@ sub compose_into {
     my ($self, $other) = @_;
 
     foreach my $attribute (values %{ $self->attributes }) {
-        $other->add_attribute( $attribute )
-            unless $other->has_attribute( $attribute->name );
+        die 'Attribute conflict ' . $attribute->name . ' when composing ' . $self->name . ' into ' . $other->name
+            if $other->has_attribute( $attribute->name );
+        $other->add_attribute( $attribute );
     }
 
     foreach my $method (values %{ $self->methods }) {
-        $other->add_method( $method )
-            unless $other->has_method( $method->name );
+        next if $method->name eq 'metaclass'
+             || $method->name eq 'FINALIZE'; # special cases that needs to be fixed
+
+        if ($other->isa('mop::role')) {
+            if ($other->has_method( $method->name )) {
+                $other->add_required_method( $method->name );
+                $other->remove_method( $method->name );
+            } else {
+                $other->add_method( $method );
+            }
+        } elsif ($other->isa('mop::class')) {
+            $other->add_method( $method )
+                unless $other->has_method( $method->name );
+        }
+
     }
 
     # merge required methods ...
