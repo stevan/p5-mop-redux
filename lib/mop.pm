@@ -203,7 +203,7 @@ __END__
   Class is a subclass of Object
 
   Class does Role 
-  Role is instance of Class
+  Role is an instance of Class
   Role does Role
 
 =cut
