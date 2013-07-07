@@ -20,6 +20,7 @@ requires 'Clone'                    => 0;
 requires 'Scalar::Util'             => 0;
 requires 'Data::Dumper'             => 0;
 requires 'parent'                   => 0;
+requires 'Module::Runtime'          => 0;
 
 build_requires 'Test::More'     => 0;
 build_requires 'Test::Fatal'    => 0;
