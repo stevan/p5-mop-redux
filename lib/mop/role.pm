@@ -150,8 +150,8 @@ sub compose_into {
 
     foreach my $method (values %{ $self->methods }) {
         # FIXME:
-        # These are bootstrap special cases 
-        # that need to be fixed. But for now
+        # This is a bootstrap special case
+        # that needs to be fixed. But for now
         # we can just punt.
         # - SL
         next if $method->name eq 'FINALIZE'; 
