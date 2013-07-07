@@ -154,7 +154,7 @@ sub build_role {
         $metadata{ 'roles' } = [ map { mop::util::find_meta($_) } @{ delete $metadata{ 'with' } } ];
     }
 
-    mop::role->new(%metadata);    
+    mop::role->new(%metadata);
 }
 
 sub generic_method_parser {

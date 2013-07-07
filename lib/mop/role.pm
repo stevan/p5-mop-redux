@@ -6,6 +6,7 @@ use warnings;
 use mop::util qw[ init_attribute_storage ];
 
 use List::AllUtils qw[ uniq ];
+use Module::Runtime qw[ is_module_name module_notional_filename ];
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -48,6 +49,10 @@ sub new {
     $__attributes_STORAGE{ $self }       = \({});
     $__methods_STORAGE{ $self }          = \({});
     $__required_methods_STORAGE{ $self } = \([]);
+
+    if (defined($args{name}) and is_module_name($args{name})) {
+        $INC{module_notional_filename($args{name})} //= '(mop)';
+    }
 
     $self;
 }

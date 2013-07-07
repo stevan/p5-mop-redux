@@ -6,6 +6,7 @@ use warnings;
 use mop::util qw[ init_attribute_storage find_meta ];
 
 use List::AllUtils qw[ uniq ];
+use Module::Runtime qw[ is_module_name module_notional_filename ];
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -21,6 +22,11 @@ sub new {
     my $self = $class->SUPER::new( @_ );
     $__superclass_STORAGE{ $self } = \($args{'superclass'});
     $__submethods_STORAGE{ $self } = \({});
+    
+    if (defined($args{name}) and is_module_name($args{name})) {
+        $INC{module_notional_filename($args{name})} //= '(mop)';
+    }
+    
     $self;
 }
 
