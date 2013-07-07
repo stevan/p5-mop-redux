@@ -12,3 +12,8 @@ to lean on existing Perl conventions instead of inventing a bunch of
 new things.
 
 It is still early in the process, but we will see how it goes.
+
+Contributing
+------------
+
+* Port existing Perl projects to use mop; tell us what breaks.
