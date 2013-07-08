@@ -125,6 +125,14 @@ sub call_method {
     die "Could not find $method_name in " . $invocant
         unless defined $method;
     
+    # need to localize these two 
+    # globals here so that they 
+    # will be available to methods
+    # added with "add_method" as 
+    # well as 
+    local ${^SELF}  = $invocant;
+    local ${^CLASS} = find_meta($invocant) if has_meta($invocant);
+    
     if ( ref $method eq 'CODE' ) {
         return $method->($invocant, @$args);
     } elsif ( blessed $method && $method->isa('mop::method') ) {

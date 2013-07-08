@@ -204,12 +204,6 @@ sub generic_method_parser {
     # and not the metaclass object
     $inject .= 'my $class = $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS->name;';
 
-    # localize ${^SELF} here too 
-    $inject .= 'local ${^SELF} = $self;';
-    
-    # and localize the ${^CLASS} here
-    $inject .= 'local ${^' . $CURRENT_TYPE{$self} . '} = $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS;';
-
     # this is our method preamble, it
     # basically creates a method local
     # variable for each attribute, then 
