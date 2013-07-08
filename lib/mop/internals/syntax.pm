@@ -26,15 +26,30 @@ fieldhash my %CURRENT_ATTRIBUTE_LIST;
 
 # So this will apply magic to the aliased
 # attributes that we put in the method 
-# preamble. For `data`, it takes an ARRAY-ref
-# containing the invocant and a ref for the 
-# fieldhash that stores our data. Then
-# when our attribute variable is written to
-# it will also write that same data back to 
-# the fieldhash storage.
+# preamble. For `data`, it takes an HASH-ref
+# containing the invocant id, the current 
+# meta object and the name of the attribute
+# we are trying to get/set. Then when our 
+# attribute variable is read from or written 
+# to it will get/set that data to the 
+# underlying fieldhash storage.
 our $WIZARD = Variable::Magic::wizard(
-    data => sub { $_[1] },
-    set  => sub { $_[1]->[1]->{ $_[1]->[0] } = $_[0] },
+    data => sub { 
+        my (undef, $config) = @_;
+        return $config;
+    },
+    get  => sub { 
+        my ($var, $config) = @_;
+        my $attr = $config->{'meta'}->get_attribute( $config->{'name'} );
+        ${ $var } = $attr->fetch_data_in_slot_for( $config->{'oid'} );
+        ();
+    },
+    set  => sub { 
+        my ($value, $config) = @_;
+        my $attr = $config->{'meta'}->get_attribute( $config->{'name'} );
+        $attr->store_data_in_slot_for( $config->{'oid'}, ${ $value } ); 
+        (); 
+    },
 );
 
 sub setup_for {
@@ -202,12 +217,15 @@ sub generic_method_parser {
     # make sure that any change in value
     # is stored in the fieldhash storage
     foreach my $attr (@{ $CURRENT_ATTRIBUTE_LIST{$self} }) {
-        my $key_name = $self->_get_storage_name_for_attribute($attr);
-        $inject .= 'my ' . $attr . ' = ${ $' . $key_name . '{$self} || \(undef) };'
+        $inject .= 'my ' . $attr . ';'
                 . 'Variable::Magic::cast(' 
                     . $attr . ', '
                     . '$' . __PACKAGE__ . '::WIZARD, '
-                    . '[ mop::util::get_object_id($self), \%' . $key_name . ' ]' 
+                    . '{' 
+                        . 'meta => $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS,' 
+                        . 'oid  => mop::util::get_object_id($self),'
+                        . 'name => q[' . $attr . ']'
+                    . '}'
                 . ');'
                 ; 
     }
@@ -216,12 +234,6 @@ sub generic_method_parser {
     $self->shadow($callback->($name));
 
     return;
-}
-
-sub _get_storage_name_for_attribute {
-    my ($self, $attr) = @_;
-    my $key = substr( $attr, 1, length $attr );
-    '__' . $key . '_STORAGE'
 }
 
 sub method_parser {
@@ -295,9 +307,7 @@ sub attribute_parser {
             }
         }
 
-        my $key_name  = $self->_get_storage_name_for_attribute($name);
-
-        substr( $linestr, $old_offset, $full_length ) = '(mop::util::init_attribute_storage(my %' . $key_name . ')' . ( $proto ? (', (' . $proto) : '') . ')';
+        substr( $linestr, $old_offset, $full_length ) = '(' . ( $proto ? $proto : ')');
 
         $self->set_linestr( $linestr );
         $self->inc_offset( $full_length );
@@ -305,14 +315,13 @@ sub attribute_parser {
 
     push @{ $CURRENT_ATTRIBUTE_LIST{$self} } => $name; 
 
-    $self->shadow(sub ($@) : lvalue {
-        my ($storage, %metadata) = @_;
+    $self->shadow(sub (@) : lvalue {
+        my (%metadata) = @_;
         my $initial_value;
         ${^META}->add_attribute(
             ${^META}->attribute_class->new(
                 name    => $name,
                 default => \$initial_value,
-                storage => $storage, 
                 %metadata
             )
         );
