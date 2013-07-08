@@ -33,12 +33,12 @@ sub find_method {
         #warn "got super-of";
         #warn "MRO: " . $mro[0];
         #warn "SUPEROF: " . $opts{'super_of'}->name;
-        if ( $mro[0] eq $opts{'super_of'}->name ) {
+        if ( $mro[0] && $mro[0] eq $opts{'super_of'}->name ) {
             #warn "got match, shifting";
             shift( @mro );
         } else {
             #warn "no match, looking"; 
-            while ( $mro[0] ne $opts{'super_of'}->name ) {
+            while ( $mro[0] && $mro[0] ne $opts{'super_of'}->name ) {
                 #warn "no match, shifting until we find it";
                 shift( @mro );
             }    
@@ -132,7 +132,7 @@ sub call_method {
     # well as 
     local ${^SELF}  = $invocant;
     local ${^CLASS} = find_meta($invocant) if has_meta($invocant);
-    
+
     if ( ref $method eq 'CODE' ) {
         return $method->($invocant, @$args);
     } elsif ( blessed $method && $method->isa('mop::method') ) {
