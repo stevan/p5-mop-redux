@@ -15,9 +15,6 @@ use B::Hooks::EndOfScope;
 # keep the local package name around
 fieldhash my %CURRENT_CLASS_NAME;
 
-# keep the local type (CLASS or ROLE)
-fieldhash my %CURRENT_TYPE;
-
 # Keep a list of attributes currently 
 # being compiled in the class because 
 # we need to alias them in the method 
@@ -100,7 +97,6 @@ sub _namespace_parser {
     my $caller = $self->get_curstash_name;
     my $pkg    = ($caller eq 'main' ? $name : (join "::" => $caller, $name));
 
-    $CURRENT_TYPE{$self}           = $type;
     $CURRENT_CLASS_NAME{$self}     = $pkg;
     $CURRENT_ATTRIBUTE_LIST{$self} = [];
 
