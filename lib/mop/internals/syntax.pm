@@ -318,8 +318,14 @@ sub attribute_parser {
     $self->shadow(sub (@) : lvalue {
         my (%metadata) = @_;
         my $initial_value;
+
+        my $attribute_Class = ${^META}->attribute_class;
+        if ( exists $metadata{ 'metaclass' } ) {
+            $attribute_Class = delete $metadata{ 'metaclass' };
+        }
+
         ${^META}->add_attribute(
-            ${^META}->attribute_class->new(
+            $attribute_Class->new(
                 name    => $name,
                 default => \$initial_value,
                 %metadata
