@@ -21,7 +21,7 @@ sub new {
     my $self = $class->SUPER::new;
     $__name_STORAGE{ $self }    = \($args{'name'});
     $__default_STORAGE{ $self } = \($args{'default'}) if exists $args{'default'};
-    $__storage_STORAGE{ $self } = \($args{'storage'});
+    $__storage_STORAGE{ $self } = \($args{'storage'}) if exists $args{'storage'};
     $self
 }
 
@@ -100,7 +100,8 @@ sub __INIT_METACLASS__ {
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$storage', 
-        storage => \%__storage_STORAGE
+        storage => \%__storage_STORAGE,
+        default => \(sub { init_attribute_storage(my %storage) })
     ));
 
     # NOTE:
