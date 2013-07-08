@@ -13,18 +13,18 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use parent 'mop::role';
 
-init_attribute_storage(my %__superclass_STORAGE);
-init_attribute_storage(my %__submethods_STORAGE);
+init_attribute_storage(my %superclass);
+init_attribute_storage(my %submethods);
 
 sub new {
     my $class = shift;
     my %args  = @_;
     my $self = $class->SUPER::new( @_ );
-    $__superclass_STORAGE{ $self } = \($args{'superclass'});
-    $__submethods_STORAGE{ $self } = \({});
+    $superclass{ $self } = \($args{'superclass'});
+    $submethods{ $self } = \({});
     
-    if (defined($args{name}) and is_module_name($args{name})) {
-        $INC{module_notional_filename($args{name})} //= '(mop)';
+    if ( defined( $args{'name'} ) && is_module_name( $args{'name'} ) ) {
+        $INC{ module_notional_filename( $args{'name'} ) } //= '(mop)';
     }
     
     $self;
@@ -32,7 +32,7 @@ sub new {
 
 # identity
 
-sub superclass { ${ $__superclass_STORAGE{ $_[0] } } }
+sub superclass { ${ $superclass{ $_[0] } } }
 
 sub is_abstract { scalar @{ (shift)->required_methods } != 0 }
 
@@ -44,7 +44,7 @@ sub new_instance { (shift)->name->new( @_ ) }
 
 sub submethod_class { 'mop::method' }
 
-sub submethods { ${ $__submethods_STORAGE{ $_[0] } } }
+sub submethods { ${ $submethods{ $_[0] } } }
 
 sub add_submethod {
     my ($self, $submethod) = @_;
@@ -96,12 +96,12 @@ sub __INIT_METACLASS__ {
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$superclass', 
-        storage => \%__superclass_STORAGE
+        storage => \%superclass
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$submethods', 
-        storage => \%__submethods_STORAGE,
+        storage => \%submethods,
         default => \({})
     ));
 

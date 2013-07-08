@@ -11,14 +11,14 @@ use Module::Runtime qw[ is_module_name module_notional_filename ];
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-init_attribute_storage(my %__name_STORAGE);
-init_attribute_storage(my %__version_STORAGE);
-init_attribute_storage(my %__authority_STORAGE);
+init_attribute_storage(my %name);
+init_attribute_storage(my %version);
+init_attribute_storage(my %authority);
 
-init_attribute_storage(my %__roles_STORAGE);
-init_attribute_storage(my %__attributes_STORAGE);
-init_attribute_storage(my %__methods_STORAGE);
-init_attribute_storage(my %__required_methods_STORAGE);
+init_attribute_storage(my %roles);
+init_attribute_storage(my %attributes);
+init_attribute_storage(my %methods);
+init_attribute_storage(my %required_methods);
 
 sub new {
     my $class = shift;
@@ -41,17 +41,17 @@ sub new {
     # - SL
     my $self = bless \(my $x) => $class; 
 
-    $__name_STORAGE{ $self }       = \($args{'name'});
-    $__version_STORAGE{ $self }    = \($args{'version'});
-    $__authority_STORAGE{ $self }  = \($args{'authority'});
+    $name{ $self }       = \($args{'name'});
+    $version{ $self }    = \($args{'version'});
+    $authority{ $self }  = \($args{'authority'});
 
-    $__roles_STORAGE{ $self }            = \($args{'roles'} || []);
-    $__attributes_STORAGE{ $self }       = \({});
-    $__methods_STORAGE{ $self }          = \({});
-    $__required_methods_STORAGE{ $self } = \([]);
+    $roles{ $self }            = \($args{'roles'} || []);
+    $attributes{ $self }       = \({});
+    $methods{ $self }          = \({});
+    $required_methods{ $self } = \([]);
 
-    if (defined($args{name}) and is_module_name($args{name})) {
-        $INC{module_notional_filename($args{name})} //= '(mop)';
+    if ( defined( $args{'name'} ) && is_module_name( $args{'name'} ) ) {
+        $INC{ module_notional_filename( $args{'name'} ) } //= '(mop)';
     }
 
     $self;
@@ -59,13 +59,13 @@ sub new {
 
 # identity
 
-sub name       { ${ $__name_STORAGE{ $_[0] } } }
-sub version    { ${ $__version_STORAGE{ $_[0] } } }
-sub authority  { ${ $__authority_STORAGE{ $_[0] } } }
+sub name       { ${ $name{ $_[0] } } }
+sub version    { ${ $version{ $_[0] } } }
+sub authority  { ${ $authority{ $_[0] } } }
 
 # roles
 
-sub roles { ${ $__roles_STORAGE{ $_[0] } } }
+sub roles { ${ $roles{ $_[0] } } }
 
 sub add_role {
     my ($self, $role) = @_;
@@ -85,7 +85,7 @@ sub does_role {
 
 sub attribute_class { 'mop::attribute' }
 
-sub attributes { ${ $__attributes_STORAGE{ $_[0] } } }
+sub attributes { ${ $attributes{ $_[0] } } }
 
 sub add_attribute {
     my ($self, $attr) = @_;
@@ -106,7 +106,7 @@ sub has_attribute {
 
 sub method_class { 'mop::method' }
 
-sub methods { ${ $__methods_STORAGE{ $_[0] } } }
+sub methods { ${ $methods{ $_[0] } } }
 
 sub add_method {
     my ($self, $method) = @_;
@@ -130,7 +130,7 @@ sub remove_method {
 
 # required methods
 
-sub required_methods { ${ $__required_methods_STORAGE{ $_[0] } } }
+sub required_methods { ${ $required_methods{ $_[0] } } }
 
 sub add_required_method {
     my ($self, $required_method) = @_;
@@ -218,40 +218,40 @@ sub __INIT_METACLASS__ {
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$name', 
-        storage => \%__name_STORAGE
+        storage => \%name
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$version', 
-        storage => \%__version_STORAGE
+        storage => \%version
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$authority', 
-        storage => \%__authority_STORAGE
+        storage => \%authority
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$roles', 
-        storage => \%__roles_STORAGE,
+        storage => \%roles,
         default => \([])
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$attributes', 
-        storage => \%__attributes_STORAGE,
+        storage => \%attributes,
         default => \({})
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$methods', 
-        storage => \%__methods_STORAGE,
+        storage => \%methods,
         default => \({})
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$required_methods', 
-        storage => \%__required_methods_STORAGE,
+        storage => \%required_methods,
         default => \([])
     ));
 

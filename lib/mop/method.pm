@@ -10,20 +10,20 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use parent 'mop::object';
 
-init_attribute_storage(my %__name_STORAGE);
-init_attribute_storage(my %__body_STORAGE);
+init_attribute_storage(my %name);
+init_attribute_storage(my %body);
 
 sub new {
     my $class = shift;
     my %args  = @_;
     my $self = $class->SUPER::new;
-    $__name_STORAGE{ $self } = \($args{'name'});
-    $__body_STORAGE{ $self } = \($args{'body'});
+    $name{ $self } = \($args{'name'});
+    $body{ $self } = \($args{'body'});
     $self;
 }
 
-sub name { ${ $__name_STORAGE{ $_[0] } } }
-sub body { ${ $__body_STORAGE{ $_[0] } } }
+sub name { ${ $name{ $_[0] } } }
+sub body { ${ $body{ $_[0] } } }
 
 sub execute {
     my ($self, $invocant, $args) = @_;
@@ -44,12 +44,12 @@ sub __INIT_METACLASS__ {
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$name', 
-        storage => \%__name_STORAGE
+        storage => \%name
     ));
 
     $METACLASS->add_attribute(mop::attribute->new( 
         name    => '$body', 
-        storage => \%__body_STORAGE
+        storage => \%body
     ));
 
     # NOTE:
