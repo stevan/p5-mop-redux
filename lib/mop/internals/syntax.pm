@@ -200,6 +200,8 @@ sub generic_method_parser {
     # and not the metaclass object
     $inject .= 'my $class = $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS->name;';
 
+    $inject .= 'local ${^CALLER} = [ $self, q[' . $name . '], $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS ];';
+
     # this is our method preamble, it
     # basically creates a method local
     # variable for each attribute, then 

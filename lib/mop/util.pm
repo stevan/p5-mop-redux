@@ -65,8 +65,12 @@ use warnings;
 
 sub method {
     my ($invocant, @args) = @_;
-    my $method_name = (split '::' => (caller(1))[3])[-1];
-    mop::internals::mro::call_method($invocant, $method_name, \@args, super_of => ${^CLASS});
+    mop::internals::mro::call_method(
+        $invocant, 
+        ${^CALLER}->[1], 
+        \@args, 
+        super_of => ${^CALLER}->[2]
+    );
 }
 
 1;
