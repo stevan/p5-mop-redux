@@ -37,7 +37,7 @@ role Bar {
 
 {
     eval q[
-        class FooBar ( with => ['Foo'] ) {
+        class FooBaz ( with => ['Foo'] ) {
             has $foo;
         }
     ];

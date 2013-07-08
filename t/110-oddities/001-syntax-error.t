@@ -20,7 +20,7 @@ eval q{
 like "$@", qr/^Global symbol \"\$baz\" requires explicit package name/, '... got the syntax error we expected';
 
 {
-    eval 'class Foo { method foo (€bar) { 1 } }';
+    eval 'class Bar { method foo (€bar) { 1 } }';
     like(
         "$@",
         qr/Unrecognized character/,
