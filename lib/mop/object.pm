@@ -67,7 +67,8 @@ sub dump {
 
     my $temp = {
         __ID__    => get_object_id($self),
-        __CLASS__ => find_meta($self)->name
+        __CLASS__ => find_meta($self)->name,
+        __SELF__  => $self,
     };
 
     foreach my $attr (values %attributes) { 
