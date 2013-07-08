@@ -27,6 +27,7 @@ we are going about handling attributes.
 
     my $wiz = wizard(
         data => sub { $_[1] },
+        get  => sub { ${ $_[0] } = ${ $_[1]->[0]->{ $_[1]->[1] } || \undef }; },
         set  => sub { $_[1]->[0]->{ $_[1]->[1] } = $_[0] },
     );
 
@@ -34,7 +35,7 @@ we are going about handling attributes.
 
     sub foo {
         my $self = shift;
-        my $foo  = ${ $foo{$self} || \(undef) };
+        my $foo;
         cast $foo, $wiz, [ \%foo, $self ]; 
 
         $foo = shift if @_;
