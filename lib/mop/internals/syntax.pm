@@ -177,11 +177,11 @@ sub generic_method_parser {
     }
 
     my $inject = $self->scope_injector_call;
+
+    $inject .= 'my ($self) = shift(@_);';
+
     if ($proto) {
-        $inject .= 'my ($self, ' . $proto . ') = @_;';    
-    }
-    else {
-        $inject .= 'my ($self) = @_;';
+        $inject .= 'my (' . $proto . ') = @_;';    
     }
 
     # create a $class variable, which
