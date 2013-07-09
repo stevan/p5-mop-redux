@@ -97,80 +97,22 @@ sub _namespace_parser {
     $self->skipspace;
 
     my $linestr = $self->get_linestr;
-    if ( substr( $linestr, $self->offset, 7 ) eq 'extends' ) {
-        my $orig_offset = $self->offset;
 
-        $self->inc_offset( 7 );
-        $self->skipspace;
+    #warn $linestr;
 
-        my $class_length = Devel::Declare::toke_scan_ident( $self->offset );
-        my $class_name   = substr( $linestr, $self->offset, $class_length );
-
-        $self->inc_offset( $class_length );
-
-        my $full_length = $self->offset - $orig_offset;
-
+    if (my $class_name = $self->parse_modifier_with_single_value(\$linestr, 'extends')) {
         $proto = ($proto ? $proto . ', ' : '') . ('extends => q[' . $class_name . ']');
-
-        substr( $linestr, $orig_offset, $full_length ) = '';
-
-        $self->set_linestr( $linestr );
-        $self->{Offset} = $orig_offset;
-        $self->skipspace;
     }
 
-    if ( substr( $linestr, $self->offset, 4 ) eq 'with' ) {
-        my $orig_offset = $self->offset;
-
-        $self->inc_offset( 4 );
-        $self->skipspace;
-
-        my @roles;
-
-        my $role_length = Devel::Declare::toke_scan_ident( $self->offset );
-        push @roles => substr( $linestr, $self->offset, $role_length );
-        $self->inc_offset( $role_length );
-
-        while (substr( $linestr, $self->offset, 1 ) eq ',') {
-            $self->inc_offset( 1 );
-            my $role_length = Devel::Declare::toke_scan_ident( $self->offset );
-            push @roles => substr( $linestr, $self->offset, $role_length );
-            $self->inc_offset( $role_length );            
-        }
-
-        my $full_length = $self->offset - $orig_offset;
-
+    if (my @roles = $self->parse_modifier_with_multiple_values(\$linestr, 'with')) {
         $proto = ($proto ? $proto . ', ' : '') . ('with => [qw[' . (join " " => @roles) . ']]');
-
-        substr( $linestr, $orig_offset, $full_length ) = '';
-
-        $self->set_linestr( $linestr );
-        $self->{Offset} = $orig_offset;
-        $self->skipspace;
     }
 
-    if ( substr( $linestr, $self->offset, 9 ) eq 'metaclass' ) {
-        my $orig_offset = $self->offset;
-
-        $self->inc_offset( 9 );
-        $self->skipspace;
-
-        my $class_length = Devel::Declare::toke_scan_ident( $self->offset );
-        my $class_name   = substr( $linestr, $self->offset, $class_length );
-
-        $self->inc_offset( $class_length );
-
-        my $full_length = $self->offset - $orig_offset;
-
-        #warn $proto;
+    if (my $class_name = $self->parse_modifier_with_single_value(\$linestr, 'metaclass')) {
         $proto = ($proto ? $proto . ', ' : '') . ('metaclass => q[' . $class_name . ']');
-
-        substr( $linestr, $orig_offset, $full_length ) = '';
-
-        $self->set_linestr( $linestr );
-        $self->{Offset} = $orig_offset;
-        $self->skipspace;
     }
+
+
     my $caller = $self->get_curstash_name;
     my $pkg    = ($caller eq 'main' ? $name : (join "::" => $caller, $name));
 
@@ -245,6 +187,71 @@ sub build_role {
     mop::role->new(%metadata);
 }
 
+sub parse_modifier_with_single_value {
+    my ($self, $linestr, $modifier) = @_;
+
+    my $modifier_length = length $modifier;
+
+    if ( substr( $$linestr, $self->offset, $modifier_length ) eq $modifier ) {
+        my $orig_offset = $self->offset;
+
+        $self->inc_offset( $modifier_length );
+        $self->skipspace;
+
+        my $length = Devel::Declare::toke_scan_ident( $self->offset );
+        my $value  = substr( $$linestr, $self->offset, $length );
+
+        $self->inc_offset( $length );
+
+        my $full_length = $self->offset - $orig_offset;
+
+        substr( $$linestr, $orig_offset, $full_length ) = '';
+
+        $self->set_linestr( $$linestr );
+        $self->{Offset} = $orig_offset;
+        $self->skipspace;
+
+        return $value;
+    }
+}
+
+sub parse_modifier_with_multiple_values {
+    my ($self, $linestr, $modifier) = @_;
+
+    my $modifier_length = length $modifier;
+
+    if ( substr( $$linestr, $self->offset, $modifier_length ) eq $modifier ) {
+        my $orig_offset = $self->offset;
+
+        $self->inc_offset( $modifier_length );
+        $self->skipspace;
+
+        my @values;
+
+        my $length = Devel::Declare::toke_scan_ident( $self->offset );
+        push @values => substr( $$linestr, $self->offset, $length );
+        $self->inc_offset( $length );
+
+        while (substr( $$linestr, $self->offset, 1 ) eq ',') {
+            $self->inc_offset( 1 );
+            my $length = Devel::Declare::toke_scan_ident( $self->offset );
+            push @values => substr( $$linestr, $self->offset, $length );
+            $self->inc_offset( $length );
+        }
+
+        my $full_length = $self->offset - $orig_offset;
+
+        substr( $$linestr, $orig_offset, $full_length ) = '';
+
+        $self->set_linestr( $$linestr );
+        $self->{Offset} = $orig_offset;
+        $self->skipspace;
+
+        return @values;
+    }
+
+    return ();
+}
 sub generic_method_parser {
     my $self     = shift;
     my $callback = shift;
