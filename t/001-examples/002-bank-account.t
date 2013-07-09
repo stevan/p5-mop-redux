@@ -21,7 +21,7 @@ class BankAccount {
     }
 }
 
-class CheckingAccount (extends => 'BankAccount') {
+class CheckingAccount extends BankAccount {
     has $overdraft_account;
 
     method overdraft_account { $overdraft_account }

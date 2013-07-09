@@ -92,8 +92,31 @@ sub _namespace_parser {
 
     $self->skip_declarator;
 
-    my $name   = $self->strip_name;
-    my $proto  = $self->strip_proto;
+    my $name  = $self->strip_name;
+    my $proto = $self->strip_proto;
+
+    my $linestr = $self->get_linestr;
+    if ( substr( $linestr, $self->offset, 7 ) eq 'extends' ) {
+        my $orig_offset = $self->offset;
+
+        $self->inc_offset( 7 );
+        $self->skipspace;
+
+        my $class_length = Devel::Declare::toke_scan_ident( $self->offset );
+        my $class_name   = substr( $linestr, $self->offset, $class_length );
+
+        $self->inc_offset( $class_length );
+
+        my $full_length = $self->offset - $orig_offset;
+
+        $proto = ($proto ? $proto . ', ' : '') . ('extends => q[' . $class_name . ']');
+
+        substr( $linestr, $orig_offset, $full_length ) = '';
+
+        $self->set_linestr( $linestr );
+        $self->{Offset} = $orig_offset;
+    }
+
     my $caller = $self->get_curstash_name;
     my $pkg    = ($caller eq 'main' ? $name : (join "::" => $caller, $name));
 

@@ -33,7 +33,7 @@ class Point {
 
 # ... subclass it ...
 
-class Point3D (extends => 'Point') {
+class Point3D extends Point {
     has $z = 0;
 
     method z { $z }
