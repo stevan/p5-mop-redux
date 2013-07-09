@@ -94,6 +94,7 @@ sub _namespace_parser {
 
     my $name  = $self->strip_name;
     my $proto = $self->strip_proto;
+    $self->skipspace;
 
     my $linestr = $self->get_linestr;
     if ( substr( $linestr, $self->offset, 7 ) eq 'extends' ) {
@@ -148,6 +149,28 @@ sub _namespace_parser {
         $self->skipspace;
     }
 
+    if ( substr( $linestr, $self->offset, 9 ) eq 'metaclass' ) {
+        my $orig_offset = $self->offset;
+
+        $self->inc_offset( 9 );
+        $self->skipspace;
+
+        my $class_length = Devel::Declare::toke_scan_ident( $self->offset );
+        my $class_name   = substr( $linestr, $self->offset, $class_length );
+
+        $self->inc_offset( $class_length );
+
+        my $full_length = $self->offset - $orig_offset;
+
+        #warn $proto;
+        $proto = ($proto ? $proto . ', ' : '') . ('metaclass => q[' . $class_name . ']');
+
+        substr( $linestr, $orig_offset, $full_length ) = '';
+
+        $self->set_linestr( $linestr );
+        $self->{Offset} = $orig_offset;
+        $self->skipspace;
+    }
     my $caller = $self->get_curstash_name;
     my $pkg    = ($caller eq 'main' ? $name : (join "::" => $caller, $name));
 

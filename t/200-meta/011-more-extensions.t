@@ -46,7 +46,7 @@ class ValidatedAccessorMeta extends mop::class {
     }
 }
 
-class Foo (metaclass => 'ValidatedAccessorMeta') {
+class Foo metaclass ValidatedAccessorMeta {
     has $bar;
     has $baz;
     has $age (validator => sub { $_[0] =~ /^\d+$/ });

@@ -22,7 +22,7 @@ class FooMeta extends mop::class {
 }
 
 # create a class (using our meta-class)
-class Foo (metaclass => 'FooMeta') {
+class Foo metaclass FooMeta {
     method hello            { 'FOO' }
     method hello_from_class { ${^CLASS}->static_method }
 }
