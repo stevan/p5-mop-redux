@@ -115,6 +115,37 @@ sub _namespace_parser {
 
         $self->set_linestr( $linestr );
         $self->{Offset} = $orig_offset;
+        $self->skipspace;
+    }
+
+    if ( substr( $linestr, $self->offset, 4 ) eq 'with' ) {
+        my $orig_offset = $self->offset;
+
+        $self->inc_offset( 4 );
+        $self->skipspace;
+
+        my @roles;
+
+        my $role_length = Devel::Declare::toke_scan_ident( $self->offset );
+        push @roles => substr( $linestr, $self->offset, $role_length );
+        $self->inc_offset( $role_length );
+
+        while (substr( $linestr, $self->offset, 1 ) eq ',') {
+            $self->inc_offset( 1 );
+            my $role_length = Devel::Declare::toke_scan_ident( $self->offset );
+            push @roles => substr( $linestr, $self->offset, $role_length );
+            $self->inc_offset( $role_length );            
+        }
+
+        my $full_length = $self->offset - $orig_offset;
+
+        $proto = ($proto ? $proto . ', ' : '') . ('with => [qw[' . (join " " => @roles) . ']]');
+
+        substr( $linestr, $orig_offset, $full_length ) = '';
+
+        $self->set_linestr( $linestr );
+        $self->{Offset} = $orig_offset;
+        $self->skipspace;
     }
 
     my $caller = $self->get_curstash_name;

@@ -16,7 +16,7 @@ role Eq {
     }
 }
 
-role Comparable ( with => [ 'Eq' ] ) {
+role Comparable with Eq {
     method compare;
     method equal_to ($other) {
         $self->compare($other) == 0;
@@ -43,7 +43,7 @@ role Printable {
     method to_string;
 }
 
-class US::Currency ( with => [ 'Comparable', 'Printable' ] ) {
+class US::Currency with Comparable, Printable {
     has $amount = 0;
 
     method amount { $amount }
