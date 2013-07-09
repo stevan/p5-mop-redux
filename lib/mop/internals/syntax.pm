@@ -92,16 +92,16 @@ sub _namespace_parser {
 
     $self->skip_declarator;
 
-    my $name  = $self->strip_name;
-    my $proto = $self->strip_proto;
-    $self->skipspace;
+    my $name   = $self->strip_name;
+    my $proto  = $self->strip_proto;
+    my $caller = $self->get_curstash_name;
+    my $pkg    = ($caller eq 'main' ? $name : (join "::" => $caller, $name));
 
+    $self->skipspace;
     my $linestr = $self->get_linestr;
 
-    #warn $linestr;
-
     if (my $class_name = $self->parse_modifier_with_single_value(\$linestr, 'extends')) {
-        $proto = ($proto ? $proto . ', ' : '') . ('extends => q[' . $class_name . ']');
+        $proto = ($proto ? $proto . ', ' : '') . ('extends => q[' . $class_name . ']');    
     }
 
     if (my @roles = $self->parse_modifier_with_multiple_values(\$linestr, 'with')) {
@@ -109,12 +109,10 @@ sub _namespace_parser {
     }
 
     if (my $class_name = $self->parse_modifier_with_single_value(\$linestr, 'metaclass')) {
-        $proto = ($proto ? $proto . ', ' : '') . ('metaclass => q[' . $class_name . ']');
-    }
+        $proto = ($proto ? $proto . ', ' : '') . ('metaclass => q[' . $class_name . ']');    
+    }  
 
-
-    my $caller = $self->get_curstash_name;
-    my $pkg    = ($caller eq 'main' ? $name : (join "::" => $caller, $name));
+    my @traits = $self->trait_collector(\$linestr, '$' . $pkg . '::METACLASS');
 
     $CURRENT_CLASS_NAME{$self}     = $pkg;
     $CURRENT_ATTRIBUTE_LIST{$self} = [];
@@ -124,28 +122,26 @@ sub _namespace_parser {
     # set it to use our custom MRO, then build
     # our metaclass.
     my $inject = $self->scope_injector_call
-        . 'my $d = shift;'
-        . 'eval(q[package ' . $pkg .';use strict;use warnings;]);'
+        . 'eval(q[package ' . $pkg .';]);'
         . 'mro::set_mro(q[' . $pkg . '], q[mop]);'
         . '$' . $pkg . '::METACLASS = ' . __PACKAGE__ . '->' . $builder_method . '('
             . 'name => q[' . $pkg . ']' 
             . ($proto ? (', ' . $proto) : '') 
         . ');'
-        . '$d->{q[' . $type. ']} = $' . $pkg . '::METACLASS;'
-        . 'local ${^' . $type. '} = $d->{q[' . $type. ']};'
-        . 'local ${^META} = $d->{q[' . $type. ']};' # mostly for internal use
+        . 'local ${^' . $type. '} = $' . $pkg . '::METACLASS;'
+        . 'local ${^META} = $' . $pkg . '::METACLASS;' # mostly for internal use
+        . 'BEGIN { mop::internals::syntax->inject_scope(q[' 
+            . (join ';' => @traits) 
+            . ';$' . $pkg . '::METACLASS->FINALIZE;'
+        . ']) }'
     ;
 
     $self->inject_if_block( $inject );
 
     $self->shadow(sub (&@) {
         my $body = shift;
-        my $data = {};
 
-        $body->( $data );
-
-        my $class = $data->{$type};
-        $class->FINALIZE;
+        $body->();
 
         return;
     });
@@ -189,7 +185,7 @@ sub build_role {
 
 sub parse_modifier_with_single_value {
     my ($self, $linestr, $modifier) = @_;
-
+    
     my $modifier_length = length $modifier;
 
     if ( substr( $$linestr, $self->offset, $modifier_length ) eq $modifier ) {
@@ -217,7 +213,7 @@ sub parse_modifier_with_single_value {
 
 sub parse_modifier_with_multiple_values {
     my ($self, $linestr, $modifier) = @_;
-
+    
     my $modifier_length = length $modifier;
 
     if ( substr( $$linestr, $self->offset, $modifier_length ) eq $modifier ) {
@@ -236,7 +232,7 @@ sub parse_modifier_with_multiple_values {
             $self->inc_offset( 1 );
             my $length = Devel::Declare::toke_scan_ident( $self->offset );
             push @values => substr( $$linestr, $self->offset, $length );
-            $self->inc_offset( $length );
+            $self->inc_offset( $length );            
         }
 
         my $full_length = $self->offset - $orig_offset;
@@ -248,10 +244,61 @@ sub parse_modifier_with_multiple_values {
         $self->skipspace;
 
         return @values;
+    }  
+
+    return ();  
+}
+
+sub trait_parser {
+    my ($self, $linestr, $meta_object_prefix) = @_;
+
+    my $length = Devel::Declare::toke_scan_ident( $self->offset );
+    my $trait  = substr( $$linestr, $self->offset, $length );
+    $self->inc_offset( $length );
+
+    if ( substr( $$linestr, $self->offset, 1 ) eq '(' ) {
+        my $length = Devel::Declare::toke_scan_str( $self->offset );
+        my $proto  = Devel::Declare::get_lex_stuff();
+        Devel::Declare::clear_lex_stuff();
+        $self->inc_offset( $length );
+        $trait .= '(' . $meta_object_prefix. ', ' . $proto . ')';
+    } else {
+        $trait .= '(' . $meta_object_prefix . ')';
     }
 
-    return ();
+    return $trait;
 }
+
+sub trait_collector {
+    my ($self, $linestr, $meta_object_prefix) = @_;
+
+    if ( substr( $$linestr, $self->offset, 2 ) eq 'is' ) {
+        my @traits;
+
+        my $orig_offset = $self->offset;
+
+        $self->inc_offset( 2 );
+        $self->skipspace;
+
+        push @traits => $self->trait_parser($linestr, $meta_object_prefix);
+
+        while (substr( $$linestr, $self->offset, 1 ) eq ',') {
+            $self->inc_offset( 1 );
+            push @traits => $self->trait_parser($linestr, $meta_object_prefix);
+        }
+
+        my $full_length = $self->offset - $orig_offset;
+
+        substr( $$linestr, $orig_offset, $full_length ) = '';
+
+        $self->set_linestr( $$linestr );
+        $self->{Offset} = $orig_offset;
+        $self->skipspace;
+
+        return @traits;
+    }  
+}
+
 sub generic_method_parser {
     my $self     = shift;
     my $callback = shift;
@@ -374,6 +421,11 @@ sub attribute_parser {
             $self->inc_offset( $length );
         }
 
+        my @traits = $self->trait_collector(
+            \$linestr, 
+            '$' . $CURRENT_CLASS_NAME{$self} . '::METACLASS, q[' . $name . ']'
+        );
+
         $self->skipspace;
         if ( substr( $linestr, $self->offset, 1 ) eq '=' ) {
             $self->inc_offset( 1 );
@@ -387,6 +439,10 @@ sub attribute_parser {
 
         $self->set_linestr( $linestr );
         $self->inc_offset( $full_length );
+
+        if (@traits) {
+            $self->inject_scope(';' . (join ";" => @traits) . ';')
+        }
     }
 
     push @{ $CURRENT_ATTRIBUTE_LIST{$self} } => $name; 
@@ -411,23 +467,6 @@ sub attribute_parser {
     });
 
     return;
-}
-
-sub inject_scope {
-    my $class  = shift;
-    my $inject = shift || ';';
-    on_scope_end {
-        my $linestr = Devel::Declare::get_linestr;
-        return unless defined $linestr;
-        my $offset  = Devel::Declare::get_linestr_offset;
-        if ( $inject eq ';' ) {
-            substr( $linestr, $offset, 0 ) = $inject;
-        }
-        else {
-            substr( $linestr, $offset - 1, 0 ) = $inject;
-        }
-        Devel::Declare::set_linestr($linestr);
-    };
 }
 
 1;
