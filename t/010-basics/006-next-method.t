@@ -12,15 +12,15 @@ class Foo {
     method foo { "FOO" }
 }
 
-class FooBar ( extends => 'Foo' ) {
+class FooBar extends Foo {
     method foo { $self->mop::next::method . "-FOOBAR" }
 }
 
-class FooBarBaz ( extends => 'FooBar' ) {
+class FooBarBaz extends FooBar {
     method foo { $self->mop::next::method . "-FOOBARBAZ" }
 }
 
-class FooBarBazGorch ( extends => 'FooBarBaz' ) {
+class FooBarBazGorch extends FooBarBaz {
     method foo { $self->mop::next::method . "-FOOBARBAZGORCH" }
 }
 

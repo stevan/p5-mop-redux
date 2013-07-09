@@ -9,7 +9,7 @@ use Test::Fatal;
 use mop;
 
 # create a meta-class (class to create classes with)
-class MetaWithData (extends => 'mop::class') {
+class MetaWithData extends mop::class {
 
     has $data = [];
 

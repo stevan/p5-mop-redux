@@ -32,7 +32,7 @@ use mop::util qw[ find_meta ];
     __PACKAGE__->meta->make_immutable;
 }
 
-class Employee (extends => 'Person') {
+class Employee extends Person {
     has $manager;
 
     method manager ($m) { 

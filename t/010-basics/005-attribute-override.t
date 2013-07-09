@@ -34,7 +34,7 @@ class Foo {
     method bar { $bar }
 }
 
-class FooBar ( extends => 'Foo' ) {
+class FooBar extends Foo {
     has $bar = 100;
     method derived_bar { $bar }
 }

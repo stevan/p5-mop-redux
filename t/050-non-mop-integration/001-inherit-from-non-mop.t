@@ -19,14 +19,14 @@ use mop;
 }
 
 
-class Foo (extends => 'BaseObject') {
+class Foo extends BaseObject {
 
     method bar { 'Foo::bar' }    
 
     submethod gorch { 'Foo::gorch' }
 }
 
-class Bar (extends => 'Foo') {
+class Bar extends Foo {
     
     method baz { 'Bar::baz' }    
 }

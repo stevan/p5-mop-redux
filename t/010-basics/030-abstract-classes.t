@@ -21,7 +21,7 @@ like(
     '... cannot create an instance of abstract class Foo'
 );
 
-class Bar (extends => 'Foo') {
+class Bar extends Foo {
     method bar { 'Bar::bar' }
 }
 
@@ -35,7 +35,7 @@ ok(!mop::get_meta('Bar')->is_abstract, '... Bar is not an abstract class');
     isa_ok($bar, 'Foo');
 }
 
-class Baz (extends => 'Bar') {
+class Baz extends Bar {
     method baz;
 }
 
@@ -49,7 +49,7 @@ like(
     '... cannot create an instance of abstract class Baz'
 );
 
-class Gorch (extends => 'Foo') {}
+class Gorch extends Foo {}
 
 ok(mop::get_meta('Gorch')->requires_method('bar'), '... bar is a required method');
 ok(mop::get_meta('Gorch')->is_abstract, '... Gorch is an abstract class');

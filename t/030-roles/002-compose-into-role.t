@@ -12,11 +12,11 @@ role Foo {
     method bar { $bar }
 }
 
-role Baz ( with => [ 'Foo' ] ) {
+role Baz with Foo {
     method baz { join ", "  => $self->bar, 'baz' }
 }
 
-class Gorch ( with => ['Baz'] ) {}
+class Gorch with Baz {}
 
 ok( mop::get_meta('Baz')->does_role( 'Foo' ), '... Baz does the Foo role');
 

@@ -7,7 +7,7 @@ use Test::More;
 
 use mop;
 
-class MyAttribute (extends => 'mop::attribute') { }
+class MyAttribute extends mop::attribute { }
 
 class Thingy {
 	has $doodah (metaclass => 'MyAttribute');

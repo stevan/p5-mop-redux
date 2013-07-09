@@ -9,7 +9,7 @@ use Test::Moose;
 
 use mop;
 
-class ClassAccessorMeta (extends => 'mop::class') {
+class ClassAccessorMeta extends mop::class {
     method FINALIZE {
 
         foreach my $attribute ( values %{ $self->attributes } ) {

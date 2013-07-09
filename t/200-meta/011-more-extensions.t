@@ -8,13 +8,13 @@ use Test::Fatal;
 
 use mop;
 
-class ValidatedAttribute (extends => 'mop::attribute') {
+class ValidatedAttribute extends mop::attribute {
     has $validator = do { sub { 1 } };
 
     method validator { $validator }
 }
 
-class ValidatedAccessorMeta (extends => 'mop::class') {
+class ValidatedAccessorMeta extends mop::class {
 
     method attribute_class { 'ValidatedAttribute' }
 

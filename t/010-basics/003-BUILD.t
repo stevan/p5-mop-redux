@@ -23,14 +23,14 @@ class Foo {
     }
 }
 
-class Bar (extends => 'Foo') {
+class Bar extends Foo {
 
     submethod BUILD {
         $self->collect( 'Bar' );
     }
 }
 
-class Baz (extends => 'Bar') {
+class Baz extends Bar {
 
     submethod BUILD {
         $self->collect( 'Baz' );

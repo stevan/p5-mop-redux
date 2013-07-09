@@ -20,14 +20,14 @@ class Foo {
     }
 }
 
-class Bar (extends => 'Foo') {
+class Bar extends Foo {
 
     submethod DEMOLISH {
         $self->collect( 'Bar' );
     }
 }
 
-class Baz (extends => 'Bar') {
+class Baz extends Bar {
 
     submethod DEMOLISH {
         $self->collect( 'Baz' );

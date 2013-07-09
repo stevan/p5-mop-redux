@@ -14,7 +14,7 @@ role Foo {
 
 {
     eval q[
-        role Foo2 ( with => ['Foo'] ) {
+        role Foo2 with Foo {
             has $foo;
         }
     ];
@@ -28,7 +28,7 @@ role Bar {
 
 {
     eval q[
-        role FooBar ( with => ['Foo', 'Bar'] ) {}
+        role FooBar with Foo, Bar {}
     ];
     like("$@", qr/Attribute conflict \$foo/, '... got the expected error message (composite role)');
     $@ = undef;
@@ -37,7 +37,7 @@ role Bar {
 
 {
     eval q[
-        class FooBaz ( with => ['Foo'] ) {
+        class FooBaz with Foo {
             has $foo;
         }
     ];

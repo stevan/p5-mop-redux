@@ -65,10 +65,10 @@ class Base {
     }
 }
 
-class Pass ( extends => 'Test::BuilderX::Test::Base' ) {}
-class Fail ( extends => 'Test::BuilderX::Test::Base' ) {}
+class Pass extends Test::BuilderX::Test::Base {}
+class Fail extends Test::BuilderX::Test::Base {}
 
-class WithReason ( extends => 'Test::BuilderX::Test::Base' ) {
+class WithReason extends Test::BuilderX::Test::Base {
     has $reason;
 
     method reason { $reason }
@@ -80,7 +80,7 @@ class WithReason ( extends => 'Test::BuilderX::Test::Base' ) {
     }
 }
 
-class Skip ( extends => 'Test::BuilderX::Test::WithReason' ) {
+class Skip extends Test::BuilderX::Test::WithReason {
 
     method report {
         return "not ok " . $self->number . " #skip " . $self->reason;
@@ -93,7 +93,7 @@ class Skip ( extends => 'Test::BuilderX::Test::WithReason' ) {
     }
 }
 
-class TODO ( extends => 'Test::BuilderX::Test::WithReason' ) {
+class TODO extends Test::BuilderX::Test::WithReason {
 
     method report {
         my $ok          = $self->passed ? 'ok' : 'not ok';

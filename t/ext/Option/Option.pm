@@ -17,7 +17,7 @@ class Option {
     method exists;
 }
 
-class None (extends => 'Option') {
+class None extends Option {
     method get              { die "None->get" }
     method get_or_else ($f) { $f->() }
     method or_else     ($f) { $f->() }
@@ -31,7 +31,7 @@ class None (extends => 'Option') {
     method exists      ($f) { 0 }
 }
 
-class Some (extends => 'Option') {
+class Some extends Option {
     has $val;
     method get              { $val }
     method get_or_else ($f) { $val }

@@ -17,7 +17,7 @@ methods.
 =cut
 
 # create a meta-class (class to create classes with)
-class FooMeta (extends => 'mop::class') {
+class FooMeta extends mop::class {
     method static_method { 'STATIC' }
 }
 
