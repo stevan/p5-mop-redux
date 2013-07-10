@@ -4,6 +4,8 @@ use v5.16;
 use mro;
 use warnings;
 
+use Sub::Install;
+
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
@@ -17,12 +19,22 @@ use mop::attribute;
 use mop::internals::syntax;
 use mop::internals::mro;
 
+use mop::traits;
 use mop::util;
 
 sub import {
     shift;
-    mop::internals::syntax->setup_for( caller );
+    my $pkg = caller;
+    mop::internals::syntax->setup_for( $pkg );
     bootstrap();
+
+    foreach my $trait ( @mop::traits::AVAILABLE_TRAITS ) {
+        Sub::Install::install_sub({
+            code => $trait,
+            into => $pkg,
+            from => 'mop::traits'
+        });
+    }
 }
 
 sub get_meta { 
