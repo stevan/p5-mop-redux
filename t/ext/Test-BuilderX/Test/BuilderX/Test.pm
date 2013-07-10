@@ -44,14 +44,10 @@ sub new {
 
 class Base {
 
-    has $passed;
-    has $number     = 0;
-    has $diagnostic = '???';
-    has $description;
-
-    method passed      { $passed      }
-    method number      { $number      }
-    method description { $description }
+    has $passed      is ro;
+    has $description is ro;
+    has $number      is ro = 0;
+    has $diagnostic        = '???';
 
     method status {
         return +{ passed => $passed, description => $description }
@@ -69,9 +65,7 @@ class Pass extends Test::BuilderX::Test::Base {}
 class Fail extends Test::BuilderX::Test::Base {}
 
 class WithReason extends Test::BuilderX::Test::Base {
-    has $reason;
-
-    method reason { $reason }
+    has $reason is ro;
 
     method status {
         my $status = $self->mop::next::method;

@@ -8,21 +8,6 @@ use Test::Fatal;
 
 use mop;
 
-sub rw {
-    my ($meta, $name) = @_;
-    my $attr = $meta->get_attribute($name);
-    $meta->add_method( 
-        $meta->method_class->new(
-            name => $attr->key_name, 
-            body => sub {
-                my $self = shift;
-                $attr->store_data_in_slot_for($self, shift) if @_;
-                $attr->fetch_data_in_slot_for($self);
-            }
-        )
-    );
-}
-
 class Foo {
     has $bar is rw;
 }
@@ -36,5 +21,25 @@ is($foo->bar, undef, '... got the value we expected');
 is(exception{ $foo->bar(10) }, undef, '... setting the value worked');
 
 is($foo->bar, 10, '... got the value we expected');
+
+class Bar {
+    has $baz is ro;
+}
+
+my $bar = Bar->new( baz => 10 );
+isa_ok($bar, 'Bar');
+can_ok($bar, 'baz');
+
+is($bar->baz, 10, '... got the value we expected');
+
+like(
+	exception{ $bar->baz(10) }, 
+	qr/Cannot assign to a read-only accessor/, 
+	'... setting the value worked'
+);
+
+class Baz is abstract {}
+
+ok(mop::get_meta('Baz')->is_abstract, '... class is abstract');
 
 done_testing;

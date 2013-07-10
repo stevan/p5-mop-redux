@@ -12,7 +12,7 @@ role Foo {
     method bar;
 }
 
-class Gorch (is_abstract => 1) with Foo {}
+class Gorch with Foo is abstract {}
 
 ok(mop::get_meta('Gorch')->is_abstract, '... composing a role with still required methods creates an abstract class');
 like(

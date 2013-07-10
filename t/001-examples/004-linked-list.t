@@ -9,13 +9,9 @@ use Test::Fatal;
 use mop;
 
 class LinkedList {
-    has $head;
-    has $tail;
-    has $count = 0;
-
-    method head { $head }
-    method tail { $tail }
-    method count { $count }
+    has $head  is ro;
+    has $tail  is ro;
+    has $count is ro = 0;
 
     method append ($node) {
         unless($tail) {

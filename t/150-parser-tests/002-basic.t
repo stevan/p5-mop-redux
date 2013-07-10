@@ -7,9 +7,7 @@ use Test::More;
 
 use mop;
 
-sub rw       {}
 sub required {}
-sub abstract {}
 sub cached   {}
 
 class Bar {}

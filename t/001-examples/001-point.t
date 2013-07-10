@@ -8,11 +8,8 @@ use Test::More;
 use mop;
 
 class Point {
-    has $x = 0;
-    has $y = 0;
-
-    method x { $x }
-    method y { $y }
+    has $x is ro = 0;
+    has $y is ro = 0;
 
     method set_x ($new_x) {
         $x = $new_x;
@@ -34,9 +31,7 @@ class Point {
 # ... subclass it ...
 
 class Point3D extends Point {
-    has $z = 0;
-
-    method z { $z }
+    has $z is ro = 0;
 
     method set_z ($new_z) {
         $z = $new_z;

@@ -9,9 +9,7 @@ use Test::Fatal;
 use mop;
 
 class ValidatedAttribute extends mop::attribute {
-    has $validator = do { sub { 1 } };
-
-    method validator { $validator }
+    has $validator is ro = do { sub { 1 } };
 }
 
 class ValidatedAccessorMeta extends mop::class {

@@ -10,20 +10,14 @@ use mop;
 use Scalar::Util qw[ isweak weaken ];
 
 class BinaryTree {
-    has $node;
-    has $parent;
+    has $node   is rw;
+    has $parent is ro;
     has $left;
     has $right;
 
     submethod BUILD { weaken( $parent ) if $parent }
 
-    method node ($n) {
-        $node = $n if $n;
-        $node;
-    }
-
     method has_parent { defined $parent }
-    method parent     { $parent }
 
     method left     { $left //= $class->new( parent => $self ) }
     method has_left { defined $left }

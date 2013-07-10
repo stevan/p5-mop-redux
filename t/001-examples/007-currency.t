@@ -44,9 +44,7 @@ role Printable {
 }
 
 class US::Currency with Comparable, Printable {
-    has $amount = 0;
-
-    method amount { $amount }
+    has $amount is ro = 0;
 
     method compare ($other) {
         $amount <=> $other->amount;

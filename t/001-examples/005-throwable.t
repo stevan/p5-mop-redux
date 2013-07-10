@@ -10,8 +10,8 @@ use mop;
 
 class Throwable {
 
-    has $message     = '';
-    has $stack_trace = do {
+    has $message     is ro = '';
+    has $stack_trace is ro = do {
         Devel::StackTrace->new(
             frame_filter => sub {
                 $_[0]->{'caller'}->[3] !~ /^mop\:\:/ &&
@@ -20,10 +20,8 @@ class Throwable {
         )
     };
 
-    method message     { $message     }
-    method stack_trace { $stack_trace }
-    method throw       { die $self    }
-    method as_string   { $message . "\n\n" . $stack_trace->as_string }
+    method throw     { die $self }
+    method as_string { $message . "\n\n" . $stack_trace->as_string }
 }
 
 my $line = __LINE__;
@@ -42,7 +40,7 @@ isa_ok( $e->stack_trace, 'Devel::StackTrace' );
 my $file = __FILE__;
 $file =~ s/^\.\///;
 
-my $line1 = $line + 2 - 10;
+my $line1 = $line + 2 - 8;
 my $line2 = $line + 2;
 my $line3 = $line + 4;
 my $line4 = $line + 4;

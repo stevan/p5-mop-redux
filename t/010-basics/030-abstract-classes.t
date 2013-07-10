@@ -8,7 +8,7 @@ use Test::Fatal;
 
 use mop;
 
-class Foo (is_abstract => 1) {
+class Foo is abstract {
     method bar;
 }
 
@@ -35,7 +35,7 @@ ok(!mop::get_meta('Bar')->is_abstract, '... Bar is not an abstract class');
     isa_ok($bar, 'Foo');
 }
 
-class Baz (is_abstract => 1) extends Bar {
+class Baz extends Bar is abstract {
     method baz;
 }
 
@@ -49,7 +49,7 @@ like(
     '... cannot create an instance of abstract class Baz'
 );
 
-class Gorch (is_abstract => 1) extends Foo {}
+class Gorch extends Foo is abstract {}
 
 ok(mop::get_meta('Gorch')->requires_method('bar'), '... bar is a required method');
 ok(mop::get_meta('Gorch')->is_abstract, '... Gorch is an abstract class');

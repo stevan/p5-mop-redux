@@ -8,9 +8,7 @@ use Test::More;
 use mop;
 
 class BankAccount {
-    has $balance = 0;
-
-    method balance { $balance }
+    has $balance is ro = 0;
 
     method deposit ($amount) { $balance += $amount }
 
@@ -22,9 +20,7 @@ class BankAccount {
 }
 
 class CheckingAccount extends BankAccount {
-    has $overdraft_account;
-
-    method overdraft_account { $overdraft_account }
+    has $overdraft_account is ro;
 
     method withdraw ($amount) {
 

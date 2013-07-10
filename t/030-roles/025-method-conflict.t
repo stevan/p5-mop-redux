@@ -38,7 +38,7 @@ is_deeply(mop::get_meta('Baz')->required_methods, [], '... no method conflict be
 ok(mop::get_meta('Foo')->has_method('foo'), '... Foo still has the foo method');
 is(Baz->new->foo, 'Baz::foo', '... got the right method');
 
-class Gorch (is_abstract => 1) with Foo, Bar {}
+class Gorch with Foo, Bar is abstract {}
 
 ok(mop::get_meta('Gorch')->is_abstract, '... method conflict between roles results in required method (and an abstract class)');
 is_deeply(mop::get_meta('Gorch')->required_methods, ['foo'], '... method conflict between roles results in required method');
