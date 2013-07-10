@@ -3,7 +3,7 @@ use warnings;
 
 use mop;
 
-class Option {
+class Option (is_abstract => 1) {
     method get;
     method get_or_else;
     method or_else;
