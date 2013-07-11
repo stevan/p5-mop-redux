@@ -423,7 +423,7 @@ sub attribute_parser {
 
         my @traits = $self->trait_collector(
             \$linestr, 
-            '$' . $CURRENT_CLASS_NAME{$self} . '::METACLASS, q[' . $name . ']'
+            '$' . $CURRENT_CLASS_NAME{$self} . '::METACLASS, q[attribute], q[' . $name . ']'
         );
 
         $self->skipspace;
