@@ -311,11 +311,23 @@ sub generic_method_parser {
 
     $self->skip_declarator;
 
-    my $name  = $self->strip_name;
-    my $proto = $self->strip_proto;
+    my $name    = $self->strip_name;
+    my $proto   = $self->strip_proto;
+    my $linestr = $self->get_linestr;
 
     $self->skipspace;
-    if (substr($self->get_linestr, $self->offset, 1) eq ';') {
+
+    my @traits = $self->trait_collector(
+        \$linestr, 
+        '$' . $CURRENT_CLASS_NAME{$self} . '::METACLASS', 'method', $name
+    );
+
+    if (@traits) {
+        $self->inject_scope(';' . (join ";" => @traits) . ';')
+    }    
+
+    $self->skipspace;
+    if (substr($linestr, $self->offset, 1) eq ';') {
         $self->shadow(sub {
             ${^META}->add_required_method( $name );
         });
