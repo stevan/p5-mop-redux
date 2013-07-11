@@ -11,7 +11,8 @@ our @AVAILABLE_TRAITS = qw[ rw ro abstract ];
 sub rw {
     my $meta = shift;
     my (%args) = @_;
-    if (my $name = $args{'attribute'}) {
+    if (exists $args{'attribute'}) {
+        my ($name, @args) = @{$args{'attribute'}};
         my $attr = $meta->get_attribute($name);
         $meta->add_method( 
             $meta->method_class->new(
@@ -29,7 +30,8 @@ sub rw {
 sub ro {
     my $meta = shift;
     my (%args) = @_;
-    if (my $name = $args{'attribute'}) {
+    if (exists $args{'attribute'}) {
+        my ($name, @args) = @{$args{'attribute'}};
         my $attr = $meta->get_attribute($name);
         $meta->add_method( 
             $meta->method_class->new(
