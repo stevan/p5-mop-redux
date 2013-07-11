@@ -250,7 +250,7 @@ sub parse_modifier_with_multiple_values {
 }
 
 sub trait_parser {
-    my ($self, $linestr, $meta_object_prefix) = @_;
+    my ($self, $linestr, $meta_object, $type, $name) = @_;
 
     my $length = Devel::Declare::toke_scan_ident( $self->offset );
     my $trait  = substr( $$linestr, $self->offset, $length );
@@ -261,16 +261,20 @@ sub trait_parser {
         my $proto  = Devel::Declare::get_lex_stuff();
         Devel::Declare::clear_lex_stuff();
         $self->inc_offset( $length );
-        $trait .= '(' . $meta_object_prefix. ', ' . $proto . ')';
+        $trait .= '(' . $meta_object . ', q[' . $type . '], [ q[' . $name . '], ' . $proto . '])';
     } else {
-        $trait .= '(' . $meta_object_prefix . ')';
+        if ($type && $name) {
+            $trait .= '(' . $meta_object . ', q[' . $type . '], [ q[' . $name . '] ])';
+        } else {
+            $trait .= '(' . $meta_object . ')';
+        }
     }
 
     return $trait;
 }
 
 sub trait_collector {
-    my ($self, $linestr, $meta_object_prefix) = @_;
+    my ($self, $linestr, $meta_object, $type, $name) = @_;
 
     if ( substr( $$linestr, $self->offset, 2 ) eq 'is' ) {
         my @traits;
@@ -280,11 +284,11 @@ sub trait_collector {
         $self->inc_offset( 2 );
         $self->skipspace;
 
-        push @traits => $self->trait_parser($linestr, $meta_object_prefix);
+        push @traits => $self->trait_parser($linestr, $meta_object, $type, $name);
 
         while (substr( $$linestr, $self->offset, 1 ) eq ',') {
             $self->inc_offset( 1 );
-            push @traits => $self->trait_parser($linestr, $meta_object_prefix);
+            push @traits => $self->trait_parser($linestr, $meta_object, $type, $name);
         }
 
         my $full_length = $self->offset - $orig_offset;
@@ -423,7 +427,7 @@ sub attribute_parser {
 
         my @traits = $self->trait_collector(
             \$linestr, 
-            '$' . $CURRENT_CLASS_NAME{$self} . '::METACLASS, q[attribute], q[' . $name . ']'
+            '$' . $CURRENT_CLASS_NAME{$self} . '::METACLASS', 'attribute', $name
         );
 
         $self->skipspace;
