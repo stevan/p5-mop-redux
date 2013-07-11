@@ -6,7 +6,7 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-our @AVAILABLE_TRAITS = qw[ rw ro abstract ];
+our @AVAILABLE_TRAITS = qw[ rw ro abstract overload ];
 
 sub rw {
     my $meta = shift;
@@ -50,6 +50,35 @@ sub abstract {
     my $meta = shift;
     my (%args) = @_;
     $meta->make_class_abstract;
+}
+
+sub overload {
+    my $meta = shift;
+    my (%args) = @_;
+
+    if (exists $args{'method'}) {
+        my ($method_name, $operator) = @{$args{'method'}};
+        my $method = $meta->get_method($method_name);
+
+        # NOTE:
+        # We are actually installing the overloads
+        # into the package directly, this works 
+        # because the MRO stuff doesn't actually 
+        # get used if the the methods are local 
+        # to the package. This should avoid some
+        # complexity (perhaps). 
+
+        # don't load it unless you 
+        # have too, it adds a speed
+        # penalty to the runtime
+        require overload;
+        overload::OVERLOAD(
+            $meta->name, 
+            $operator,
+            sub { $method->execute( shift( @_ ), [ @_ ] ) }, 
+            fallback => 1
+        );
+    }
 }
 
 1;
