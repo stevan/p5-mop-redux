@@ -159,7 +159,7 @@ This is a prototype for a new object system for Perl 5.
         method DESTROY { ... }
     }
     
-    class Attribute (extends => 'Object') {
+    class Attribute extends Object {
         has $name is ro;
         has $default;
         has $storage is ro = {};
@@ -174,7 +174,7 @@ This is a prototype for a new object system for Perl 5.
         method store_default_in_slot_for ($instance) { ... }
     }
     
-    class Method (extends => 'Object') {
+    class Method extends Object {
         has $name is ro;
         has $body is ro;
     
@@ -215,7 +215,7 @@ This is a prototype for a new object system for Perl 5.
         sub FINALIZE { ... }
     }
     
-    class Class (extends => 'Object', with => ['Role']) {
+    class Class extends Object with Role {
         has $superclass  is ro;
         has $submethods  is ro = {};
         has $is_abstract is ro;
