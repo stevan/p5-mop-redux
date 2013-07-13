@@ -88,6 +88,21 @@ sub bootstrap {
         # is true.
         @{ $Class_stash->get_symbol('@ISA') } = ('mop::object');
     }
+
+    {
+        my $old_next_method = \&next::method;
+        no warnings 'redefine';
+        *next::method = sub {
+            my $invocant = shift;
+            if ( mop::util::has_meta( $invocant ) ) {
+                $invocant->mop::next::method( @_ )
+            } else {
+                $invocant->$old_next_method( @_ )
+            }
+        }
+
+    }
+
     $BOOTSTRAPPED = 1;
 }
 

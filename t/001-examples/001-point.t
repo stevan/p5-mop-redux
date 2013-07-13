@@ -38,7 +38,7 @@ class Point3D extends Point {
     }
 
     method pack {
-        my $data = $self->mop::next::method;
+        my $data = $self->next::method;
         $data->{z} = $z;
         $data;
     }

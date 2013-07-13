@@ -13,15 +13,15 @@ class Foo {
 }
 
 class FooBar extends Foo {
-    method foo { $self->mop::next::method . "-FOOBAR" }
+    method foo { $self->next::method . "-FOOBAR" }
 }
 
 class FooBarBaz extends FooBar {
-    method foo { $self->mop::next::method . "-FOOBARBAZ" }
+    method foo { $self->next::method . "-FOOBARBAZ" }
 }
 
 class FooBarBazGorch extends FooBarBaz {
-    method foo { $self->mop::next::method . "-FOOBARBAZGORCH" }
+    method foo { $self->next::method . "-FOOBARBAZGORCH" }
 }
 
 my $foo = FooBarBazGorch->new;

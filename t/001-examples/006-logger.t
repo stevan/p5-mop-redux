@@ -42,7 +42,7 @@ class MyLogger extends Logger {
         given ( $level ) {
             when ( 'info'  ) { my_warn( '<info> ', $msg ) }
             default {
-                $self->mop::next::method( $level, $msg );
+                $self->next::method( $level, $msg );
             }
         }
     }

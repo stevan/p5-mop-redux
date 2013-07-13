@@ -28,7 +28,7 @@ class ClassAccessorMeta extends mop::class {
             );
         }
 
-        $self->mop::next::method;
+        $self->next::method;
     }
 }
 
