@@ -97,6 +97,38 @@ __END__
 
 =pod
 
+=head1 NAME
+
+mop - A meta-object protocol for Perl 5
+
+=head1 VERSION
+
+version 0.01
+
+=head1 SYNOPSIS
+
+    class Point {
+        has $x is ro = 0;
+        has $y is ro = 0;
+    
+        method clear {
+            ($x, $y) = (0, 0);
+        }
+    }
+    
+    class Point3D extends Point {
+        has $z is ro = 0;
+    
+        method clear {
+            $self->next::method;
+            $z = 0;
+        }
+    }
+
+=head1 DESCRIPTION
+
+This is a prototype for a new object system for Perl 5.
+
 =head1 The MOP
 
     class Object {
@@ -113,18 +145,14 @@ __END__
     }
     
     class Attribute (extends => 'Object') {
-        has $name;
+        has $name is ro;
         has $default;
-        has $storage = {};
-    
-        method name { $name }
+        has $storage is ro = {};
     
         method key_name { ... }
     
         method has_default { ... }
         method get_default { ... }
-    
-        method storage { $storage }
     
         method fetch_data_in_slot_for ($instance) { ... }
         method store_data_in_slot_for ($instance, $data) { ... }
@@ -132,37 +160,26 @@ __END__
     }
     
     class Method (extends => 'Object') {
-        has $name;
-        has $body;
-    
-        method name { $name }
-        method body { $body }
+        has $name is ro;
+        has $body is ro;
     
         method execute ($invocant, $args) { ... }
     }
     
     role Role {
-        has $name;
-        has $version;
-        has $authority;
+        has $name      is ro;
+        has $version   is ro;
+        has $authority is ro;
     
-        has $roles            = [];
-        has $attributes       = {};
-        has $methods          = {};
-        has $required_methods = [];
-    
-        method name      { $name }
-        method version   { $version }
-        method authority { $authority }
-    
-        method roles { $roles } 
+        has $roles            is ro = [];
+        has $attributes       is ro = {};
+        has $methods          is ro = {};
+        has $required_methods is ro = [];
     
         method add_role ($role) { ... }
         method does_role ($name) { ... }
     
         method attribute_class { 'Attribute' }
-    
-        method attributes { $attributes }
     
         method add_attribute ($attr) { ... }
         method get_attribute ($name) { ... }
@@ -170,14 +187,10 @@ __END__
     
         method method_class { 'Method' }
     
-        method methods { $methods }
-    
         method add_method ($attr) { ... }
         method get_method ($name) { ... }
         method has_method ($name) { ... }
         method remove_method ($name) { ... }
-    
-        method required_methods { $required_methods }
     
         method add_required_method ($required_method) { ... }
         method requires_method ($name) { ... }
@@ -188,18 +201,15 @@ __END__
     }
     
     class Class (extends => 'Object', with => ['Role']) {
-        has $superclass;
-        has $submethods = {};
-    
-        method superclass { $superclass }
-    
-        method is_abstract { ... }
+        has $superclass  is ro;
+        has $submethods  is ro = {};
+        has $is_abstract is ro;
+
+        method make_class_abstract { ... }
     
         method new_instance { ... }
     
         method submethod_class { 'Method' }
-    
-        method submethods { $submethods }
     
         method add_submethod ($attr) { ... }
         method get_submethod ($name) { ... }
@@ -218,12 +228,24 @@ __END__
   Role is an instance of Class
   Role does Role
 
+=head1 BUGS
+
+All complex software has bugs lurking in it, and this module is no
+exception. If you find a bug please either email me, or add the bug
+to cpan-RT.
+
+=head1 AUTHOR
+
+Stevan Little <stevan@iinteractive.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by Infinity Interactive.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
 =cut
-
-
-
-
-
 
 
 
