@@ -22,6 +22,17 @@ sub type {
         my $attr = $meta->get_attribute( $attr_name );
         $attr->type_checker(sub { $type->assert_valid( @_ ) });
     }
+    if (exists $args{'method'}) {
+        my ($meth_name, @type_names) = @{$args{'method'}};
+        my @types = map { Moose::Util::TypeConstraints::find_type_constraint( $_ ) } @type_names;
+        my $meth  = $meta->get_method( $meth_name );
+        $meth->sig_checker(sub {
+            my @args = @{ $_[0] };
+            foreach my $i ( 0 .. $#args ) {
+                $types[ $i ]->assert_valid( $args[ $i ] );
+            }
+        });
+    }
 }
 
 class TypedAttribute extends mop::attribute {
@@ -33,15 +44,29 @@ class TypedAttribute extends mop::attribute {
     }
 }
 
-class TypedAttributeClass extends mop::class {
-    method attribute_class { 'TypedAttribute' }
+class TypedMethod extends mop::method {
+    has $sig_checker is rw;
+
+    method execute ($invocant, $args) {
+        $sig_checker->( $args ) if $sig_checker;
+        $self->next::method( $invocant, $args );
+    }
 }
 
-class Foo metaclass TypedAttributeClass {
+class TypedClass extends mop::class {
+    method attribute_class { 'TypedAttribute' }
+    method method_class    { 'TypedMethod'    }
+}
+
+class Foo metaclass TypedClass {
     has $bar is rw, type('Int');
 
     method set_bar ($val) {
         $bar = $val;
+    }
+
+    method add_numbers ($a, $b) is type('Int', 'Int') {
+        $a + $b
     }
 }
 
@@ -70,6 +95,18 @@ like(
     '... this failed correctly'
 );
 is($foo->bar, 100, '... the value is still 100');
+
+{
+    my $result;
+    is(exception{ $result = $foo->add_numbers(100, 100) }, undef, '... this succeeded');
+    is($result, 200, '... got the result we expected too');
+}
+
+like(
+    exception{ $foo->add_numbers([], 20) }, 
+    qr/Validation failed for \'Int\' with value \[  \]/, 
+    '... this failed correctly'
+);
 
 done_testing;
 
