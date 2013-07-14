@@ -8,8 +8,9 @@ use base 'Devel::Declare::Context::Simple';
 use Hash::Util::FieldHash qw[ fieldhash ];
 use Variable::Magic       qw[ wizard ];
 
-use Sub::Name      ();
-use Devel::Declare ();
+use Sub::Name       ();
+use Devel::Declare  ();
+use Module::Runtime ();
 use B::Hooks::EndOfScope;
 
 # keep the local package name around
@@ -100,16 +101,21 @@ sub _namespace_parser {
     $self->skipspace;
     my $linestr = $self->get_linestr;
 
+    my @classes_to_load;
+
     if (my $class_name = $self->parse_modifier_with_single_value(\$linestr, 'extends')) {
         $proto = ($proto ? $proto . ', ' : '') . ('extends => q[' . $class_name . ']');    
+        push @classes_to_load => $class_name;
     }
 
     if (my @roles = $self->parse_modifier_with_multiple_values(\$linestr, 'with')) {
         $proto = ($proto ? $proto . ', ' : '') . ('with => [qw[' . (join " " => @roles) . ']]');
+        push @classes_to_load => @roles;
     }
 
     if (my $class_name = $self->parse_modifier_with_single_value(\$linestr, 'metaclass')) {
         $proto = ($proto ? $proto . ', ' : '') . ('metaclass => q[' . $class_name . ']');    
+        push @classes_to_load => $class_name;
     }  
 
     my @traits = $self->trait_collector(\$linestr, '$' . $pkg . '::METACLASS');
@@ -122,6 +128,14 @@ sub _namespace_parser {
     # set it to use our custom MRO, then build
     # our metaclass.
     my $inject = $self->scope_injector_call
+        . (join '' => map  { 
+                '{'
+                    . 'local $@;'
+                    . 'eval(q[use ' . $_ . ']);'
+                    . 'Module::Runtime::use_package_optimistically(q[' . $_ . ']) if $@;'
+                    . 
+                '}' 
+            } grep { !mop::util::has_meta( $_ ) } @classes_to_load)
         . 'eval(q[package ' . $pkg .';]);'
         . 'mro::set_mro(q[' . $pkg . '], q[mop]);'
         . '$' . $pkg . '::METACLASS = ' . __PACKAGE__ . '->' . $builder_method . '('
