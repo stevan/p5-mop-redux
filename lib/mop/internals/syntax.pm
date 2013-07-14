@@ -230,6 +230,7 @@ sub parse_modifier_with_multiple_values {
 
         while (substr( $$linestr, $self->offset, 1 ) eq ',') {
             $self->inc_offset( 1 );
+            $self->skipspace;
             my $length = Devel::Declare::toke_scan_ident( $self->offset );
             push @values => substr( $$linestr, $self->offset, $length );
             $self->inc_offset( $length );            
