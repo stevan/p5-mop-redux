@@ -15,11 +15,9 @@ our @AVAILABLE_TRAITS = qw[
 ];
 
 sub rw {
-    my $meta = shift;
-    my (%args) = @_;
-    if (exists $args{'attribute'}) {
-        my ($name, @args) = @{$args{'attribute'}};
-        my $attr = $meta->get_attribute($name);
+    if ($_[0]->isa('mop::attribute')) {
+        my ($attr) = @_;
+        my $meta = $attr->associated_class;
         $meta->add_method(
             $meta->method_class->new(
                 name => $attr->key_name,
@@ -31,8 +29,8 @@ sub rw {
             )
         );
     }
-    # if it is on the class itself
-    elsif ( (scalar keys %args) == 0 ) {
+    elsif ($_[0]->isa('mop::class')) {
+        my ($meta) = @_;
         foreach my $attr ( values %{ $meta->attributes } ) {
             $meta->add_method(
                 $meta->method_class->new(
@@ -49,11 +47,9 @@ sub rw {
 }
 
 sub ro {
-    my $meta = shift;
-    my (%args) = @_;
-    if (exists $args{'attribute'}) {
-        my ($name, @args) = @{$args{'attribute'}};
-        my $attr = $meta->get_attribute($name);
+    if ($_[0]->isa('mop::attribute')) {
+        my ($attr) = @_;
+        my $meta = $attr->associated_class;
         $meta->add_method(
             $meta->method_class->new(
                 name => $attr->key_name,
@@ -65,8 +61,8 @@ sub ro {
             )
         );
     }
-    # if it is on the class itself
-    elsif ( (scalar keys %args) == 0 ) {
+    elsif ($_[0]->isa('mop::class')) {
+        my ($meta) = @_;
         foreach my $attr ( values %{ $meta->attributes } ) {
             $meta->add_method(
                 $meta->method_class->new(
@@ -84,17 +80,12 @@ sub ro {
 
 sub abstract {
     my $meta = shift;
-    my (%args) = @_;
     $meta->make_class_abstract;
 }
 
 sub overload {
-    my $meta = shift;
-    my (%args) = @_;
-
-    if (exists $args{'method'}) {
-        my ($method_name, $operator) = @{$args{'method'}};
-        my $method = $meta->get_method($method_name);
+    if ($_[0]->isa('mop::method')) {
+        my ($method, $operator) = @_;
 
         # NOTE:
         # We are actually installing the overloads
@@ -109,7 +100,7 @@ sub overload {
         # penalty to the runtime
         require overload;
         overload::OVERLOAD(
-            $meta->name,
+            $method->associated_class->name,
             $operator,
             sub { $method->execute( shift( @_ ), [ @_ ] ) },
             fallback => 1

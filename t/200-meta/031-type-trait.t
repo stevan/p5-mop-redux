@@ -14,18 +14,14 @@ BEGIN {
 }
 
 sub type {
-    my $meta = shift;
-    my %args = @_;
-    if (exists $args{'attribute'}) {
-        my ($attr_name, $type_name) = @{$args{'attribute'}};
+    if ($_[0]->isa('mop::attribute')) {
+        my ($attr, $type_name) = @_;
         my $type = Moose::Util::TypeConstraints::find_type_constraint( $type_name );
-        my $attr = $meta->get_attribute( $attr_name );
         $attr->bind('before:STORE_DATA' => sub { $type->assert_valid( $_[2] ) });
     }
-    if (exists $args{'method'}) {
-        my ($meth_name, @type_names) = @{$args{'method'}};
+    elsif ($_[0]->isa('mop::method')) {
+        my ($meth, @type_names) = @_;
         my @types = map { Moose::Util::TypeConstraints::find_type_constraint( $_ ) } @type_names;
-        my $meth  = $meta->get_method( $meth_name );
         $meth->bind('before:EXECUTE' => sub {
             my @args = @{ $_[2] };
             foreach my $i ( 0 .. $#args ) {
