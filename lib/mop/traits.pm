@@ -109,11 +109,9 @@ sub overload {
 }
 
 sub weak_ref {
-    my $meta = shift;
-    my %args = @_;
-    if (exists $args{'attribute'}) {
-        my ($name) = @{ $args{'attribute'} };
-        $meta->get_attribute($name)->bind('after:STORE_DATA' => sub {
+    if ($_[0]->isa('mop::attribute')) {
+        my ($attr) = @_;
+        $attr->bind('after:STORE_DATA' => sub {
             Scalar::Util::weaken( ${ $_[0]->storage->{ $_[1] } } );
         })
     }
