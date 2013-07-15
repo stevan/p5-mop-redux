@@ -276,13 +276,9 @@ sub trait_parser {
         my $proto  = Devel::Declare::get_lex_stuff();
         Devel::Declare::clear_lex_stuff();
         $self->inc_offset( $length );
-        $trait .= '(' . $meta_object . ', q[' . $type . '], [ q[' . $name . '], ' . $proto . '])';
+        $trait .= '(' . $meta_object . ', ' . $proto . ')';
     } else {
-        if ($type && $name) {
-            $trait .= '(' . $meta_object . ', q[' . $type . '], [ q[' . $name . '] ])';
-        } else {
-            $trait .= '(' . $meta_object . ')';
-        }
+        $trait .= '(' . $meta_object . ')';
     }
 
     return $trait;
@@ -334,7 +330,7 @@ sub generic_method_parser {
 
     my @traits = $self->trait_collector(
         \$linestr,
-        '$' . $CURRENT_CLASS_NAME{$self} . '::METACLASS', 'method', $name
+        '$' . $CURRENT_CLASS_NAME{$self} . '::METACLASS->get_method(q[' . $name . '])'
     );
 
     if (@traits) {
@@ -455,7 +451,7 @@ sub attribute_parser {
 
         my @traits = $self->trait_collector(
             \$linestr,
-            '$' . $CURRENT_CLASS_NAME{$self} . '::METACLASS', 'attribute', $name
+            '$' . $CURRENT_CLASS_NAME{$self} . '::METACLASS->get_attribute(q[' . $name . '])'
         );
 
         $self->skipspace;
