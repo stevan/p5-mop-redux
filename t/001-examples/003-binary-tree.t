@@ -7,15 +7,13 @@ use Test::More;
 use Test::Fatal;
 
 use mop;
-use Scalar::Util qw[ isweak weaken ];
+use Scalar::Util qw[ isweak ];
 
 class BinaryTree {
     has $node   is rw;
-    has $parent is ro;
+    has $parent is ro, weak_ref;
     has $left;
     has $right;
-
-    submethod BUILD { weaken( $parent ) if $parent }
 
     method has_parent { defined $parent }
 
@@ -25,6 +23,8 @@ class BinaryTree {
     method right     { $right //= $class->new( parent => $self ) }
     method has_right { defined $right }
 }
+
+my $parent_store = mop::get_meta('BinaryTree')->get_attribute('$parent')->storage;
 
 {
     my $t = BinaryTree->new;
@@ -43,11 +43,13 @@ class BinaryTree {
 
     ok($t->left->has_parent, '... left has a parent');
     is($t->left->parent, $t, '... and it is us');
-    #ok(isweak(${ $t->left->{'slots'}->{'$parent'} }), '... the value is weakened');
+
+    ok(isweak(${ $parent_store->{ $t->left } }), '... the value is weakened');
 
     ok($t->right->has_parent, '... right has a parent');
     is($t->right->parent, $t, '... and it is us');
-    #ok(isweak(${ $t->right->{'slots'}->{'$parent'} }), '... the value is weakened');
+
+    ok(isweak(${ $parent_store->{ $t->right } }), '... the value is weakened');
 }
 
 class MyBinaryTree ( extends => 'BinaryTree' ) {}

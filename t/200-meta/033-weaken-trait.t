@@ -6,37 +6,19 @@ use warnings;
 use Test::More;
 use Test::Fatal;
 
-use Scalar::Util qw[ weaken isweak ];
+use Scalar::Util qw[ isweak ];
 
 use mop;
-
-sub weak {
-    my $meta = shift;
-    my %args = @_;
-    if (exists $args{'attribute'}) {
-        my ($name) = @{ $args{'attribute'} };
-        $meta->get_attribute($name)->bind('after:STORE_DATA' => sub {
-            my ($self, $instance, $data) = @_;
-            #warn "STORAGE:  " . $self->storage;
-            #warn "INSTANCE: " . $instance;
-            #warn "VALUE:    " . $self->storage->{ $instance };
-            weaken ${ $self->storage->{ $instance } };
-        })
-    }
-}
 
 class Foo {
     has $bar is rw;
 
-    #submethod DEMOLISH {
-    #    warn "reapin... "
-    #}
+    #submethod DEMOLISH { warn "reapin... " }
 }
 
 class Bar {
-    has $foo is rw, weak;
+    has $foo is rw, weak_ref;
 }
-
 
 my $foo = Foo->new;
 my $bar = Bar->new;

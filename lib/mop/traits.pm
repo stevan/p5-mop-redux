@@ -6,7 +6,13 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-our @AVAILABLE_TRAITS = qw[ rw ro abstract overload ];
+our @AVAILABLE_TRAITS = qw[ 
+    rw 
+    ro 
+    weak_ref
+    abstract 
+    overload 
+];
 
 sub rw {
     my $meta = shift;
@@ -108,6 +114,17 @@ sub overload {
             sub { $method->execute( shift( @_ ), [ @_ ] ) },
             fallback => 1
         );
+    }
+}
+
+sub weak_ref {
+    my $meta = shift;
+    my %args = @_;
+    if (exists $args{'attribute'}) {
+        my ($name) = @{ $args{'attribute'} };
+        $meta->get_attribute($name)->bind('after:STORE_DATA' => sub {
+            Scalar::Util::weaken( ${ $_[0]->storage->{ $_[1] } } );
+        })
     }
 }
 
