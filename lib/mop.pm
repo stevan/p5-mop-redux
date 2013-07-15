@@ -16,6 +16,8 @@ use mop::class;
 use mop::method;
 use mop::attribute;
 
+use mop::observable;
+
 use mop::internals::syntax;
 use mop::internals::mro;
 
@@ -52,10 +54,15 @@ sub bootstrap {
         mop::class
         mop::attribute
         mop::method
+        mop::observable
     ];
 
     my $Role  = mop::util::find_meta('mop::role');
     my $Class = mop::util::find_meta('mop::class');
+
+    my $Method     = mop::util::find_meta('mop::method');
+    my $Attribute  = mop::util::find_meta('mop::attribute');
+    my $Observable = mop::util::find_meta('mop::observable');
 
     # At this point the metaclass
     # layer class to role relationship
@@ -66,6 +73,11 @@ sub bootstrap {
     # is true.
     $Class->add_role( $Role );
     $Role->compose_into( $Class );
+
+    # make attribute and method into
+    # observables
+    $Observable->compose_into( $_ ) 
+        foreach ( $Method, $Attribute );
 
     {
         # NOTE:
@@ -87,6 +99,20 @@ sub bootstrap {
         #   - Class is a subclass of Object
         # is true.
         @{ $Class_stash->get_symbol('@ISA') } = ('mop::object');
+    }
+
+    {
+        my $Method_stash    = mop::util::get_stash_for('mop::method');
+        my $Attribute_stash = mop::util::get_stash_for('mop::attribute');
+
+        foreach my $method ( values %{ $Observable->methods }) {
+            
+            $Method_stash->add_symbol( '&' . $method->name, $method->body )
+                unless $Method_stash->has_symbol( '&' . $method->name );
+
+            $Attribute_stash->add_symbol( '&' . $method->name, $method->body )
+                unless $Attribute_stash->has_symbol( '&' . $method->name );
+        }
     }
 
     {
