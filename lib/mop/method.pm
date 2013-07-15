@@ -27,7 +27,22 @@ sub body { ${ $body{ $_[0] } } }
 
 sub execute {
     my ($self, $invocant, $args) = @_;
-    $self->body->( $invocant, @$args );
+
+    $self->fire('before:EXECUTE' => $invocant, $args);
+
+    my @result;
+    my $wantarray = wantarray;
+    if ( $wantarray ) {
+        @result = $self->body->( $invocant, @$args );
+    } elsif ( defined $wantarray ) {
+        $result[0] = $self->body->( $invocant, @$args );
+    } else {
+        $self->body->( $invocant, @$args );
+    }
+
+    $self->fire('after:EXECUTE' => $invocant, $args);
+
+    return $wantarray ? @result : $result[0];
 }
 
 our $METACLASS;
