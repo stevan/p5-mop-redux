@@ -20,14 +20,14 @@ sub type {
         my ($attr_name, $type_name) = @{$args{'attribute'}};
         my $type = Moose::Util::TypeConstraints::find_type_constraint( $type_name );
         my $attr = $meta->get_attribute( $attr_name );
-        $attr->type_checker(sub { $type->assert_valid( @_ ) });
+        $attr->bind('before:STORE_DATA' => sub { $type->assert_valid( $_[2] ) });
     }
     if (exists $args{'method'}) {
         my ($meth_name, @type_names) = @{$args{'method'}};
         my @types = map { Moose::Util::TypeConstraints::find_type_constraint( $_ ) } @type_names;
         my $meth  = $meta->get_method( $meth_name );
-        $meth->sig_checker(sub {
-            my @args = @{ $_[0] };
+        $meth->bind('before:EXECUTE' => sub {
+            my @args = @{ $_[2] };
             foreach my $i ( 0 .. $#args ) {
                 $types[ $i ]->assert_valid( $args[ $i ] );
             }
@@ -35,30 +35,7 @@ sub type {
     }
 }
 
-class TypedAttribute extends mop::attribute {
-    has $type_checker is rw;
-
-    method store_data_in_slot_for ($instance, $data) {
-        $type_checker->( $data ) if $type_checker;
-        $self->next::method($instance, $data);
-    }
-}
-
-class TypedMethod extends mop::method {
-    has $sig_checker is rw;
-
-    method execute ($invocant, $args) {
-        $sig_checker->( $args ) if $sig_checker;
-        $self->next::method( $invocant, $args );
-    }
-}
-
-class TypedClass extends mop::class {
-    method attribute_class { 'TypedAttribute' }
-    method method_class    { 'TypedMethod'    }
-}
-
-class Foo metaclass TypedClass {
+class Foo {
     has $bar is rw, type('Int');
 
     method set_bar ($val) {
