@@ -39,7 +39,7 @@ class TypedAttribute extends mop::attribute {
     has $type_checker is rw;
 
     method store_data_in_slot_for ($instance, $data) {
-        $type_checker->( $data );
+        $type_checker->( $data ) if $type_checker;
         $self->next::method($instance, $data);
     }
 }
