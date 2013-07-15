@@ -12,6 +12,7 @@ use parent 'mop::object';
 
 init_attribute_storage(my %name);
 init_attribute_storage(my %body);
+init_attribute_storage(my %associated_class);
 
 sub new {
     my $class = shift;
@@ -24,6 +25,8 @@ sub new {
 
 sub name { ${ $name{ $_[0] } } }
 sub body { ${ $body{ $_[0] } } }
+sub associated_class { ${ $associated_class{ $_[0] } } }
+sub set_associated_class { $associated_class{ $_[0] } = \$_[1] }
 
 sub execute {
     my ($self, $invocant, $args) = @_;
@@ -52,14 +55,23 @@ sub __INIT_METACLASS__ {
         storage => \%body
     ));
 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$associated_class',
+        storage => \%associated_class
+    ));
+
     # NOTE:
     # we do not include the new method, because
     # we want all meta-extensions to use the one
     # from mop::object.
     # - SL
-    $METACLASS->add_method( mop::method->new( name => 'name',    body => \&name    ) );
-    $METACLASS->add_method( mop::method->new( name => 'body',    body => \&body    ) );
+    $METACLASS->add_method( mop::method->new( name => 'name',                 body => \&name                 ) );
+    $METACLASS->add_method( mop::method->new( name => 'body',                 body => \&body                 ) );
+    $METACLASS->add_method( mop::method->new( name => 'associated_class',     body => \&associated_class     ) );
+    $METACLASS->add_method( mop::method->new( name => 'set_associated_class', body => \&set_associated_class ) );
+
     $METACLASS->add_method( mop::method->new( name => 'execute', body => \&execute ) );
+
     $METACLASS;
 }
 
