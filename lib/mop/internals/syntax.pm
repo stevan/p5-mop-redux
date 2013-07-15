@@ -450,6 +450,7 @@ sub attribute_parser {
             $full_length += $length;
             Devel::Declare::clear_lex_stuff();
             $self->inc_offset( $length );
+            $self->skipspace;
         }
 
         my @traits = $self->trait_collector(
