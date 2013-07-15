@@ -5,6 +5,7 @@ use warnings;
 
 use mop::util qw[ init_attribute_storage ];
 use Clone ();
+use Scalar::Util 'weaken';
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -62,7 +63,10 @@ sub get_default {
 sub storage { ${ $storage{ $_[0] } } }
 
 sub associated_class { ${ $associated_class{ $_[0] } } }
-sub set_associated_class { $associated_class{ $_[0] } = \$_[1] }
+sub set_associated_class {
+    $associated_class{ $_[0] } = \$_[1];
+    weaken(${ $associated_class{ $_[0] } });
+}
 
 sub fetch_data_in_slot_for {
     my ($self, $instance) = @_;

@@ -20,4 +20,10 @@ is($attr->associated_class, $meta);
 my $meth = $meta->get_method('foo');
 is($meth->associated_class, $meta);
 
+undef $Foo::METACLASS;
+undef $meta;
+
+is($attr->associated_class, undef);
+is($meth->associated_class, undef);
+
 done_testing;

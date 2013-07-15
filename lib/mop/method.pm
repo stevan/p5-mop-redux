@@ -4,6 +4,7 @@ use v5.16;
 use warnings;
 
 use mop::util qw[ init_attribute_storage ];
+use Scalar::Util 'weaken';
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -26,7 +27,10 @@ sub new {
 sub name { ${ $name{ $_[0] } } }
 sub body { ${ $body{ $_[0] } } }
 sub associated_class { ${ $associated_class{ $_[0] } } }
-sub set_associated_class { $associated_class{ $_[0] } = \$_[1] }
+sub set_associated_class {
+    $associated_class{ $_[0] } = \$_[1];
+    weaken(${ $associated_class{ $_[0] } });
+}
 
 sub execute {
     my ($self, $invocant, $args) = @_;
