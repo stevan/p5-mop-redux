@@ -21,14 +21,14 @@ sub new {
     my $class = shift;
     my %args  = @_;
     my $self = $class->SUPER::new( @_ );
-    $is_abstract{ $self } = \($args{'is_abstract'} // 0);    
+    $is_abstract{ $self } = \($args{'is_abstract'} // 0);
     $superclass{ $self }  = \($args{'superclass'});
     $submethods{ $self }  = \({});
-    
+
     if ( defined( $args{'name'} ) && is_module_name( $args{'name'} ) ) {
         $INC{ module_notional_filename( $args{'name'} ) } //= '(mop)';
     }
-    
+
     $self;
 }
 
@@ -78,7 +78,7 @@ sub FINALIZE {
                 @{ $self->required_methods } = uniq(
                     @{ $self->required_methods },
                     @{ $meta->required_methods }
-                );  
+                );
             }
         }
     }
@@ -86,8 +86,8 @@ sub FINALIZE {
     $self->mop::role::FINALIZE;
 
     if (scalar @{ $self->required_methods } != 0 && not $self->is_abstract) {
-        die 'Required methods are not allowed in ' 
-            . $self->name 
+        die 'Required methods are not allowed in '
+            . $self->name
             . ' unless class is declared abstract';
     }
 }
@@ -100,23 +100,23 @@ sub __INIT_METACLASS__ {
     $METACLASS = mop::class->new(
         name       => 'mop::class',
         version    => $VERSION,
-        authority  => $AUTHORITY,        
+        authority  => $AUTHORITY,
         superclass => 'mop::object'
     );
 
-    $METACLASS->add_attribute(mop::attribute->new( 
-        name    => '$is_abstract', 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$is_abstract',
         storage => \%is_abstract,
         default => \(0)
     ));
 
-    $METACLASS->add_attribute(mop::attribute->new( 
-        name    => '$superclass', 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$superclass',
         storage => \%superclass
     ));
 
-    $METACLASS->add_attribute(mop::attribute->new( 
-        name    => '$submethods', 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$submethods',
         storage => \%submethods,
         default => \({})
     ));

@@ -14,7 +14,7 @@ class ClassAccessorMeta extends mop::class {
 
         foreach my $attribute ( values %{ $self->attributes } ) {
             $self->add_method(
-                # stupid Devel::Declare won't let me 
+                # stupid Devel::Declare won't let me
                 # use the word method without trying
                 # to capture it, *sigh*
                 'mop::method'->new(

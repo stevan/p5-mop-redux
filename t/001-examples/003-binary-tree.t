@@ -65,10 +65,10 @@ class MyBinaryTree ( extends => 'BinaryTree' ) {}
     # NOTE:
     # this next thing illustrates that $class is not
     # virtual, meaning that it fixed to be the class
-    # it is defined in, and not the class of the 
+    # it is defined in, and not the class of the
     # invocant itself.
     # This deviates from the older prototype, but it
-    # perhaps feels more correct and is similar to 
+    # perhaps feels more correct and is similar to
     # how __PACKAGE__ works.
     # - SL
 

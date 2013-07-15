@@ -26,20 +26,20 @@ sub new {
 
     # NOTE:
     # the only method from mop::object
-    # that we actually used was the 
-    # part of &mop::object::new that 
-    # created the instance. So since 
+    # that we actually used was the
+    # part of &mop::object::new that
+    # created the instance. So since
     # we really didn't need mop::role
-    # to be a subclass of mop::object, 
-    # it was easier to just do this 
-    # here. 
+    # to be a subclass of mop::object,
+    # it was easier to just do this
+    # here.
     # If for some reason, at a later
     # date, this does not work out,
     # we can simply restore the isa
-    # relationship, but for now, the 
+    # relationship, but for now, the
     # tests pass and it feels right.
     # - SL
-    my $self = bless \(my $x) => $class; 
+    my $self = bless \(my $x) => $class;
 
     $name{ $self }       = \($args{'name'});
     $version{ $self }    = \($args{'version'});
@@ -159,7 +159,7 @@ sub compose_into {
         # that needs to be fixed. But for now
         # we can just punt.
         # - SL
-        next if $method->name eq 'FINALIZE'; 
+        next if $method->name eq 'FINALIZE';
 
         if ($other->isa('mop::role')) {
             if ($other->has_method( $method->name )) {
@@ -177,7 +177,7 @@ sub compose_into {
 
     # merge required methods ...
     @{ $other->required_methods } = uniq(
-        @{ $self->required_methods }, 
+        @{ $self->required_methods },
         @{ $other->required_methods }
     );
 }
@@ -187,7 +187,7 @@ sub compose_into {
 sub FINALIZE {
     my $self = shift;
 
-    my $composite = mop::role->new( 
+    my $composite = mop::role->new(
         name => 'COMPOSITE::OF::[' . (join ', ' => map { $_->name } @{ $self->roles }) . ']'
     );
 
@@ -197,9 +197,9 @@ sub FINALIZE {
 
     $composite->compose_into( $self );
 
-    # rectify required methods 
+    # rectify required methods
     # after composition
-    @{ $self->required_methods } = grep { 
+    @{ $self->required_methods } = grep {
         !$self->has_method( $_ )
     } @{ $self->required_methods };
 }
@@ -212,45 +212,45 @@ sub __INIT_METACLASS__ {
     $METACLASS = mop::class->new(
         name       => 'mop::role',
         version    => $VERSION,
-        authority  => $AUTHORITY,        
+        authority  => $AUTHORITY,
         superclass => 'mop::object'
     );
 
-    $METACLASS->add_attribute(mop::attribute->new( 
-        name    => '$name', 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$name',
         storage => \%name
     ));
 
-    $METACLASS->add_attribute(mop::attribute->new( 
-        name    => '$version', 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$version',
         storage => \%version
     ));
 
-    $METACLASS->add_attribute(mop::attribute->new( 
-        name    => '$authority', 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$authority',
         storage => \%authority
     ));
 
-    $METACLASS->add_attribute(mop::attribute->new( 
-        name    => '$roles', 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$roles',
         storage => \%roles,
         default => \([])
     ));
 
-    $METACLASS->add_attribute(mop::attribute->new( 
-        name    => '$attributes', 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$attributes',
         storage => \%attributes,
         default => \({})
     ));
 
-    $METACLASS->add_attribute(mop::attribute->new( 
-        name    => '$methods', 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$methods',
         storage => \%methods,
         default => \({})
     ));
 
-    $METACLASS->add_attribute(mop::attribute->new( 
-        name    => '$required_methods', 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$required_methods',
         storage => \%required_methods,
         default => \([])
     ));
@@ -261,7 +261,7 @@ sub __INIT_METACLASS__ {
     # from mop::object.
     # - SL
     $METACLASS->add_method( mop::method->new( name => 'name',       body => \&name       ) );
-    $METACLASS->add_method( mop::method->new( name => 'version',    body => \&version    ) );   
+    $METACLASS->add_method( mop::method->new( name => 'version',    body => \&version    ) );
     $METACLASS->add_method( mop::method->new( name => 'authority',  body => \&authority  ) );
 
     $METACLASS->add_method( mop::method->new( name => 'roles',     body => \&roles     ) );

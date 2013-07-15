@@ -21,7 +21,7 @@ it doesn't).
 
 =cut
 
-warning_like { 
+warning_like {
     eval q[
         class Foo {
             has $bar = 99;
@@ -33,7 +33,7 @@ warning_like {
                 join " " => ( $self->bar, $bar );
             }
         }
-    ] 
+    ]
 }
 qr/^\"my\" variable \$bar masks earlier declaration in same scope/,
 '... got the warning at compile time';

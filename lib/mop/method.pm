@@ -35,20 +35,20 @@ our $METACLASS;
 sub __INIT_METACLASS__ {
     return $METACLASS if defined $METACLASS;
     require mop::class;
-    $METACLASS = mop::class->new( 
+    $METACLASS = mop::class->new(
         name       => 'mop::method',
         version    => $VERSION,
-        authority  => $AUTHORITY,        
+        authority  => $AUTHORITY,
         superclass => 'mop::object'
     );
 
-    $METACLASS->add_attribute(mop::attribute->new( 
-        name    => '$name', 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$name',
         storage => \%name
     ));
 
-    $METACLASS->add_attribute(mop::attribute->new( 
-        name    => '$body', 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$body',
         storage => \%body
     ));
 

@@ -42,7 +42,7 @@ class LinkedList {
     method remove ($index) {
         die "Index ($index) out of bounds"
             if $index < 0 or $index > $count - 1;
-        
+
         my $tmp = $head;
         $tmp = $tmp->get_next while($index--);
         $tmp->get_previous->set_next($tmp->get_next);
@@ -70,7 +70,7 @@ class LinkedList {
         do { $sum += $tmp->get_value } while($tmp = $tmp->get_next);
         return $sum;
     }
-}   
+}
 
 class LinkedListNode {
     has $previous;

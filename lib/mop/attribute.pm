@@ -33,11 +33,11 @@ sub key_name {
 }
 
 # NOTE:
-# need to do a double de-ref for the 
-# default value. first is to access 
-# the value from the attribute, the 
-# second is to  actually dereference 
-# the default value (which is stored 
+# need to do a double de-ref for the
+# default value. first is to access
+# the value from the attribute, the
+# second is to  actually dereference
+# the default value (which is stored
 # as a ref of whatever the default is)
 # - SL
 sub has_default { defined( ${ ${ $default{ $_[0] } } } ) }
@@ -55,7 +55,7 @@ sub get_default {
             die "References of type(" . ref $value  . ") are not supported";
         }
     }
-    $value 
+    $value
 }
 
 sub storage { ${ $storage{ $_[0] } } }
@@ -88,18 +88,18 @@ sub __INIT_METACLASS__ {
         superclass => 'mop::object'
     );
 
-    $METACLASS->add_attribute(mop::attribute->new( 
-        name    => '$name', 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$name',
         storage => \%name
     ));
 
-    $METACLASS->add_attribute(mop::attribute->new( 
-        name    => '$default', 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$default',
         storage => \%default
     ));
 
-    $METACLASS->add_attribute(mop::attribute->new( 
-        name    => '$storage', 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$storage',
         storage => \%storage,
         default => \(sub { init_attribute_storage(my %x) })
     ));
@@ -110,7 +110,7 @@ sub __INIT_METACLASS__ {
     # from mop::object.
     # - SL
     $METACLASS->add_method( mop::method->new( name => 'name',        body => \&name        ) );
-    $METACLASS->add_method( mop::method->new( name => 'key_name',    body => \&key_name    ) );   
+    $METACLASS->add_method( mop::method->new( name => 'key_name',    body => \&key_name    ) );
     $METACLASS->add_method( mop::method->new( name => 'has_default', body => \&has_default ) );
     $METACLASS->add_method( mop::method->new( name => 'get_default', body => \&get_default ) );
     $METACLASS->add_method( mop::method->new( name => 'storage',     body => \&storage     ) );

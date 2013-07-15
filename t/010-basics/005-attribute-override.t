@@ -7,20 +7,20 @@ use Test::More;
 
 =pod
 
-This test illustrates how the attributes are 
-private and allocated on a per-class basis. 
+This test illustrates how the attributes are
+private and allocated on a per-class basis.
 So when you override an attribute in a subclass
-the methods of the superclass will not get 
-the value 'virtually', since the storage is 
-class specific. 
+the methods of the superclass will not get
+the value 'virtually', since the storage is
+class specific.
 
 This is perhaps not ideal, the older p5-mop
 prototype did the opposite and in some ways
 that is more what I think people would expect.
 
 The solution to making this work like the
-older prototype would be to lookup the 
-attribute storage hash on each method call, 
+older prototype would be to lookup the
+attribute storage hash on each method call,
 this should then give us the virtual behavior
 but it seems a lot of overhead, so perhaps
 I will just punt until we do the real thing.

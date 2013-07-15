@@ -44,12 +44,12 @@ my $line1 = $line + 2 - 8;
 my $line2 = $line + 2;
 my $line3 = $line + 4;
 my $line4 = $line + 4;
-is(
+like(
     $e->stack_trace->as_string,
-    qq[Trace begun at $file line $line1
-main::foo at $file line $line2
-main::bar at $file line $line3
-eval {...} at $file line $line4
+    qr[^Trace begun at \Q$file\E line \Q$line1\E
+main::foo at \Q$file\E line \Q$line2\E
+main::bar at \Q$file\E line \Q$line3\E
+eval {\.\.\.} at \Q$file\E line \Q$line4\E
 ],
     '... got the exception'
 );
