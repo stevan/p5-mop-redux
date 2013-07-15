@@ -40,7 +40,7 @@ sub execute {
         $self->body->( $invocant, @$args );
     }
 
-    $self->fire('after:EXECUTE' => $invocant, $args);
+    $self->fire('after:EXECUTE' => $invocant, $args, \@result);
 
     return $wantarray ? @result : $result[0];
 }
