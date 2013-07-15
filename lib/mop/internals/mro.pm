@@ -3,10 +3,10 @@ package mop::internals::mro;
 use v5.16;
 use warnings;
 
-use mop::util qw[ 
-    has_meta 
-    find_meta 
-    get_stash_for 
+use mop::util qw[
+    has_meta
+    find_meta
+    get_stash_for
 ];
 
 use Devel::GlobalDestruction;
@@ -16,7 +16,7 @@ use Variable::Magic qw[ wizard cast ];
 
 BEGIN {
     MRO::Define::register_mro(
-        'mop', 
+        'mop',
         sub { [ 'mop::internals::mro' ] }
     )
 }
@@ -26,8 +26,8 @@ sub find_method {
 
     my @mro = @{ mop::mro::get_linear_isa( $invocant ) };
 
-    # NOTE: 
-    # this is ugly, needs work 
+    # NOTE:
+    # this is ugly, needs work
     # - SL
     if ( exists $opts{'super_of'} ) {
         #warn "got super-of";
@@ -37,11 +37,11 @@ sub find_method {
             #warn "got match, shifting";
             shift( @mro );
         } else {
-            #warn "no match, looking"; 
+            #warn "no match, looking";
             while ( $mro[0] && $mro[0] ne $opts{'super_of'}->name ) {
                 #warn "no match, shifting until we find it";
                 shift( @mro );
-            }    
+            }
             #warn "got it, shifting";
             shift( @mro );
         }
@@ -60,10 +60,10 @@ sub find_method {
         }
     }
 
-    # this is just because 
+    # this is just because
     # UNIVERSAL never shows
     # up in the mro and so
-    # we have to look for 
+    # we have to look for
     # these explicitly
     if ($method_name eq 'can' || $method_name eq 'isa') {
         return find_meta('mop::object')->get_method( $method_name );
@@ -86,7 +86,7 @@ sub find_submethod {
     if ( has_meta( $invocant ) ) {
         my $meta = find_meta( $invocant );
         # NOTE:
-        # we need to bail on this if 
+        # we need to bail on this if
         # the metaclass is a role
         # - SL
         return if $meta->isa('mop::role');
@@ -111,25 +111,25 @@ sub call_method {
     $method    = find_method( $invocant, $method_name, %opts )
         unless defined $method;
 
-    # XXX 
+    # XXX
     # this is f-ing stupid, but under `make test`
     # in_global_destruction is not working right
     # and I am getting errors in the test:
     #
     # > t/050-non-mop-integration/001-inherit-from-non-mop.t
-    # 
+    #
     # This should be removed ASAP.
     # - SL
     return if $method_name eq 'DESTROY' && not defined $method;
 
     die "Could not find $method_name in " . $invocant
         unless defined $method;
-    
-    # need to localize these two 
-    # globals here so that they 
+
+    # need to localize these two
+    # globals here so that they
     # will be available to methods
-    # added with "add_method" as 
-    # well as 
+    # added with "add_method" as
+    # well as
     local ${^SELF}  = $invocant;
     local ${^CLASS} = find_meta($invocant) if has_meta($invocant);
 
@@ -142,8 +142,8 @@ sub call_method {
     }
 }
 
-# Here is where things get a little ugly, 
-# we need to wrap the stash in magic so 
+# Here is where things get a little ugly,
+# we need to wrap the stash in magic so
 # that we can capture calls to it
 {
     my $method_called;

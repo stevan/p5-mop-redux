@@ -17,7 +17,7 @@ sub new {
 
     # NOTE:
     # prior to the bootstrapping being
-    # finished, we need to not try and 
+    # finished, we need to not try and
     # build classes, it will all be done
     # manually in the mop:: classes.
     # - SL
@@ -25,18 +25,18 @@ sub new {
 
     my $meta = find_meta($class);
 
-    die 'Cannot instantiate abstract class (' . $class . ')' 
+    die 'Cannot instantiate abstract class (' . $class . ')'
         if $meta->is_abstract;
-    
+
     my @mro = @{ mop::mro::get_linear_isa($class) };
 
-    my %attributes = map { 
+    my %attributes = map {
         if (my $m = find_meta($_)) {
             %{ $m->attributes }
         }
     } reverse @mro;
 
-    foreach my $attr (values %attributes) { 
+    foreach my $attr (values %attributes) {
         if ( exists $args{ $attr->key_name }) {
             $attr->store_data_in_slot_for( $self, $args{ $attr->key_name } )
         } else {
@@ -46,7 +46,7 @@ sub new {
 
     foreach my $class (reverse @mro) {
         if (my $m = find_meta($class)) {
-            $m->get_submethod('BUILD')->execute($self, [ \%args ]) 
+            $m->get_submethod('BUILD')->execute($self, [ \%args ])
                 if $m->has_submethod('BUILD');
         }
     }
@@ -59,7 +59,7 @@ sub id { get_object_id( shift ) }
 sub dump {
     my $self = shift;
 
-    my %attributes = map { 
+    my %attributes = map {
         if (my $m = find_meta($_)) {
             %{ $m->attributes }
         }
@@ -71,13 +71,13 @@ sub dump {
         __SELF__  => $self,
     };
 
-    foreach my $attr (values %attributes) { 
+    foreach my $attr (values %attributes) {
         if ($attr->name eq '$storage') {
             $temp->{ $attr->name } = '__INTERNAL_DETAILS__';
         } else {
-            $temp->{ $attr->name } = _dumper( 
+            $temp->{ $attr->name } = _dumper(
                 $attr->fetch_data_in_slot_for( $self )
-            );    
+            );
         }
     }
 
@@ -87,17 +87,17 @@ sub dump {
 sub _dumper {
     my ($data) = @_;
     if (blessed($data)) {
-        return $data->dump;            
+        return $data->dump;
     } elsif (ref $data) {
         if (ref $data eq 'ARRAY') {
             return [ map { _dumper( $_ ) } @$data ];
         } elsif (ref $data eq 'HASH') {
-            return { map { $_ => _dumper( $data->{$_} ) } keys %$data };     
+            return { map { $_ => _dumper( $data->{$_} ) } keys %$data };
         } else {
-            return $data;            
+            return $data;
         }
     } else {
-        return $data;            
+        return $data;
     }
 }
 
@@ -115,10 +115,10 @@ sub DESTROY {
     my $self = shift;
     foreach my $class (@{ mop::mro::get_linear_isa($self) }) {
         if (my $m = find_meta($class)) {
-            $m->get_submethod('DEMOLISH')->execute($self, []) 
+            $m->get_submethod('DEMOLISH')->execute($self, [])
                 if $m->has_submethod('DEMOLISH');
         }
-    }    
+    }
 }
 
 our $METACLASS;
@@ -126,7 +126,7 @@ our $METACLASS;
 sub __INIT_METACLASS__ {
     return $METACLASS if defined $METACLASS;
     require mop::class;
-    $METACLASS = mop::class->new( 
+    $METACLASS = mop::class->new(
         name      => 'mop::object',
         version   => $VERSION,
         authority => $AUTHORITY,
@@ -136,21 +136,21 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'dump',      body => \&dump ) );
     $METACLASS->add_method( mop::method->new( name => 'does',      body => \&does ) );
     $METACLASS->add_method( mop::method->new( name => 'DOES',      body => \&DOES ) );
-    $METACLASS->add_method( mop::method->new( 
-        name => 'isa', 
+    $METACLASS->add_method( mop::method->new(
+        name => 'isa',
         body => sub {
             my ($self, $class) = @_;
             scalar grep { $class eq $_ } @{ mop::mro::get_linear_isa($self) }
-        } 
+        }
     ));
-    $METACLASS->add_method( mop::method->new( 
-        name => 'can', 
+    $METACLASS->add_method( mop::method->new(
+        name => 'can',
         body => sub {
             my ($self, $method_name) = @_;
             if (my $method = mop::internals::mro::find_method($self, $method_name)) {
                 return blessed($method) ? $method->body : $method;
             }
-        } 
+        }
     ));
     $METACLASS->add_method( mop::method->new( name => 'DESTROY', body => \&DESTROY ) );
     $METACLASS;

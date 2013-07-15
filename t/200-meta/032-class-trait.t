@@ -41,14 +41,14 @@ is($bar->baz, 10, '... got the value we expected');
 is($bar->foo, 20, '... got the value we expected');
 
 like(
-    exception{ $bar->baz(40) }, 
-    qr/Cannot assign to a read-only accessor/, 
+    exception{ $bar->baz(40) },
+    qr/Cannot assign to a read-only accessor/,
     '... setting the value worked'
 );
 
 like(
-    exception{ $bar->foo(30) }, 
-    qr/Cannot assign to a read-only accessor/, 
+    exception{ $bar->foo(30) },
+    qr/Cannot assign to a read-only accessor/,
     '... setting the value worked'
 );
 

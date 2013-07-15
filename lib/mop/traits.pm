@@ -14,9 +14,9 @@ sub rw {
     if (exists $args{'attribute'}) {
         my ($name, @args) = @{$args{'attribute'}};
         my $attr = $meta->get_attribute($name);
-        $meta->add_method( 
+        $meta->add_method(
             $meta->method_class->new(
-                name => $attr->key_name, 
+                name => $attr->key_name,
                 body => sub {
                     my $self = shift;
                     $attr->store_data_in_slot_for($self, shift) if @_;
@@ -24,13 +24,13 @@ sub rw {
                 }
             )
         );
-    } 
+    }
     # if it is on the class itself
-    elsif ( (scalar keys %args) == 0 ) { 
+    elsif ( (scalar keys %args) == 0 ) {
         foreach my $attr ( values %{ $meta->attributes } ) {
-            $meta->add_method( 
+            $meta->add_method(
                 $meta->method_class->new(
-                    name => $attr->key_name, 
+                    name => $attr->key_name,
                     body => sub {
                         my $self = shift;
                         $attr->store_data_in_slot_for($self, shift) if @_;
@@ -48,9 +48,9 @@ sub ro {
     if (exists $args{'attribute'}) {
         my ($name, @args) = @{$args{'attribute'}};
         my $attr = $meta->get_attribute($name);
-        $meta->add_method( 
+        $meta->add_method(
             $meta->method_class->new(
-                name => $attr->key_name, 
+                name => $attr->key_name,
                 body => sub {
                     my $self = shift;
                     die "Cannot assign to a read-only accessor" if @_;
@@ -60,11 +60,11 @@ sub ro {
         );
     }
     # if it is on the class itself
-    elsif ( (scalar keys %args) == 0 ) { 
+    elsif ( (scalar keys %args) == 0 ) {
         foreach my $attr ( values %{ $meta->attributes } ) {
-            $meta->add_method( 
+            $meta->add_method(
                 $meta->method_class->new(
-                    name => $attr->key_name, 
+                    name => $attr->key_name,
                     body => sub {
                         my $self = shift;
                         die "Cannot assign to a read-only accessor" if @_;
@@ -92,20 +92,20 @@ sub overload {
 
         # NOTE:
         # We are actually installing the overloads
-        # into the package directly, this works 
-        # because the MRO stuff doesn't actually 
-        # get used if the the methods are local 
+        # into the package directly, this works
+        # because the MRO stuff doesn't actually
+        # get used if the the methods are local
         # to the package. This should avoid some
-        # complexity (perhaps). 
+        # complexity (perhaps).
 
-        # don't load it unless you 
+        # don't load it unless you
         # have too, it adds a speed
         # penalty to the runtime
         require overload;
         overload::OVERLOAD(
-            $meta->name, 
+            $meta->name,
             $operator,
-            sub { $method->execute( shift( @_ ), [ @_ ] ) }, 
+            sub { $method->execute( shift( @_ ), [ @_ ] ) },
             fallback => 1
         );
     }

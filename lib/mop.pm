@@ -37,9 +37,9 @@ sub import {
     }
 }
 
-sub get_meta { 
+sub get_meta {
     my $class = shift;
-    die "Could not find metaclass for $class" 
+    die "Could not find metaclass for $class"
       unless mop::util::has_meta( $class );
     mop::util::find_meta( $class );
 }
@@ -60,19 +60,19 @@ sub bootstrap {
     # At this point the metaclass
     # layer class to role relationship
     # is correct. And the following
-    #   - Class does Role 
+    #   - Class does Role
     #   - Role is instance of Class
     #   - Role does Role
     # is true.
     $Class->add_role( $Role );
     $Role->compose_into( $Class );
 
-    {  
+    {
         # NOTE:
         # This is ugly, but we need to do
-        # it to set the record straight 
+        # it to set the record straight
         # and make sure that the relationship
-        # between mop::class and mop::role 
+        # between mop::class and mop::role
         # are correct and code is reused.
         # - SL
         my $Class_stash = mop::util::get_stash_for('mop::class');
@@ -80,7 +80,7 @@ sub bootstrap {
             $Class_stash->add_symbol( '&' . $method->name, $method->body )
                 unless $Class_stash->has_symbol( '&' . $method->name );
         }
-        # Here we finalize the rest of the 
+        # Here we finalize the rest of the
         # metaclass layer so that the following:
         #   - Class is an instance of Class
         #   - Object is an instance of Class
@@ -125,15 +125,15 @@ version 0.01
     class Point {
         has $x is ro = 0;
         has $y is ro = 0;
-    
+
         method clear {
             ($x, $y) = (0, 0);
         }
     }
-    
+
     class Point3D extends Point {
         has $z is ro = 0;
-    
+
         method clear {
             $self->next::method;
             $z = 0;
@@ -148,98 +148,98 @@ This is a prototype for a new object system for Perl 5.
 
     class Object {
         method new (%args) { ... }
-    
+
         method id { ... }
-    
+
         method can  ($name)  { ... }
         method isa  ($class) { ... }
         method does ($role)  { ... }
         method DOES ($name)  { ... }
-    
+
         method DESTROY { ... }
     }
-    
+
     class Attribute extends Object {
         has $name is ro;
         has $default;
         has $storage is ro = {};
-    
+
         method key_name { ... }
-    
+
         method has_default { ... }
         method get_default { ... }
-    
+
         method fetch_data_in_slot_for ($instance) { ... }
         method store_data_in_slot_for ($instance, $data) { ... }
         method store_default_in_slot_for ($instance) { ... }
     }
-    
+
     class Method extends Object {
         has $name is ro;
         has $body is ro;
-    
+
         method execute ($invocant, $args) { ... }
     }
-    
+
     role Role {
         has $name      is ro;
         has $version   is ro;
         has $authority is ro;
-    
+
         has $roles            is ro = [];
         has $attributes       is ro = {};
         has $methods          is ro = {};
         has $required_methods is ro = [];
-    
+
         method add_role ($role) { ... }
         method does_role ($name) { ... }
-    
+
         method attribute_class { 'Attribute' }
-    
+
         method add_attribute ($attr) { ... }
         method get_attribute ($name) { ... }
         method has_attribute ($name) { ... }
-    
+
         method method_class { 'Method' }
-    
+
         method add_method ($attr) { ... }
         method get_method ($name) { ... }
         method has_method ($name) { ... }
         method remove_method ($name) { ... }
-    
+
         method add_required_method ($required_method) { ... }
         method requires_method ($name) { ... }
-    
+
         method compose_into ($other) { ... }
-    
+
         sub FINALIZE { ... }
     }
-    
+
     class Class extends Object with Role {
         has $superclass  is ro;
         has $submethods  is ro = {};
         has $is_abstract is ro;
 
         method make_class_abstract { ... }
-    
+
         method new_instance { ... }
-    
+
         method submethod_class { 'Method' }
-    
+
         method add_submethod ($attr) { ... }
         method get_submethod ($name) { ... }
         method has_submethod ($name) { ... }
-    
+
         method FINALIZE { ... }
     }
-  
+
 =head1 BOOTSTRAPPING GOALS
 
   Class is an instance of Class
   Object is an instance of Class
   Class is a subclass of Object
 
-  Class does Role 
+  Class does Role
   Role is an instance of Class
   Role does Role
 

@@ -8,10 +8,10 @@ use Test::More;
 use mop ();
 
 # make sure to bootstrap things ...
-# this is only needed because we 
+# this is only needed because we
 # do `use mop ()` with the parens
 # afterwards.
-mop::bootstrap; 
+mop::bootstrap;
 
 ok(mop::get_meta('mop::object')->isa('mop::class'), '... object->class is instance of class');
 ok(mop::class->isa('mop::object'), '... class isa object');

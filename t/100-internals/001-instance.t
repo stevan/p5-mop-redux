@@ -10,7 +10,7 @@ use Data::Dumper qw[ Dumper ];
 
 =pod
 
-This was just a proof of concept for how 
+This was just a proof of concept for how
 we are going about handling attributes.
 
 =cut
@@ -36,7 +36,7 @@ we are going about handling attributes.
     sub foo {
         my $self = shift;
         my $foo;
-        cast $foo, $wiz, [ \%foo, $self ]; 
+        cast $foo, $wiz, [ \%foo, $self ];
 
         $foo = shift if @_;
         $foo;
@@ -56,7 +56,7 @@ my $x = $foo->foo([ 2, 3, 4 ]);
 is_deeply($x, [ 2, 3, 4 ], '... got the value we expected');
 is_deeply($foo->foo, [ 2, 3, 4 ], '... got the value we expected');
 
-# check to make sure altering 
+# check to make sure altering
 # the value outside of the object
 # still works as expected.
 push @$x => 10;

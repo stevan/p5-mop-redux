@@ -1,5 +1,5 @@
 use strict;
-use warnings;    
+use warnings;
 use mop;
 class Root {
     has $foo;

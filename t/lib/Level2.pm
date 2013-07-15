@@ -1,5 +1,5 @@
 use strict;
-use warnings;    
+use warnings;
 use mop;
 
 class Level2 extends Level1 {}

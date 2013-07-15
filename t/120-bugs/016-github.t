@@ -16,10 +16,10 @@ which have private attribute data:
 
   scala> class Foo { private var test = 0; def set_test (x: Int) = { test = x } }
   defined class Foo
-  
+
   scala> class Baz extends Foo { private var test = 0; def get_test = test }
   defined class Baz
-  
+
   scala> val x = new Baz; x.set_test(10); x.get_test;
   x: Baz = Baz@42932892
   res0: Int = 0

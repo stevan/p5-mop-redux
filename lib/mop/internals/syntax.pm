@@ -16,37 +16,37 @@ use B::Hooks::EndOfScope;
 # keep the local package name around
 fieldhash my %CURRENT_CLASS_NAME;
 
-# Keep a list of attributes currently 
-# being compiled in the class because 
-# we need to alias them in the method 
+# Keep a list of attributes currently
+# being compiled in the class because
+# we need to alias them in the method
 # preamble.
 fieldhash my %CURRENT_ATTRIBUTE_LIST;
 
 # So this will apply magic to the aliased
-# attributes that we put in the method 
+# attributes that we put in the method
 # preamble. For `data`, it takes an HASH-ref
-# containing the invocant id, the current 
+# containing the invocant id, the current
 # meta object and the name of the attribute
-# we are trying to get/set. Then when our 
-# attribute variable is read from or written 
-# to it will get/set that data to the 
+# we are trying to get/set. Then when our
+# attribute variable is read from or written
+# to it will get/set that data to the
 # underlying fieldhash storage.
 our $WIZARD = Variable::Magic::wizard(
-    data => sub { 
+    data => sub {
         my (undef, $config) = @_;
         return $config;
     },
-    get  => sub { 
+    get  => sub {
         my ($var, $config) = @_;
         my $attr = $config->{'meta'}->get_attribute( $config->{'name'} );
         ${ $var } = $attr->fetch_data_in_slot_for( $config->{'oid'} );
         ();
     },
-    set  => sub { 
+    set  => sub {
         my ($value, $config) = @_;
         my $attr = $config->{'meta'}->get_attribute( $config->{'name'} );
-        $attr->store_data_in_slot_for( $config->{'oid'}, ${ $value } ); 
-        (); 
+        $attr->store_data_in_slot_for( $config->{'oid'}, ${ $value } );
+        ();
     },
 );
 
@@ -57,7 +57,7 @@ sub setup_for {
         no strict 'refs';
         *{ $pkg . '::class'     } = sub (&@) {};
         *{ $pkg . '::role'      } = sub (&@) {};
-        *{ $pkg . '::has'       } = sub ($@) {};        
+        *{ $pkg . '::has'       } = sub ($@) {};
         *{ $pkg . '::method'    } = sub (&)  {};
         *{ $pkg . '::submethod' } = sub (&)  {};
     }
@@ -104,7 +104,7 @@ sub _namespace_parser {
     my @classes_to_load;
 
     if (my $class_name = $self->parse_modifier_with_single_value(\$linestr, 'extends')) {
-        $proto = ($proto ? $proto . ', ' : '') . ('extends => q[' . $class_name . ']');    
+        $proto = ($proto ? $proto . ', ' : '') . ('extends => q[' . $class_name . ']');
         push @classes_to_load => $class_name;
     }
 
@@ -114,38 +114,38 @@ sub _namespace_parser {
     }
 
     if (my $class_name = $self->parse_modifier_with_single_value(\$linestr, 'metaclass')) {
-        $proto = ($proto ? $proto . ', ' : '') . ('metaclass => q[' . $class_name . ']');    
+        $proto = ($proto ? $proto . ', ' : '') . ('metaclass => q[' . $class_name . ']');
         push @classes_to_load => $class_name;
-    }  
+    }
 
     my @traits = $self->trait_collector(\$linestr, '$' . $pkg . '::METACLASS');
 
     $CURRENT_CLASS_NAME{$self}     = $pkg;
     $CURRENT_ATTRIBUTE_LIST{$self} = [];
 
-    # The class preamble is pretty simple, we 
+    # The class preamble is pretty simple, we
     # evaluate the package into existence, then
     # set it to use our custom MRO, then build
     # our metaclass.
     my $inject = $self->scope_injector_call
-        . (join '' => map  { 
+        . (join '' => map  {
                 '{'
                     . 'local $@;'
                     . 'eval(q[use ' . $_ . ']);'
                     . 'Module::Runtime::use_package_optimistically(q[' . $_ . ']) if $@;'
-                    . 
-                '}' 
+                    .
+                '}'
             } grep { !mop::util::has_meta( $_ ) } @classes_to_load)
         . 'eval(q[package ' . $pkg .';]);'
         . 'mro::set_mro(q[' . $pkg . '], q[mop]);'
         . '$' . $pkg . '::METACLASS = ' . __PACKAGE__ . '->' . $builder_method . '('
-            . 'name => q[' . $pkg . ']' 
-            . ($proto ? (', ' . $proto) : '') 
+            . 'name => q[' . $pkg . ']'
+            . ($proto ? (', ' . $proto) : '')
         . ');'
         . 'local ${^' . $type. '} = $' . $pkg . '::METACLASS;'
         . 'local ${^META} = $' . $pkg . '::METACLASS;' # mostly for internal use
-        . 'BEGIN { mop::internals::syntax->inject_scope(q[' 
-            . (join ';' => @traits) 
+        . 'BEGIN { mop::internals::syntax->inject_scope(q['
+            . (join ';' => @traits)
             . ';$' . $pkg . '::METACLASS->FINALIZE;'
         . ']) }'
     ;
@@ -182,14 +182,14 @@ sub build_class {
         $metadata{ 'roles' } = [ map { mop::util::find_meta($_) } @{ delete $metadata{ 'with' } } ];
     }
 
-    $class_Class->new(%metadata);    
+    $class_Class->new(%metadata);
 }
 
 sub build_role {
     shift;
     my %metadata = @_;
-    
-    if ( exists $metadata{ 'with' } ) {      
+
+    if ( exists $metadata{ 'with' } ) {
         $metadata{ 'with' }  = [ $metadata{ 'with' } ] unless ref($metadata{ 'with' }) eq q(ARRAY);
         $metadata{ 'roles' } = [ map { mop::util::find_meta($_) } @{ delete $metadata{ 'with' } } ];
     }
@@ -199,7 +199,7 @@ sub build_role {
 
 sub parse_modifier_with_single_value {
     my ($self, $linestr, $modifier) = @_;
-    
+
     my $modifier_length = length $modifier;
 
     if ( substr( $$linestr, $self->offset, $modifier_length ) eq $modifier ) {
@@ -227,7 +227,7 @@ sub parse_modifier_with_single_value {
 
 sub parse_modifier_with_multiple_values {
     my ($self, $linestr, $modifier) = @_;
-    
+
     my $modifier_length = length $modifier;
 
     if ( substr( $$linestr, $self->offset, $modifier_length ) eq $modifier ) {
@@ -247,7 +247,7 @@ sub parse_modifier_with_multiple_values {
             $self->skipspace;
             my $length = Devel::Declare::toke_scan_ident( $self->offset );
             push @values => substr( $$linestr, $self->offset, $length );
-            $self->inc_offset( $length );            
+            $self->inc_offset( $length );
         }
 
         my $full_length = $self->offset - $orig_offset;
@@ -259,9 +259,9 @@ sub parse_modifier_with_multiple_values {
         $self->skipspace;
 
         return @values;
-    }  
+    }
 
-    return ();  
+    return ();
 }
 
 sub trait_parser {
@@ -315,7 +315,7 @@ sub trait_collector {
         $self->skipspace;
 
         return @traits;
-    }  
+    }
 }
 
 sub generic_method_parser {
@@ -333,13 +333,13 @@ sub generic_method_parser {
     $self->skipspace;
 
     my @traits = $self->trait_collector(
-        \$linestr, 
+        \$linestr,
         '$' . $CURRENT_CLASS_NAME{$self} . '::METACLASS', 'method', $name
     );
 
     if (@traits) {
         $self->inject_scope(';' . (join ";" => @traits) . ';')
-    }    
+    }
 
     $self->skipspace;
     if (substr($linestr, $self->offset, 1) eq ';') {
@@ -354,7 +354,7 @@ sub generic_method_parser {
     $inject .= 'my ($self) = shift(@_);';
 
     if ($proto) {
-        $inject .= 'my (' . $proto . ') = @_;';    
+        $inject .= 'my (' . $proto . ') = @_;';
     }
 
     # create a $class variable, which
@@ -366,24 +366,24 @@ sub generic_method_parser {
 
     # this is our method preamble, it
     # basically creates a method local
-    # variable for each attribute, then 
-    # it will cast the magic on it to 
+    # variable for each attribute, then
+    # it will cast the magic on it to
     # make sure that any change in value
     # is stored in the fieldhash storage
     foreach my $attr (@{ $CURRENT_ATTRIBUTE_LIST{$self} }) {
         $inject .= 'my ' . $attr . ';'
-                . 'Variable::Magic::cast(' 
+                . 'Variable::Magic::cast('
                     . $attr . ', '
                     . '$' . __PACKAGE__ . '::WIZARD, '
-                    . '{' 
-                        . 'meta => $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS,' 
+                    . '{'
+                        . 'meta => $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS,'
                         . 'oid  => mop::util::get_object_id($self),'
                         . 'name => q[' . $attr . ']'
                     . '}'
                 . ');'
-                ; 
+                ;
     }
-    
+
     $self->inject_if_block( $inject );
     $self->shadow($callback->($name));
 
@@ -454,7 +454,7 @@ sub attribute_parser {
         }
 
         my @traits = $self->trait_collector(
-            \$linestr, 
+            \$linestr,
             '$' . $CURRENT_CLASS_NAME{$self} . '::METACLASS', 'attribute', $name
         );
 
@@ -477,7 +477,7 @@ sub attribute_parser {
         }
     }
 
-    push @{ $CURRENT_ATTRIBUTE_LIST{$self} } => $name; 
+    push @{ $CURRENT_ATTRIBUTE_LIST{$self} } => $name;
 
     $self->shadow(sub (@) : lvalue {
         my (%metadata) = @_;

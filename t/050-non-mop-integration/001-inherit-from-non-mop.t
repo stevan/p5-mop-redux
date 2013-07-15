@@ -21,14 +21,14 @@ use mop;
 
 class Foo extends BaseObject {
 
-    method bar { 'Foo::bar' }    
+    method bar { 'Foo::bar' }
 
     submethod gorch { 'Foo::gorch' }
 }
 
 class Bar extends Foo {
-    
-    method baz { 'Bar::baz' }    
+
+    method baz { 'Bar::baz' }
 }
 
 my $foo = Foo->new;

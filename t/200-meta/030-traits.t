@@ -33,8 +33,8 @@ can_ok($bar, 'baz');
 is($bar->baz, 10, '... got the value we expected');
 
 like(
-	exception{ $bar->baz(10) }, 
-	qr/Cannot assign to a read-only accessor/, 
+	exception{ $bar->baz(10) },
+	qr/Cannot assign to a read-only accessor/,
 	'... setting the value worked'
 );
 

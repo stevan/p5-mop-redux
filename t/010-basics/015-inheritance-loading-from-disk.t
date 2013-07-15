@@ -10,9 +10,9 @@ use lib 't/lib';
 
 use_ok 'Level3', '... use Level3 works';
 
-is_deeply( 
-    mop::mro::get_linear_isa('Level3'), 
-    [ 'Level3', 'Level2', 'Level1', 'Root', 'mop::object' ], 
+is_deeply(
+    mop::mro::get_linear_isa('Level3'),
+    [ 'Level3', 'Level2', 'Level1', 'Root', 'mop::object' ],
     '... Level3 MRO contains all relevant classes'
 );
 

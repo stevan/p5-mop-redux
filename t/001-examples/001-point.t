@@ -43,7 +43,7 @@ class Point3D extends Point {
         $data;
     }
 }
- 
+
 ## Test an instance
 {
     my $p = Point->new;

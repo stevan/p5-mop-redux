@@ -16,8 +16,8 @@ ok(mop::get_meta('Foo')->requires_method('bar'), '... bar is a required method')
 ok(mop::get_meta('Foo')->is_abstract, '... Foo is an abstract class');
 
 like(
-    exception { Foo->new }, 
-    qr/Cannot instantiate abstract class \(Foo\)/, 
+    exception { Foo->new },
+    qr/Cannot instantiate abstract class \(Foo\)/,
     '... cannot create an instance of abstract class Foo'
 );
 
@@ -44,8 +44,8 @@ ok(mop::get_meta('Baz')->requires_method('baz'), '... baz is a required method')
 ok(mop::get_meta('Baz')->is_abstract, '... Baz is an abstract class');
 
 like(
-    exception { Baz->new }, 
-    qr/Cannot instantiate abstract class \(Baz\)/, 
+    exception { Baz->new },
+    qr/Cannot instantiate abstract class \(Baz\)/,
     '... cannot create an instance of abstract class Baz'
 );
 
@@ -55,8 +55,8 @@ ok(mop::get_meta('Gorch')->requires_method('bar'), '... bar is a required method
 ok(mop::get_meta('Gorch')->is_abstract, '... Gorch is an abstract class');
 
 like(
-    exception { Gorch->new }, 
-    qr/Cannot instantiate abstract class \(Gorch\)/, 
+    exception { Gorch->new },
+    qr/Cannot instantiate abstract class \(Gorch\)/,
     '... cannot create an instance of abstract class Gorch'
 );
 

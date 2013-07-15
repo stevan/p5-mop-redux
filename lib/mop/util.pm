@@ -22,10 +22,10 @@ use Sub::Exporter -setup => {
 sub find_meta { ${ get_stash_for( shift )->get_symbol('$METACLASS') || \undef } }
 sub has_meta  {    get_stash_for( shift )->has_symbol('$METACLASS')  }
 
-sub get_stash_for { 
+sub get_stash_for {
     state %STASHES;
     my $class = ref($_[0]) || $_[0];
-    $STASHES{ $class } //= Package::Stash->new( $class ) 
+    $STASHES{ $class } //= Package::Stash->new( $class )
 }
 
 sub get_object_id { Hash::Util::FieldHash::id( $_[0] ) }
@@ -43,7 +43,7 @@ sub get_linear_isa {
     my $class = shift;
     if (my $meta = mop::util::find_meta($class)) {
         # NOTE:
-        # Roles have no ISA, but this question 
+        # Roles have no ISA, but this question
         # is asked by the dispatcher so we need
         # to be able to handle it.
         # - SL
@@ -66,9 +66,9 @@ use warnings;
 sub method {
     my ($invocant, @args) = @_;
     mop::internals::mro::call_method(
-        $invocant, 
-        ${^CALLER}->[1], 
-        \@args, 
+        $invocant,
+        ${^CALLER}->[1],
+        \@args,
         super_of => ${^CALLER}->[2]
     );
 }

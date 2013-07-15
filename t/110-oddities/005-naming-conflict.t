@@ -8,10 +8,10 @@ use Test::More;
 =pod
 
 This used to work differently in the old
-prototype, because Bar was turned into a 
-subroutine. However, this is no longer 
+prototype, because Bar was turned into a
+subroutine. However, this is no longer
 the case since we are generating packages
-now. 
+now.
 
 =cut
 

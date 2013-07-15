@@ -1,5 +1,5 @@
 use strict;
-use warnings;    
+use warnings;
 use mop;
 
 class Level1 extends Root {}

@@ -21,7 +21,7 @@ use mop::util qw[ find_meta ];
     use Moose;
 
     # NOTE:
-    # we have to make these attribute lazy 
+    # we have to make these attribute lazy
     # because of how Moose does constructors
     # that are inherited by non-Moose classes
     # - SL
