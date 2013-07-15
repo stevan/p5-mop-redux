@@ -32,17 +32,17 @@ sub key_name {
     substr( $self->name, 1, length $self->name )
 }
 
-sub has_default { defined( ${ $default{ $_[0] } }) }
+# NOTE:
+# need to do a double de-ref for the 
+# default value. first is to access 
+# the value from the attribute, the 
+# second is to  actually dereference 
+# the default value (which is stored 
+# as a ref of whatever the default is)
+# - SL
+sub has_default { defined( ${ ${ $default{ $_[0] } } } ) }
 sub get_default {
     my $self  = shift;
-    # NOTE:
-    # need to do a double de-ref here
-    # first is to access the value from
-    # the attribute, the second is to 
-    # actually dereference the default 
-    # value (which is stored as a ref
-    # of whatever the default is)
-    # - SL
     my $value = ${ ${ $default{ $self } } };
     if ( ref $value  ) {
         if ( ref $value  eq 'ARRAY' || ref $value  eq 'HASH' ) {
@@ -72,7 +72,7 @@ sub store_data_in_slot_for {
 
 sub store_default_in_slot_for {
     my ($self, $instance) = @_;
-    $self->storage->{ $instance } = \($self->get_default)
+    $self->store_data_in_slot_for($instance, $self->get_default)
         if $self->has_default;
 }
 
