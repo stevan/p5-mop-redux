@@ -16,6 +16,7 @@ requires 'Variable::Magic'          => 0;
 requires 'Package::Stash'           => 0;
 requires 'Package::Stash::XS'       => 0.26;
 requires 'List::AllUtils'           => 0;
+requires 'Devel::PartialDump'       => 0;
 requires 'Carp'                     => 0;
 requires 'Clone'                    => 0;
 requires 'Scalar::Util'             => 0;
