@@ -52,6 +52,9 @@ class Baz {
     has $bar;
 
     method new ($x) {
+        # NOTE:
+        # this is how we do argument mangling
+        # - SL
         $class->next::method( bar => $x )
     }
 
