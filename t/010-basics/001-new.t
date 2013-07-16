@@ -31,4 +31,39 @@ is( mop::get_meta($foo)->name, 'Foo', '... the class of this object is Foo' );
     is( mop::get_meta($foo), mop::get_meta($foo2), '... these two objects share the same class' );
 }
 
+class Bar {
+    has $foo;
+    method foo { $foo }
+}
+
+{
+    my $bar = Bar->new;
+    isa_ok($bar, 'Bar');
+    is($bar->foo, undef, '... defaults to undef');
+}
+
+{
+    my $bar = Bar->new( foo => 10 );
+    isa_ok($bar, 'Bar');
+    is($bar->foo, 10, '... keyword args to new work');
+}
+
+class Baz {
+    has $bar;
+
+    method new ($x) {
+        $self->next::method( bar => $x )
+    }
+
+    method bar { $bar }
+}
+
+{
+    my $baz = Baz->new( 10 );
+    isa_ok($baz, 'Baz');
+    is($baz->bar, 10, '... overriding new works');
+}
+
+
+
 done_testing;
