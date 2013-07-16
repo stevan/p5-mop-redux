@@ -50,10 +50,10 @@ sub new {
 }
 
 sub BUILDALL {
-    my ($self, $args) = @_;
+    my ($self, @args) = @_;
     foreach my $class (reverse @{ mop::mro::get_linear_isa($self) }) {
         if (my $m = find_meta($class)) {
-            $m->get_submethod('BUILD')->execute($self, [ $args ])
+            $m->get_submethod('BUILD')->execute($self, [ @args ])
                 if $m->has_submethod('BUILD');
         }
     }
