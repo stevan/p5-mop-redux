@@ -52,7 +52,7 @@ class Baz {
     has $bar;
 
     method new ($x) {
-        $self->next::method( bar => $x )
+        $class->next::method( bar => $x )
     }
 
     method bar { $bar }
