@@ -107,6 +107,18 @@ sub call_method {
         return $class->name->UNIVERSAL::can( @$args );
     }
 
+    # XXX
+    # for some reason, we are getting a lot
+    # of "method not found" type errors in 
+    # 5.18 during local scope destruction
+    # and there doesn't seem to be any 
+    # sensible way to fix this. Hence, this
+    # horrid fucking kludge.
+    # - SL
+    local $SIG{'__WARN__'} = sub {
+        warn $_[0] unless $_[0] =~ /\(in cleanup\)/
+    };
+
     my $method = find_submethod( $invocant, $method_name, %opts );
     $method    = find_method( $invocant, $method_name, %opts )
         unless defined $method;
