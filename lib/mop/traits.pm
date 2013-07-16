@@ -6,7 +6,7 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-our @AVAILABLE_TRAITS = qw[ rw ro abstract overload ];
+our @AVAILABLE_TRAITS = qw[ rw ro abstract overload extending_non_mop ];
 
 sub rw {
     if ($_[0]->isa('mop::attribute')) {
@@ -98,6 +98,28 @@ sub overload {
             $operator,
             sub { $method->execute( shift( @_ ), [ @_ ] ) },
             fallback => 1
+        );
+    }
+}
+
+sub extending_non_mop {
+    if ($_[0]->isa('mop::class')) {
+        state $BUILDALL = mop::get_meta('mop::object')->get_method('BUILDALL');
+        
+        my $meta              = shift;
+        my $constructor_name  = shift // 'new';
+        my $super_constructor = join '::' => $meta->superclass, $constructor_name;
+
+        $meta->add_method(
+            $meta->method_class->new(
+                name => $constructor_name,
+                body => sub {
+                    my $class = shift;
+                    my $self  = $class->$super_constructor( @_ );
+                    $BUILDALL->execute( $self, [ @_ ] );
+                    $self;
+                }
+            )
         );
     }
 }
