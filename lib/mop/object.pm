@@ -140,6 +140,7 @@ sub __INIT_METACLASS__ {
         name => 'isa',
         body => sub {
             my ($self, $class) = @_;
+            return 0 unless defined $class; # WTF perl!
             scalar grep { $class eq $_ } @{ mop::mro::get_linear_isa($self) }
         }
     ));
