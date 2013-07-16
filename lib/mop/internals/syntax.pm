@@ -147,6 +147,15 @@ sub _namespace_parser {
         . 'BEGIN { mop::internals::syntax->inject_scope(q['
             . (join ';' => @traits)
             . ';$' . $pkg . '::METACLASS->FINALIZE;'
+            # make sure to clean out the namespace once we are done
+            . '{' 
+                . 'my $stash = mop::util::get_stash_for(q[' . $pkg . ']);'
+                . '$stash->remove_symbol(q[&class]);'
+                . '$stash->remove_symbol(q[&role]);'
+                . '$stash->remove_symbol(q[&has]);'
+                . '$stash->remove_symbol(q[&method]);'
+                . '$stash->remove_symbol(q[&submethod]);'
+            . '}'
         . ']) }'
     ;
 
