@@ -44,14 +44,19 @@ sub new {
         }
     }
 
-    foreach my $class (reverse @mro) {
+    $self->BUILDALL( \%args );
+
+    $self;
+}
+
+sub BUILDALL {
+    my ($self, @args) = @_;
+    foreach my $class (reverse @{ mop::mro::get_linear_isa($self) }) {
         if (my $m = find_meta($class)) {
-            $m->get_submethod('BUILD')->execute($self, [ \%args ])
+            $m->get_submethod('BUILD')->execute($self, [ @args ])
                 if $m->has_submethod('BUILD');
         }
     }
-
-    $self;
 }
 
 sub id { get_object_id( shift ) }
@@ -132,6 +137,7 @@ sub __INIT_METACLASS__ {
         authority => $AUTHORITY,
     );
     $METACLASS->add_method( mop::method->new( name => 'new',       body => \&new ) );
+    $METACLASS->add_method( mop::method->new( name => 'BUILDALL',  body => \&BUILDALL ) );
     $METACLASS->add_method( mop::method->new( name => 'id',        body => \&id ) );
     $METACLASS->add_method( mop::method->new( name => 'dump',      body => \&dump ) );
     $METACLASS->add_method( mop::method->new( name => 'does',      body => \&does ) );

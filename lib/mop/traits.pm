@@ -12,7 +12,9 @@ our @AVAILABLE_TRAITS = qw[
     weak_ref
     abstract 
     overload 
+    extending_non_mop
 ];
+
 
 sub rw {
     if ($_[0]->isa('mop::attribute')) {
@@ -113,7 +115,29 @@ sub weak_ref {
         my ($attr) = @_;
         $attr->bind('after:STORE_DATA' => sub {
             Scalar::Util::weaken( ${ $_[0]->storage->{ $_[1] } } );
-        })
+        });
+    }
+}
+
+sub extending_non_mop {
+    if ($_[0]->isa('mop::class')) {
+        state $BUILDALL = mop::get_meta('mop::object')->get_method('BUILDALL');
+        
+        my $meta              = shift;
+        my $constructor_name  = shift // 'new';
+        my $super_constructor = join '::' => $meta->superclass, $constructor_name;
+
+        $meta->add_method(
+            $meta->method_class->new(
+                name => $constructor_name,
+                body => sub {
+                    my $class = shift;
+                    my $self  = $class->$super_constructor( @_ );
+                    $BUILDALL->execute( $self, [ @_ ] );
+                    $self;
+                }
+            )
+        );
     }
 }
 
