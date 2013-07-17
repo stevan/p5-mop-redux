@@ -149,7 +149,11 @@ sub requires_method {
 # composition
 
 sub compose_into {
-    my ($self, $other) = @_;
+    my ($self, $other, $ultimate_target) = @_;
+
+    $ultimate_target //= $other;
+
+    $self->fire('before:COMPOSE' => $ultimate_target);
 
     foreach my $attribute (values %{ $self->attributes }) {
         die 'Attribute conflict ' . $attribute->name . ' when composing ' . $self->name . ' into ' . $other->name
@@ -184,6 +188,8 @@ sub compose_into {
         @{ $self->required_methods },
         @{ $other->required_methods }
     );
+
+    $self->fire('after:COMPOSE' => $ultimate_target);
 }
 
 # events
@@ -197,7 +203,7 @@ sub FINALIZE {
     );
 
     foreach my $role ( @{ $self->roles } ) {
-        $role->compose_into( $composite );
+        $role->compose_into( $composite, $self );
     }
 
     $composite->compose_into( $self );
