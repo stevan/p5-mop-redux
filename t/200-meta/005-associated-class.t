@@ -12,18 +12,41 @@ class Foo {
     method foo { $foo }
 }
 
-my $meta = mop::util::find_meta('Foo');
+role Bar {
+    has $baz;
+    method baz { $baz }
+}
 
-my $attr = $meta->get_attribute('$foo');
-is($attr->associated_class, $meta);
+{
+    my $meta = mop::util::find_meta('Foo');
 
-my $meth = $meta->get_method('foo');
-is($meth->associated_class, $meta);
+    my $attr = $meta->get_attribute('$foo');
+    is($attr->associated_meta, $meta, '... got the expected meta object');
 
-undef $Foo::METACLASS;
-undef $meta;
+    my $meth = $meta->get_method('foo');
+    is($meth->associated_meta, $meta, '... got the expected meta object');
 
-is($attr->associated_class, undef);
-is($meth->associated_class, undef);
+    undef $Foo::METACLASS;
+    undef $meta;
+
+    is($attr->associated_meta, undef, '... got the lack of an expected meta object');
+    is($meth->associated_meta, undef, '... got the lack of an expected meta object');
+}
+
+{
+    my $meta = mop::util::find_meta('Bar');
+
+    my $attr = $meta->get_attribute('$baz');
+    is($attr->associated_meta, $meta, '... got the expected meta object');
+
+    my $meth = $meta->get_method('baz');
+    is($meth->associated_meta, $meta, '... got the expected meta object');
+
+    undef $Bar::METACLASS;
+    undef $meta;
+
+    is($attr->associated_meta, undef, '... got the lack of an expected meta object');
+    is($meth->associated_meta, undef, '... got the lack of an expected meta object');
+}
 
 done_testing;

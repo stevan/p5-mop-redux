@@ -19,7 +19,7 @@ our @AVAILABLE_TRAITS = qw[
 sub rw {
     if ($_[0]->isa('mop::attribute')) {
         my ($attr) = @_;
-        my $meta = $attr->associated_class;
+        my $meta = $attr->associated_meta;
         $meta->add_method(
             $meta->method_class->new(
                 name => $attr->key_name,
@@ -51,7 +51,7 @@ sub rw {
 sub ro {
     if ($_[0]->isa('mop::attribute')) {
         my ($attr) = @_;
-        my $meta = $attr->associated_class;
+        my $meta = $attr->associated_meta;
         $meta->add_method(
             $meta->method_class->new(
                 name => $attr->key_name,
@@ -102,7 +102,7 @@ sub overload {
         # penalty to the runtime
         require overload;
         overload::OVERLOAD(
-            $method->associated_class->name,
+            $method->associated_meta->name,
             $operator,
             sub { $method->execute( shift( @_ ), [ @_ ] ) },
             fallback => 1

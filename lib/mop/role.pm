@@ -90,7 +90,7 @@ sub attributes { ${ $attributes{ $_[0] } } }
 sub add_attribute {
     my ($self, $attr) = @_;
     $self->attributes->{ $attr->name } = $attr;
-    $attr->set_associated_class($self);
+    $attr->set_associated_meta($self);
 }
 
 sub get_attribute {
@@ -112,7 +112,7 @@ sub methods { ${ $methods{ $_[0] } } }
 sub add_method {
     my ($self, $method) = @_;
     $self->methods->{ $method->name } = $method;
-    $method->set_associated_class($self);
+    $method->set_associated_meta($self);
 }
 
 sub get_method {
