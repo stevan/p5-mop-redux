@@ -69,6 +69,7 @@ sub has_submethod {
 
 sub FINALIZE {
     my $self = shift;
+    $self->fire('before:FINALIZE');
 
     # inherit required methods ...
     if (my $super = $self->superclass) {
@@ -90,6 +91,8 @@ sub FINALIZE {
             . $self->name
             . ' unless class is declared abstract';
     }
+
+    $self->fire('after:FINALIZE');
 }
 
 our $METACLASS;

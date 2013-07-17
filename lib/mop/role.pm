@@ -190,6 +190,7 @@ sub compose_into {
 
 sub FINALIZE {
     my $self = shift;
+    $self->fire('before:FINALIZE');
 
     my $composite = mop::role->new(
         name => 'COMPOSITE::OF::[' . (join ', ' => map { $_->name } @{ $self->roles }) . ']'
@@ -206,6 +207,8 @@ sub FINALIZE {
     @{ $self->required_methods } = grep {
         !$self->has_method( $_ )
     } @{ $self->required_methods };
+
+    $self->fire('after:FINALIZE');
 }
 
 our $METACLASS;
