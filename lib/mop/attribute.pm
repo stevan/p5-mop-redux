@@ -10,7 +10,7 @@ use Scalar::Util 'weaken';
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use parent 'mop::object';
+use parent 'mop::object', 'mop::observable';
 
 init_attribute_storage(my %name);
 init_attribute_storage(my %default);

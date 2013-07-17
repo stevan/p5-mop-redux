@@ -77,7 +77,7 @@ sub bootstrap {
     # make attribute and method into
     # observables
     $Observable->compose_into( $_ ) 
-        foreach ( $Method, $Attribute );
+        foreach ( $Method, $Attribute, $Class, $Role );
 
     {
         # NOTE:
@@ -99,20 +99,6 @@ sub bootstrap {
         #   - Class is a subclass of Object
         # is true.
         @{ $Class_stash->get_symbol('@ISA') } = ('mop::object');
-    }
-
-    {
-        my $Method_stash    = mop::util::get_stash_for('mop::method');
-        my $Attribute_stash = mop::util::get_stash_for('mop::attribute');
-
-        foreach my $method ( values %{ $Observable->methods }) {
-            
-            $Method_stash->add_symbol( '&' . $method->name, $method->body )
-                unless $Method_stash->has_symbol( '&' . $method->name );
-
-            $Attribute_stash->add_symbol( '&' . $method->name, $method->body )
-                unless $Attribute_stash->has_symbol( '&' . $method->name );
-        }
     }
 
     {

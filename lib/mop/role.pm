@@ -11,6 +11,8 @@ use Module::Runtime qw[ is_module_name module_notional_filename ];
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
+use parent 'mop::observable';
+
 init_attribute_storage(my %name);
 init_attribute_storage(my %version);
 init_attribute_storage(my %authority);
