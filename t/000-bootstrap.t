@@ -51,9 +51,11 @@ is_deeply(
 );
 
 {
-    my $class  = mop::get_meta('mop::class');
-    my $object = mop::get_meta('mop::object');
-    my $role   = mop::get_meta('mop::role');
+    my $class     = mop::get_meta('mop::class');
+    my $object    = mop::get_meta('mop::object');
+    my $role      = mop::get_meta('mop::role');
+    my $method    = mop::get_meta('mop::method');
+    my $attribute = mop::get_meta('mop::attribute');
 
     ok($class->isa('mop::class'), '... class is an instance of class');
     ok($object->isa('mop::class'), '... object is an instance of class');
@@ -64,6 +66,11 @@ is_deeply(
     ok($role->does('mop::role'), '... role does role');
 
     ok($class->has_method('name'), '... mop::class does have the name method that was composed into it');
+
+    ok($role->does('mop::observable'), '... roles are observable');
+    ok($class->does('mop::observable'), '... classes are observable');
+    ok($method->does('mop::observable'), '... methods are observable');
+    ok($attribute->does('mop::observable'), '... attributes are observable');
 }
 
 

@@ -76,10 +76,17 @@ sub bootstrap {
 
     # make attribute and method into
     # observables
-    $Observable->compose_into( $_ ) 
-        foreach ( $Method, $Attribute, $Class, $Role );
+    foreach my $meta ( $Method, $Attribute, $Class, $Role ) {
+        $meta->add_role( $Observable );
+        $Observable->compose_into( $meta );
+    }
 
     {
+        my $Class_stash     = mop::util::get_stash_for('mop::class');
+        my $Role_stash      = mop::util::get_stash_for('mop::role');
+        my $Method_stash    = mop::util::get_stash_for('mop::method');
+        my $Attribute_stash = mop::util::get_stash_for('mop::attribute');
+
         # NOTE:
         # This is ugly, but we need to do
         # it to set the record straight
@@ -87,11 +94,26 @@ sub bootstrap {
         # between mop::class and mop::role
         # are correct and code is reused.
         # - SL
-        my $Class_stash = mop::util::get_stash_for('mop::class');
         foreach my $method ( values %{ $Role->methods }) {
             $Class_stash->add_symbol( '&' . $method->name, $method->body )
                 unless $Class_stash->has_symbol( '&' . $method->name );
         }
+
+        # now make sure the Observable roles are 
+        # completely intergrated into the stashes
+        foreach my $method ( values %{ $Observable->methods }) {
+            foreach my $stash ( $Role_stash, $Method_stash, $Attribute_stash ) {
+                $stash->add_symbol( '&' . $method->name, $method->body )
+                    unless $stash->has_symbol( '&' . $method->name );
+            }
+        }        
+
+        # then clean up some of the @ISA by
+        # removing mop::observable from them
+        @{ $Role_stash->get_symbol('@ISA')      }  = ();
+        @{ $Method_stash->get_symbol('@ISA')    } = ('mop::object');
+        @{ $Attribute_stash->get_symbol('@ISA') } = ('mop::object');
+
         # Here we finalize the rest of the
         # metaclass layer so that the following:
         #   - Class is an instance of Class
@@ -99,6 +121,9 @@ sub bootstrap {
         #   - Class is a subclass of Object
         # is true.
         @{ $Class_stash->get_symbol('@ISA') } = ('mop::object');
+
+        # blow the cache now
+        mro::method_changed_in('UNIVERSAL');
     }
 
     {
