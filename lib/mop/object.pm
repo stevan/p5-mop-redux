@@ -11,7 +11,7 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 sub new {
     my $class = shift;
-    my %args  = @_;
+    my %args  = scalar(@_) == 1 && ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
 
     my $self = bless \(my $x) => $class;
 
