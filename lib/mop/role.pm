@@ -281,11 +281,12 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'add_attribute',   body => \&add_attribute   ) );
     $METACLASS->add_method( mop::method->new( name => 'has_attribute',   body => \&has_attribute   ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'method_class', body => \&method_class ) );
-    $METACLASS->add_method( mop::method->new( name => 'methods',      body => \&methods      ) );
-    $METACLASS->add_method( mop::method->new( name => 'get_method',   body => \&get_method   ) );
-    $METACLASS->add_method( mop::method->new( name => 'add_method',   body => \&add_method   ) );
-    $METACLASS->add_method( mop::method->new( name => 'has_method',   body => \&has_method   ) );
+    $METACLASS->add_method( mop::method->new( name => 'method_class',  body => \&method_class  ) );
+    $METACLASS->add_method( mop::method->new( name => 'methods',       body => \&methods       ) );
+    $METACLASS->add_method( mop::method->new( name => 'get_method',    body => \&get_method    ) );
+    $METACLASS->add_method( mop::method->new( name => 'add_method',    body => \&add_method    ) );
+    $METACLASS->add_method( mop::method->new( name => 'has_method',    body => \&has_method    ) );
+    $METACLASS->add_method( mop::method->new( name => 'remove_method', body => \&remove_method ) );
 
     $METACLASS->add_method( mop::method->new( name => 'required_methods',    body => \&required_methods    ) );
     $METACLASS->add_method( mop::method->new( name => 'add_required_method', body => \&add_required_method ) );
