@@ -107,6 +107,22 @@ sub overload {
             sub { $method->execute( shift( @_ ), [ @_ ] ) },
             fallback => 1
         );
+    } elsif ($_[0]->isa('mop::class')) {
+        my $meta = shift;
+        ($_[0] eq 'inherited')
+            || die "I don't know what to do with $_[0]";
+
+        ($meta->superclass)
+            || die "You don't have a superclass on " . $meta->name;
+
+        my $local_stash = mop::util::get_stash_for( $meta->name );
+        my $super_stash = mop::util::get_stash_for( $meta->superclass );
+        my $all_symbols = $super_stash->get_all_symbols('CODE');
+
+        foreach my $symbol ( grep { /^\(/ } keys %$all_symbols ) {
+            $local_stash->add_symbol( '&' . $symbol => $all_symbols->{ $symbol } )
+                unless $local_stash->has_symbol( '&' . $symbol );
+        }
     }
 }
 
