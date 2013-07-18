@@ -119,9 +119,16 @@ sub overload {
         my $super_stash = mop::util::get_stash_for( $meta->superclass );
         my $all_symbols = $super_stash->get_all_symbols('CODE');
 
-        foreach my $symbol ( grep { /^\(/ } keys %$all_symbols ) {
-            $local_stash->add_symbol( '&' . $symbol => $all_symbols->{ $symbol } )
-                unless $local_stash->has_symbol( '&' . $symbol );
+        foreach my $symbol ( grep { /^\(/ && !/^\(\)/ && !/^\(\(/ } keys %$all_symbols ) {
+            unless ($local_stash->has_symbol( '&' . $symbol )) {
+                my ($operator) = ($symbol =~ /^\((.*)/);
+                overload::OVERLOAD(
+                    $meta->name,
+                    $operator,
+                    $all_symbols->{ $symbol },
+                    fallback => 1
+                );
+            }   
         }
     }
 }
