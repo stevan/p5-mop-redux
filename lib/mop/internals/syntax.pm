@@ -8,6 +8,7 @@ use base 'Devel::Declare::Context::Simple';
 use Hash::Util::FieldHash qw[ fieldhash ];
 use Variable::Magic       qw[ wizard ];
 
+use Scalar::Util    ();
 use Sub::Name       ();
 use Devel::Declare  ();
 use Module::Runtime ();
@@ -356,16 +357,17 @@ sub generic_method_parser {
 
     my $inject = $self->scope_injector_call;
 
-    $inject .= 'my ($self) = shift(@_);';
+    $inject .= 'my ($self, $class);'
+             . 'if (Scalar::Util::blessed($_[0])) {'
+                . '$self  = shift(@_);'
+                . '$class = Scalar::Util::blessed($self);'
+             . '} else {'
+                . '$class = shift(@_);'
+             . '}';
 
     if ($proto) {
         $inject .= 'my (' . $proto . ') = @_;';
     }
-
-    # create a $class variable, which
-    # actually points to the class name
-    # and not the metaclass object
-    $inject .= 'my $class = $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS->name;';
 
     $inject .= 'local ${^CALLER} = [ $self, q[' . $name . '], $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS ];';
 
