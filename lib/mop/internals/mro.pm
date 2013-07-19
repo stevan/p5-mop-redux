@@ -158,25 +158,79 @@ sub call_method {
 # we need to wrap the stash in magic so
 # that we can capture calls to it
 {
-    my $method_called;
+    my $method_called; 
+    my $is_fetched = 0;
 
     sub invoke_method {
         my ($caller, @args) = @_;
+        
+        # NOTE: this warning can be used to 
+        # diagnose the double-invoke/no-fetch bug
+        #warn "++++ $method_called called without wizard->fetch" if not $is_fetched;        
+
+        # FIXME:
+        # So for some really odd reason I cannot
+        # seem to diagnose, every once in a while
+        # invoke_method will be called, but the 
+        # wizard->fetch magic below will *not* 
+        # be called.
+        #
+        # To make it even more confusing, the $caller
+        # value is retained, but the @args values 
+        # are not (they show up as undef). 
+        #
+        # To make it even /more/ confusing,  
+        # if I was to detect the situation (which 
+        # is easy to do when you find a reproduceable
+        # case, simply by checking for undef args
+        # when you know for sure they should be 
+        # defined), and then die in response to 
+        # the situation, the die gets swallowed 
+        # up and everything just works fine.
+        # 
+        # Bug in Perl? Is putting magic on the stash
+        # just too damn funky? I have no idea, but 
+        # this code below will detect the situation
+        # (the lack of wizard->fetch/invoke_method 
+        # pair) and stop it. I leave the DESTROY 
+        # exception in place because that seemed to 
+        # be happening on a semi-legit basis.
+        #
+        # - SL
+        if (!$is_fetched && $method_called ne 'DESTROY') {
+            return;
+        }
+        $is_fetched = 0;
+        
+        # NOTE: this warning can be used to 
+        # diagnose the double-invoke/no-fetch bug
+        #warn join ", " => "invoke_method: ", $caller, $method_called, @args;
+
         call_method($caller, $method_called, \@args);
     }
 
     my $wiz = wizard(
-        data  => sub { \$method_called },
+        data  => sub { [ \$method_called, \$is_fetched ] },
         fetch => sub {
             return if $_[2] =~ /^\(/      # no overloaded methods
                    || $_[2] eq 'AUTOLOAD' # no AUTOLOAD (never!!)
                    || $_[2] eq 'import'   # classes don't import
                    || $_[2] eq 'unimport';  # and they certainly don't export
             return if $_[2] eq 'DESTROY' && in_global_destruction;
-            #warn join ", " => @_;
-            ${ $_[1] } = $_[2];
+
+            # NOTE: this warning can be used to 
+            # diagnose the double-invoke/no-fetch bug
+            #warn join ", " => "wizard->fetch: ", ${$_[1]->[1]}, ${$_[1]->[0]}, $_[2];
+
+            ${ $_[1]->[1] } = 1;
+            ${ $_[1]->[0] } = $_[2];
             $_[2] = 'invoke_method';
-            mro::method_changed_in('UNIVERSAL');
+            mro::method_changed_in('UNIVERSAL'); 
+            
+            # NOTE: this warning can be used to 
+            # diagnose the double-invoke/no-fetch bug
+            #Carp::cluck("HI");
+            
             ();
         }
     );
