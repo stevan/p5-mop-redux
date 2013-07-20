@@ -35,11 +35,36 @@ we are going about handling attributes.
 
     sub foo {
         my $self = shift;
+
         my $foo;
         cast $foo, $wiz, [ \%foo, $self ];
 
-        $foo = shift if @_;
-        $foo;
+        {
+            $foo = shift if @_;
+            $foo;
+        }
+    }
+
+    sub bar {
+        # first get the instance
+        my $self = shift;
+
+        # then setup the attributes
+        my $foo;
+        cast $foo, $wiz, [ \%foo, $self ];
+
+        # now create a block so that if
+        # you wish to use an attribute 
+        # name, you can without issuing
+        # a warning. 
+        {
+            # then unpack the args
+            my ($baz) = @_;
+
+            # then the method body itself
+            my $foo = $baz * 2;
+            return $foo;
+        }
     }
 
 }

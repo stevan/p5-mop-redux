@@ -387,6 +387,8 @@ sub generic_method_parser {
                 ;
     }
 
+    $inject .= '{; BEGIN { mop::internals::syntax->inject_scope(q[}]) };';
+
     # inject this after the attributes so that 
     # you it is overriding the attr and not the
     # other way around.

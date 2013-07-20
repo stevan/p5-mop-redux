@@ -10,18 +10,16 @@ use mop;
 
 =pod
 
-Since attributes are viewed as
-lexically scoped variables, it
-is possible to overwrite the
-name (which is dumb, but you
-can do it). And this is fine
-as long as the scope doesn't
-bleed into other scopes (and
-it doesn't).
+This behavior is now different then
+it used to be (and then it was in
+the old prototype), see the 
+t/100-internals/001-instance.t test 
+for a de-compiled example of what 
+is being done under the covers.
 
 =cut
 
-warning_like {
+warning_is {
     eval q[
         class Foo {
             has $bar = 99;
@@ -35,7 +33,7 @@ warning_like {
         }
     ]
 }
-qr/^\"my\" variable \$bar masks earlier declaration in same scope/,
+undef,
 '... got the warning at compile time';
 
 my $foo = Foo->new;
