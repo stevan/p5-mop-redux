@@ -17,7 +17,7 @@ sub type {
     if ($_[0]->isa('mop::attribute')) {
         my ($attr, $type_name) = @_;
         my $type = Moose::Util::TypeConstraints::find_type_constraint( $type_name );
-        $attr->bind('before:STORE_DATA' => sub { $type->assert_valid( $_[2] ) });
+        $attr->bind('before:STORE_DATA' => sub { $type->assert_valid( ${ $_[2] } ) });
     }
     elsif ($_[0]->isa('mop::method')) {
         my ($meth, @type_names) = @_;

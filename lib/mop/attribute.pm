@@ -78,9 +78,9 @@ sub fetch_data_in_slot_for {
 
 sub store_data_in_slot_for {
     my ($self, $instance, $data) = @_;
-    $self->fire('before:STORE_DATA', $instance, $data);
+    $self->fire('before:STORE_DATA', $instance, \$data);
     $self->storage->{ $instance } = \$data;
-    $self->fire('after:STORE_DATA', $instance, $data);
+    $self->fire('after:STORE_DATA', $instance, \$data);
     return;
 }
 
