@@ -365,10 +365,6 @@ sub generic_method_parser {
                 . '$class = shift(@_);'
              . '}';
 
-    if ($proto) {
-        $inject .= 'my (' . $proto . ') = @_;';
-    }
-
     $inject .= 'local ${^CALLER} = [ $self, q[' . $name . '], $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS ];';
 
     # this is our method preamble, it
@@ -389,6 +385,13 @@ sub generic_method_parser {
                     . '}'
                 . ');'
                 ;
+    }
+
+    # inject this after the attributes so that 
+    # you it is overriding the attr and not the
+    # other way around.
+    if ($proto) {
+        $inject .= 'my (' . $proto . ') = @_;';
     }
 
     $self->inject_if_block( $inject );
