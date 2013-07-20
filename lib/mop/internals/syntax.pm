@@ -32,7 +32,7 @@ fieldhash my %CURRENT_ATTRIBUTE_LIST;
 # attribute variable is read from or written
 # to it will get/set that data to the
 # underlying fieldhash storage.
-our $WIZARD = Variable::Magic::wizard(
+our $ATTR_WIZARD = Variable::Magic::wizard(
     data => sub {
         my (undef, $config) = @_;
         return $config;
@@ -47,6 +47,26 @@ our $WIZARD = Variable::Magic::wizard(
         my ($value, $config) = @_;
         my $attr = $config->{'meta'}->get_attribute( $config->{'name'} );
         $attr->store_data_in_slot_for( $config->{'oid'}, ${ $value } );
+        ();
+    },
+);
+
+# this wizard if for class methods only
+# that throws an error if the user tries
+# to access or assign to an attribute
+our $ERR_WIZARD = Variable::Magic::wizard(
+    data => sub {
+        my (undef, $name) = @_;
+        return $name;
+    },
+    get  => sub {
+        my (undef, $name) = @_;
+        die "Cannot access the attribute:($name) in a method without a blessed invocant";
+        ();
+    },
+    set  => sub {
+        my (undef, $name) = @_;
+        die "Cannot assign to the attribute:($name) in a method without a blessed invocant";
         ();
     },
 );
@@ -377,12 +397,19 @@ sub generic_method_parser {
         $inject .= 'my ' . $attr . ';'
                 . 'Variable::Magic::cast('
                     . $attr . ', '
-                    . '$' . __PACKAGE__ . '::WIZARD, '
-                    . '{'
-                        . 'meta => $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS,'
-                        . 'oid  => mop::util::get_object_id($self),'
-                        . 'name => q[' . $attr . ']'
-                    . '}'
+                    . '(Scalar::Util::blessed($self) ' 
+                        . '? $' . __PACKAGE__ . '::ATTR_WIZARD' 
+                        . ': $' . __PACKAGE__ . '::ERR_WIZARD' 
+                    . '), '
+                    . '(Scalar::Util::blessed($self) ' 
+                        . '? '
+                            . '{'
+                                . 'meta => $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS,'
+                                . 'oid  => mop::util::get_object_id($self),'
+                                . 'name => q[' . $attr . ']'
+                            . '}' 
+                        . ': q[' . $attr . ']' 
+                    . '), '
                 . ');'
                 ;
     }
