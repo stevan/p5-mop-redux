@@ -13,7 +13,7 @@ class Foo {
 
     method bar ($x) {
         $bar = $x if $x;
-        $bar;
+        $bar + 1;
     }
 }
 
@@ -23,13 +23,19 @@ like(
     '... got the error we expected'
 );
 
+like(
+    exception { Foo->bar() }, 
+    qr/^Cannot access the attribute\:\(\$bar\) in a method without a blessed invocant/,
+    '... got the error we expected'
+);
+
 my $foo = Foo->new;
 isa_ok($foo, 'Foo');
 {
     my $result;
     is(exception { $result = $foo->bar(10) }, undef, '... did not die');
-    is($result, 10, '... and the method worked');
-    is($foo->bar, 10, '... and the attribute assignment worked');
+    is($result, 11, '... and the method worked');
+    is($foo->bar, 11, '... and the attribute assignment worked');
 }
 
 done_testing;
