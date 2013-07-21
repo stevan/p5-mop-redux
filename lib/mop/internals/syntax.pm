@@ -188,7 +188,7 @@ sub _namespace_parser {
 
         $body->();
 
-        return 1;
+        return;
     });
 
     return;
