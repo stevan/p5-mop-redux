@@ -177,6 +177,7 @@ sub _namespace_parser {
                 . '$stash->remove_symbol(q[&method]);'
                 . '$stash->remove_symbol(q[&submethod]);'
             . '}'
+            . '1;'
         . ']) }'
     ;
 
@@ -187,7 +188,7 @@ sub _namespace_parser {
 
         $body->();
 
-        return;
+        return 1;
     });
 
     return;
