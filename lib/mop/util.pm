@@ -30,6 +30,9 @@ sub get_stash_for {
 
 sub get_object_id { Hash::Util::FieldHash::id( $_[0] ) }
 
+sub register_object    { Hash::Util::FieldHash::register( $_[0] ) }
+sub get_object_from_id { Hash::Util::FieldHash::id_2obj( $_[0] ) }
+
 sub init_attribute_storage (\%) {
     &Hash::Util::FieldHash::fieldhash( $_[0] )
 }

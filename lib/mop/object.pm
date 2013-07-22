@@ -15,6 +15,8 @@ sub new {
 
     my $self = bless \(my $x) => $class;
 
+    mop::util::register_object( $self );
+
     # NOTE:
     # prior to the bootstrapping being
     # finished, we need to not try and
