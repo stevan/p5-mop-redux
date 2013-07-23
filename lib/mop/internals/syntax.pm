@@ -12,10 +12,10 @@ use Sub::Name       ();
 use Module::Runtime ();
 
 use Parse::Keyword {
-    class     => sub { namespace_parser('class', \&build_class) },
-    role      => sub { namespace_parser('role', \&build_role) },
-    method    => sub { generic_method_parser('method') },
-    submethod => sub { generic_method_parser('submethod') },
+    class     => \&namespace_parser,
+    role      => \&namespace_parser,
+    method    => \&generic_method_parser,
+    submethod => \&generic_method_parser,
     has       => \&has_parser,
 };
 
@@ -104,7 +104,7 @@ sub role {
 }
 
 sub namespace_parser {
-    my ($type, $builder) = @_;
+    my ($type) = @_;
 
     lex_read_space;
 
@@ -167,7 +167,7 @@ sub namespace_parser {
 
     mro::set_mro($pkg, 'mop');
 
-    my $meta = $builder->(
+    my $meta = ($type eq 'class' ? \&build_class : \&build_role)->(
         name      => $pkg,
         extends   => $extends,
         with      => \@with,
