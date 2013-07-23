@@ -17,13 +17,13 @@ class Thing2 extends Thing1 is overload('inherited') {
 	}
 }
 
-my $thing1 = 'Thing1'->new(name => 'foo');
-is("$thing1", 'foo');
+my $thing1 = Thing1->new(name => 'foo');
+is("$thing1", 'foo', '... this stringifies correctly');
 
 {
 	local $TODO = "this doesn't work... maybe it's not supposed to";
-	my $thing2 = 'Thing2'->new(name => 'bar');
-	is("$thing2", 'BAR');
+	my $thing2 = Thing2->new(name => 'bar');
+	is("$thing2", 'BAR', '... this should stringify as well');
 }
 
 done_testing;
