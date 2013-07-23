@@ -158,9 +158,6 @@ sub namespace_parser {
         Module::Runtime::use_package_optimistically($class);
     }
 
-    # not doing this supposedly causes weird errors in edge cases
-    eval qq[package $pkg];
-
     mro::set_mro($pkg, 'mop');
 
     my $meta = $builder->(
