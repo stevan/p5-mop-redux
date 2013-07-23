@@ -116,18 +116,6 @@ sub namespace_parser {
 
     lex_read_space;
 
-    my $metadata;
-    if (lex_peek eq '(') {
-        lex_read;
-        lex_read_space;
-        $metadata = parse_listexpr;
-        lex_read_space;
-        die "Unterminated $type metadata for $name" unless lex_peek eq ')';
-        lex_read;
-    }
-
-    lex_read_space;
-
     my @classes_to_load;
 
     my $extends;
@@ -172,7 +160,6 @@ sub namespace_parser {
         extends   => $extends,
         with      => \@with,
         metaclass => $metaclass,
-        $metadata ? ($metadata->()) : (),
     );
     mop::util::get_stash_for($pkg)->add_symbol('$METACLASS', \$meta);
     my $g = guard {
@@ -359,20 +346,14 @@ sub generic_method_parser {
 }
 
 sub has {
-    my ($name, $metadata, $default, @traits) = @_;
+    my ($name, $metaclass, $default, @traits) = @_;
 
-    my %metadata = $metadata ? ($metadata->()) : ();
-
-    my $attribute_Class = ${^META}->attribute_class;
-    if ( exists $metadata{ 'metaclass' } ) {
-        $attribute_Class = delete $metadata{ 'metaclass' };
-    }
+    my $attribute_Class = $metaclass || ${^META}->attribute_class;
 
     ${^META}->add_attribute(
         $attribute_Class->new(
             name    => $name,
             default => \$default,
-            %metadata,
         )
     );
 
@@ -389,14 +370,9 @@ sub has_parser {
 
     lex_read_space;
 
-    my $metadata;
-    if (lex_peek eq '(') {
-        lex_read;
-        lex_read_space;
-        $metadata = parse_listexpr;
-        lex_read_space;
-        die "Unterminated attribute metadata for $name" unless lex_peek eq ')';
-        lex_read;
+    my $metaclass;
+    if ($metaclass = parse_modifier_with_single_value('metaclass')) {
+        Module::Runtime::use_package_optimistically($metaclass);
     }
 
     lex_read_space;
@@ -419,7 +395,7 @@ sub has_parser {
 
     push @{ $CURRENT_ATTRIBUTE_LIST } => $name;
 
-    return (sub { ($name, $metadata, $default, @traits) }, 1);
+    return (sub { ($name, $metaclass, $default, @traits) }, 1);
 }
 
 sub parse_modifier_with_single_value {

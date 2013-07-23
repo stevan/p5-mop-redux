@@ -52,7 +52,7 @@ $Foo->add_method(
 	)
 );
 
-eval "class Bar (with => 'Foo') {}";
+eval "class Bar with Foo {}";
 die $@ if $@;
 
 my $bar = Bar->new;
