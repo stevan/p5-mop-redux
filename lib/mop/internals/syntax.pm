@@ -160,6 +160,11 @@ sub namespace_parser {
         Module::Runtime::use_package_optimistically($class);
     }
 
+    die "$type must be followed by a block" unless lex_peek eq '{';
+
+    local $CURRENT_CLASS_NAME     = $pkg;
+    local $CURRENT_ATTRIBUTE_LIST = [];
+
     mro::set_mro($pkg, 'mop');
 
     my $meta = $builder->(
@@ -173,11 +178,6 @@ sub namespace_parser {
     my $g = guard {
         mop::util::get_stash_for($pkg)->remove_symbol('$METACLASS');
     };
-
-    local $CURRENT_CLASS_NAME     = $pkg;
-    local $CURRENT_ATTRIBUTE_LIST = [];
-
-    die "$type must be followed by a block" unless lex_peek eq '{';
 
     if (my $code = parse_block(1)) {
         local ${^META} = $meta;
