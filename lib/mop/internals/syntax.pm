@@ -11,8 +11,8 @@ use Sub::Name       ();
 use Module::Runtime ();
 
 use Parse::Keyword {
-    class     => sub { namespace_parser('CLASS', \&build_class) },
-    role      => sub { namespace_parser('ROLE', \&build_role) },
+    class     => sub { namespace_parser('class', \&build_class) },
+    role      => sub { namespace_parser('role', \&build_role) },
     method    => sub { generic_method_parser('method') },
     submethod => sub { generic_method_parser('submethod') },
     has       => \&has_parser,
@@ -107,7 +107,7 @@ sub namespace_parser {
 
     lex_read_space;
 
-    my $name   = parse_name(lc($type), 1);
+    my $name   = parse_name($type, 1);
     my $caller = compiling_package;
     my $pkg    = $name =~ /::/ || $caller eq 'main'
         ? $name
@@ -121,7 +121,7 @@ sub namespace_parser {
         lex_read_space;
         $metadata = parse_listexpr;
         lex_read_space;
-        die "Unterminated \L$type\E metadata for $name" unless lex_peek eq ')';
+        die "Unterminated $type metadata for $name" unless lex_peek eq ')';
         lex_read;
     }
 
@@ -173,14 +173,14 @@ sub namespace_parser {
     local $CURRENT_CLASS_NAME     = $pkg;
     local $CURRENT_ATTRIBUTE_LIST = [];
 
-    die "\L$type\E must be followed by a block" unless lex_peek eq '{';
+    die "$type must be followed by a block" unless lex_peek eq '{';
 
     {
         local $@;
         my $code = parse_block(1);
         die $@ if $@;
         local ${^META} = $meta;
-        if ($type eq 'CLASS') {
+        if ($type eq 'class') {
             local ${^CLASS} = $meta;
             $code->();
         }
