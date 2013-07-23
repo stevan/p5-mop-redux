@@ -174,20 +174,20 @@ sub namespace_parser {
     local $CURRENT_ATTRIBUTE_LIST = [];
 
     die "\L$type\E must be followed by a block" unless lex_peek eq '{';
-    lex_read;
-
-    my $preamble = '{';
-
-    $preamble .= 'local ${^' . $type. '} = $' . $pkg . '::METACLASS;'
-               . 'local ${^META} = $' . $pkg . '::METACLASS;';
-
-    lex_stuff($preamble);
 
     {
         local $@;
         my $code = parse_block(1);
         die $@ if $@;
-        $code->();
+        local ${^META} = $meta;
+        if ($type eq 'CLASS') {
+            local ${^CLASS} = $meta;
+            $code->();
+        }
+        else {
+            local ${^ROLE} = $meta;
+            $code->();
+        }
     }
 
     run_traits($meta, @traits);
