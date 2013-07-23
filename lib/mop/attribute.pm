@@ -34,8 +34,6 @@ sub key_name {
     substr( $self->name, 1, length $self->name )
 }
 
-sub set_default { $default{ $_[0] } = \(\$_[1]) }
-
 # NOTE:
 # need to do a double de-ref for the
 # default value. first is to access
@@ -45,6 +43,9 @@ sub set_default { $default{ $_[0] } = \(\$_[1]) }
 # as a ref of whatever the default is)
 # - SL
 sub has_default { defined( ${ ${ $default{ $_[0] } } } ) }
+# we also have to do the double en-ref 
+# here too, this should get fixed
+sub set_default { $default{ $_[0] } = \(\$_[1]) }
 sub get_default {
     my $self  = shift;
     my $value = ${ ${ $default{ $self } } };
