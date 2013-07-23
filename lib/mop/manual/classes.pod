@@ -1,0 +1,104 @@
+# PODNAME: mop::manual::classes
+# ABSTRACT: A manual for p5-mop
+
+__END__
+
+=pod
+
+=head1 NAME
+
+mop::manual::classes - A manual for p5-mop
+
+=head1 GRAMMAR
+
+Classes in the p5-mop are defined in the following way:
+
+  class NAME 
+    ?<(.*)> 
+    ?(extends NAME) 
+    ?(with NAME ?(, NAME)) 
+    ?(metaclass NAME) 
+    ?(is TRAIT ?(, TRAIT)) 
+  BLOCK
+
+The C<class> keyword is followed by a name. 
+
+Which is optionally followed by arbitrary metadata wrapped 
+inside parentheses (this will be passed into the constructor 
+of the metaclass). 
+
+Which is optionally followed by the C<extends> keyword 
+that is followed by the name of the class you wish to 
+subclass. 
+
+Which is optionally followed by the C<with> keyword that is 
+followed by a comma seperated list of the names of the roles 
+you wish to be composed into you class.
+
+Which is optionally followed by the C<metaclass> keyword
+that is followed by the name of the metaclass you wish to 
+be used in constructing this class. 
+
+Which is optionally followed by the C<is> keyword that is 
+followed by a comma seperated list of traits you wish to 
+be applied to your class. 
+
+After this comes a block, within which you can define
+methods and attributes (refer to those docs for more info).
+
+=head1 Constructing instances
+
+Classes which do not explitly extend a superclass will 
+automatically extend the C<mop::object> class. This class
+will provide a C<new> method which can be used to construct
+instances.
+
+The C<new> method inherited from C<mop::object> accepts 
+a set of key/value pairs where the key is the name of an 
+attribute (minus the sigil).
+
+If you wish to override this, you simply create a C<new>
+method yourself to accept different parameters, then simply
+munge those parameters into the key/value pair before 
+calling the C<mop::object> constructor with C<next::method>.
+Here is a short example:
+
+    class Foo {
+        has $bar;
+
+        method new ($b) {
+            $class->next::method( bar => $b );
+        }
+    }
+
+It should be noted that C<$self> inside the C<new> method
+will be undefined, and any attempt to assign to an attribute
+will result in an error. So if you either need access to 
+C<$self> or attributes, you can do this inside of the C<BUILD>
+submethod, which will be automatically called from C<new>.
+
+    class Foo {
+        has $bar;
+
+        method new ($b) {
+            $class->next::method;
+        }
+
+        submethod BUILD (%args) {
+            $bar = $args{'bar'} if exists $args{'bar'};
+        }
+    }
+
+
+=head1 AUTHOR
+
+Stevan Little <stevan.little@iinteractive.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by Infinity Interactive.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

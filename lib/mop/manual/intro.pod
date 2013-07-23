@@ -5,17 +5,38 @@ __END__
 
 =pod
 
-=head NAME
+=head1 NAME
 
 mop::manual::intro - A manual for p5-mop
 
-=head INTRODUCTION
+=head1 DESCRIPTION
 
-...
+This is the first attempt at a manual for the 
+p5-mop, it is very much a work in progress. You 
+can expect gaps and inconsistency in these 
+early versions. 
+
+Patches are always welcome :)
+
+=head1 SECTIONS
+
+=over 4
+
+=item L<Classes>
+
+=item L<Attributes>
+
+=item L<Methods>
+
+=item L<Roles>
+
+=item L<Traits>
+
+=back
 
 =head1 AUTHOR
 
-Stevan Little <stevan@iinteractive.com>
+Stevan Little <stevan.little@iinteractive.com>
 
 =head1 COPYRIGHT AND LICENSE
 
