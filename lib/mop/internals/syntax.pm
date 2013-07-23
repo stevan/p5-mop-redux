@@ -379,7 +379,7 @@ sub has {
 sub has_parser {
     lex_read_space;
 
-    die "invalid attribute name " . read_tokenish() unless lex_peek eq '$';
+    die "Invalid attribute name " . read_tokenish() unless lex_peek eq '$';
     lex_read;
 
     my $name = '$' . parse_name('attribute');
