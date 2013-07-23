@@ -175,10 +175,7 @@ sub namespace_parser {
 
     die "$type must be followed by a block" unless lex_peek eq '{';
 
-    {
-        local $@;
-        my $code = parse_block(1);
-        die $@ if $@;
+    if (my $code = parse_block(1)) {
         local ${^META} = $meta;
         if ($type eq 'class') {
             local ${^CLASS} = $meta;
