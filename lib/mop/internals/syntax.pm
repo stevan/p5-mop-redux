@@ -3,6 +3,7 @@ package mop::internals::syntax;
 use v5.16;
 use warnings;
 
+use Scope::Guard qw[ guard ];
 use Variable::Magic       qw[ wizard ];
 
 use B::Hooks::EndOfScope ();
@@ -169,6 +170,9 @@ sub namespace_parser {
         $metadata ? ($metadata->()) : (),
     );
     mop::util::get_stash_for($pkg)->add_symbol('$METACLASS', \$meta);
+    my $g = guard {
+        mop::util::get_stash_for($pkg)->remove_symbol('$METACLASS');
+    };
 
     local $CURRENT_CLASS_NAME     = $pkg;
     local $CURRENT_ATTRIBUTE_LIST = [];
@@ -185,6 +189,8 @@ sub namespace_parser {
             local ${^ROLE} = $meta;
             $code->();
         }
+
+        $g->dismiss;
     }
 
     run_traits($meta, @traits);
