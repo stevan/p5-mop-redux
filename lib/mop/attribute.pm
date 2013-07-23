@@ -34,6 +34,8 @@ sub key_name {
     substr( $self->name, 1, length $self->name )
 }
 
+sub set_default { $default{ $_[0] } = \(\$_[1]) }
+
 # NOTE:
 # need to do a double de-ref for the
 # default value. first is to access
@@ -66,6 +68,11 @@ sub associated_meta { ${ $associated_meta{ $_[0] } } }
 sub set_associated_meta {
     $associated_meta{ $_[0] } = \$_[1];
     weaken(${ $associated_meta{ $_[0] } });
+}
+
+sub has_data_in_slot_for {
+    my ($self, $instance) = @_;
+    exists $self->storage->{ $instance };
 }
 
 sub fetch_data_in_slot_for {
