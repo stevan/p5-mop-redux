@@ -76,6 +76,24 @@ sub method {
     );
 }
 
+sub can {
+    my ($invocant) = @_;
+    my $method = mop::internals::mro::find_method(
+        $invocant,
+        ${^CALLER}->[1],
+        super_of => ${^CALLER}->[2]
+    );
+    return unless $method;
+    # NOTE:
+    # we need to preserve any events 
+    # that have been attached to this
+    # method.
+    # - SL
+    return sub { $method->execute( shift, [ @_ ] ) }
+        if Scalar::Util::blessed($method) && $method->isa('mop::method');
+    return $method;
+}
+
 1;
 
 __END__

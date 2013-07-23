@@ -128,6 +128,7 @@ sub bootstrap {
 
     {
         my $old_next_method = \&next::method;
+        my $old_next_can    = \&next::can;
         no warnings 'redefine';
         *next::method = sub {
             my $invocant = shift;
@@ -136,7 +137,16 @@ sub bootstrap {
             } else {
                 $invocant->$old_next_method( @_ )
             }
-        }
+        };
+
+        *next::can = sub {
+            my $invocant = shift;
+            if ( mop::util::has_meta( $invocant ) ) {
+                $invocant->mop::next::can( @_ )
+            } else {
+                $invocant->$old_next_can( @_ )
+            }
+        };
 
     }
 
