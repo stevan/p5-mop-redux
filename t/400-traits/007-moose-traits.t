@@ -90,24 +90,6 @@ sub trigger {
     }
 }
 
-sub required {
-    my $meta = shift;
-    if ($meta->isa('mop::attribute')) {
-        my $class = $meta->associated_meta;
-        $class->add_method(
-            $class->method_class->new(
-                name => 'BUILDALL',
-                body => sub {
-                    my $self = shift;
-                    $self->mop::object::BUILDALL(@_);
-                    $meta->has_data_in_slot_for( $self )
-                        || die $meta->name . " is required";
-                }
-            )
-        );
-    }
-}
-
 class Bar {
     method bar { 'BAR' }
     method baz { 'BAZ' }
@@ -121,7 +103,7 @@ class Foo {
 
     has $gorch is rw, predicate('has_gorch'), lazy('_build_gorch');
 
-    has $bar_object is required, handles({ 'test_bar' => 'bar', 'test_baz' => 'baz' });
+    has $bar_object is handles({ 'test_bar' => 'bar', 'test_baz' => 'baz' }) = do { die '$bar_object is required' };
 
     has $bling_was_triggered is rw;
 
