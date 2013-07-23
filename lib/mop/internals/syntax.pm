@@ -3,7 +3,6 @@ package mop::internals::syntax;
 use v5.16;
 use warnings;
 
-use Hash::Util::FieldHash qw[ fieldhash ];
 use Variable::Magic       qw[ wizard ];
 
 use B::Hooks::EndOfScope ();
@@ -20,13 +19,13 @@ use Parse::Keyword {
 };
 
 # keep the local package name around
-fieldhash my %CURRENT_CLASS_NAME;
+our $CURRENT_CLASS_NAME;
 
 # Keep a list of attributes currently
 # being compiled in the class because
 # we need to alias them in the method
 # preamble.
-fieldhash my %CURRENT_ATTRIBUTE_LIST;
+our $CURRENT_ATTRIBUTE_LIST;
 
 # So this will apply magic to the aliased
 # attributes that we put in the method
@@ -171,8 +170,8 @@ sub namespace_parser {
     );
     mop::util::get_stash_for($pkg)->add_symbol('$METACLASS', \$meta);
 
-    $CURRENT_CLASS_NAME{''}     = $pkg;
-    $CURRENT_ATTRIBUTE_LIST{''} = [];
+    local $CURRENT_CLASS_NAME     = $pkg;
+    local $CURRENT_ATTRIBUTE_LIST = [];
 
     die "\L$type\E must be followed by a block" unless lex_peek eq '{';
     lex_read;
@@ -294,7 +293,7 @@ sub generic_method_parser {
         . '} else {'
            . '$class = shift(@_);'
         . '}'
-        . 'local ${^CALLER} = [ $self, q[' . $name . '], $' . $CURRENT_CLASS_NAME{''} . '::METACLASS ];';
+        . 'local ${^CALLER} = [ $self, q[' . $name . '], $' . $CURRENT_CLASS_NAME . '::METACLASS ];';
 
     # this is our method preamble, it
     # basically creates a method local
@@ -302,7 +301,7 @@ sub generic_method_parser {
     # it will cast the magic on it to
     # make sure that any change in value
     # is stored in the fieldhash storage
-    foreach my $attr (@{ $CURRENT_ATTRIBUTE_LIST{''} }) {
+    foreach my $attr (@{ $CURRENT_ATTRIBUTE_LIST }) {
         $preamble .=
             'my ' . $attr . ';'
           . 'Variable::Magic::cast('
@@ -313,7 +312,7 @@ sub generic_method_parser {
               . '), '
               . '(Scalar::Util::blessed($self) '
                   . '? {'
-                      . 'meta => $' . $CURRENT_CLASS_NAME{''} . '::METACLASS,'
+                      . 'meta => $' . $CURRENT_CLASS_NAME . '::METACLASS,'
                       . 'oid  => mop::util::get_object_id($self),'
                       . 'name => q[' . $attr . ']'
                   . '}'
@@ -415,7 +414,7 @@ sub has_parser {
     die "Couldn't parse attribute $name" unless lex_peek eq ';';
     lex_read;
 
-    push @{ $CURRENT_ATTRIBUTE_LIST{''} } => $name;
+    push @{ $CURRENT_ATTRIBUTE_LIST } => $name;
 
     return (sub { ($name, $metadata, $default, @traits) }, 1);
 }
