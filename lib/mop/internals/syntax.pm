@@ -14,8 +14,8 @@ use Module::Runtime ();
 use Parse::Keyword {
     class     => sub { namespace_parser('CLASS', \&build_class) },
     role      => sub { namespace_parser('ROLE', \&build_role) },
-    method    => \&generic_method_parser,
-    submethod => \&generic_method_parser,
+    method    => sub { generic_method_parser('method') },
+    submethod => sub { generic_method_parser('submethod') },
     has       => \&has_parser,
 };
 
@@ -108,7 +108,7 @@ sub namespace_parser {
 
     lex_read_space;
 
-    my $name   = parse_name(1);
+    my $name   = parse_name(lc($type), 1);
     my $caller = compiling_package;
     my $pkg    = ($caller eq 'main' ? $name : (join "::" => $caller, $name));
 
@@ -120,7 +120,7 @@ sub namespace_parser {
         lex_read_space;
         $metadata = parse_listexpr;
         lex_read_space;
-        die "syntax error" unless lex_peek eq ')';
+        die "Unterminated \L$type\E metadata for $name" unless lex_peek eq ')';
         lex_read;
     }
 
@@ -175,7 +175,7 @@ sub namespace_parser {
     $CURRENT_CLASS_NAME{''}     = $pkg;
     $CURRENT_ATTRIBUTE_LIST{''} = [];
 
-    die "syntax error" unless lex_peek eq '{';
+    die "\L$type\E must be followed by a block" unless lex_peek eq '{';
     lex_read;
 
     my $preamble = '{';
@@ -264,13 +264,14 @@ sub submethod {
 }
 
 sub generic_method_parser {
+    my ($type) = @_;
     lex_read_space;
 
-    my $name = parse_name();
+    my $name = parse_name($type);
 
     lex_read_space;
 
-    my @prototype = parse_prototype();
+    my @prototype = parse_prototype($name);
 
     lex_read_space;
 
@@ -283,7 +284,7 @@ sub generic_method_parser {
         return (sub { $name }, 1);
     }
 
-    die "syntax error" unless lex_peek eq '{';
+    die "Non-required ${type}s require a body" unless lex_peek eq '{';
     lex_read;
 
     my $preamble = '{'
@@ -380,10 +381,10 @@ sub has {
 sub has_parser {
     lex_read_space;
 
-    die "invalid attribute" unless lex_peek eq '$';
+    die "invalid attribute name " . read_tokenish() unless lex_peek eq '$';
     lex_read;
 
-    my $name = '$' . parse_name();
+    my $name = '$' . parse_name('attribute');
 
     lex_read_space;
 
@@ -393,7 +394,7 @@ sub has_parser {
         lex_read_space;
         $metadata = parse_listexpr;
         lex_read_space;
-        die "syntax error" unless lex_peek eq ')';
+        die "Unterminated attribute metadata for $name" unless lex_peek eq ')';
         lex_read;
     }
 
@@ -412,7 +413,7 @@ sub has_parser {
 
     lex_read_space;
 
-    die "syntax error" unless lex_peek eq ';';
+    die "Couldn't parse attribute $name" unless lex_peek eq ';';
     lex_read;
 
     push @{ $CURRENT_ATTRIBUTE_LIST{''} } => $name;
@@ -430,8 +431,7 @@ sub parse_modifier_with_single_value {
     lex_read($modifier_length);
     lex_read_space;
 
-    my $name = parse_name(1);
-    die "syntax error" unless length $name;
+    my $name = parse_name(($modifier eq 'extends' ? 'class' : $modifier), 1);
 
     return $name;
 }
@@ -449,8 +449,7 @@ sub parse_modifier_with_multiple_values {
     my @names;
 
     do {
-        my $name = parse_name(1);
-        die "syntax error" unless length $name;
+        my $name = parse_name('role', 1);
         push @names, $name;
         lex_read_space;
     } while (lex_peek eq ',' && do { lex_read; lex_read_space; 1 });
@@ -467,13 +466,13 @@ sub parse_traits {
     my @traits;
 
     do {
-        my $name = parse_name(1);
-        die "syntax error" unless length $name;
+        my $name = parse_name('trait', 1);
         my $params;
         if (lex_peek eq '(') {
             lex_read;
             $params = parse_fullexpr;
-            die "syntax error" unless lex_peek eq ')';
+            die "Unterminated parameter list for trait $name"
+                unless lex_peek eq ')';
             lex_read;
         }
         push @traits, { name => $name, params => $params };
@@ -523,6 +522,7 @@ sub run_traits {
 }
 
 sub parse_prototype {
+    my ($method_name) = @_;
     return unless lex_peek eq '(';
 
     lex_read;
@@ -537,7 +537,7 @@ sub parse_prototype {
     my @vars;
     while ((my $sigil = lex_peek) ne ')') {
         my $var = {};
-        die "syntax error"
+        die "Invalid sigil: $sigil"
             unless $sigil eq '$' || $sigil eq '@' || $sigil eq '%';
         die "Can't declare parameters after a slurpy parameter"
             if $seen_slurpy;
@@ -546,7 +546,7 @@ sub parse_prototype {
 
         lex_read;
         lex_read_space;
-        my $name = parse_name(0);
+        my $name = parse_name('argument', 0);
         lex_read_space;
 
         $var->{name} = "$sigil$name";
@@ -561,7 +561,7 @@ sub parse_prototype {
 
         push @vars, $var;
 
-        die "syntax error"
+        die "Unterminated prototype for $method_name"
             unless lex_peek eq ')' || lex_peek eq ',';
 
         if (lex_peek eq ',') {
@@ -577,7 +577,7 @@ sub parse_prototype {
 
 # XXX push back into Parse::Keyword?
 sub parse_name {
-    my ($allow_package) = @_;
+    my ($what, $allow_package) = @_;
     my $name = '';
 
     # XXX this isn't quite right, i think, but probably close enough for now?
@@ -595,7 +595,10 @@ sub parse_name {
             $char_rx = $cont_rx;
         }
         elsif ($allow_package && $char eq ':') {
-            die "syntax error" unless lex_peek(3) =~ /^::(?:[^:]|$)/;
+            if (lex_peek(3) !~ /^::(?:[^:]|$)/) {
+                my $invalid = $name . read_tokenish();
+                die "Invalid identifier: $invalid";
+            }
             $name .= '::';
             lex_read(2);
         }
@@ -604,7 +607,23 @@ sub parse_name {
         }
     }
 
-    return length($name) ? $name : undef;
+    die read_tokenish() . " is not a valid $what name" unless length $name;
+
+    return $name;
+}
+
+sub read_tokenish {
+    my $token = '';
+    if ((my $next = lex_peek) =~ /[\$\@\%]/) {
+        $token .= $next;
+        lex_read;
+    }
+    while ((my $next = lex_peek) =~ /\S/) {
+        $token .= $next;
+        lex_read;
+        last if ($next . lex_peek) =~ /^\S\b/;
+    }
+    return $token;
 }
 
 1;
