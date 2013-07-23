@@ -8,7 +8,7 @@ license 'perl';
 
 requires 'MRO::Define'              => 0;
 requires 'Sub::Name'                => 0;
-requires 'Devel::Declare'           => 0;
+requires 'Parse::Keyword'           => 0.02;
 requires 'B::Hooks::EndOfScope'     => 0;
 requires 'Devel::GlobalDestruction' => 0;
 requires 'Hash::Util::FieldHash'    => 0;
