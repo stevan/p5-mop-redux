@@ -311,8 +311,6 @@ sub generic_method_parser {
           . ');';
     }
 
-    local $mop::internals::syntax::{'DEFAULTS::'};
-
     # inject this after the attributes so that 
     # you it is overriding the attr and not the
     # other way around.
@@ -320,16 +318,10 @@ sub generic_method_parser {
         my @names = map { $_->{name} } @prototype;
         $preamble .= 'my (' . join(', ', @names) . ') = @_;';
 
-        my $index = 1;
         for my $var (grep { defined $_->{default} } @prototype) {
-            {
-                no strict 'refs';
-                *{ __PACKAGE__ . '::DEFAULTS::def' . $index } = sub () {
-                    $var->{default}
-                };
-            }
-            $preamble .= $var->{name} . ' = ' . __PACKAGE__ . '::DEFAULTS::def' . $index . '->()' . ' unless @_ > ' . $var->{index} . ';';
-            $index++;
+            $preamble .=
+                $var->{name} . ' = ' . stuff_value($var->{default}) . '->()'
+                  . ' unless @_ > ' . $var->{index} . ';';
         }
     }
 
@@ -338,9 +330,7 @@ sub generic_method_parser {
                        . 'Parse::Keyword::lex_stuff("}");'
                    . '} }';
 
-    lex_stuff($preamble);
-
-    my $code = parse_block;
+    my $code = parse_stuff_with_values($preamble, \&parse_block);
 
     return (sub { ($name, $code, @traits) }, 1);
 }
@@ -462,39 +452,25 @@ sub parse_traits {
 sub run_traits {
     my ($meta, @traits) = @_;
 
-    local $mop::internals::syntax::{'TRAITS::'};
-
-    {
-        no strict 'refs';
-        *{ __PACKAGE__ . '::TRAITS::meta' } = sub () { $meta };
-    }
+    my $meta_stuff = stuff_value($meta);
 
     my $code = '{';
 
-    my $index = 1;
     for my $trait (@traits) {
         if ($trait->{params}) {
-            {
-                no strict 'refs';
-                *{ __PACKAGE__ . '::TRAITS::trait' . $index } = sub () {
-                    $trait->{params}
-                };
-            }
             $code .= $trait->{name} . '('
-                . 'mop::internals::syntax::TRAITS::meta(),'
-                . 'mop::internals::syntax::TRAITS::trait' . $index . '()->()'
+                . "$meta_stuff,"
+                . stuff_value($trait->{params}) . '->()'
             . ');';
-            $index++;
         }
         else {
-            $code .= $trait->{name} . '(mop::internals::syntax::TRAITS::meta());';
+            $code .= $trait->{name} . "($meta_stuff);";
         }
     }
 
     $code .= '}';
 
-    lex_stuff($code);
-    my $traits_code = parse_block;
+    my $traits_code = parse_stuff_with_values($code, \&parse_block);
     $traits_code->();
 }
 
@@ -587,6 +563,36 @@ sub parse_name {
     die read_tokenish() . " is not a valid $what name" unless length $name;
 
     return $name;
+}
+
+# this is a little hack to be able to inject actual values into the thing we
+# want to parse (what we would normally do by inserting OP_CONST nodes into the
+# optree if we were building it manually). we insert a constant sub into a
+# private stash, and return the name of that sub. then, when that sub is
+# parsed, it'll be turned into an OP_CONST during constant folding, at which
+# point we can remove the sub (to avoid issues with holding onto refs longer
+# than we should).
+{
+    my @guards;
+    sub stuff_value {
+        my ($value) = @_;
+        state $index = 1;
+        my $symbol = '&value' . $index;
+        my $stash = mop::util::get_stash_for('mop::internals::syntax::STUFF');
+        $stash->add_symbol($symbol, sub () { $value });
+        my $code = "mop::internals::syntax::STUFF::value$index";
+        push @guards, guard { $stash->remove_symbol($symbol); };
+        $index++;
+        return $code;
+    }
+
+    sub parse_stuff_with_values {
+        my ($code, $parser) = @_;
+        lex_stuff($code);
+        my $ret = $parser->();
+        @guards = ();
+        $ret;
+    }
 }
 
 sub read_tokenish {
