@@ -157,13 +157,11 @@ sub lazy {
     if ($_[0]->isa('mop::attribute')) {
         my $meta    = shift;
         my $builder = shift;
-        my $event   = sub {
+        $meta->bind('before:FETCH_DATA' => sub {
             my (undef, $instance) = @_;
-            $meta->store_data_in_slot_for($instance, $instance->$builder());
-        };
-        $meta->bind('before:FETCH_DATA' => $event);
-        $meta->bind('before:STORE_DATA' => sub {
-            $meta->unbind('before:FETCH_DATA' => $event);
+            if (!exists $meta->storage->{$instance}) {
+                $meta->store_data_in_slot_for($instance, $instance->$builder());
+            }
         });
     }
 }
