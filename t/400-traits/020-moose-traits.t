@@ -22,14 +22,6 @@ for now.
 
 =cut
 
-sub built_by {
-    my $meta = shift;
-    if ($meta->isa('mop::attribute')) {
-        my $method = shift;
-        $meta->set_default(sub { ${^SELF}->$method() });
-    }
-}
-
 sub predicate {
     my $meta = shift;
     if ($meta->isa('mop::attribute')) {
@@ -41,21 +33,6 @@ sub predicate {
                 body => sub { $meta->has_data_in_slot_for( $_[0] ) }
             )
         );
-    }
-}
-
-sub lazy {
-    my $meta = shift;
-    if ($meta->isa('mop::attribute')) {
-        my $builder = shift;
-        my $event   = sub {
-            my (undef, $instance) = @_;
-            $meta->store_data_in_slot_for($instance, $instance->$builder());
-        };
-        $meta->bind('before:FETCH_DATA' => $event);
-        $meta->bind('before:STORE_DATA' => sub {
-            $meta->unbind('before:FETCH_DATA' => $event);
-        });
     }
 }
 
