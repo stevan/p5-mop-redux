@@ -41,7 +41,7 @@ sub handles {
     if ($meta->isa('mop::attribute')) {
         my $handles = shift;
         my $class = $meta->associated_meta;
-        foreach my $name ( %$handles ) {
+        foreach my $name ( keys %$handles ) {
             my $other_name = $handles->{$name};
             $class->add_method(
                 $class->method_class->new(
