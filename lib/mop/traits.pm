@@ -10,11 +10,12 @@ our @AVAILABLE_TRAITS = qw[
     rw 
     ro 
     weak_ref
+    built_by
+    lazy
     abstract 
     overload 
     extending_non_mop
 ];
-
 
 sub rw {
     if ($_[0]->isa('mop::attribute')) {
@@ -81,8 +82,10 @@ sub ro {
 }
 
 sub abstract {
-    my $meta = shift;
-    $meta->make_class_abstract;
+    if ($_[0]->isa('mop::class')) {
+        my $meta = shift;
+        $meta->make_class_abstract;
+    }
 }
 
 sub overload {
@@ -138,6 +141,29 @@ sub weak_ref {
         my ($attr) = @_;
         $attr->bind('after:STORE_DATA' => sub {
             Scalar::Util::weaken( ${ $_[0]->storage->{ $_[1] } } );
+        });
+    }
+}
+
+sub built_by {
+    if ($_[0]->isa('mop::attribute')) {
+        my $meta   = shift;
+        my $method = shift;
+        $meta->set_default(sub { ${^SELF}->$method() });
+    }
+}
+
+sub lazy {
+    if ($_[0]->isa('mop::attribute')) {
+        my $meta    = shift;
+        my $builder = shift;
+        my $event   = sub {
+            my (undef, $instance) = @_;
+            $meta->store_data_in_slot_for($instance, $instance->$builder());
+        };
+        $meta->bind('before:FETCH_DATA' => $event);
+        $meta->bind('before:STORE_DATA' => sub {
+            $meta->unbind('before:FETCH_DATA' => $event);
         });
     }
 }
