@@ -18,7 +18,7 @@ use mop;
 class Bar {}
 
 class Foo {
-    has $bar = do { Bar->new };
+    has $bar = Bar->new;
 
     method bar { $bar }
 
