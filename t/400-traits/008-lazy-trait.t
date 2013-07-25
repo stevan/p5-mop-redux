@@ -24,18 +24,20 @@ class Foo {
     }
 }
 
-my $foo = Foo->new;
-isa_ok($foo, 'Foo');
+for (1..2) {
+    my $foo = Foo->new;
+    isa_ok($foo, 'Foo');
 
-ok(!$foo->bar_touched, '... no bar yet');
-is($foo->bar, 50, '... bar has been generated');
-ok($foo->bar_touched, '... bar was created');
+    ok(!$foo->bar_touched, '... no bar yet');
+    is($foo->bar, 50, '... bar has been generated');
+    ok($foo->bar_touched, '... bar was created');
 
-is($foo->bar, 50, '... checking bar again');
-is($foo->bar_touched, 1, '... the lazy builder did not fire');
+    is($foo->bar, 50, '... checking bar again');
+    is($foo->bar_touched, 1, '... the lazy builder did not fire');
 
-ok(!$foo->baz_touched, '... no baz yet');
-is($foo->baz, 100, '... baz has been generated');
-ok($foo->baz_touched, '... baz was created');
+    ok(!$foo->baz_touched, '... no baz yet');
+    is($foo->baz, 100, '... baz has been generated');
+    ok($foo->baz_touched, '... baz was created');
+}
 
 done_testing;
