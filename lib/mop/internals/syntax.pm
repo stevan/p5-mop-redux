@@ -3,25 +3,30 @@ package mop::internals::syntax;
 use v5.16;
 use warnings;
 
-use base 'Devel::Declare::Context::Simple';
-
-use Hash::Util::FieldHash qw[ fieldhash ];
+use Scope::Guard qw[ guard ];
 use Variable::Magic       qw[ wizard ];
 
+use B::Hooks::EndOfScope ();
 use Scalar::Util    ();
 use Sub::Name       ();
-use Devel::Declare  ();
 use Module::Runtime ();
-use B::Hooks::EndOfScope;
+
+use Parse::Keyword {
+    class     => \&namespace_parser,
+    role      => \&namespace_parser,
+    method    => \&generic_method_parser,
+    submethod => \&generic_method_parser,
+    has       => \&has_parser,
+};
 
 # keep the local package name around
-fieldhash my %CURRENT_CLASS_NAME;
+our $CURRENT_CLASS_NAME;
 
 # Keep a list of attributes currently
 # being compiled in the class because
 # we need to alias them in the method
 # preamble.
-fieldhash my %CURRENT_ATTRIBUTE_LIST;
+our $CURRENT_ATTRIBUTE_LIST;
 
 # So this will apply magic to the aliased
 # attributes that we put in the method
@@ -72,143 +77,131 @@ our $ERR_WIZARD = Variable::Magic::wizard(
 );
 
 sub setup_for {
-    my $class = shift;
-    my $pkg   = shift;
+    shift;
+    my ($pkg) = @_;
     {
         no strict 'refs';
-        *{ $pkg . '::class'     } = sub (&@) {};
-        *{ $pkg . '::role'      } = sub (&@) {};
-        *{ $pkg . '::has'       } = sub ($@) {};
-        *{ $pkg . '::method'    } = sub (&)  {};
-        *{ $pkg . '::submethod' } = sub (&)  {};
+        *{ $pkg . '::class'     } = \&class;
+        *{ $pkg . '::role'      } = \&role;
+        *{ $pkg . '::method'    } = \&method;
+        *{ $pkg . '::submethod' } = \&submethod;
+        *{ $pkg . '::has'       } = \&has;
     }
-
-    my $context = $class->new;
-    Devel::Declare->setup_for(
-        $pkg,
-        {
-            'class'     => { const => sub { $context->class_parser( @_ )     } },
-            'role'      => { const => sub { $context->role_parser( @_ )      } },
-            'has'       => { const => sub { $context->attribute_parser( @_ ) } },
-            'method'    => { const => sub { $context->method_parser( @_ )    } },
-            'submethod' => { const => sub { $context->submethod_parser( @_ ) } },
-        }
-    );
 }
 
-sub role_parser {
-    my $self = shift;
-    $self->init( @_ );
-    $self->_namespace_parser('ROLE', 'build_role');
+sub class {
+    my ($pkg) = @_;
+    mop::util::get_stash_for($pkg)->remove_glob($_)
+        for qw(class role method submethod has);
+    1;
 }
 
-sub class_parser {
-    my $self = shift;
-    $self->init( @_ );
-    $self->_namespace_parser('CLASS', 'build_class');
+sub role {
+    my ($pkg) = @_;
+    mop::util::get_stash_for($pkg)->remove_glob($_)
+        for qw(class role method submethod has);
+    1;
 }
 
-sub _namespace_parser {
-    my $self = shift;
-    my ($type, $builder_method) = @_;
+sub namespace_parser {
+    my ($type) = @_;
 
-    $self->skip_declarator;
+    lex_read_space;
 
-    my $name   = $self->strip_name;
-    my $proto  = $self->strip_proto;
-    my $caller = $self->get_curstash_name;
-    my $pkg    = ($caller eq 'main' ? $name : (join "::" => $caller, $name));
+    my $name   = parse_name($type, 1);
+    my $caller = compiling_package;
+    my $pkg    = $name =~ /::/ || $caller eq 'main'
+        ? $name
+        : join "::" => $caller, $name;
 
-    $self->skipspace;
-    my $linestr = $self->get_linestr;
+    lex_read_space;
 
     my @classes_to_load;
 
-    if (my $class_name = $self->parse_modifier_with_single_value(\$linestr, 'extends')) {
-        $proto = ($proto ? $proto . ', ' : '') . ('extends => q[' . $class_name . ']');
-        push @classes_to_load => $class_name;
+    my $extends;
+    if ($extends = parse_modifier_with_single_value('extends')) {
+        push @classes_to_load => $extends;
     }
 
-    if (my @roles = $self->parse_modifier_with_multiple_values(\$linestr, 'with')) {
-        $proto = ($proto ? $proto . ', ' : '') . ('with => [qw[' . (join " " => @roles) . ']]');
-        push @classes_to_load => @roles;
+    lex_read_space;
+
+    my @with;
+    if (@with = parse_modifier_with_multiple_values('with')) {
+        push @classes_to_load => @with;
     }
 
-    if (my $class_name = $self->parse_modifier_with_single_value(\$linestr, 'metaclass')) {
-        $proto = ($proto ? $proto . ', ' : '') . ('metaclass => q[' . $class_name . ']');
-        push @classes_to_load => $class_name;
+    lex_read_space;
+
+    my $metaclass;
+    if ($metaclass = parse_modifier_with_single_value('metaclass')) {
+        push @classes_to_load => $metaclass;
     }
 
-    my @traits = $self->trait_collector(\$linestr, '$' . $pkg . '::METACLASS');
+    lex_read_space;
 
-    $CURRENT_CLASS_NAME{$self}     = $pkg;
-    $CURRENT_ATTRIBUTE_LIST{$self} = [];
+    my @traits = parse_traits();
 
-    # The class preamble is pretty simple, we
-    # evaluate the package into existence, then
-    # set it to use our custom MRO, then build
-    # our metaclass.
-    my $inject = $self->scope_injector_call
-        . (join '' => map  {
-                '{'
-                    . 'local $@;'
-                    . 'eval(q[use ' . $_ . ']);'
-                    . 'Module::Runtime::use_package_optimistically(q[' . $_ . ']) if $@;'
-                    .
-                '}'
-            } grep { !mop::util::has_meta( $_ ) } @classes_to_load)
-        . 'eval(q[package ' . $pkg .';]);'
-        . 'mro::set_mro(q[' . $pkg . '], q[mop]);'
-        . '$' . $pkg . '::METACLASS = ' . __PACKAGE__ . '->' . $builder_method . '('
-            . 'name => q[' . $pkg . ']'
-            . ($proto ? (', ' . $proto) : '')
-        . ');'
-        . 'local ${^' . $type. '} = $' . $pkg . '::METACLASS;'
-        . 'local ${^META} = $' . $pkg . '::METACLASS;' # mostly for internal use
-        . 'BEGIN { mop::internals::syntax->inject_scope(q['
-            . (join ';' => @traits)
-            . ';$' . $pkg . '::METACLASS->FINALIZE;'
-            # make sure to clean out the namespace once we are done
-            . '{' 
-                . 'my $stash = mop::util::get_stash_for(q[' . $pkg . ']);'
-                . '$stash->remove_symbol(q[&class]);'
-                . '$stash->remove_symbol(q[&role]);'
-                . '$stash->remove_symbol(q[&has]);'
-                . '$stash->remove_symbol(q[&method]);'
-                . '$stash->remove_symbol(q[&submethod]);'
-            . '}'
-            . '1;'
-        . ']) }'
-    ;
+    lex_read_space;
 
-    $self->inject_if_block( $inject );
+    for my $class (@classes_to_load) {
+        next if mop::util::has_meta($class);
+        Module::Runtime::use_package_optimistically($class);
+    }
 
-    $self->shadow(sub (&@) {
-        my $body = shift;
+    die "$type must be followed by a block" unless lex_peek eq '{';
 
-        $body->();
+    local $CURRENT_CLASS_NAME     = $pkg;
+    local $CURRENT_ATTRIBUTE_LIST = [];
 
-        return;
-    });
+    mro::set_mro($pkg, 'mop');
 
-    return;
+    my $meta = ($type eq 'class' ? \&build_class : \&build_role)->(
+        name      => $pkg,
+        extends   => $extends,
+        with      => \@with,
+        metaclass => $metaclass,
+    );
+    mop::util::get_stash_for($pkg)->add_symbol('$METACLASS', \$meta);
+    my $g = guard {
+        mop::util::get_stash_for($pkg)->remove_symbol('$METACLASS');
+    };
+
+    if (my $code = parse_block(1)) {
+        local ${^META} = $meta;
+        if ($type eq 'class') {
+            local ${^CLASS} = $meta;
+            $code->();
+        }
+        else {
+            local ${^ROLE} = $meta;
+            $code->();
+        }
+
+        $g->dismiss;
+    }
+
+    run_traits($meta, @traits);
+
+    $meta->FINALIZE;
+
+    return (sub { $pkg }, 1);
 }
+
 sub build_class {
-    shift;
     my %metadata = @_;
 
     my $class_Class = 'mop::class';
-    if ( exists $metadata{ 'metaclass' } ) {
+    if ( defined $metadata{ 'metaclass' } ) {
         $class_Class = delete $metadata{ 'metaclass' };
     }
 
-    if ( exists $metadata{ 'extends' } ) {
+    if ( defined $metadata{ 'extends' } ) {
         $metadata{ 'superclass' } = delete $metadata{ 'extends' };
     } else {
         $metadata{ 'superclass' } = 'mop::object';
     }
 
-    if ( exists $metadata{ 'with' } ) {
+    if ( defined $metadata{ 'with' } ) {
         $metadata{ 'with' }  = [ $metadata{ 'with' } ] unless ref($metadata{ 'with' }) eq q(ARRAY);
         $metadata{ 'roles' } = [ map { mop::util::find_meta($_) } @{ delete $metadata{ 'with' } } ];
     }
@@ -217,10 +210,9 @@ sub build_class {
 }
 
 sub build_role {
-    shift;
     my %metadata = @_;
 
-    if ( exists $metadata{ 'with' } ) {
+    if ( defined $metadata{ 'with' } ) {
         $metadata{ 'with' }  = [ $metadata{ 'with' } ] unless ref($metadata{ 'with' }) eq q(ARRAY);
         $metadata{ 'roles' } = [ map { mop::util::find_meta($_) } @{ delete $metadata{ 'with' } } ];
     }
@@ -228,165 +220,70 @@ sub build_role {
     mop::role->new(%metadata);
 }
 
-sub parse_modifier_with_single_value {
-    my ($self, $linestr, $modifier) = @_;
+sub method {
+    my ($name, $body, @traits) = @_;
 
-    my $modifier_length = length $modifier;
-
-    if ( substr( $$linestr, $self->offset, $modifier_length ) eq $modifier ) {
-        my $orig_offset = $self->offset;
-
-        $self->inc_offset( $modifier_length );
-        $self->skipspace;
-
-        my $length = Devel::Declare::toke_scan_ident( $self->offset );
-        my $value  = substr( $$linestr, $self->offset, $length );
-
-        $self->inc_offset( $length );
-
-        my $full_length = $self->offset - $orig_offset;
-
-        substr( $$linestr, $orig_offset, $full_length ) = '';
-
-        $self->set_linestr( $$linestr );
-        $self->{Offset} = $orig_offset;
-        $self->skipspace;
-
-        return $value;
+    if ($body) {
+        ${^META}->add_method(
+            ${^META}->method_class->new(
+                name => $name,
+                body => Sub::Name::subname($name, $body),
+            )
+        );
     }
+    else {
+        ${^META}->add_required_method($name);
+    }
+
+    run_traits(${^META}->get_method($name), @traits);
 }
 
-sub parse_modifier_with_multiple_values {
-    my ($self, $linestr, $modifier) = @_;
+sub submethod {
+    my ($name, $body, @traits) = @_;
 
-    my $modifier_length = length $modifier;
+    ${^META}->add_submethod(
+        ${^META}->submethod_class->new(
+            name => $name,
+            body => Sub::Name::subname($name, $body),
+        )
+    );
 
-    if ( substr( $$linestr, $self->offset, $modifier_length ) eq $modifier ) {
-        my $orig_offset = $self->offset;
-
-        $self->inc_offset( $modifier_length );
-        $self->skipspace;
-
-        my @values;
-
-        my $length = Devel::Declare::toke_scan_ident( $self->offset );
-        push @values => substr( $$linestr, $self->offset, $length );
-        $self->inc_offset( $length );
-
-        while (substr( $$linestr, $self->offset, 1 ) eq ',') {
-            $self->inc_offset( 1 );
-            $self->skipspace;
-            my $length = Devel::Declare::toke_scan_ident( $self->offset );
-            push @values => substr( $$linestr, $self->offset, $length );
-            $self->inc_offset( $length );
-        }
-
-        my $full_length = $self->offset - $orig_offset;
-
-        substr( $$linestr, $orig_offset, $full_length ) = '';
-
-        $self->set_linestr( $$linestr );
-        $self->{Offset} = $orig_offset;
-        $self->skipspace;
-
-        return @values;
-    }
-
-    return ();
-}
-
-sub trait_parser {
-    my ($self, $linestr, $meta_object, $type, $name) = @_;
-
-    my $length = Devel::Declare::toke_scan_ident( $self->offset );
-    my $trait  = substr( $$linestr, $self->offset, $length );
-    $self->inc_offset( $length );
-
-    if ( substr( $$linestr, $self->offset, 1 ) eq '(' ) {
-        my $length = Devel::Declare::toke_scan_str( $self->offset );
-        my $proto  = Devel::Declare::get_lex_stuff();
-        Devel::Declare::clear_lex_stuff();
-        $self->inc_offset( $length );
-        $trait .= '(' . $meta_object . ', ' . $proto . ')';
-    } else {
-        $trait .= '(' . $meta_object . ')';
-    }
-
-    return $trait;
-}
-
-sub trait_collector {
-    my ($self, $linestr, $meta_object, $type, $name) = @_;
-
-    if ( substr( $$linestr, $self->offset, 2 ) eq 'is' ) {
-        my @traits;
-
-        my $orig_offset = $self->offset;
-
-        $self->inc_offset( 2 );
-        $self->skipspace;
-
-        push @traits => $self->trait_parser($linestr, $meta_object, $type, $name);
-
-        while (substr( $$linestr, $self->offset, 1 ) eq ',') {
-            $self->inc_offset( 1 );
-            push @traits => $self->trait_parser($linestr, $meta_object, $type, $name);
-        }
-
-        my $full_length = $self->offset - $orig_offset;
-
-        substr( $$linestr, $orig_offset, $full_length ) = '';
-
-        $self->set_linestr( $$linestr );
-        $self->{Offset} = $orig_offset;
-        $self->skipspace;
-
-        return @traits;
-    }
+    run_traits(${^META}->get_submethod($name), @traits);
 }
 
 sub generic_method_parser {
-    my $self     = shift;
-    my $callback = shift;
+    my ($type) = @_;
+    lex_read_space;
 
-    $self->init( @_ );
+    my $name = parse_name($type);
 
-    $self->skip_declarator;
+    lex_read_space;
 
-    my $name    = $self->strip_name;
-    my $proto   = $self->strip_proto;
-    my $linestr = $self->get_linestr;
+    my @prototype = parse_prototype($name);
 
-    $self->skipspace;
+    lex_read_space;
 
-    my @traits = $self->trait_collector(
-        \$linestr,
-        '$' . $CURRENT_CLASS_NAME{$self} . '::METACLASS->get_method(q[' . $name . '])'
-    );
+    my @traits = parse_traits();
 
-    if (@traits) {
-        $self->inject_scope(';' . (join ";" => @traits) . ';')
+    lex_read_space;
+
+    if (lex_peek eq ';') {
+        lex_read;
+        return (sub { $name }, 1);
     }
 
-    $self->skipspace;
-    if (substr($linestr, $self->offset, 1) eq ';') {
-        $self->shadow(sub {
-            ${^META}->add_required_method( $name );
-        });
-        return;
-    }
+    die "Non-required ${type}s require a body" unless lex_peek eq '{';
+    lex_read;
 
-    my $inject = $self->scope_injector_call;
-
-    $inject .= 'my ($self, $class);'
-             . 'if (Scalar::Util::blessed($_[0])) {'
-                . '$self  = shift(@_);'
-                . '$class = Scalar::Util::blessed($self);'
-             . '} else {'
-                . '$class = shift(@_);'
-             . '}';
-
-    $inject .= 'local ${^CALLER} = [ $self, q[' . $name . '], $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS ];';
+    my $preamble = '{'
+        . 'my ($self, $class);'
+        . 'if (Scalar::Util::blessed($_[0])) {'
+           . '$self  = shift(@_);'
+           . '$class = Scalar::Util::blessed($self);'
+        . '} else {'
+           . '$class = shift(@_);'
+        . '}'
+        . 'local ${^CALLER} = [ $self, q[' . $name . '], $' . $CURRENT_CLASS_NAME . '::METACLASS ];';
 
     # this is our method preamble, it
     # basically creates a method local
@@ -394,151 +291,322 @@ sub generic_method_parser {
     # it will cast the magic on it to
     # make sure that any change in value
     # is stored in the fieldhash storage
-    foreach my $attr (@{ $CURRENT_ATTRIBUTE_LIST{$self} }) {
-        $inject .= 'my ' . $attr . ';'
-                . 'Variable::Magic::cast('
-                    . $attr . ', '
-                    . '(Scalar::Util::blessed($self) ' 
-                        . '? $' . __PACKAGE__ . '::ATTR_WIZARD' 
-                        . ': $' . __PACKAGE__ . '::ERR_WIZARD' 
-                    . '), '
-                    . '(Scalar::Util::blessed($self) ' 
-                        . '? '
-                            . '{'
-                                . 'meta => $' . $CURRENT_CLASS_NAME{$self} . '::METACLASS,'
-                                . 'oid  => mop::util::get_object_id($self),'
-                                . 'name => q[' . $attr . ']'
-                            . '}' 
-                        . ': q[' . $attr . ']' 
-                    . '), '
-                . ');'
-                ;
+    foreach my $attr (@{ $CURRENT_ATTRIBUTE_LIST }) {
+        $preamble .=
+            'my ' . $attr . ';'
+          . 'Variable::Magic::cast('
+              . $attr . ', '
+              . '(Scalar::Util::blessed($self) '
+                  . '? $' . __PACKAGE__ . '::ATTR_WIZARD'
+                  . ': $' . __PACKAGE__ . '::ERR_WIZARD'
+              . '), '
+              . '(Scalar::Util::blessed($self) '
+                  . '? {'
+                      . 'meta => $' . $CURRENT_CLASS_NAME . '::METACLASS,'
+                      . 'oid  => mop::util::get_object_id($self),'
+                      . 'name => q[' . $attr . ']'
+                  . '}'
+                  . ': q[' . $attr . ']'
+              . '), '
+          . ');';
     }
-
-    $inject .= '{; BEGIN { mop::internals::syntax->inject_scope(q[}]) };';
 
     # inject this after the attributes so that 
     # you it is overriding the attr and not the
     # other way around.
-    if ($proto) {
-        $inject .= 'my (' . $proto . ') = @_;';
+    if (@prototype) {
+        my @names = map { $_->{name} } @prototype;
+        $preamble .= 'my (' . join(', ', @names) . ') = @_;';
+
+        for my $var (grep { defined $_->{default} } @prototype) {
+            $preamble .=
+                $var->{name} . ' = ' . stuff_value($var->{default}) . '->()'
+                  . ' unless @_ > ' . $var->{index} . ';';
+        }
     }
 
-    $self->inject_if_block( $inject );
-    $self->shadow($callback->($name));
+    $preamble .= '{'
+                   . 'BEGIN { B::Hooks::EndOfScope::on_scope_end {'
+                       . 'Parse::Keyword::lex_stuff("}");'
+                   . '} }';
 
-    return;
+    my $code = parse_stuff_with_values($preamble, \&parse_block);
+
+    return (sub { ($name, $code, @traits) }, 1);
 }
 
-sub method_parser {
-    my $self = shift;
-    $self->generic_method_parser(sub {
-        my $name = shift;
-        return sub (&) {
-            my $body = shift;
-            ${^META}->add_method(
-                ${^META}->method_class->new(
-                    name => $name,
-                    body => Sub::Name::subname( $name, $body )
-                )
-            )
-        }
-    }, @_);
+sub has {
+    my ($name, $metaclass, $default, @traits) = @_;
+
+    my $attribute_Class = $metaclass || ${^META}->attribute_class;
+
+    ${^META}->add_attribute(
+        $attribute_Class->new(
+            name    => $name,
+            default => \$default,
+        )
+    );
+
+    run_traits(${^META}->get_attribute($name), @traits);
 }
 
-sub submethod_parser {
-    my $self = shift;
-    $self->generic_method_parser(sub {
-        my $name = shift;
-        return sub (&) {
-            my $body = shift;
-            ${^META}->add_submethod(
-                ${^META}->submethod_class->new(
-                    name => $name,
-                    body => Sub::Name::subname( $name, $body )
-                )
-            )
-        }
-    }, @_);
+sub has_parser {
+    lex_read_space;
+
+    die "Invalid attribute name " . read_tokenish() unless lex_peek eq '$';
+    lex_read;
+
+    my $name = '$' . parse_name('attribute');
+
+    lex_read_space;
+
+    my $metaclass;
+    if ($metaclass = parse_modifier_with_single_value('metaclass')) {
+        Module::Runtime::use_package_optimistically($metaclass);
+    }
+
+    lex_read_space;
+
+    my @traits = parse_traits();
+
+    lex_read_space;
+
+    my $default;
+    if (lex_peek eq '=') {
+        lex_read;
+        lex_read_space;
+        $default = parse_fullexpr;
+    }
+
+    lex_read_space;
+
+    die "Couldn't parse attribute $name" unless lex_peek eq ';';
+    lex_read;
+
+    push @{ $CURRENT_ATTRIBUTE_LIST } => $name;
+
+    return (sub { ($name, $metaclass, $default, @traits) }, 1);
 }
 
-sub attribute_parser {
-    my $self = shift;
+sub parse_modifier_with_single_value {
+    my ($modifier) = @_;
 
-    $self->init( @_ );
+    my $modifier_length = length $modifier;
 
-    $self->skip_declarator;
-    $self->skipspace;
+    return unless lex_peek($modifier_length + 1) =~ /^$modifier\b/;
 
-    my $name;
+    lex_read($modifier_length);
+    lex_read_space;
 
-    my $linestr = $self->get_linestr;
-    if ( substr( $linestr, $self->offset, 1 ) eq '$' ) {
-        my $length = Devel::Declare::toke_scan_ident( $self->offset );
-        $name = substr( $linestr, $self->offset, $length );
+    my $name = parse_name(($modifier eq 'extends' ? 'class' : $modifier), 1);
 
-        my $full_length = $length;
-        my $old_offset  = $self->offset;
+    return $name;
+}
 
-        $self->inc_offset( $length );
-        $self->skipspace;
+sub parse_modifier_with_multiple_values {
+    my ($modifier) = @_;
 
-        my $proto;
-        if ( substr( $linestr, $self->offset, 1 ) eq '(' ) {
-            my $length = Devel::Declare::toke_scan_str( $self->offset );
-            $proto = Devel::Declare::get_lex_stuff();
-            $full_length += $length;
-            Devel::Declare::clear_lex_stuff();
-            $self->inc_offset( $length );
-            $self->skipspace;
+    my $modifier_length = length $modifier;
+
+    return unless lex_peek($modifier_length + 1) =~ /^$modifier\b/;
+
+    lex_read($modifier_length);
+    lex_read_space;
+
+    my @names;
+
+    do {
+        my $name = parse_name('role', 1);
+        push @names, $name;
+        lex_read_space;
+    } while (lex_peek eq ',' && do { lex_read; lex_read_space; 1 });
+
+    return @names;
+}
+
+sub parse_traits {
+    return unless lex_peek(3) =~ /^is\b/;
+
+    lex_read(2);
+    lex_read_space;
+
+    my @traits;
+
+    do {
+        my $name = parse_name('trait', 1);
+        my $params;
+        if (lex_peek eq '(') {
+            lex_read;
+            $params = parse_fullexpr;
+            die "Unterminated parameter list for trait $name"
+                unless lex_peek eq ')';
+            lex_read;
+        }
+        push @traits, { name => $name, params => $params };
+        lex_read_space;
+    } while (lex_peek eq ',' && do { lex_read; lex_read_space; 1 });
+
+    return @traits;
+}
+
+sub run_traits {
+    my ($meta, @traits) = @_;
+
+    my $meta_stuff = stuff_value($meta);
+
+    my $code = '{';
+
+    for my $trait (@traits) {
+        if ($trait->{params}) {
+            $code .= $trait->{name} . '('
+                . "$meta_stuff,"
+                . stuff_value($trait->{params}) . '->()'
+            . ');';
+        }
+        else {
+            $code .= $trait->{name} . "($meta_stuff);";
+        }
+    }
+
+    $code .= '}';
+
+    my $traits_code = parse_stuff_with_values($code, \&parse_block);
+    $traits_code->();
+}
+
+sub parse_prototype {
+    my ($method_name) = @_;
+    return unless lex_peek eq '(';
+
+    lex_read;
+    lex_read_space;
+
+    if (lex_peek eq ')') {
+        lex_read;
+        return;
+    }
+
+    my $seen_slurpy;
+    my @vars;
+    while ((my $sigil = lex_peek) ne ')') {
+        my $var = {};
+        die "Invalid sigil: $sigil"
+            unless $sigil eq '$' || $sigil eq '@' || $sigil eq '%';
+        die "Can't declare parameters after a slurpy parameter"
+            if $seen_slurpy;
+
+        $seen_slurpy = 1 if $sigil eq '@' || $sigil eq '%';
+
+        lex_read;
+        lex_read_space;
+        my $name = parse_name('argument', 0);
+        lex_read_space;
+
+        $var->{name} = "$sigil$name";
+
+        if (lex_peek eq '=') {
+            lex_read;
+            lex_read_space;
+            $var->{default} = parse_arithexpr;
         }
 
-        my @traits = $self->trait_collector(
-            \$linestr,
-            '$' . $CURRENT_CLASS_NAME{$self} . '::METACLASS->get_attribute(q[' . $name . '])'
-        );
+        $var->{index} = @vars;
 
-        $self->skipspace;
-        if ( substr( $linestr, $self->offset, 1 ) eq '=' ) {
-            $self->inc_offset( 1 );
-            $self->skipspace;
-            if ( substr( $linestr, $self->offset, 2 ) eq 'do' ) {
-                substr( $linestr, $self->offset, 2 ) = 'sub';
+        push @vars, $var;
+
+        die "Unterminated prototype for $method_name"
+            unless lex_peek eq ')' || lex_peek eq ',';
+
+        if (lex_peek eq ',') {
+            lex_read;
+            lex_read_space;
+        }
+    }
+
+    lex_read;
+
+    return @vars;
+}
+
+# XXX push back into Parse::Keyword?
+sub parse_name {
+    my ($what, $allow_package) = @_;
+    my $name = '';
+
+    # XXX this isn't quite right, i think, but probably close enough for now?
+    my $start_rx = qr/^[\p{ID_Start}_]$/;
+    my $cont_rx  = qr/^\p{ID_Continue}$/;
+
+    my $char_rx = $start_rx;
+
+    while (1) {
+        my $char = lex_peek;
+        last unless length $char;
+        if ($char =~ $char_rx) {
+            $name .= $char;
+            lex_read;
+            $char_rx = $cont_rx;
+        }
+        elsif ($allow_package && $char eq ':') {
+            if (lex_peek(3) !~ /^::(?:[^:]|$)/) {
+                my $invalid = $name . read_tokenish();
+                die "Invalid identifier: $invalid";
             }
+            $name .= '::';
+            lex_read(2);
         }
-
-        substr( $linestr, $old_offset, $full_length ) = '(' . ( $proto ? $proto : ')');
-
-        $self->set_linestr( $linestr );
-        $self->inc_offset( $full_length );
-
-        if (@traits) {
-            $self->inject_scope(';' . (join ";" => @traits) . ';')
+        else {
+            last;
         }
     }
 
-    push @{ $CURRENT_ATTRIBUTE_LIST{$self} } => $name;
+    die read_tokenish() . " is not a valid $what name" unless length $name;
 
-    $self->shadow(sub (@) : lvalue {
-        my (%metadata) = @_;
-        my $initial_value;
+    return $name;
+}
 
-        my $attribute_Class = ${^META}->attribute_class;
-        if ( exists $metadata{ 'metaclass' } ) {
-            $attribute_Class = delete $metadata{ 'metaclass' };
-        }
+# this is a little hack to be able to inject actual values into the thing we
+# want to parse (what we would normally do by inserting OP_CONST nodes into the
+# optree if we were building it manually). we insert a constant sub into a
+# private stash, and return the name of that sub. then, when that sub is
+# parsed, it'll be turned into an OP_CONST during constant folding, at which
+# point we can remove the sub (to avoid issues with holding onto refs longer
+# than we should).
+{
+    my @guards;
+    sub stuff_value {
+        my ($value) = @_;
+        state $index = 1;
+        my $symbol = '&value' . $index;
+        my $stash = mop::util::get_stash_for('mop::internals::syntax::STUFF');
+        $stash->add_symbol($symbol, sub () { $value });
+        my $code = "mop::internals::syntax::STUFF::value$index";
+        push @guards, guard { $stash->remove_symbol($symbol); };
+        $index++;
+        return $code;
+    }
 
-        ${^META}->add_attribute(
-            $attribute_Class->new(
-                name    => $name,
-                default => \$initial_value,
-                %metadata
-            )
-        );
-        $initial_value
-    });
+    sub parse_stuff_with_values {
+        my ($code, $parser) = @_;
+        lex_stuff($code);
+        my $ret = $parser->();
+        @guards = ();
+        $ret;
+    }
+}
 
-    return;
+sub read_tokenish {
+    my $token = '';
+    if ((my $next = lex_peek) =~ /[\$\@\%]/) {
+        $token .= $next;
+        lex_read;
+    }
+    while ((my $next = lex_peek) =~ /\S/) {
+        $token .= $next;
+        lex_read;
+        last if ($next . lex_peek) =~ /^\S\b/;
+    }
+    return $token;
 }
 
 1;

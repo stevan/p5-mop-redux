@@ -9,7 +9,7 @@ use mop;
 
 class FooMeta extends mop::class {}
 
-class Foo (foo => 'bar') metaclass FooMeta {}
+class Foo metaclass FooMeta {}
 
 pass("... this actually parsed!");
 

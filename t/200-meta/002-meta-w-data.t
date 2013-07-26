@@ -20,6 +20,12 @@ class MetaWithData extends mop::class {
     }
 }
 
+# XXX eventually, the trait should handle applying the metaclass itself, but that requires mop-level reblessing and/or role application to instances
+sub data {
+    my ($meta, @data) = @_;
+    $meta->add_to_data($_) for @data;
+}
+
 # create a class (using our meta-class)
 class Foo metaclass MetaWithData {
     method get_meta_data {
@@ -28,7 +34,7 @@ class Foo metaclass MetaWithData {
 }
 
 # create a class (using our meta-class and extra data)
-class Bar (data => [ 1, 2, 3 ]) metaclass MetaWithData {
+class Bar metaclass MetaWithData is data(1, 2, 3) {
     method get_meta_data {
         ${^CLASS}->get_data
     }

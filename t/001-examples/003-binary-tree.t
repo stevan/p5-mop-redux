@@ -52,7 +52,7 @@ my $parent_store = mop::get_meta('BinaryTree')->get_attribute('$parent')->storag
     ok(isweak(${ $parent_store->{ $t->right } }), '... the value is weakened');
 }
 
-class MyBinaryTree ( extends => 'BinaryTree' ) {}
+class MyBinaryTree extends BinaryTree {}
 
 {
     my $t = MyBinaryTree->new;

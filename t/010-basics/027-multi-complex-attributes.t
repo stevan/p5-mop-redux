@@ -18,8 +18,8 @@ class Bar {}
 class Baz {}
 
 class Foo {
-    has $bar = do { Bar->new };
-    has $baz = do { Baz->new };
+    has $bar = Bar->new;
+    has $baz = Baz->new;
 
     method bar { $bar }
     method has_bar      { defined $bar }
