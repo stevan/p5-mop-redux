@@ -32,6 +32,8 @@ are getting cleaned out properly.
     class Foo {
         method method { "calling the method method" }
     }
+
+    no mop; # need to this cause our UNITCHECK won't fire
 }
 
 {
@@ -43,6 +45,8 @@ are getting cleaned out properly.
     class Bar {
         method foo { 10 }
     }
+
+    no mop; # need to this cause our UNITCHECK won't fire
 }
 
 my $foo = My::Test::Foo->new;
