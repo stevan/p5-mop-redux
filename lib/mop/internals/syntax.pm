@@ -331,8 +331,10 @@ sub generic_method_parser {
           . ');';
     }
 
+    $preamble .= '{';
+
     # inject this after the attributes so that 
-    # you it is overriding the attr and not the
+    # it is overriding the attr and not the
     # other way around.
     if (@prototype) {
         my @names = map { $_->{name} } @prototype;
@@ -345,10 +347,7 @@ sub generic_method_parser {
         }
     }
 
-    $preamble .= '{'
-                   . 'BEGIN { B::Hooks::EndOfScope::on_scope_end {'
-                       . 'Parse::Keyword::lex_stuff("}");'
-                   . '} }';
+    $preamble .= 'BEGIN{B::Hooks::EndOfScope::on_scope_end { Parse::Keyword::lex_stuff("}") }}';
 
     my $code = parse_stuff_with_values($preamble, \&parse_block);
 
