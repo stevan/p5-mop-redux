@@ -91,15 +91,11 @@ sub setup_for {
 
 sub class {
     my ($pkg) = @_;
-    mop::util::get_stash_for($pkg)->remove_glob($_)
-        for qw(class role method submethod has);
     1;
 }
 
 sub role {
     my ($pkg) = @_;
-    mop::util::get_stash_for($pkg)->remove_glob($_)
-        for qw(class role method submethod has);
     1;
 }
 
@@ -183,6 +179,30 @@ sub namespace_parser {
     run_traits($meta, @traits);
 
     $meta->FINALIZE;
+
+    # NOTE:
+    # Now clean up the package we imported
+    # into and do it at the right time in
+    # the compilaton cycle.
+    #
+    # For a more detailed explination about
+    # why we are doing it this way, see the
+    # comment in the following test:
+    #
+    #     t/120-bugs/001-plack-parser-bug.t
+    #
+    # it will give you detailed explination
+    # as to why we are doing this.
+    #
+    # In short, don't muck with this unless
+    # you really understand the comments in
+    # that test.
+    # - SL
+    {
+        lex_stuff('{UNITCHECK{B::Hooks::EndOfScope::on_scope_end { mop->unimport }}}');
+        my $ret = parse_block();
+        $ret->();
+    }
 
     return (sub { $pkg }, 1);
 }

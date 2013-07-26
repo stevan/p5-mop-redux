@@ -39,6 +39,15 @@ sub import {
     }
 }
 
+sub unimport {
+    my $pkg = caller;
+    mop::util::get_stash_for($pkg)->remove_glob($_)
+        for (
+            qw(class role method submethod has), 
+            @mop::traits::AVAILABLE_TRAITS
+        );
+}
+
 sub get_meta {
     my $class = shift;
     die "Could not find metaclass for $class"
