@@ -106,7 +106,7 @@ sub namespace_parser {
 
     my $name   = parse_name($type, 1);
     my $caller = compiling_package;
-    my $pkg    = $name =~ /::/ || $caller eq 'main'
+    my $pkg    = $caller eq 'main'
         ? $name
         : join "::" => $caller, $name;
 
