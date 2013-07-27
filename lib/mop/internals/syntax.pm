@@ -399,8 +399,12 @@ sub has_parser {
 
     lex_read_space;
 
-    die "Couldn't parse attribute $name" unless lex_peek eq ';';
-    lex_read;
+    if (lex_peek eq ';') {
+        lex_read;
+    }
+    elsif (lex_peek ne '}') {
+        die "Couldn't parse attribute $name";
+    }
 
     push @{ $CURRENT_ATTRIBUTE_LIST } => $name;
 
