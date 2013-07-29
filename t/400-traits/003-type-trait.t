@@ -5,13 +5,9 @@ use warnings;
 
 use Test::More;
 use Test::Fatal;
+use Test::Requires 'Moose::Util::TypeConstraints';
 
 use mop;
-
-BEGIN {
-    eval { require Moose::Util::TypeConstraints; 1 }
-        or plan skip_all => "This test requires Moose::Util::TypeConstraints";
-}
 
 sub type {
     if ($_[0]->isa('mop::attribute')) {
