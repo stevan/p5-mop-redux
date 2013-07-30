@@ -10,8 +10,8 @@ use mop;
 
 class Foo {
 
-    has $bar is ro, built_by('_build_bar');
-    has $baz is ro, built_by(sub { 200 });
+    has $bar is ro = ${^SELF}->_build_bar;
+    has $baz is ro = 200;
 
     submethod _build_bar { 100 }
 }
@@ -19,7 +19,7 @@ class Foo {
 my $foo = Foo->new;
 isa_ok($foo, 'Foo');
 
-is($foo->bar, 100, '... the built_by trait worked with a method string');
-is($foo->baz, 200, '... the built_by trait worked with a sub-ref');
+is($foo->bar, 100, '... the revised traitless build process worked with a method string');
+is($foo->baz, 200, '... the revised traitless build process worked with a sub-ref');
 
 done_testing;

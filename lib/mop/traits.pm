@@ -10,7 +10,6 @@ our @AVAILABLE_TRAITS = qw[
     rw 
     ro 
     weak_ref
-    built_by
     lazy
     abstract 
     overload 
@@ -142,14 +141,6 @@ sub weak_ref {
         $attr->bind('after:STORE_DATA' => sub {
             Scalar::Util::weaken( ${ $_[0]->storage->{ $_[1] } } );
         });
-    }
-}
-
-sub built_by {
-    if ($_[0]->isa('mop::attribute')) {
-        my $meta   = shift;
-        my $method = shift;
-        $meta->set_default(sub { ${^SELF}->$method() });
     }
 }
 

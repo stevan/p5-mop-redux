@@ -74,7 +74,7 @@ class Bar {
 
 class Foo {
 
-    has $bar is ro, built_by('_build_bar');
+    has $bar is ro = ${^SELF}->_build_bar;
 
     has $baz is rw, predicate('has_baz');
 
@@ -100,7 +100,7 @@ is(exception {
 
 isa_ok($foo, 'Foo');
 
-is($foo->bar, 100, '... the built_by trait worked');
+is($foo->bar, 100, '... the revised traitless build process trait worked');
 
 ok(!$foo->has_baz, '... no baz here');
 $foo->baz(100);
