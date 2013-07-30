@@ -9,7 +9,6 @@ requires 'Package::Stash'           => 0;
 requires 'Package::Stash::XS'       => 0.27;
 requires 'Module::Runtime'          => 0;
 requires 'Sub::Name'                => 0;
-requires 'Clone'                    => 0;
 requires 'Carp'                     => 0;
 requires 'List::AllUtils'           => 0;
 requires 'Scalar::Util'             => 0;

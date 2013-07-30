@@ -121,7 +121,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$submethods',
         storage => \%submethods,
-        default => \({})
+        default => \sub { {} },
     ));
 
     # NOTE:

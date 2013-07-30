@@ -35,7 +35,6 @@ my %WriteMakefileArgs = (
     'Sub::Name'                => 0,
 
     # general utility modules
-    'Clone'                    => 0,
     'Carp'                     => 0,
     'List::AllUtils'           => 0,
     'Scalar::Util'             => 0,
