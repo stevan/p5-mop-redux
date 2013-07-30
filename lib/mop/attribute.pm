@@ -53,7 +53,7 @@ sub get_default {
             $value  = $value ->();
         }
         else {
-            die "References of type(" . ref $value  . ") are not supported";
+            die "References of type (" . ref($value) . ") are not supported as attribute defaults (in attribute " . $self->name . ($self->associated_meta ? " in class " . $self->associated_meta->name : "") . ")";
         }
     }
     $value
