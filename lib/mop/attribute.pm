@@ -4,7 +4,6 @@ use v5.16;
 use warnings;
 
 use mop::util qw[ init_attribute_storage ];
-use Clone ();
 use Scalar::Util 'weaken';
 
 our $VERSION   = '0.01';
@@ -50,10 +49,7 @@ sub get_default {
     my $self  = shift;
     my $value = ${ ${ $default{ $self } } };
     if ( ref $value  ) {
-        if ( ref $value  eq 'ARRAY' || ref $value  eq 'HASH' ) {
-            $value  = Clone::clone( $value  );
-        }
-        elsif ( ref $value  eq 'CODE' ) {
+        if ( ref $value  eq 'CODE' ) {
             $value  = $value ->();
         }
         else {
