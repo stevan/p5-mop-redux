@@ -6,7 +6,7 @@ use warnings;
 use Test::More;
 use Test::Fatal;
 
-use Data::Dumper qw[ Dumper ];
+#use Data::Dumper qw[ Dumper ];
 
 =pod
 

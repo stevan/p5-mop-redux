@@ -10,10 +10,13 @@ use mop;
 
 class Foo {
     method foo { "FOO" }
+    method baz { "BAZ" }
 }
 
 class FooBar extends Foo {
     method foo { $self->next::method . "-FOOBAR" }
+    method bar { $self->next::can }
+    method baz { $self->next::can }
 }
 
 class FooBarBaz extends FooBar {
@@ -32,5 +35,11 @@ ok( $foo->isa( 'Foo' ), '... the object is from class Foo' );
 ok( $foo->isa( 'mop::object' ), '... the object is derived from class Object' );
 
 is( $foo->foo, 'FOO-FOOBAR-FOOBARBAZ-FOOBARBAZGORCH', '... got the chained super calls as expected');
+
+is($foo->bar, undef, '... no next method');
+
+my $method = $foo->baz;
+is(ref $method, 'CODE', '... got back a code ref');
+is($method->($foo), 'BAZ', '... got the method we expected');
 
 done_testing;

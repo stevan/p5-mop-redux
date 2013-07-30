@@ -52,7 +52,8 @@ $Foo->add_method(
 	)
 );
 
-class Bar (with => 'Foo') {}
+eval "class Bar with Foo {}";
+die $@ if $@;
 
 my $bar = Bar->new;
 isa_ok($bar, 'Bar');

@@ -39,6 +39,15 @@ sub import {
     }
 }
 
+sub unimport {
+    my $pkg = caller;
+    mop::util::get_stash_for($pkg)->remove_glob($_)
+        for (
+            qw(class role method submethod has), 
+            @mop::traits::AVAILABLE_TRAITS
+        );
+}
+
 sub get_meta {
     my $class = shift;
     die "Could not find metaclass for $class"
@@ -128,6 +137,7 @@ sub bootstrap {
 
     {
         my $old_next_method = \&next::method;
+        my $old_next_can    = \&next::can;
         no warnings 'redefine';
         *next::method = sub {
             my $invocant = shift;
@@ -136,7 +146,16 @@ sub bootstrap {
             } else {
                 $invocant->$old_next_method( @_ )
             }
-        }
+        };
+
+        *next::can = sub {
+            my $invocant = shift;
+            if ( mop::util::has_meta( $invocant ) ) {
+                $invocant->mop::next::can( @_ )
+            } else {
+                $invocant->$old_next_can( @_ )
+            }
+        };
 
     }
 

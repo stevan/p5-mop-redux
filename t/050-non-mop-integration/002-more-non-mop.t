@@ -11,8 +11,6 @@ BEGIN {
         or plan skip_all => "This test requires Moose";
 }
 
-use Data::Dumper 'Dumper';
-
 use mop;
 use mop::util qw[ find_meta ];
 

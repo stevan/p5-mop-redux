@@ -247,25 +247,25 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$roles',
         storage => \%roles,
-        default => \([])
+        default => \sub { [] },
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$attributes',
         storage => \%attributes,
-        default => \({})
+        default => \sub { {} },
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$methods',
         storage => \%methods,
-        default => \({})
+        default => \sub { {} },
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$required_methods',
         storage => \%required_methods,
-        default => \([])
+        default => \sub { [] },
     ));
 
     # NOTE:

@@ -5,6 +5,11 @@ use warnings;
 
 use Test::More;
 
+BEGIN {
+    eval { require Path::Class; 1 }
+        or plan skip_all => "This test requires Path::Class";
+}
+
 =pod
 
 This test shows how you can import functions

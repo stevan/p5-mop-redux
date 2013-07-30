@@ -22,7 +22,7 @@ like "$@", qr/^Global symbol \"\$baz\" requires explicit package name/, '... got
     eval 'class Bar { method foo (€bar) { 1 } }';
     like(
         "$@",
-        qr/Unrecognized character/,
+        qr/^Invalid sigil/,
         '... signature parse failure works'
     );
 }
@@ -31,7 +31,7 @@ like "$@", qr/^Global symbol \"\$baz\" requires explicit package name/, '... got
     eval 'class Boo { method foo ($bar { 1 } }';
     like(
         "$@",
-        qr/Missing right curly or square bracket/,
+        qr/Unterminated prototype for foo/,
         '... signature parse failure works'
     );
 }
@@ -40,9 +40,12 @@ like "$@", qr/^Global symbol \"\$baz\" requires explicit package name/, '... got
     eval 'class Goo } { method foo ($bar { 1 } }';
     like(
         "$@",
-        qr/Unmatched right curly bracket/,
+        qr/class must be followed by a block/,
         '... class metadata parse failure works'
     );
 }
+
+ok(!mop::util::find_meta($_), "$_ no longer exists")
+    for qw(Foo Bar Boo Goo);
 
 done_testing

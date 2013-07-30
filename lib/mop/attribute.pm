@@ -4,7 +4,6 @@ use v5.16;
 use warnings;
 
 use mop::util qw[ init_attribute_storage ];
-use Clone ();
 use Scalar::Util 'weaken';
 
 our $VERSION   = '0.01';
@@ -43,18 +42,18 @@ sub key_name {
 # as a ref of whatever the default is)
 # - SL
 sub has_default { defined( ${ ${ $default{ $_[0] } } } ) }
+# we also have to do the double en-ref 
+# here too, this should get fixed
+sub set_default { $default{ $_[0] } = \(\$_[1]) }
 sub get_default {
     my $self  = shift;
     my $value = ${ ${ $default{ $self } } };
     if ( ref $value  ) {
-        if ( ref $value  eq 'ARRAY' || ref $value  eq 'HASH' ) {
-            $value  = Clone::clone( $value  );
-        }
-        elsif ( ref $value  eq 'CODE' ) {
+        if ( ref $value  eq 'CODE' ) {
             $value  = $value ->();
         }
         else {
-            die "References of type(" . ref $value  . ") are not supported";
+            die "References of type (" . ref($value) . ") are not supported as attribute defaults (in attribute " . $self->name . ($self->associated_meta ? " in class " . $self->associated_meta->name : "") . ")";
         }
     }
     $value
@@ -66,6 +65,11 @@ sub associated_meta { ${ $associated_meta{ $_[0] } } }
 sub set_associated_meta {
     $associated_meta{ $_[0] } = \$_[1];
     weaken(${ $associated_meta{ $_[0] } });
+}
+
+sub has_data_in_slot_for {
+    my ($self, $instance) = @_;
+    exists $self->storage->{ $instance };
 }
 
 sub fetch_data_in_slot_for {
