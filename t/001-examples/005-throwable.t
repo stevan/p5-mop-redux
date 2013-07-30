@@ -4,7 +4,11 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Requires 'Devel::StackTrace';
+
+BEGIN {
+    eval { require Devel::StackTrace; 1 }
+        or plan skip_all => "This test requires Devel::StackTrace";
+}
 
 use mop;
 

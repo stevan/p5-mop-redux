@@ -5,7 +5,11 @@ use warnings;
 
 use Test::More;
 use Test::Fatal;
-use Test::Requires 'Moose';
+
+BEGIN {
+    eval { require Moose; 1 }
+        or plan skip_all => "This test requires Moose";
+}
 
 use mop;
 use mop::util qw[ find_meta ];

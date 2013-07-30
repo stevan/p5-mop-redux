@@ -19,4 +19,3 @@ requires 'parent'                   => 0;
 build_requires 'Test::More'     => 0.88;
 build_requires 'Test::Warn'     => 0;
 build_requires 'Test::Fatal'    => 0;
-build_requires 'Test::Requires' => 0;
