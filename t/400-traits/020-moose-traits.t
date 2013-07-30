@@ -78,7 +78,7 @@ class Foo {
 
     has $baz is rw, predicate('has_baz');
 
-    has $gorch is rw, predicate('has_gorch'), lazy('_build_gorch');
+    has $gorch is rw, predicate('has_gorch'), lazy = ${^SELF}->_build_gorch;
 
     has $bar_object is handles({ 'test_bar' => 'bar', 'test_baz' => 'baz' }) = do { die '$bar_object is required' };
 
