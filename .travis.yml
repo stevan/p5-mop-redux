@@ -3,4 +3,6 @@ perl:
     - "5.16"
     - "5.18"
 notifications:
-  irc: "irc.perl.org#p5-mop"
+    channels:
+        - "irc.perl.org#p5-mop"
+    on_success: change
