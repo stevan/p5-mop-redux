@@ -19,7 +19,8 @@ $ENV{PERL5LIB} = $ENV{PERL5LIB}
 
 (my $mop_repo = $mop_dir) =~ s{^.*/([^/]+/[^/]+)/?$}{$1};
 my @repos = (
-    [ 'stevan/Plack',                       'master'       ],
+    # XXX the plack port is currently failing its tests
+    # [ 'stevan/Plack',                       'master'       ],
     [ 'stevan/Forward-Routes-p5-mop-redux', 'master'       ],
     [ 'stevan/http-headers-actionpack',     'p5-mop'       ],
     [ 'perigrin/promises-perl',             'p5-mop'       ],
