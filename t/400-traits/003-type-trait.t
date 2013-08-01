@@ -54,7 +54,7 @@ is($foo->bar, 10, '... the value was set to 10');
 
 like(
     exception{ $foo->bar([]) },
-    qr/Validation failed for \'Int\' with value \[  \]/,
+    qr/^Validation failed for \'Int\' with value /,
     '... this failed correctly'
 );
 is($foo->bar, 10, '... the value is still 10');
@@ -64,7 +64,7 @@ is($foo->bar, 100, '... the value was set to 100');
 
 like(
     exception{ $foo->set_bar([]) },
-    qr/Validation failed for \'Int\' with value \[  \]/,
+    qr/^Validation failed for \'Int\' with value /,
     '... this failed correctly'
 );
 is($foo->bar, 100, '... the value is still 100');
@@ -77,7 +77,7 @@ is($foo->bar, 100, '... the value is still 100');
 
 like(
     exception{ $foo->add_numbers([], 20) },
-    qr/Validation failed for \'Int\' with value \[  \]/,
+    qr/^Validation failed for \'Int\' with value /,
     '... this failed correctly'
 );
 

@@ -60,6 +60,7 @@ my %WriteMakefileArgs = (
     'FindBin'                      => 0,
     'IO::Handle'                   => 0,
     'Moose'                        => 0,
+    'Devel::PartialDump'           => 0,
     'Moose::Util::TypeConstraints' => 0,
     'Path::Class'                  => 0,
   },
