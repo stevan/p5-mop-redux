@@ -9,16 +9,23 @@ __END__
 
 mop::manual::intro - A manual for p5-mop
 
-=head1 DESCRIPTION
+=head1 CAVEAT
 
-This is the first attempt at a manual for the 
-p5-mop, it is very much a work in progress. You 
-can expect gaps and inconsistency in these 
-early versions. 
+This is the first attempt at a manual for the p5-mop, it is very 
+much a work in progress. You can expect gaps and inconsistency in 
+these early versions. 
 
 Patches are always welcome :)
 
-=head1 SECTIONS
+=head1 TUTORIALS
+
+=over 4
+
+=item Moose to MOP
+
+=back
+
+=head1 DETAILED SECTIONS
 
 =over 4
 

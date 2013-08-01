@@ -1,0 +1,156 @@
+# PODNAME: mop::manual::tutorials::moose_to_mop
+# ABSTRACT: A manual for p5-mop
+
+__END__
+
+=pod
+
+=head1 NAME
+
+mop::manual::tutorials::moose_to_mop - A manual for p5-mop
+
+=head1 DESCRIPTION
+
+This tutorial is an attempt to map some of the common Moose
+concepts to their MOP equivalent.
+
+=head2 Creating Classes
+
+In Moose a class is just a package which contains a 
+C<use Moose> declaration. After that you use the Moose keywords;
+C<extends> introduces inheritence, C<with> adds roles and C<has>
+creates attributes in the class. After this any subroutines 
+created in the package are automatically added as methods of
+the class.
+
+In the MOP there are explicit class, method and attribute 
+declarations. Here is a simple example:
+
+    class Foo extends Bar with Baz, Gorch {
+        has $foo;
+        has $bar;
+
+        method foo { ... }
+        method set_bar ($b) { ... }
+    }
+
+This creates a class named C<Foo> which is a subclass of 
+the C<Bar> class and consumes the C<Baz> and C<Gorch> roles.
+It contains two attributes, C<$foo> and C<$bar> and two methods
+C<foo> and C<set_bar> and C<set_bar> takes one arguments C<$b>.
+
+The specific details of attributes and methods will be discussed
+later, but the above example should provide a basic overview 
+of the base syntax.
+
+=head2 Constructing instances
+
+Classes which do not explitly extend a superclass will 
+automatically extend the C<mop::object> class. This class
+will provide a C<new> method which can be used to construct
+instances.
+
+The C<new> method inherited from C<mop::object> accepts 
+a set of key/value pairs where the key is the name of an 
+attribute (minus the sigil). The instances created by the MOP
+are opaque, meaning they are not HASH refs and access to 
+the individual slots is only possible either inside a method
+(where they are accessible as normal variables) or via the 
+MOP (the details of which are left as an exercise to the 
+reader).
+
+=head3 BUILDARGS 
+
+If you wish to override the default constructors behavior
+with regard to arguments, then you simply create a C<new>
+method yourself to accept different parameters, then simply
+munge those parameters into the key/value pair before 
+calling the C<mop::object> constructor with C<next::method>.
+
+This is very similar to overriding the C<BUILDARGS> method
+in a Moose class. Here is a short example:
+
+    class Foo {
+        has $bar;
+
+        method new ($b) {
+            $class->next::method( bar => $b );
+        }
+    }
+
+It should be noted that C<$self> inside the C<new> method
+will be undefined, and any attempt to assign to an attribute
+will result in an error. So if you either need access to 
+C<$self> or attributes, you can do this inside of the C<BUILD>
+submethod, which will be automatically called from C<new>.
+
+=head3 BUILD
+
+As with Moose, if you need to perform initialization on an 
+instance, you can use the C<BUILD> method for that. In Moose
+C<BUILD> is a regular method, but in the MOP, C<BUILD> is 
+actually a C<submethod> (these will be explained later).
+
+Here is a simple example where the C<bar> argument to the 
+constructor is not actualy stored, but instead is processed
+first then stored in the C<$double_bar> attribute.
+
+    class Foo {
+        has $double_bar;
+
+        submethod BUILD (%args) {
+            $double_bar = $args{'bar'} * 2 
+                if exists $args{'bar'};
+        }
+    }
+
+=head2 Creating Attributes
+
+Below is the list of options for 
+
+=over 4
+
+=item I<is =E<gt> 'rw'|'ro'>
+
+=item I<isa =E<gt> $type_name>
+
+=item I<coerce =E<gt> (1|0)>
+
+=item I<does =E<gt> $role_name>
+
+=item I<required =E<gt> (1|0)>
+
+=item I<weak_ref =E<gt> (1|0)>
+
+=item I<lazy =E<gt> (1|0)>
+
+=item I<trigger =E<gt> $code>
+
+=item I<handles =E<gt> ARRAY | HASH | REGEXP | ROLE | ROLETYPE | DUCKTYPE | CODE>
+
+=item I<traits =E<gt> [ @role_names ]>
+
+=item I<builder> => Str
+
+=item I<default> => SCALAR | CODE
+
+=item I<clearer> => Str
+
+=item I<predicate> => Str
+
+=item I<documentation> => $string
+
+=back
+
+=head1 AUTHOR
+
+Stevan Little <stevan.little@iinteractive.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by Infinity Interactive.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

@@ -46,50 +46,6 @@ be applied to your class.
 After this comes a block, within which you can define
 methods and attributes (refer to those docs for more info).
 
-=head1 Constructing instances
-
-Classes which do not explitly extend a superclass will 
-automatically extend the C<mop::object> class. This class
-will provide a C<new> method which can be used to construct
-instances.
-
-The C<new> method inherited from C<mop::object> accepts 
-a set of key/value pairs where the key is the name of an 
-attribute (minus the sigil).
-
-If you wish to override this, you simply create a C<new>
-method yourself to accept different parameters, then simply
-munge those parameters into the key/value pair before 
-calling the C<mop::object> constructor with C<next::method>.
-Here is a short example:
-
-    class Foo {
-        has $bar;
-
-        method new ($b) {
-            $class->next::method( bar => $b );
-        }
-    }
-
-It should be noted that C<$self> inside the C<new> method
-will be undefined, and any attempt to assign to an attribute
-will result in an error. So if you either need access to 
-C<$self> or attributes, you can do this inside of the C<BUILD>
-submethod, which will be automatically called from C<new>.
-
-    class Foo {
-        has $bar;
-
-        method new ($b) {
-            $class->next::method;
-        }
-
-        submethod BUILD (%args) {
-            $bar = $args{'bar'} if exists $args{'bar'};
-        }
-    }
-
-
 =head1 AUTHOR
 
 Stevan Little <stevan.little@iinteractive.com>
