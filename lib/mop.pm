@@ -48,6 +48,23 @@ sub unimport {
         );
 }
 
+# NOTE:
+# we need this here until we can 
+# prevent a defined check from 
+# inflating the attribute variable
+# in a lazy-build type scenario. 
+# - SL
+sub defined ($) {
+    if (my $data = Variable::Magic::getdata($_[0], $mop::internals::syntax::ATTR_WIZARD)) {
+        my $storage = $data->{'meta'}->get_attribute( $data->{'name'} )->storage;
+        exists $storage->{ $data->{'oid'} } 
+            ? CORE::defined ${ $storage->{ $data->{'oid'} } }
+            : 0;
+    } else {
+        CORE::defined $_[0];     
+    }
+}
+
 sub get_meta {
     my $class = shift;
     die "Could not find metaclass for $class"
