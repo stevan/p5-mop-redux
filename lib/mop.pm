@@ -222,8 +222,10 @@ This is a prototype for a new object system for Perl 5.
 
         method key_name { ... }
 
-        method has_default { ... }
-        method get_default { ... }
+        method has_default   { ... }
+        method set_default   { ... }
+        method clear_default { ... }
+        method get_default   { ... }
 
         method fetch_data_in_slot_for ($instance) { ... }
         method store_data_in_slot_for ($instance, $data) { ... }
