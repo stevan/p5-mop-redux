@@ -2,6 +2,7 @@ language: perl
 perl:
     - "5.16"
     - "5.18"
+    - "5.19"
 notifications:
     channels:
         - "irc.perl.org#p5-mop"
