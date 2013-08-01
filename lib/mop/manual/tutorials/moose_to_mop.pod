@@ -106,39 +106,185 @@ first then stored in the C<$double_bar> attribute.
 
 =head2 Creating Attributes
 
-Below is the list of options for 
+Below is the list of options for the Moose C<has> keyword, 
+with each of them we will show an example of how to 
+accomplish the same with the MOP.
 
 =over 4
 
 =item I<is =E<gt> 'rw'|'ro'>
 
+This is supported by the core C<ro> and C<rw> traits, 
+which are applied with the C<is> modifier. Here is a 
+simple example:
+
+    class Foo {
+        has $bar is ro;
+        has $baz is rw;
+    }
+
 =item I<isa =E<gt> $type_name>
+
+There is currently no support for types in the MOP, however 
+it is possible to create a C<type> trait that can perform
+the same validation and even use Moose types constraints.
+See F<t/400-traits/003-type-trait.t> for an example.
 
 =item I<coerce =E<gt> (1|0)>
 
+As was said with the C<isa> option, there is no support for
+types in the MOP. However it would be possible to extend the
+C<type> trait in F<t/400-traits/003-type-trait.t> to also 
+do coerceion. It might look like this:
+
+    class Foo {
+        has $bar is type( isa => 'SomeType', coerce => 1 );
+    }
+
+Actual implementation of this is left as an exercise for 
+the reader.
+
 =item I<does =E<gt> $role_name>
+
+This option is really just a shortcut for a type assignment
+so the suggestions in the above two options apply here as well.
 
 =item I<required =E<gt> (1|0)>
 
+Required attributes are easily mimiced through the MOP without
+even needed a trait. Here is how they are accomplished:
+
+    class Foo {
+        has $bar = die '$bar is required';
+    }
+
+When an instance of C<Foo> is created and no value is supplied 
+for either C<$bar> or C<$baz> then the default will be executed,
+which in this case will simply die with the error message. 
+
 =item I<weak_ref =E<gt> (1|0)>
+
+Weak references are accomplished using the C<weak_ref> trait
+that is core in the MOP. Here is a simple example:
+
+    class Tree {
+        has $parent is weak_ref;
+    }
 
 =item I<lazy =E<gt> (1|0)>
 
+Lazy attributes are supported via the core C<lazy> trait, here 
+is a simple example of that.
+
+    class Foo {
+        has $bar is lazy;
+    }
+
+Unlike Moose, where lazy attributes are only re-created if 
+the slot has not been populated, in MOP they will be populated
+both if the slot has not been populated and if the value in 
+the slot is undef. This is specifically there to support the 
+versions of C<clearer> and C<predicate> that we detail below.
+Additionally this is more in line with how regular scalars work,
+meaning that if you define a scalar with C<my $foo;> then it 
+is implictly undef and not some special "not assigned too" value.
+
 =item I<trigger =E<gt> $code>
+
+There is no specific way to do C<trigger> yet, take a look at
+F<t/400-traits/020-moose-traits.t> for a niave (and mostly wrong)
+version. 
 
 =item I<handles =E<gt> ARRAY | HASH | REGEXP | ROLE | ROLETYPE | DUCKTYPE | CODE>
 
+There is no specific way to do C<handles> yet, take a look at
+F<t/400-traits/020-moose-traits.t> for a simple version that 
+supports the basic HASH syntax. 
+
+NOTE: This will very likely be put into the core traits, but
+for now it is not. 
+
 =item I<traits =E<gt> [ @role_names ]>
+
+This is not currently supported, and honestly, probably never 
+will be, it is highly Moose specific.
 
 =item I<builder> => Str
 
+There is no special trait for C<builder> instead you simply
+use the existing syntax for assigning default values to attributes
+and just call a method. Here is an example:
+
+    class Foo {
+        has $bar = ${^SELF}->build_bar;
+
+        method build_bar { ... }
+    }
+
+The C<${^SELF}> value is a special global value that will always 
+contain the current invocant (when it is in scope).
+
 =item I<default> => SCALAR | CODE
+
+There is also no special trait for C<default> instead you 
+use the existing syntax. Here is how you would provide a simple
+default value:
+
+    class Foo {
+        has $bar = 10;
+        has $baz = {};
+    }
+
+Pretty much anything you can stick in a scalar variable can go 
+on the right hand side of a C<has> expression.
+
+If you need to initialize a more complex value, but for some 
+reason do not want to use the C<builder> style approach. Then 
+you can wrap your default value in a C<do> block, like so:
+
+    class Foo {
+        has $bar = do {
+            ${^SELF}->bar_has_been_touched;
+            100;
+        };
+    }
+
+While this works, most often it is better to use the C<builder>
+approach.
 
 =item I<clearer> => Str
 
+There is no special trait for C<clearer> instead it is 
+recommended that you write a simple method that follows this
+pattern instead.
+
+    class Foo {
+        has $bar;
+
+        method clear_bar { undef $bar }
+    }
+
 =item I<predicate> => Str
 
+There is no special trait for C<predicate> instead it is 
+recommended that you write a simple method that follows this
+pattern instead.
+
+    class Foo {
+        has $bar;
+
+        method has_bar { mop::defined $bar }
+    }
+
+NOTE: Within this prototype you must use the C<mop::defined>
+function instead of the built-in C<defined> function. This 
+is specifically a limitation of the prototype.
+
 =item I<documentation> => $string
+
+This is not currently supported in the MOP and likely 
+won't be. To the best of my knowledge it was hardly 
+ever actually used in Moose.
 
 =back
 
