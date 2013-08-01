@@ -74,11 +74,11 @@ class Bar {
 
 class Foo {
 
-    has $bar is ro, built_by('_build_bar');
+    has $bar is ro = ${^SELF}->_build_bar;
 
     has $baz is rw, predicate('has_baz');
 
-    has $gorch is rw, predicate('has_gorch'), lazy('_build_gorch');
+    has $gorch is rw, predicate('has_gorch'), lazy = ${^SELF}->_build_gorch;
 
     has $bar_object is handles({ 'test_bar' => 'bar', 'test_baz' => 'baz' }) = do { die '$bar_object is required' };
 
@@ -100,7 +100,7 @@ is(exception {
 
 isa_ok($foo, 'Foo');
 
-is($foo->bar, 100, '... the built_by trait worked');
+is($foo->bar, 100, '... the revised traitless build process trait worked');
 
 ok(!$foo->has_baz, '... no baz here');
 $foo->baz(100);

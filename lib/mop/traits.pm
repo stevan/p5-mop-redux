@@ -10,7 +10,6 @@ our @AVAILABLE_TRAITS = qw[
     rw 
     ro 
     weak_ref
-    built_by
     lazy
     abstract 
     overload 
@@ -145,22 +144,14 @@ sub weak_ref {
     }
 }
 
-sub built_by {
-    if ($_[0]->isa('mop::attribute')) {
-        my $meta   = shift;
-        my $method = shift;
-        $meta->set_default(sub { ${^SELF}->$method() });
-    }
-}
-
 sub lazy {
     if ($_[0]->isa('mop::attribute')) {
         my $meta    = shift;
-        my $builder = shift;
+        my $default = $meta->clear_default;
         $meta->bind('before:FETCH_DATA' => sub {
             my (undef, $instance) = @_;
             if (!exists $meta->storage->{$instance}) {
-                $meta->store_data_in_slot_for($instance, $instance->$builder());
+                $meta->store_data_in_slot_for($instance, $default->());
             }
         });
     }

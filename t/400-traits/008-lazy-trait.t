@@ -15,8 +15,11 @@ class Foo {
     has $bar_touched is ro;
     has $baz_touched is rw;
 
-    has $bar is ro, lazy('_build_bar');
-    has $baz is ro, lazy(sub { ${^SELF}->baz_touched(1); ${^SELF}->bar * 2 });
+    has $bar is ro, lazy = ${^SELF}->_build_bar;
+    has $baz is ro, lazy = do { 
+        ${^SELF}->baz_touched(1); 
+        ${^SELF}->bar * 2 
+    };
 
     submethod _build_bar {
         $bar_touched++;
