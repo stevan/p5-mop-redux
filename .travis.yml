@@ -3,6 +3,12 @@ perl:
     - "5.16"
     - "5.18"
     - "5.19"
+before_install:
+    - perl -I .travis -MTravisHelper -E'exit clone_repos'
+install:
+    - perl -I .travis -MTravisHelper -E'exit installdeps'
+script:
+    - perl -I .travis -MTravisHelper -E'exit test'
 notifications:
     channels:
         - "irc.perl.org#p5-mop"
