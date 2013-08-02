@@ -47,6 +47,9 @@ isa_ok( $e->stack_trace, 'Devel::StackTrace' );
 
 my $file = __FILE__;
 $file =~ s/^\.\///;
+# for whatever reason, Devel::StackTrace does this internally, which converts
+# forward slashes into backslashes on windows
+$file = File::Spec->canonpath($file);
 
 my $line1 = $line + 2;
 my $line2 = $line + 4;
