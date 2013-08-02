@@ -17,6 +17,9 @@ $ENV{PERL5LIB} = $ENV{PERL5LIB}
     ? join(":", "$mop_dir/lib", $ENV{PERL5LIB})
     : "$mop_dir/lib";
 
+# for the HTTP::Thin::UserAgent test suite
+$ENV{LIVE_HTTP_TESTS} = 1;
+
 (my $mop_repo = $mop_dir) =~ s{^.*/([^/]+/[^/]+)/?$}{$1};
 my @repos = (
     [ 'stevan/Plack',                       'master'       ],
