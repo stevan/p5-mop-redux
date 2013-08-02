@@ -150,7 +150,7 @@ sub lazy {
         my $default = $meta->clear_default;
         $meta->bind('before:FETCH_DATA' => sub {
             my (undef, $instance) = @_;
-            if (not( exists $meta->storage->{$instance} ) || not( defined ${ $meta->storage->{$instance} } )) {
+            if ( !defined ${ $meta->storage->{$instance} || \undef } ) {
                 $meta->store_data_in_slot_for($instance, $default->());
             }
         });

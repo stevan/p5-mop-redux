@@ -26,7 +26,9 @@ class Foo {
         $foo * 5;
     }
 
-    method has_bar { mop::defined $bar }
+    method has_bar { 
+        defined ${ ${^CLASS}->get_attribute('$bar')->storage->{ $self } || \undef }
+    }
 
     method clear_bar {
         $bar_touched--;

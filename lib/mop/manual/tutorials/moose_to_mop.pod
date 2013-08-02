@@ -183,11 +183,10 @@ is a simple example of that.
 Unlike Moose, where lazy attributes are only re-created if 
 the slot has not been populated, in MOP they will be populated
 both if the slot has not been populated and if the value in 
-the slot is undef. This is specifically there to support the 
-versions of C<clearer> and C<predicate> that we detail below.
-Additionally this is more in line with how regular scalars work,
-meaning that if you define a scalar with C<my $foo;> then it 
-is implictly undef and not some special "not assigned too" value.
+the slot is undef. This is more in line with how regular scalars 
+work, meaning that if you define a scalar with C<my $foo;> then 
+it  is implictly undef and not some special "not assigned too" 
+value.
 
 =item I<trigger =E<gt> $code>
 
@@ -264,6 +263,9 @@ pattern instead.
         method clear_bar { undef $bar }
     }
 
+If C<$bar> was lazy, this would force a recalculation of 
+C<$bar> the next time that C<$bar> was accessed.
+
 =item I<predicate> => Str
 
 There is no special trait for C<predicate> instead it is 
@@ -273,12 +275,26 @@ pattern instead.
     class Foo {
         has $bar;
 
-        method has_bar { mop::defined $bar }
+        method has_bar { defined $bar }
     }
 
-NOTE: Within this prototype you must use the C<mop::defined>
-function instead of the built-in C<defined> function. This 
-is specifically a limitation of the prototype.
+It should be noted that if C<$bar> was lazy, this would 
+force evaluation of C<$bar>. If you want to test if a lazy 
+value is yet to be initialized, you need to go through the
+MOP to get that. Here is what that code would look like.
+
+    ${^CLASS}->get_attribute('$bar')->has_data_in_slot_for($self)
+
+This would only tell if you if the slot had B<never> been 
+initialized, if you also wanted to know if the slot was 
+defined or not, the simplest way to do that would be:
+
+    defined ${ ${^CLASS}->get_attribute('$bar')->storage->{ $self } || \undef }
+
+but that is really overkill. The real lesson here is that 
+if you want lazy and predicates, you should implement the 
+accessors yourself, see F<t/001-examples/003-binary-tree.t>
+for an example of that.
 
 =item I<documentation> => $string
 
