@@ -30,7 +30,7 @@ my %WriteMakefileArgs = (
     # for implementation
     'Hash::Util::FieldHash'    => 0,
     'Package::Stash'           => 0,
-    'Package::Stash'           => '0.27',
+    'Package::Stash::XS'       => '0.27',
     'Module::Runtime'          => 0,
     'Sub::Name'                => 0,
 
