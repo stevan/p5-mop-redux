@@ -151,7 +151,10 @@ sub lazy {
         $meta->bind('before:FETCH_DATA' => sub {
             my (undef, $instance) = @_;
             if ( !defined ${ $meta->storage->{$instance} || \undef } ) {
-                $meta->store_data_in_slot_for($instance, $default->());
+                $meta->store_data_in_slot_for($instance, do {                
+                    local $_ = $instance;
+                    $default->()
+                });
             }
         });
     }

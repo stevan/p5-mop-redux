@@ -215,13 +215,14 @@ use the existing syntax for assigning default values to attributes
 and just call a method. Here is an example:
 
     class Foo {
-        has $bar = ${^SELF}->build_bar;
+        has $bar = $_->build_bar;
 
         method build_bar { ... }
     }
 
-The C<${^SELF}> value is a special global value that will always 
-contain the current invocant (when it is in scope).
+The standard perl topic variable C<$_>, is localized to be the 
+current instance when running the builders, so you can use it 
+to access the current invocant.
 
 =item I<default> => SCALAR | CODE
 
@@ -243,7 +244,7 @@ you can wrap your default value in a C<do> block, like so:
 
     class Foo {
         has $bar = do {
-            ${^SELF}->bar_has_been_touched;
+            $_->bar_has_been_touched;
             100;
         };
     }

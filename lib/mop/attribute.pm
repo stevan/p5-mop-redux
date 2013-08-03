@@ -51,7 +51,7 @@ sub get_default {
     my $value = ${ ${ $default{ $self } } };
     if ( ref $value  ) {
         if ( ref $value  eq 'CODE' ) {
-            $value  = $value ->();
+            $value  = $value->();
         } else {
             die "References of type (" . ref($value) . ") are not supported as attribute defaults (in attribute " . $self->name . ($self->associated_meta ? " in class " . $self->associated_meta->name : "") . ")";
         }
@@ -90,8 +90,10 @@ sub store_data_in_slot_for {
 
 sub store_default_in_slot_for {
     my ($self, $instance) = @_;
-    $self->store_data_in_slot_for($instance, $self->get_default)
-        if $self->has_default;
+    $self->store_data_in_slot_for($instance, do {                
+        local $_ = $instance;
+        $self->get_default;
+    }) if $self->has_default;
 }
 
 our $METACLASS;
