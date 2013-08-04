@@ -54,6 +54,12 @@ our $ATTR_WIZARD = Variable::Magic::wizard(
         $attr->store_data_in_slot_for( $config->{'oid'}, ${ $value } );
         ();
     },
+    # NOTE: 
+    # this can be usedful at times, 
+    # but no need to take the perf
+    # hit if we don't need it.
+    # - SL
+    #op_info => Variable::Magic::VMG_OP_INFO_NAME
 );
 
 # this wizard if for class methods only
