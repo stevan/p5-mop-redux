@@ -4,7 +4,7 @@ use v5.16;
 use warnings;
 
 use mop::util qw[ init_attribute_storage ];
-use Scalar::Util 'weaken';
+use Scalar::Util qw[ blessed weaken ];
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -74,6 +74,7 @@ sub has_data_in_slot_for {
 
 sub fetch_data_in_slot_for {
     my ($self, $instance) = @_;
+    $instance = blessed $instance ? $instance : mop::util::get_object_from_id( $instance );
     $self->fire('before:FETCH_DATA', $instance);
     my $val = ${ $self->storage->{ $instance } || \undef };
     $self->fire('after:FETCH_DATA', $instance);
@@ -82,6 +83,7 @@ sub fetch_data_in_slot_for {
 
 sub store_data_in_slot_for {
     my ($self, $instance, $data) = @_;
+    $instance = blessed $instance ? $instance : mop::util::get_object_from_id( $instance );
     $self->fire('before:STORE_DATA', $instance, \$data);
     $self->storage->{ $instance } = \$data;
     $self->fire('after:STORE_DATA', $instance, \$data);
