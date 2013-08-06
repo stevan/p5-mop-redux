@@ -10,6 +10,7 @@ use B::Hooks::EndOfScope ();
 use Scalar::Util    ();
 use Sub::Name       ();
 use Module::Runtime ();
+use version         ();
 
 use Parse::Keyword {
     class     => \&namespace_parser,
@@ -118,6 +119,14 @@ sub namespace_parser {
 
     lex_read_space;
 
+    my $version;
+    if (lex_peek(40) =~ / \A ($version::LAX) (?:\s|\{) /x) {
+        lex_read(length($1));
+        $version = version::is_strict($1) ? eval($1) : $1 eq 'undef' ? undef : $1;
+    }
+
+    lex_read_space;
+
     my @classes_to_load;
 
     my $extends;
@@ -162,6 +171,7 @@ sub namespace_parser {
         extends   => $extends,
         with      => \@with,
         metaclass => $metaclass,
+        version   => $version,
     );
     mop::util::get_stash_for($pkg)->add_symbol('$METACLASS', \$meta);
     my $g = guard {
