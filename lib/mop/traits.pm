@@ -174,6 +174,7 @@ sub extending_non_mop {
                 body => sub {
                     my $class = shift;
                     my $self  = $class->$super_constructor( @_ );
+                    mop::util::register_object( $self );
                     $BUILDALL->execute( $self, [ @_ ] );
                     $self;
                 }
