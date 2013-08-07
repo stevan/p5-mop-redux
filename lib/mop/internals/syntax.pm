@@ -268,7 +268,11 @@ sub method {
             ),
         );
         $method->set_associated_meta( ${^META} );
-        run_traits( $method, @traits );
+        if (my $m = run_traits( $method, @traits )) {
+            $method = $m
+                if Scalar::Util::blessed($m) 
+                && $m->isa('mop::method');
+        }
 
         ${^META}->add_method( $method );
     }
@@ -291,7 +295,11 @@ sub submethod {
         ),
     );
     $submethod->set_associated_meta( ${^META} );
-    run_traits( $submethod, @traits );
+    if (my $s = run_traits( $submethod, @traits )) {
+        $submethod = $s
+            if Scalar::Util::blessed($s) 
+            && $s->isa('mop::method');
+    }
 
     ${^META}->add_submethod( $submethod );
 }
@@ -389,7 +397,11 @@ sub has {
         default => \$default,
     );
     $attribute->set_associated_meta( ${^META} );
-    run_traits( $attribute, @traits );
+    if (my $a = run_traits( $attribute, @traits )) {
+        $attribute = $a 
+            if Scalar::Util::blessed($a) 
+            && $a->isa('mop::attribute');
+    }
 
     ${^META}->add_attribute( $attribute );
 }
