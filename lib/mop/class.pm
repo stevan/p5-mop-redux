@@ -16,14 +16,16 @@ use parent 'mop::role';
 init_attribute_storage(my %is_abstract);
 init_attribute_storage(my %superclass);
 init_attribute_storage(my %submethods);
+init_attribute_storage(my %instance_generator);
 
 sub new {
     my $class = shift;
     my %args  = @_;
     my $self = $class->SUPER::new( @_ );
-    $is_abstract{ $self } = \($args{'is_abstract'} // 0);
-    $superclass{ $self }  = \($args{'superclass'});
-    $submethods{ $self }  = \({});
+    $is_abstract{ $self }        = \($args{'is_abstract'} // 0);
+    $superclass{ $self }         = \($args{'superclass'});
+    $submethods{ $self }         = \({});
+    $instance_generator{ $self } = \(sub { \(my $anon) });
 
     if ( defined( $args{'name'} ) && is_module_name( $args{'name'} ) ) {
         $INC{ module_notional_filename( $args{'name'} ) } //= '(mop)';
@@ -43,6 +45,11 @@ sub make_class_abstract { $is_abstract{ $_[0] } = \1 }
 # instance creation
 
 sub new_instance { (shift)->name->new( @_ ) }
+
+sub instance_generator { ${ $instance_generator{ $_[0] } } }
+sub set_instance_generator { $instance_generator{ $_[0] } = \$_[1] }
+
+sub create_fresh_instance_structure { (shift)->instance_generator->() }
 
 # submethods
 
@@ -126,6 +133,12 @@ sub __INIT_METACLASS__ {
         default => \sub { {} },
     ));
 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$instance_generator',
+        storage => \%instance_generator,
+        default => \sub { sub { \(my $anon) } },
+    ));
+
     # NOTE:
     # we do not include the new method, because
     # we want all meta-extensions to use the one
@@ -137,6 +150,9 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'make_class_abstract', body => \&make_class_abstract ) );
 
     $METACLASS->add_method( mop::method->new( name => 'new_instance', body => \&new_instance ) );
+    $METACLASS->add_method( mop::method->new( name => 'instance_generator', body => \&instance_generator ) );
+    $METACLASS->add_method( mop::method->new( name => 'set_instance_generator', body => \&set_instance_generator ) );
+    $METACLASS->add_method( mop::method->new( name => 'create_fresh_instance_structure', body => \&create_fresh_instance_structure ) );
 
     $METACLASS->add_method( mop::method->new( name => 'submethod_class', body => \&submethod_class ) );
     $METACLASS->add_method( mop::method->new( name => 'submethods',      body => \&submethods      ) );

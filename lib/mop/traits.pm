@@ -15,6 +15,7 @@ our @AVAILABLE_TRAITS = qw[
     overload 
     extending_non_mop
     sealed
+    instance
 ];
 
 sub rw {
@@ -234,6 +235,39 @@ sub sealed {
     }
 
     bless $class, $new_meta->name;
+}
+
+sub instance {
+    my ($class, $instance) = @_;
+    die "sealed can only be used on classes"
+        unless $class->isa('mop::class');
+
+    my $generator;
+    if (ref $instance && ref $instance eq 'CODE') {
+        $generator = $instance;
+    }
+    elsif (!ref $instance) {
+        if ($instance eq 'SCALAR') {
+            $generator = sub { \(my $anon) };
+        }
+        elsif ($instance eq 'ARRAY') {
+            $generator = sub { [] };
+        }
+        elsif ($instance eq 'HASH') {
+            $generator = sub { {} };
+        }
+        elsif ($instance eq 'GLOB') {
+            $generator = sub { select select my $fh; %{*$fh} = (); $fh };
+        }
+        else {
+            die "unknown instance generator type $instance";
+        }
+    }
+    else {
+        die "unknown instance generator $instance";
+    }
+
+    $class->set_instance_generator($generator);
 }
 
 1;

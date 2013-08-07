@@ -13,43 +13,50 @@ sub new {
     my $class = shift;
     my %args  = scalar(@_) == 1 && ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
 
-    my $self = bless \(my $x) => $class;
+    if (!$mop::BOOTSTRAPPED) {
+        # NOTE:
+        # prior to the bootstrapping being
+        # finished, we need to not try and
+        # build classes, it will all be done
+        # manually in the mop:: classes.
+        # - SL
+        my $self = bless \(my $x) => $class;
 
-    mop::util::register_object( $self );
+        mop::util::register_object( $self );
 
-    # NOTE:
-    # prior to the bootstrapping being
-    # finished, we need to not try and
-    # build classes, it will all be done
-    # manually in the mop:: classes.
-    # - SL
-    return $self unless $mop::BOOTSTRAPPED;
-
-    my @mro = grep { has_meta($_) } @{ mop::mro::get_linear_isa($class) };
-
-    # we'll always at least get mop::object in the mro
-    my $meta = find_meta($mro[0]);
-
-    die 'Cannot instantiate abstract class (' . $class . ')'
-        if $meta->is_abstract;
-
-    my %attributes = map {
-        if (my $m = find_meta($_)) {
-            %{ $m->attributes }
-        }
-    } reverse @mro;
-
-    foreach my $attr (values %attributes) {
-        if ( exists $args{ $attr->key_name }) {
-            $attr->store_data_in_slot_for( $self, $args{ $attr->key_name } )
-        } else {
-            $attr->store_default_in_slot_for( $self );
-        }
+        return $self;
     }
+    else {
+        my @mro = grep { has_meta($_) } @{ mop::mro::get_linear_isa($class) };
 
-    $self->BUILDALL( \%args );
+        # we'll always at least get mop::object in the mro
+        my $meta = find_meta($mro[0]);
 
-    $self;
+        die 'Cannot instantiate abstract class (' . $class . ')'
+            if $meta->is_abstract;
+
+        my $instance = $meta->create_fresh_instance_structure;
+        my $self = bless $instance, $class;
+        mop::util::register_object($self);
+
+        my %attributes = map {
+            if (my $m = find_meta($_)) {
+                %{ $m->attributes }
+            }
+        } reverse @mro;
+
+        foreach my $attr (values %attributes) {
+            if ( exists $args{ $attr->key_name }) {
+                $attr->store_data_in_slot_for( $self, $args{ $attr->key_name } )
+            } else {
+                $attr->store_default_in_slot_for( $self );
+            }
+        }
+
+        $self->BUILDALL( \%args );
+
+        return $self;
+    }
 }
 
 sub BUILDALL {
