@@ -53,6 +53,7 @@ sub submethods { ${ $submethods{ $_[0] } } }
 sub add_submethod {
     my ($self, $submethod) = @_;
     $self->submethods->{ $submethod->name } = $submethod;
+    $submethod->set_associated_meta($self);
 }
 
 sub get_submethod {

@@ -260,31 +260,40 @@ sub method {
     my ($name, $body, @traits) = @_;
 
     if ($body) {
-        ${^META}->add_method(
-            ${^META}->method_class->new(
-                name => $name,
-                body => Sub::Name::subname((join '::' => $CURRENT_CLASS_NAME, $name), $body),
-            )
+        my $method = ${^META}->method_class->new(
+            name => $name,
+            body => Sub::Name::subname(
+                (join '::' => $CURRENT_CLASS_NAME, $name), 
+                $body
+            ),
         );
+        $method->set_associated_meta( ${^META} );
+        run_traits( $method, @traits );
+
+        ${^META}->add_method( $method );
     }
     else {
+        die "Cannot associate traits with an abstract method" 
+            if scalar @traits != 0;
+
         ${^META}->add_required_method($name);
     }
-
-    run_traits(${^META}->get_method($name), @traits);
 }
 
 sub submethod {
     my ($name, $body, @traits) = @_;
 
-    ${^META}->add_submethod(
-        ${^META}->submethod_class->new(
-            name => $name,
-            body => Sub::Name::subname((join '::' => $CURRENT_CLASS_NAME, $name), $body),
-        )
+    my $submethod = ${^META}->submethod_class->new(
+        name => $name,
+        body => Sub::Name::subname(
+            (join '::' => $CURRENT_CLASS_NAME, $name), 
+            $body
+        ),
     );
+    $submethod->set_associated_meta( ${^META} );
+    run_traits( $submethod, @traits );
 
-    run_traits(${^META}->get_submethod($name), @traits);
+    ${^META}->add_submethod( $submethod );
 }
 
 sub generic_method_parser {
@@ -375,14 +384,14 @@ sub has {
 
     my $attribute_Class = $metaclass || ${^META}->attribute_class;
 
-    ${^META}->add_attribute(
-        $attribute_Class->new(
-            name    => $name,
-            default => \$default,
-        )
+    my $attribute = $attribute_Class->new(
+        name    => $name,
+        default => \$default,
     );
+    $attribute->set_associated_meta( ${^META} );
+    run_traits( $attribute, @traits );
 
-    run_traits(${^META}->get_attribute($name), @traits);
+    ${^META}->add_attribute( $attribute );
 }
 
 sub has_parser {

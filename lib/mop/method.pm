@@ -4,7 +4,7 @@ use v5.16;
 use warnings;
 
 use mop::util qw[ init_attribute_storage ];
-use Scalar::Util 'weaken';
+use Scalar::Util qw[ weaken isweak ];
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -30,7 +30,7 @@ sub body { ${ $body{ $_[0] } } }
 sub associated_meta { ${ $associated_meta{ $_[0] } } }
 sub set_associated_meta {
     $associated_meta{ $_[0] } = \$_[1];
-    weaken(${ $associated_meta{ $_[0] } });
+    weaken(${ $associated_meta{ $_[0] } }) unless isweak(${ $associated_meta{ $_[0] } });
 }
 
 sub execute {
