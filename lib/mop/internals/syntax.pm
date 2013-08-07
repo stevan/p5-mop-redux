@@ -277,6 +277,9 @@ sub method {
 sub submethod {
     my ($name, $body, @traits) = @_;
 
+    die "submethods are not supported in roles"
+        if ${^META}->isa('mop::role');
+
     ${^META}->add_submethod(
         ${^META}->submethod_class->new(
             name => $name,
