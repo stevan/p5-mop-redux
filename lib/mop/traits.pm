@@ -213,6 +213,15 @@ sub sealed {
 
     $new_meta->FINALIZE;
 
+    my $stash = mop::util::get_stash_for($class->name);
+    for my $isa (@{ mop::mro::get_linear_isa($class->name) }) {
+        if (mop::util::has_meta($isa)) {
+            for my $method (values %{ mop::get_meta($isa)->methods }) {
+                $stash->add_symbol('&' . $method->name => $method->body);
+            }
+        }
+    }
+
     bless $class, $new_meta->name;
 }
 
