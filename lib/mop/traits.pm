@@ -202,7 +202,18 @@ sub sealed {
     mop::util::get_stash_for($new_meta->name)->add_symbol('$METACLASS', \$new_meta);
     mro::set_mro($new_meta->name, 'mop');
 
-    for my $method (qw(add_method add_attribute)) {
+    my @mutable_methods = qw(
+        add_attribute
+        add_method
+        add_required_method
+        add_role
+        add_submethod
+        compose_into
+        make_class_abstract
+        remove_method
+    );
+
+    for my $method (@mutable_methods) {
         $new_meta->add_method(
             $new_meta->method_class->new(
                 name => $method,
