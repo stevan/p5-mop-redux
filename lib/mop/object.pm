@@ -3,7 +3,7 @@ package mop::object;
 use v5.16;
 use warnings;
 
-use mop::util    qw[ find_meta get_object_id ];
+use mop::util    qw[ has_meta find_meta get_object_id ];
 use Scalar::Util qw[ blessed ];
 
 our $VERSION   = '0.01';
@@ -25,12 +25,13 @@ sub new {
     # - SL
     return $self unless $mop::BOOTSTRAPPED;
 
-    my $meta = find_meta($class);
+    my @mro = grep { has_meta($_) } @{ mop::mro::get_linear_isa($class) };
+
+    # we'll always at least get mop::object in the mro
+    my $meta = find_meta($mro[0]);
 
     die 'Cannot instantiate abstract class (' . $class . ')'
         if $meta->is_abstract;
-
-    my @mro = @{ mop::mro::get_linear_isa($class) };
 
     my %attributes = map {
         if (my $m = find_meta($_)) {
