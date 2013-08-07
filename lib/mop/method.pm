@@ -27,6 +27,8 @@ sub new {
 sub name { ${ $name{ $_[0] } } }
 sub body { ${ $body{ $_[0] } } }
 
+sub set_body { $body{ $_[0] } = \$_[1] }
+
 sub associated_meta { ${ $associated_meta{ $_[0] } } }
 sub set_associated_meta {
     $associated_meta{ $_[0] } = \$_[1];
