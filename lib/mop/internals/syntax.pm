@@ -263,7 +263,7 @@ sub method {
         ${^META}->add_method(
             ${^META}->method_class->new(
                 name => $name,
-                body => Sub::Name::subname($name, $body),
+                body => Sub::Name::subname((join '::' => $CURRENT_CLASS_NAME, $name), $body),
             )
         );
     }
@@ -280,7 +280,7 @@ sub submethod {
     ${^META}->add_submethod(
         ${^META}->submethod_class->new(
             name => $name,
-            body => Sub::Name::subname($name, $body),
+            body => Sub::Name::subname((join '::' => $CURRENT_CLASS_NAME, $name), $body),
         )
     );
 
