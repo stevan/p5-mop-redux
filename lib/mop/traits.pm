@@ -14,6 +14,7 @@ our @AVAILABLE_TRAITS = qw[
     abstract 
     overload 
     extending_non_mop
+    sealed
 ];
 
 sub rw {
@@ -181,6 +182,38 @@ sub extending_non_mop {
             )
         );
     }
+}
+
+sub sealed {
+    my ($class) = @_;
+    die "sealed can only be used on classes"
+        unless $class->isa('mop::class');
+
+    state $anon_index = 1;
+    my $class_meta = mop::get_meta($class);
+
+    my $new_meta = $class_meta->new_instance(
+        name       => $class->name . '::Immutable::__ANON__::' . $anon_index++,
+        version    => $class->version,
+        superclass => $class_meta->name,
+        roles      => [],
+    );
+    # XXX there should really be a better way to encapsulate this
+    mop::util::get_stash_for($new_meta->name)->add_symbol('$METACLASS', \$new_meta);
+    mro::set_mro($new_meta->name, 'mop');
+
+    for my $method (qw(add_method add_attribute)) {
+        $new_meta->add_method(
+            $new_meta->method_class->new(
+                name => $method,
+                body => sub { die "Can't call $method on a sealed class" },
+            )
+        );
+    }
+
+    $new_meta->FINALIZE;
+
+    bless $class, $new_meta->name;
 }
 
 1;
