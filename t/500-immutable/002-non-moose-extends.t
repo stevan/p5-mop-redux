@@ -5,7 +5,7 @@ use Test::More;
 
 use mop;
 
-class Foo is sealed, instance('HASH') {
+class Foo is closed, repr('HASH') {
     has $attr = 'ATTR';
 
     method attr { $attr }

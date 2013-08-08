@@ -23,7 +23,7 @@ class Foo {
     is(Foo->new->baz, 2);
 }
 
-class Bar is sealed {
+class Bar is closed {
     method bar { 1 }
 }
 
@@ -40,7 +40,7 @@ class Bar is sealed {
                 )
             )
         },
-        qr/^Can't call add_method on a sealed class/
+        qr/^Can't call add_method on a closed class/
     );
     ok(!Bar->new->can('baz'));
 }

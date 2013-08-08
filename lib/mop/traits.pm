@@ -14,8 +14,8 @@ our @AVAILABLE_TRAITS = qw[
     abstract 
     overload 
     extending_non_mop
-    sealed
-    instance
+    closed
+    repr
 ];
 
 sub rw {
@@ -185,9 +185,9 @@ sub extending_non_mop {
     }
 }
 
-sub sealed {
+sub closed {
     my ($class) = @_;
-    die "sealed can only be used on classes"
+    die "closed can only be used on classes"
         unless $class->isa('mop::class');
 
     state $anon_index = 1;
@@ -218,7 +218,7 @@ sub sealed {
         $new_meta->add_method(
             $new_meta->method_class->new(
                 name => $method,
-                body => sub { die "Can't call $method on a sealed class" },
+                body => sub { die "Can't call $method on a closed class" },
             )
         );
     }
@@ -237,9 +237,9 @@ sub sealed {
     bless $class, $new_meta->name;
 }
 
-sub instance {
+sub repr {
     my ($class, $instance) = @_;
-    die "sealed can only be used on classes"
+    die "repr can only be used on classes"
         unless $class->isa('mop::class');
 
     my $generator;
