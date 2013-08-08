@@ -21,7 +21,50 @@ BEGIN {
     )
 }
 
+{
+    my %METHOD_CACHE;
+
+    sub clear_method_cache_for {
+        my ($invocant) = @_;
+        delete $METHOD_CACHE{method_cache_for($invocant)};
+    }
+
+    sub method_cache_lookup {
+        my ($invocant, $method_name, $super_of) = @_;
+        my $pkg = method_cache_for($invocant);
+        my $super = $super_of ? $super_of->name : '';
+        return $METHOD_CACHE{$pkg}{$method_name}{$super};
+    }
+
+    sub add_to_method_cache {
+        my ($invocant, $method_name, $super_of, $method) = @_;
+        my $pkg = method_cache_for($invocant);
+        my $super = $super_of ? $super_of->name : '';
+        $METHOD_CACHE{$pkg}{$method_name}{$super} = $method;
+    }
+
+    sub method_cache_for {
+        my ($invocant) = @_;
+        return blessed($invocant) || $invocant;
+    }
+
+    # disable method caching during global destruction, because things may have
+    # started disappearing by that point
+    END { %METHOD_CACHE = () }
+}
+
 sub find_method {
+    my ($invocant, $method_name, $super_of) = @_;
+    if (my $method = method_cache_lookup($invocant, $method_name, $super_of)) {
+        return $method;
+    }
+    return add_to_method_cache(
+        $invocant, $method_name, $super_of,
+        _find_method($invocant, $method_name, $super_of)
+    );
+}
+
+sub _find_method {
     my ($invocant, $method_name, $super_of) = @_;
 
     my @mro = @{ mop::mro::get_linear_isa( $invocant ) };

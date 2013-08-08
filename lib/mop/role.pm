@@ -114,6 +114,7 @@ sub methods { ${ $methods{ $_[0] } } }
 sub add_method {
     my ($self, $method) = @_;
     $self->methods->{ $method->name } = $method;
+    mop::internals::mro::clear_method_cache_for($self->name);
     $method->set_associated_meta($self);
 }
 
@@ -129,6 +130,7 @@ sub has_method {
 
 sub remove_method {
     my ($self, $name) = @_;
+    mop::internals::mro::clear_method_cache_for($self->name);
     delete $self->methods->{ $name };
 }
 
