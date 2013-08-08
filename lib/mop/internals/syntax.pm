@@ -164,8 +164,6 @@ sub namespace_parser {
     local $CURRENT_CLASS_NAME     = $pkg;
     local $CURRENT_ATTRIBUTE_LIST = [];
 
-    mro::set_mro($pkg, 'mop');
-
     my $meta = ($type eq 'class' ? \&build_class : \&build_role)->(
         name      => $pkg,
         extends   => $extends,
@@ -173,9 +171,9 @@ sub namespace_parser {
         metaclass => $metaclass,
         version   => $version,
     );
-    mop::util::get_stash_for($pkg)->add_symbol('$METACLASS', \$meta);
+    mop::util::install_meta($meta);
     my $g = guard {
-        mop::util::get_stash_for($pkg)->remove_symbol('$METACLASS');
+        mop::util::uninstall_meta($meta);
     };
 
     if (my $code = parse_block(1)) {

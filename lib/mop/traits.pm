@@ -199,9 +199,7 @@ sub closed {
         superclass => $class_meta->name,
         roles      => [],
     );
-    # XXX there should really be a better way to encapsulate this
-    mop::util::get_stash_for($new_meta->name)->add_symbol('$METACLASS', \$new_meta);
-    mro::set_mro($new_meta->name, 'mop');
+    mop::util::install_meta($new_meta);
 
     my @mutable_methods = qw(
         add_attribute

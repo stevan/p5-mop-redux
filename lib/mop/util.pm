@@ -37,6 +37,18 @@ sub init_attribute_storage (\%) {
     &Hash::Util::FieldHash::fieldhash( $_[0] )
 }
 
+sub install_meta {
+    my ($meta) = @_;
+    mop::util::get_stash_for($meta->name)->add_symbol('$METACLASS', \$meta);
+    mro::set_mro($meta->name, 'mop');
+}
+
+sub uninstall_meta {
+    my ($meta) = @_;
+    mop::util::get_stash_for($meta->name)->remove_symbol('$METACLASS');
+    mro::set_mro($meta->name, 'dfs');
+}
+
 package mop::mro;
 
 use strict;
