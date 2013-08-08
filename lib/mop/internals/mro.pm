@@ -100,11 +100,6 @@ sub call_method {
 
     my $class = get_stash_for( $invocant );
 
-    # *sigh* Devel::Declare does this and we need to ignore it
-    if ( $method_name eq 'can' && ($args->[0] eq 'method' || $args->[0] eq 'class') ) {
-        return $class->name->UNIVERSAL::can( @$args );
-    }
-
     # XXX
     # for some reason, we are getting a lot
     # of "method not found" type errors in 
