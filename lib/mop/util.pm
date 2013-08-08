@@ -45,12 +45,6 @@ use warnings;
 sub get_linear_isa {
     my $class = shift;
     if (my $meta = mop::util::find_meta($class)) {
-        # NOTE:
-        # Roles have no ISA, but this question
-        # is asked by the dispatcher so we need
-        # to be able to handle it.
-        # - SL
-        return [ $meta->name ] if $meta->isa('mop::role');
         if (my $super = $meta->superclass) {
             return [ $meta->name, @{ get_linear_isa($super) || [] } ];
         } else {
