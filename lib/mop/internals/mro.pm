@@ -59,21 +59,19 @@ sub find_method {
         }
     }
 
-    # this is just because
-    # UNIVERSAL never shows
-    # up in the mro and so
-    # we have to look for
-    # these explicitly
-    if ($method_name eq 'can' || $method_name eq 'isa') {
-        return find_meta('mop::object')->get_method( $method_name );
-    }
-
-    # UNIVERSAL has other
-    # built-in methods such
-    # as DOES, VERSION and
-    # potentially others
     if (my $universally = UNIVERSAL->can($method_name)) {
-        return $universally;
+        if (my $method = find_meta('mop::object')->get_method($method_name)) {
+            # we're doing method lookup on a mop class which doesn't inherit
+            # from mop::object (otherwise this would have been found above). we
+            # need to use the mop::object version of the appropriate UNIVERSAL
+            # methods, because the methods in UNIVERSAL won't necessarily do
+            # the right thing for mop objects.
+            return $method;
+        }
+        else {
+            # a method which was added to UNIVERSAL manually
+            return $universally;
+        }
     }
 
     return;
