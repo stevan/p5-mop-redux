@@ -22,23 +22,23 @@ BEGIN {
 }
 
 sub find_method {
-    my ($invocant, $method_name, %opts) = @_;
+    my ($invocant, $method_name, $super_of) = @_;
 
     my @mro = @{ mop::mro::get_linear_isa( $invocant ) };
 
     # NOTE:
     # this is ugly, needs work
     # - SL
-    if ( exists $opts{'super_of'} ) {
+    if ( defined $super_of ) {
         #warn "got super-of";
         #warn "MRO: " . $mro[0];
-        #warn "SUPEROF: " . $opts{'super_of'}->name;
-        if ( $mro[0] && $mro[0] eq $opts{'super_of'}->name ) {
+        #warn "SUPEROF: " . $super_of->name;
+        if ( $mro[0] && $mro[0] eq $super_of->name ) {
             #warn "got match, shifting";
             shift( @mro );
         } else {
             #warn "no match, looking";
-            while ( $mro[0] && $mro[0] ne $opts{'super_of'}->name ) {
+            while ( $mro[0] && $mro[0] ne $super_of->name ) {
                 #warn "no match, shifting until we find it";
                 shift( @mro );
             }
@@ -80,7 +80,7 @@ sub find_method {
 }
 
 sub find_submethod {
-    my ($invocant, $method_name, %opts) = @_;
+    my ($invocant, $method_name) = @_;
 
     if (my $meta = find_meta($invocant)) {
         # NOTE:
@@ -96,7 +96,7 @@ sub find_submethod {
 }
 
 sub call_method {
-    my ($invocant, $method_name, $args, %opts) = @_;
+    my ($invocant, $method_name, $args, $super_of) = @_;
 
     my $class = get_stash_for( $invocant );
 
@@ -112,8 +112,8 @@ sub call_method {
         warn $_[0] unless $_[0] =~ /\(in cleanup\)/
     };
 
-    my $method = find_submethod( $invocant, $method_name, %opts );
-    $method    = find_method( $invocant, $method_name, %opts )
+    my $method = find_submethod( $invocant, $method_name );
+    $method    = find_method( $invocant, $method_name, $super_of )
         unless defined $method;
 
     die "Could not find $method_name in " . $invocant

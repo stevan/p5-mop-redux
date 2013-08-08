@@ -82,7 +82,7 @@ sub method {
         $invocant,
         ${^CALLER}->[1],
         \@args,
-        super_of => ${^CALLER}->[2]
+        ${^CALLER}->[2]
     );
 }
 
@@ -91,7 +91,7 @@ sub can {
     my $method = mop::internals::mro::find_method(
         $invocant,
         ${^CALLER}->[1],
-        super_of => ${^CALLER}->[2]
+        ${^CALLER}->[2]
     );
     return unless $method;
     # NOTE:
