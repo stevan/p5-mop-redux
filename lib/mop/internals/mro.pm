@@ -116,17 +116,6 @@ sub call_method {
     $method    = find_method( $invocant, $method_name, %opts )
         unless defined $method;
 
-    # XXX
-    # this is f-ing stupid, but under `make test`
-    # in_global_destruction is not working right
-    # and I am getting errors in the test:
-    #
-    # > t/050-non-mop-integration/001-inherit-from-non-mop.t
-    #
-    # This should be removed ASAP.
-    # - SL
-    return if $method_name eq 'DESTROY' && not defined $method;
-
     die "Could not find $method_name in " . $invocant
         unless defined $method;
 
