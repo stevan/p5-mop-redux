@@ -154,10 +154,10 @@ sub call_method {
     local ${^SELF}  = $invocant;
     local ${^CLASS} = find_meta($invocant);
 
-    if ( ref $method eq 'CODE' ) {
-        return $method->($invocant, @$args);
-    } elsif ( blessed $method && $method->isa('mop::method') ) {
+    if ( blessed $method && $method->isa('mop::method') ) {
         return $method->execute( $invocant, $args );
+    } elsif ( ref $method eq 'CODE' ) {
+        return $method->($invocant, @$args);
     } else {
         die "Unrecognized method type: $method";
     }
