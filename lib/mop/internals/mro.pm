@@ -105,7 +105,8 @@ sub _find_method {
             return $method;
         }
         else {
-            # a method which was added to UNIVERSAL manually
+            # a method which was added to UNIVERSAL manually, or a method whose
+            # implementation in UNIVERSAL also works for mop objects
             return $universally;
         }
     }

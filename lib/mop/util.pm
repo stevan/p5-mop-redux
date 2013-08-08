@@ -39,13 +39,17 @@ sub init_attribute_storage (\%) {
 
 sub install_meta {
     my ($meta) = @_;
-    mop::util::get_stash_for($meta->name)->add_symbol('$METACLASS', \$meta);
+    my $stash = mop::util::get_stash_for($meta->name);
+    $stash->add_symbol('$METACLASS', \$meta);
+    $stash->add_symbol('$VERSION', \$meta->version);
     mro::set_mro($meta->name, 'mop');
 }
 
 sub uninstall_meta {
     my ($meta) = @_;
-    mop::util::get_stash_for($meta->name)->remove_symbol('$METACLASS');
+    my $stash = mop::util::get_stash_for($meta->name);
+    $stash->remove_symbol('$METACLASS');
+    $stash->remove_symbol('$VERSION');
     mro::set_mro($meta->name, 'dfs');
 }
 

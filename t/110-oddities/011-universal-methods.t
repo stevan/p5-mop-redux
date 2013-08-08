@@ -27,7 +27,7 @@ is(exception { Bar->VERSION(5) }, undef);
 is(exception { Bar->VERSION(6) }, undef);
 like(
     exception { Bar->VERSION(7) },
-    qr/^Bar version 7 required--this is only version 6\./
+    qr/^Bar version 7 required--this is only version 6/
 );
 
 sub UNIVERSAL::frobnicate {
