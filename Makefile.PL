@@ -52,6 +52,7 @@ my %WriteMakefileArgs = (
     'Test::More'                   => '0.88',
     'Test::Warn'                   => 0,
     'Test::Fatal'                  => 0,
+    'Test::EOL'                    => 0,
 
     # core utility pragma
     'lib'                          => 0,
