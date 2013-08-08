@@ -33,19 +33,12 @@ sub find_method {
         #warn "got super-of";
         #warn "MRO: " . $mro[0];
         #warn "SUPEROF: " . $super_of->name;
-        if ( $mro[0] && $mro[0] eq $super_of->name ) {
-            #warn "got match, shifting";
-            shift( @mro );
-        } else {
-            #warn "no match, looking";
-            while ( $mro[0] && $mro[0] ne $super_of->name ) {
-                #warn "no match, shifting until we find it";
-                shift( @mro );
-            }
-            #warn "got it, shifting";
+        while ( $mro[0] && $mro[0] ne $super_of->name ) {
+            #warn "no match, shifting until we find it";
             shift( @mro );
         }
-
+        #warn "got it, shifting";
+        shift( @mro );
     }
 
     foreach my $class ( @mro ) {
