@@ -10,13 +10,13 @@ use mop;
 
 =pod
 
-This was just an experiment to see how much of 
+This was just an experiment to see how much of
 Moose's attribute options could be replicated
 (at least partially) via traits.
 
-Note, these are very niave implementations, 
+Note, these are very niave implementations,
 they are unable to coordinate with one another
-so it is possible you can make some messes 
+so it is possible you can make some messes
 with them. But is it just a proof of concept
 for now.
 
@@ -48,10 +48,10 @@ sub handles {
                     name => $name,
                     body => sub {
                         my $self = shift;
-                        $meta->fetch_data_in_slot_for( $self )->$other_name( @_ ); 
+                        $meta->fetch_data_in_slot_for( $self )->$other_name( @_ );
                     }
                 )
-            );    
+            );
         }
     }
 }
@@ -60,9 +60,9 @@ sub trigger {
     my $meta = shift;
     if ($meta->isa('mop::attribute')) {
         my $trigger = shift;
-        $meta->bind('after:STORE_DATA' => sub { 
+        $meta->bind('after:STORE_DATA' => sub {
             my (undef, $instance, $data) = @_;
-            $trigger->($instance, ${ $data }); 
+            $trigger->($instance, ${ $data });
         });
     }
 }
@@ -93,7 +93,7 @@ class Foo {
     }
 }
 
-my $foo; 
+my $foo;
 is(exception {
     $foo = Foo->new( bar_object => Bar->new );
 }, undef, '... created Foo successfully');
@@ -123,7 +123,7 @@ ok(!$foo->bling_was_triggered, '... bling has not been triggered yet');
 $foo->bling(20);
 is($foo->bling_was_triggered, 20, '... bling has now been triggered yet');
 
-like(exception { 
+like(exception {
     Foo->new;
 }, qr/\$bar_object is required/, '... failed to create Foo (successfully)');
 

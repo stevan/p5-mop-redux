@@ -89,18 +89,26 @@ sub installdeps {
 
 sub test {
     each_dir {
+        my $failed = 0;
+
         if (-e 'Build.PL') {
-            _system("perl Build.PL && ./Build test");
+            $failed ||= !_system("perl Build.PL && ./Build test");
         }
         elsif (-e 'Makefile.PL') {
-            _system("perl Makefile.PL && make test");
+            $failed ||= !_system("perl Makefile.PL && make test");
         }
         elsif (-e 'dist.ini') {
-            _system("dzil test");
+            $failed ||= !_system("dzil test");
         }
         else {
-            _system("prove -lr t");
+            $failed ||= !_system("prove -lr t");
         }
+
+        if (-e 'xt') {
+            $failed ||= !_system("prove -lr xt");
+        }
+
+        return $failed;
     }
 }
 

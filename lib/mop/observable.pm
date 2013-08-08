@@ -12,9 +12,9 @@ init_attribute_storage(my %callbacks);
 
 sub bind {
     my ($self, $event_name, $callback) = @_;
-    $callbacks{ $self } = {} 
+    $callbacks{ $self } = {}
         unless defined $callbacks{ $self };
-    $callbacks{ $self }->{ $event_name } = [] 
+    $callbacks{ $self }->{ $event_name } = []
         unless exists $callbacks{ $self }->{ $event_name };
     push @{ $callbacks{ $self }->{ $event_name } } => $callback;
     $self;
@@ -24,7 +24,7 @@ sub unbind {
     my ($self, $event_name, $callback) = @_;
     return $self unless defined $callbacks{ $self };
     return $self unless exists $callbacks{ $self }->{ $event_name };
-    @{ $callbacks{ $self }->{ $event_name } } = grep { 
+    @{ $callbacks{ $self }->{ $event_name } } = grep {
         "$_" ne "$callback"
     } @{ $callbacks{ $self }->{ $event_name } };
     $self;

@@ -55,8 +55,8 @@ our $ATTR_WIZARD = Variable::Magic::wizard(
         $attr->store_data_in_slot_for( $config->{'oid'}, ${ $value } );
         ();
     },
-    # NOTE: 
-    # this can be usedful at times, 
+    # NOTE:
+    # this can be usedful at times,
     # but no need to take the perf
     # hit if we don't need it.
     # - SL
@@ -197,14 +197,14 @@ sub namespace_parser {
     # NOTE:
     # We are removing this whole clean up code
     # because it is fragile and causes some really
-    # hard to diagnose errors. Intead it will be 
+    # hard to diagnose errors. Intead it will be
     # the responsibility of the user to add a
     # C<no mop> at the end of the file when needed.
-    # I am also preserving this comment as well as 
+    # I am also preserving this comment as well as
     # the test case it refers to mostly for historical
     # puporses.
     # - SL
-    # 
+    #
     # # NOTE:
     # # Now clean up the package we imported
     # # into and do it at the right time in
@@ -361,7 +361,7 @@ sub generic_method_parser {
 
     $preamble .= '{';
 
-    # inject this after the attributes so that 
+    # inject this after the attributes so that
     # it is overriding the attr and not the
     # other way around.
     if (@prototype) {

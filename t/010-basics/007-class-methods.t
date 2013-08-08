@@ -18,13 +18,13 @@ class Foo {
 }
 
 like(
-    exception { Foo->bar(10) }, 
+    exception { Foo->bar(10) },
     qr/^Cannot assign to the attribute\:\(\$bar\) in a method without a blessed invocant/,
     '... got the error we expected'
 );
 
 like(
-    exception { Foo->bar() }, 
+    exception { Foo->bar() },
     qr/^Cannot access the attribute\:\(\$bar\) in a method without a blessed invocant/,
     '... got the error we expected'
 );

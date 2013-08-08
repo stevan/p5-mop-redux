@@ -16,9 +16,9 @@ class Foo {
     has $baz_touched is rw;
 
     has $bar is ro, lazy = $_->_build_bar;
-    has $baz is ro, lazy = do { 
-        $_->baz_touched(1); 
-        $_->bar * 2 
+    has $baz is ro, lazy = do {
+        $_->baz_touched(1);
+        $_->bar * 2
     };
 
     submethod _build_bar {
@@ -26,7 +26,7 @@ class Foo {
         $foo * 5;
     }
 
-    method has_bar { 
+    method has_bar {
         defined ${ ${^CLASS}->get_attribute('$bar')->storage->{ $self } || \undef }
     }
 
@@ -51,7 +51,7 @@ for (1..2) {
 
     $foo->clear_bar;
     ok(!$foo->has_bar, '... no bar again');
-    is($foo->bar_touched, 0, '... we cleared bar');    
+    is($foo->bar_touched, 0, '... we cleared bar');
 
     is($foo->bar, 50, '... init bar again');
     is($foo->bar_touched, 1, '... the lazy builder fired again');

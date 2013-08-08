@@ -54,9 +54,9 @@ we are going about handling attributes.
         cast $foo, $wiz, [ \%foo, $self ];
 
         # now create a block so that if
-        # you wish to use an attribute 
+        # you wish to use an attribute
         # name, you can without issuing
-        # a warning. 
+        # a warning.
         {
             # then unpack the args
             my ($baz) = @_;

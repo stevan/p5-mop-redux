@@ -11,8 +11,8 @@ use lib "$FindBin::Bin/../lib";
 =pod
 
 This test is a clone of 008-method-method.t
-but testing that it works when loading from 
-disk (and doesn't need the C<no mop> at the 
+but testing that it works when loading from
+disk (and doesn't need the C<no mop> at the
 end of the package definition).
 
 =cut

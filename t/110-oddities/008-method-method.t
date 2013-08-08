@@ -7,15 +7,15 @@ use Test::More;
 
 =pod
 
-This came up when I was porting Plack to 
+This came up when I was porting Plack to
 use the mop. The second package declaration
-My::Test::Foo will (sorta) stomp on the 
-namespace created by the class Foo that 
+My::Test::Foo will (sorta) stomp on the
+namespace created by the class Foo that
 is defined in the first package My::Test;
 
 When the mop is imported into My::Test::Foo
 it will create a local sub called method that
-will override the method 'method' in 
+will override the method 'method' in
 the My::Test::Foo class.
 
 This test just makes sure that the namespaces

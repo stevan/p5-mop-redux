@@ -43,7 +43,7 @@ sub unimport {
     my $pkg = caller;
     mop::util::get_stash_for($pkg)->remove_glob($_)
         for (
-            qw(class role method submethod has), 
+            qw(class role method submethod has),
             @mop::traits::AVAILABLE_TRAITS
         );
 }
@@ -108,14 +108,14 @@ sub bootstrap {
                 unless $Class_stash->has_symbol( '&' . $method->name );
         }
 
-        # now make sure the Observable roles are 
+        # now make sure the Observable roles are
         # completely intergrated into the stashes
         foreach my $method ( values %{ $Observable->methods }) {
             foreach my $stash ( $Role_stash, $Method_stash, $Attribute_stash ) {
                 $stash->add_symbol( '&' . $method->name, $method->body )
                     unless $stash->has_symbol( '&' . $method->name );
             }
-        }        
+        }
 
         # then clean up some of the @ISA by
         # removing mop::observable from them

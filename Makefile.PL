@@ -8,10 +8,10 @@ use ExtUtils::MakeMaker 6.30;
 
 my %WriteMakefileArgs = (
   'ABSTRACT'           => 'A meta-object protocol for Perl 5',
-  'DISTNAME'           => 'p5-mop-redux',  
+  'DISTNAME'           => 'p5-mop-redux',
   'AUTHOR'             => 'Stevan Little <stevan.little@iinterative.com>',
   'LICENSE'            => 'perl',
-  'NAME'               => 'mop',  
+  'NAME'               => 'mop',
   'VERSION'            => '0.01',
   'BUILD_REQUIRES'     => {},
   'CONFIGURE_REQUIRES' => { 'ExtUtils::MakeMaker' => '6.30' },
@@ -22,11 +22,11 @@ my %WriteMakefileArgs = (
     'B::Hooks::EndOfScope'     => 0,
     'Devel::GlobalDestruction' => 0,
     'MRO::Define'              => 0,
-    'Parse::Keyword'           => '0.04',    
+    'Parse::Keyword'           => '0.04',
     'Scope::Guard'             => 0,
     'Variable::Magic'          => 0,
 
-    # utility modules needed 
+    # utility modules needed
     # for implementation
     'Hash::Util::FieldHash'    => 0,
     'Package::Stash'           => 0,
@@ -50,8 +50,8 @@ my %WriteMakefileArgs = (
   'TEST_REQUIRES' => {
     # test modules
     'Test::More'                   => '0.88',
-    'Test::Warn'                   => 0,    
-    'Test::Fatal'                  => 0,    
+    'Test::Warn'                   => 0,
+    'Test::Fatal'                  => 0,
 
     # core utility pragma
     'lib'                          => 0,

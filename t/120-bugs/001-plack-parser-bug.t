@@ -10,14 +10,14 @@ use lib "$FindBin::Bin/../lib";
 
 =pod
 
-So, this is a tricky problem actually. 
+So, this is a tricky problem actually.
 
-When the Parse::Keyword branch landed, there was 
+When the Parse::Keyword branch landed, there was
 code inside the mop::internals::syntax::{class,role}
 that would attempt to clean out the package imports
 that it had done (class, role, has, method & submethod).
 This works fine for classes being created in main::
-(essentially classes created in the same package). 
+(essentially classes created in the same package).
 However it failed for the following:
 
 in Foo/Bar.pm
@@ -36,12 +36,12 @@ And the reason it failed was that the symbol table
 cleanup code in mop::internals::syntax::{class,role}
 was basically running too early (and had a bug in it).
 
-When Foo::Bar::Baz was loaded, the class would begin 
-parsing, it would encounter the extends definition, 
+When Foo::Bar::Baz was loaded, the class would begin
+parsing, it would encounter the extends definition,
 then load Foo::Bar. Once Foo::Bar had been parsed
 and compiled, it would then proceed to clean out the
-symbol table imports from Foo::Bar. This would result 
-in a parse fail of the Foo::Bar class block. 
+symbol table imports from Foo::Bar. This would result
+in a parse fail of the Foo::Bar class block.
 
 This was wrong in two ways; first, it should have been
 cleaning out the symbols from Foo and not Foo::Bar as
@@ -56,24 +56,24 @@ in Foo/Gorch.pm
 
     class Gorch extends Foo::Bar { ... }
 
-In this case, Foo::Gorch would load Foo::Bar and 
-then Foo would get cleaned out too early and cause 
+In this case, Foo::Gorch would load Foo::Bar and
+then Foo would get cleaned out too early and cause
 a parse fail of the rest of Foo::Gorch.
 
-So the way to solve the second issue can be seen at 
+So the way to solve the second issue can be seen at
 the end of mop::internal::syntax::namespace_parser
 right after the metaclass is finalized. It basically
-injects a UNITCHECK block, which will fire at the 
-very end of compile time for that one specific 
+injects a UNITCHECK block, which will fire at the
+very end of compile time for that one specific
 compilation unit. It then goes one further and hooks
-an end-of-scope handler which in turn will clean 
+an end-of-scope handler which in turn will clean
 out the imported symbols.
 
 =cut
 
 # NOTE:
-# if you uncommented either of 
-# these, it worked (see above 
+# if you uncommented either of
+# these, it worked (see above
 # for default as to why).
 # - SL
 
@@ -83,9 +83,9 @@ out the imported symbols.
 use Flack::Middleware::AccessLog;
 
 # NOTE:
-# any changed made to this should 
+# any changed made to this should
 # run this code to make sure that
-# the namespaces are properly 
+# the namespaces are properly
 # cleaned out.
 # - SL
 #foreach my $pkg ('Flack', 'Flack::Component', 'Flack::Middleware', 'Flack::Middleware::AccessLog') {

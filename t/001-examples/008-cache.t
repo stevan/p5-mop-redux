@@ -14,10 +14,10 @@ use mop;
 
     has fetcher => (is => 'ro', required => 1);
     has data => (
-        is        => 'rw', 
+        is        => 'rw',
         lazy      => 1,
         builder   => '_fetch_data',
-        predicate => 'has_data', 
+        predicate => 'has_data',
         clearer   => 'clear'
     );
 
@@ -39,8 +39,8 @@ class Cache {
 }
 
 my @data = qw[
-    one 
-    two 
+    one
+    two
     three
 ];
 

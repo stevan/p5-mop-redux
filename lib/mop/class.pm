@@ -94,7 +94,7 @@ sub FINALIZE {
     $self->mop::role::FINALIZE;
 
     if (scalar @{ $self->required_methods } != 0 && not $self->is_abstract) {
-        die 'Required method(s) [' 
+        die 'Required method(s) ['
             . (join ', ' => @{ $self->required_methods })
             . '] are not allowed in '
             . $self->name

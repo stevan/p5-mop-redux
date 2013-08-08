@@ -6,13 +6,13 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-our @AVAILABLE_TRAITS = qw[ 
-    rw 
-    ro 
+our @AVAILABLE_TRAITS = qw[
+    rw
+    ro
     weak_ref
     lazy
-    abstract 
-    overload 
+    abstract
+    overload
     extending_non_mop
     closed
     repr
@@ -132,7 +132,7 @@ sub overload {
                     $all_symbols->{ $symbol },
                     fallback => 1
                 );
-            }   
+            }
         }
     }
 }
@@ -153,7 +153,7 @@ sub lazy {
         $meta->bind('before:FETCH_DATA' => sub {
             my (undef, $instance) = @_;
             if ( !defined ${ $meta->storage->{$instance} || \undef } ) {
-                $meta->store_data_in_slot_for($instance, do {                
+                $meta->store_data_in_slot_for($instance, do {
                     local $_ = $instance;
                     $default->()
                 });
@@ -165,7 +165,7 @@ sub lazy {
 sub extending_non_mop {
     if ($_[0]->isa('mop::class')) {
         state $BUILDALL = mop::get_meta('mop::object')->get_method('BUILDALL');
-        
+
         my $meta              = shift;
         my $constructor_name  = shift // 'new';
         my $super_constructor = join '::' => $meta->superclass, $constructor_name;

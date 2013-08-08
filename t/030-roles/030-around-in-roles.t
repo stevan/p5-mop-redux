@@ -33,7 +33,7 @@ sub modifier {
             } elsif ( $type eq 'before' ) {
                 die "before not yet supported";
             } elsif ( $type eq 'after' ) {
-                die "after not yet supported";    
+                die "after not yet supported";
             } else {
                 die "I have no idea what to do with $type";
             }

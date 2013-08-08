@@ -159,7 +159,7 @@ sub compose_into {
 
     foreach my $attribute (values %{ $self->attributes }) {
         die 'Attribute conflict ' . $attribute->name . ' when composing ' . $self->name . ' into ' . $other->name
-            if $other->has_attribute( $attribute->name ) 
+            if $other->has_attribute( $attribute->name )
             && $other->get_attribute( $attribute->name )->id ne $attribute->id;
         $other->add_attribute( $attribute );
     }

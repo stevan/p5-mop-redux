@@ -99,7 +99,7 @@ sub can {
     );
     return unless $method;
     # NOTE:
-    # we need to preserve any events 
+    # we need to preserve any events
     # that have been attached to this
     # method.
     # - SL

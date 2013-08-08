@@ -42,7 +42,7 @@ sub key_name {
 # as a ref of whatever the default is)
 # - SL
 sub has_default { defined( ${ ${ $default{ $_[0] } } } ) }
-# we also have to do the double en-ref 
+# we also have to do the double en-ref
 # here too, this should get fixed
 sub set_default   { $default{ $_[0] } = \(\$_[1]) }
 sub clear_default { ${ ${ delete $default{ $_[0] } } } }
@@ -92,7 +92,7 @@ sub store_data_in_slot_for {
 
 sub store_default_in_slot_for {
     my ($self, $instance) = @_;
-    $self->store_data_in_slot_for($instance, do {                
+    $self->store_data_in_slot_for($instance, do {
         local $_ = $instance;
         $self->get_default;
     }) if $self->has_default;
