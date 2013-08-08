@@ -126,6 +126,19 @@ sub DOES {
     $self->does($role) or $self->isa($role) or $role eq q(UNIVERSAL);
 }
 
+sub VERSION {
+    my $self = shift;
+
+    my $meta = find_meta($self);
+    if (@_) {
+        die $meta->name . " version $_[0] required"
+          . "--this is only version " . $meta->version . "."
+            if version->parse($_[0]) > $meta->version;
+    }
+
+    return $meta->version;
+}
+
 sub DESTROY {
     my $self = shift;
     foreach my $class (@{ mop::mro::get_linear_isa($self) }) {
@@ -152,6 +165,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'dump',      body => \&dump ) );
     $METACLASS->add_method( mop::method->new( name => 'does',      body => \&does ) );
     $METACLASS->add_method( mop::method->new( name => 'DOES',      body => \&DOES ) );
+    $METACLASS->add_method( mop::method->new( name => 'VERSION',   body => \&VERSION ) );
     $METACLASS->add_method( mop::method->new(
         name => 'isa',
         body => sub {
