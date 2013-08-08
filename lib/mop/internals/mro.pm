@@ -72,7 +72,7 @@ sub find_method {
     # built-in methods such
     # as DOES, VERSION and
     # potentially others
-    if (my $universally = 'UNIVERSAL'->can($method_name)) {
+    if (my $universally = UNIVERSAL->can($method_name)) {
         return $universally;
     }
 

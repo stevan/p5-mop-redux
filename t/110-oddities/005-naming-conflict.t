@@ -42,7 +42,7 @@ is(
 );
 
 is(
-    'Foo::Bar'->new->go,
+    Foo::Bar->new->go,
     'package Foo::Bar',
 );
 
