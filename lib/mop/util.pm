@@ -44,15 +44,19 @@ use warnings;
 
 sub get_linear_isa {
     my $class = shift;
-    if (my $meta = mop::util::find_meta($class)) {
-        if (my $super = $meta->superclass) {
-            return [ $meta->name, @{ get_linear_isa($super) || [] } ];
-        } else {
-            return [ $meta->name ];
+
+    my @isa;
+    while (defined $class) {
+        if (my $meta = mop::util::find_meta($class)) {
+            push @isa, $meta->name;
+            $class = $meta->superclass;
         }
-    } else {
-        return mro::get_linear_isa($class);
+        else {
+            push @isa, @{ mro::get_linear_isa($class) };
+            last;
+        }
     }
+    return \@isa;
 }
 
 package mop::next;
