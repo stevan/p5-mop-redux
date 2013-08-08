@@ -10,6 +10,7 @@ install:
 script:
     - perl -I .travis -MTravisHelper -E'exit test'
 notifications:
-    channels:
-        - "irc.perl.org#p5-mop"
-    on_success: change
+    irc:
+        channels:
+            - "irc.perl.org#p5-mop"
+        on_success: change
