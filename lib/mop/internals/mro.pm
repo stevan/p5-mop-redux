@@ -126,8 +126,6 @@ sub find_submethod {
 sub call_method {
     my ($invocant, $method_name, $args, $super_of) = @_;
 
-    my $class = get_stash_for( $invocant );
-
     # XXX
     # for some reason, we are getting a lot
     # of "method not found" type errors in 
