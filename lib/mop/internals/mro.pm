@@ -49,8 +49,7 @@ sub find_method {
     }
 
     foreach my $class ( @mro ) {
-        if ( has_meta( $class ) ) {
-            my $meta = find_meta( $class );
+        if (my $meta = find_meta($class)) {
             return $meta->get_method( $method_name )
                 if $meta->has_method( $method_name );
         } else {
@@ -83,8 +82,7 @@ sub find_method {
 sub find_submethod {
     my ($invocant, $method_name, %opts) = @_;
 
-    if ( has_meta( $invocant ) ) {
-        my $meta = find_meta( $invocant );
+    if (my $meta = find_meta($invocant)) {
         # NOTE:
         # we need to bail on this if
         # the metaclass is a role
@@ -143,7 +141,7 @@ sub call_method {
     # added with "add_method" as
     # well as
     local ${^SELF}  = $invocant;
-    local ${^CLASS} = find_meta($invocant) if has_meta($invocant);
+    local ${^CLASS} = find_meta($invocant);
 
     if ( ref $method eq 'CODE' ) {
         return $method->($invocant, @$args);
