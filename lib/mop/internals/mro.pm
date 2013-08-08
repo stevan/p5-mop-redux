@@ -81,8 +81,7 @@ sub find_submethod {
     my ($invocant, $method_name) = @_;
 
     if (my $meta = find_meta($invocant)) {
-        return $meta->get_submethod( $method_name )
-            if $meta->has_submethod( $method_name );
+        return $meta->get_submethod( $method_name );
     }
 
     return;
