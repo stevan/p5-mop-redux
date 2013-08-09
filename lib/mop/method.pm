@@ -80,11 +80,8 @@ sub __INIT_METACLASS__ {
         storage => \%associated_meta
     ));
 
-    # NOTE:
-    # we do not include the new method, because
-    # we want all meta-extensions to use the one
-    # from mop::object.
-    # - SL
+    $METACLASS->add_method( mop::method->new( name => 'new', body => \&new ) );
+
     $METACLASS->add_method( mop::method->new( name => 'name',                body => \&name                ) );
     $METACLASS->add_method( mop::method->new( name => 'body',                body => \&body                ) );
     $METACLASS->add_method( mop::method->new( name => 'associated_meta',     body => \&associated_meta     ) );

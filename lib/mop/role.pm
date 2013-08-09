@@ -170,7 +170,7 @@ sub compose_into {
         # that needs to be fixed. But for now
         # we can just punt.
         # - SL
-        next if $method->name eq 'FINALIZE';
+        next if $method->name eq 'FINALIZE' || $method->name eq 'new';
 
         if ($other->isa('mop::role')) {
             if ($other->has_method( $method->name )) {
@@ -271,11 +271,8 @@ sub __INIT_METACLASS__ {
         default => \sub { [] },
     ));
 
-    # NOTE:
-    # we do not include the new method, because
-    # we want all meta-extensions to use the one
-    # from mop::object.
-    # - SL
+    $METACLASS->add_method( mop::method->new( name => 'new', body => \&new ) );
+
     $METACLASS->add_method( mop::method->new( name => 'name',       body => \&name       ) );
     $METACLASS->add_method( mop::method->new( name => 'version',    body => \&version    ) );
     $METACLASS->add_method( mop::method->new( name => 'authority',  body => \&authority  ) );

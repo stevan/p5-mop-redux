@@ -139,11 +139,8 @@ sub __INIT_METACLASS__ {
         default => \sub { sub { \(my $anon) } },
     ));
 
-    # NOTE:
-    # we do not include the new method, because
-    # we want all meta-extensions to use the one
-    # from mop::object.
-    # - SL
+    $METACLASS->add_method( mop::method->new( name => 'new', body => \&new ) );
+
     $METACLASS->add_method( mop::method->new( name => 'superclass', body => \&superclass ) );
 
     $METACLASS->add_method( mop::method->new( name => 'is_abstract',         body => \&is_abstract ) );
