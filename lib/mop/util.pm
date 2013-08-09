@@ -59,13 +59,13 @@ sub fix_metaclass_compatibility {
     my ($meta, $super) = @_;
 
     my $meta_name  = blessed($meta);
-    my $super_name = blessed($super);
+    return $meta_name if !defined $super; # non-mop inheritance
 
-    return $meta_name unless defined $super; # non-mop inheritance
+    my $super_name = blessed($super);
 
     # immutability is on a per-class basis, it shouldn't be inherited.
     # otherwise, subclasses of immutable classes won't be able to do things
-    # like add attributes or methods to the subclass
+    # like add attributes or methods to themselves
     $meta_name = mop::get_meta($meta_name)->superclass
         if $meta->is_closed;
     $super_name = mop::get_meta($super_name)->superclass
