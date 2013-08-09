@@ -193,11 +193,9 @@ sub namespace_parser {
     if (my $code = parse_block(1)) {
         local ${^META} = $meta;
         if ($type eq 'class') {
-            local ${^CLASS} = $meta;
             $code->();
         }
         else {
-            local ${^ROLE} = $meta;
             $code->();
         }
 

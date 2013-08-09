@@ -24,7 +24,7 @@ class FooMeta extends mop::class {
 # create a class (using our meta-class)
 class Foo metaclass FooMeta {
     method hello            { 'FOO' }
-    method hello_from_class { ${^CLASS}->static_method }
+    method hello_from_class { mop::get_meta($self)->static_method }
 }
 
 ok(FooMeta->isa( 'mop::object' ), '... FooMeta is an Object');

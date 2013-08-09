@@ -27,7 +27,7 @@ class Foo {
     }
 
     method has_bar {
-        defined ${ ${^CLASS}->get_attribute('$bar')->storage->{ $self } || \undef }
+        defined ${ mop::get_meta($self)->get_attribute('$bar')->storage->{ $self } || \undef }
     }
 
     method clear_bar {

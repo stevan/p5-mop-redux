@@ -29,14 +29,14 @@ sub data {
 # create a class (using our meta-class)
 class Foo metaclass MetaWithData {
     method get_meta_data {
-        ${^CLASS}->get_data
+        mop::get_meta($self)->get_data
     }
 }
 
 # create a class (using our meta-class and extra data)
 class Bar metaclass MetaWithData is data(1, 2, 3) {
     method get_meta_data {
-        ${^CLASS}->get_data
+        mop::get_meta($self)->get_data
     }
 }
 

@@ -284,13 +284,13 @@ force evaluation of C<$bar>. If you want to test if a lazy
 value is yet to be initialized, you need to go through the
 MOP to get that. Here is what that code would look like.
 
-    ${^CLASS}->get_attribute('$bar')->has_data_in_slot_for($self)
+    mop::get_meta($self)->get_attribute('$bar')->has_data_in_slot_for($self)
 
 This would only tell if you if the slot had B<never> been 
 initialized, if you also wanted to know if the slot was 
 defined or not, the simplest way to do that would be:
 
-    defined ${ ${^CLASS}->get_attribute('$bar')->storage->{ $self } || \undef }
+    defined ${ mop::get_meta($self)->get_attribute('$bar')->storage->{ $self } || \undef }
 
 but that is really overkill. The real lesson here is that 
 if you want lazy and predicates, you should implement the 
