@@ -58,22 +58,14 @@ sub uninstall_meta {
 sub fix_metaclass_compatibility {
     my ($meta, $super) = @_;
 
-    if (!defined($super)) {
-        # non-mop inheritance
-        return blessed($meta);
-    }
-    if ($meta->isa(blessed($super))) {
-        return blessed($meta);
-    }
-    elsif ($super->isa(blessed($meta))) {
-        return blessed($super);
-    }
-    else {
-        # XXX we should be able to fix up simple role incompatibilities too
-        die "Can't fix metaclass compatibility between "
-          . $meta->name . " (" . blessed($meta) . ") and "
-          . $super->name . " (" . blessed($super) . ")";
-    }
+    return blessed($meta)  unless defined $super; # non-mop inheritance
+    return blessed($meta)  if $meta->isa(blessed($super));
+    return blessed($super) if $super->isa(blessed($meta));
+    # XXX we should be able to fix up simple role incompatibilities too
+
+    die "Can't fix metaclass compatibility between "
+      . $meta->name . " (" . blessed($meta) . ") and "
+      . $super->name . " (" . blessed($super) . ")";
 }
 
 package mop::mro;
