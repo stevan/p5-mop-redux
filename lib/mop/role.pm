@@ -155,7 +155,8 @@ sub compose_into {
         # that needs to be fixed. But for now
         # we can just punt.
         # - SL
-        next if $method->name eq 'FINALIZE' || $method->name eq 'new';
+        next if !$mop::BOOTSTRAPPED
+             && ($method->name eq 'FINALIZE' || $method->name eq 'new');
 
         if ($other->isa('mop::role')) {
             if ($other->has_method( $method->name )) {
