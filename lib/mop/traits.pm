@@ -221,6 +221,13 @@ sub closed {
         );
     }
 
+    $new_meta->add_method(
+        $new_meta->method_class->new(
+            name => 'is_closed',
+            body => sub { 1 },
+        )
+    );
+
     $new_meta->FINALIZE;
 
     my $stash = mop::util::get_stash_for($class->name);
