@@ -130,9 +130,6 @@ sub bootstrap {
         #   - Class is a subclass of Object
         # is true.
         @{ $Class_stash->get_symbol('@ISA') } = ('mop::object');
-
-        # blow the cache now
-        mro::method_changed_in('UNIVERSAL');
     }
 
     {
