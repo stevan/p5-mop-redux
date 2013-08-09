@@ -58,21 +58,37 @@ package mop::mro;
 use strict;
 use warnings;
 
-sub get_linear_isa {
-    my $class = shift;
+{
+    my %ISA_CACHE;
 
-    my @isa;
-    while (defined $class) {
-        if (my $meta = mop::util::find_meta($class)) {
-            push @isa, $meta->name;
-            $class = $meta->superclass;
-        }
-        else {
-            push @isa, @{ mro::get_linear_isa($class) };
-            last;
-        }
+    sub clear_isa_cache {
+        my ($class) = ref($_[0]) || $_[0];
+        delete $ISA_CACHE{$class};
     }
-    return \@isa;
+
+    sub get_linear_isa {
+        my $class = ref($_[0]) || $_[0];
+
+        return $ISA_CACHE{$class} if $ISA_CACHE{$class};
+
+        my @isa;
+        my $current = $class;
+        while (defined $current) {
+            if (my $meta = mop::util::find_meta($current)) {
+                push @isa, $current;
+                $current = $meta->superclass;
+            }
+            else {
+                push @isa, @{ mro::get_linear_isa($current) };
+                last;
+            }
+        }
+        return $ISA_CACHE{$class} = \@isa;
+    }
+
+    # disable isa caching during global destruction, because things may have
+    # started disappearing by that point
+    END { %ISA_CACHE = () }
 }
 
 package mop::next;
