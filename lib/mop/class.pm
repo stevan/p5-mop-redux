@@ -3,7 +3,7 @@ package mop::class;
 use v5.16;
 use warnings;
 
-use mop::util qw[ init_attribute_storage find_meta ];
+use mop::util qw[ init_attribute_storage find_meta fix_metaclass_compatibility ];
 
 use List::AllUtils qw[ uniq ];
 use Module::Runtime qw[ is_module_name module_notional_filename ];
@@ -29,6 +29,12 @@ sub new {
 
     if ( defined( $args{'name'} ) && is_module_name( $args{'name'} ) ) {
         $INC{ module_notional_filename( $args{'name'} ) } //= '(mop)';
+    }
+
+    if (defined(my $super = $self->superclass)) {
+        my $meta = fix_metaclass_compatibility($self, find_meta($super));
+        bless $self, $meta
+            if $meta ne $class;
     }
 
     $self;

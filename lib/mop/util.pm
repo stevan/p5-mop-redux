@@ -8,6 +8,7 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use Package::Stash;
 use Hash::Util::FieldHash;
+use Scalar::Util qw[ blessed ];
 
 use Sub::Exporter -setup => {
     exports => [qw[
@@ -16,6 +17,7 @@ use Sub::Exporter -setup => {
         get_stash_for
         init_attribute_storage
         get_object_id
+        fix_metaclass_compatibility
     ]]
 };
 
@@ -51,6 +53,27 @@ sub uninstall_meta {
     $stash->remove_symbol('$METACLASS');
     $stash->remove_symbol('$VERSION');
     mro::set_mro($meta->name, 'dfs');
+}
+
+sub fix_metaclass_compatibility {
+    my ($meta, $super) = @_;
+
+    if (!defined($super)) {
+        # non-mop inheritance
+        return blessed($meta);
+    }
+    if ($meta->isa(blessed($super))) {
+        return blessed($meta);
+    }
+    elsif ($super->isa(blessed($meta))) {
+        return blessed($super);
+    }
+    else {
+        # XXX we should be able to fix up simple role incompatibilities too
+        die "Can't fix metaclass compatibility between "
+          . $meta->name . " (" . blessed($meta) . ") and "
+          . $super->name . " (" . blessed($super) . ")";
+    }
 }
 
 package mop::mro;
