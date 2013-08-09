@@ -119,7 +119,7 @@ sub bootstrap {
 
         # then clean up some of the @ISA by
         # removing mop::observable from them
-        @{ $Role_stash->get_symbol('@ISA')      }  = ();
+        @{ $Role_stash->get_symbol('@ISA')      } = ('mop::object');
         @{ $Method_stash->get_symbol('@ISA')    } = ('mop::object');
         @{ $Attribute_stash->get_symbol('@ISA') } = ('mop::object');
 

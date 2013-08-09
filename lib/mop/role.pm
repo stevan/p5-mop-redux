@@ -11,7 +11,7 @@ use Module::Runtime qw[ is_module_name module_notional_filename ];
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use parent 'mop::observable';
+use parent 'mop::object', 'mop::observable';
 
 init_attribute_storage(my %name);
 init_attribute_storage(my %version);
@@ -26,22 +26,7 @@ sub new {
     my $class = shift;
     my %args  = @_;
 
-    # NOTE:
-    # the only method from mop::object
-    # that we actually used was the
-    # part of &mop::object::new that
-    # created the instance. So since
-    # we really didn't need mop::role
-    # to be a subclass of mop::object,
-    # it was easier to just do this
-    # here.
-    # If for some reason, at a later
-    # date, this does not work out,
-    # we can simply restore the isa
-    # relationship, but for now, the
-    # tests pass and it feels right.
-    # - SL
-    my $self = bless \(my $x) => $class;
+    my $self = $class->SUPER::new( @_ );
 
     $name{ $self }       = \($args{'name'});
     $version{ $self }    = \($args{'version'});
