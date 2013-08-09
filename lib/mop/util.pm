@@ -58,14 +58,26 @@ sub uninstall_meta {
 sub fix_metaclass_compatibility {
     my ($meta, $super) = @_;
 
-    return blessed($meta)  unless defined $super; # non-mop inheritance
-    return blessed($meta)  if $meta->isa(blessed($super));
-    return blessed($super) if $super->isa(blessed($meta));
+    my $meta_name  = blessed($meta);
+    my $super_name = blessed($super);
+
+    return $meta_name unless defined $super; # non-mop inheritance
+
+    # immutability is on a per-class basis, it shouldn't be inherited.
+    # otherwise, subclasses of immutable classes won't be able to do things
+    # like add attributes or methods to the subclass
+    $meta_name = mop::get_meta($meta_name)->superclass
+        if $meta->is_closed;
+    $super_name = mop::get_meta($super_name)->superclass
+        if $super->is_closed;
+
+    return $meta_name  if $meta->isa($super_name);
+    return $super_name if $super->isa($meta_name);
     # XXX we should be able to fix up simple role incompatibilities too
 
     die "Can't fix metaclass compatibility between "
-      . $meta->name . " (" . blessed($meta) . ") and "
-      . $super->name . " (" . blessed($super) . ")";
+      . $meta->name . " (" . $meta_name . ") and "
+      . $super->name . " (" . $super_name . ")";
 }
 
 package mop::mro;
