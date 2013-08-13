@@ -60,9 +60,9 @@ sub close_class {
 
     my $class_meta = find_meta($class);
 
-    my $new_meta = $class_meta->new_instance(
-        name       => 'mop::closed::' . $class->name,
-        version    => $class->version,
+    my $new_meta = find_meta($class_meta)->new_instance(
+        name       => 'mop::closed::' . $class_meta->name,
+        version    => $class_meta->version,
         superclass => $class_meta->name,
         roles      => [],
     );
