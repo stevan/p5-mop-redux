@@ -39,11 +39,20 @@ role Bar {
     method bar { $bar }
 }
 
-my $method = mop::get_meta('Bar')->get_method( 'bar' );
+my $Bar = mop::get_meta('Bar');
+ok($Bar->isa('mop::role'));
+ok($Bar->isa('mop::object'));
+ok($Bar->DOES('mop::role'));
+ok($Bar->DOES('mop::object'));
+ok($Bar->DOES('mop::observable'));
+ok($Bar->does('mop::observable'));
+ok($Bar->can('name'));
+
+my $method = $Bar->get_method( 'bar' );
 ok( $method->isa( 'mop::method' ), '... got the method we expected' );
 is( $method->name, 'bar', '... got the name of the method we expected');
 
-my $attribute = mop::get_meta('Bar')->get_attribute( '$bar' );
+my $attribute = $Bar->get_attribute( '$bar' );
 ok( $attribute->isa( 'mop::attribute' ), '... got the attribute we expected' );
 is( $attribute->name, '$bar', '... got the name of the attribute we expected');
 
