@@ -17,6 +17,9 @@ ok(mop::get_meta('mop::object')->isa('mop::class'), '... object->class is instan
 ok(mop::class->isa('mop::object'), '... class isa object');
 ok(mop::get_meta('mop::class')->isa('mop::class'), '... class->class is instance of class');
 
+ok(mop::role->isa('mop::object'), '... role isa object');
+ok(mop::get_meta('mop::role')->isa('mop::class'), '... role->class is instance of class');
+
 ok(mop::attribute->isa('mop::object'), '... attribute isa object');
 ok(mop::get_meta('mop::attribute')->isa('mop::class'), '... attribute->class is instance of class');
 
@@ -29,6 +32,12 @@ isa_ok('mop::attribute', 'mop::object');
 is_deeply(
     mop::mro::get_linear_isa('mop::class'),
     [ 'mop::class', 'mop::object' ],
+    '... got the expected mro'
+);
+
+is_deeply(
+    mop::mro::get_linear_isa('mop::role'),
+    [ 'mop::role', 'mop::object' ],
     '... got the expected mro'
 );
 
