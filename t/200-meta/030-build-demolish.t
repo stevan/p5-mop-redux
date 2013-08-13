@@ -25,13 +25,9 @@ is($built, 3);
 is($demolished, 1);
 mop::util::uninstall_meta(mop::get_meta('Bar'));
 is($built, 3);
-{ local $TODO = "these DEMOLISH methods don't get called at all, for reasons i don't understand at all (seems to be related to the no-fetch bug in the mro)";
 is($demolished, 2);
-}
 mop::util::uninstall_meta(mop::get_meta('Baz'));
 is($built, 3);
-{ local $TODO = "these DEMOLISH methods don't get called at all, for reasons i don't understand at all (seems to be related to the no-fetch bug in the mro)";
 is($demolished, 3);
-}
 
 done_testing;

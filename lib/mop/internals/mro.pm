@@ -177,37 +177,13 @@ sub call_method {
         # diagnose the double-invoke/no-fetch bug
         #warn "++++ $method_called called without wizard->fetch" if not $is_fetched;
 
-        # FIXME:
-        # So for some really odd reason I cannot
-        # seem to diagnose, every once in a while
-        # invoke_method will be called, but the
-        # wizard->fetch magic below will *not*
-        # be called.
-        #
-        # To make it even more confusing, the $caller
-        # value is retained, but the @args values
-        # are not (they show up as undef).
-        #
-        # To make it even /more/ confusing,
-        # if I was to detect the situation (which
-        # is easy to do when you find a reproduceable
-        # case, simply by checking for undef args
-        # when you know for sure they should be
-        # defined), and then die in response to
-        # the situation, the die gets swallowed
-        # up and everything just works fine.
-        #
-        # Bug in Perl? Is putting magic on the stash
-        # just too damn funky? I have no idea, but
-        # this code below will detect the situation
-        # (the lack of wizard->fetch/invoke_method
-        # pair) and stop it. I leave the DESTROY
-        # exception in place because that seemed to
-        # be happening on a semi-legit basis.
-        #
-        # - SL
-        if (!$is_fetched && $method_called ne 'DESTROY') {
-            return;
+        # so perl keeps an additional cache of DESTROY methods, beyond the
+        # normal method caching. this cache isn't affected by the mro stuff.
+        # DESTROY is the only method (so far) cached in this way, so we can
+        # just assume that if the method wasn't fetched, it was being pulled
+        # from the DESTROY cache.
+        if (!$is_fetched) {
+            $method_called = 'DESTROY';
         }
         $is_fetched = 0;
 
