@@ -64,7 +64,7 @@ sub fix_metaclass_compatibility {
     my $super_name = blessed($super);
 
     # immutability is on a per-class basis, it shouldn't be inherited.
-    # otherwise, subclasses of immutable classes won't be able to do things
+    # otherwise, subclasses of closed classes won't be able to do things
     # like add attributes or methods to themselves
     $meta_name = mop::get_meta($meta_name)->superclass
         if $meta->is_closed;
