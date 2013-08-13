@@ -43,4 +43,26 @@ class Gorch with Foo, Bar is abstract {}
 ok(mop::get_meta('Gorch')->is_abstract, '... method conflict between roles results in required method (and an abstract class)');
 is_deeply(mop::get_meta('Gorch')->required_methods, ['foo'], '... method conflict between roles results in required method');
 
+role WithFinalize1 {
+    method FINALIZE { }
+}
+
+role WithFinalize2 {
+    method FINALIZE { }
+}
+
+eval "class MultipleFinalizeMethods with WithFinalize1, WithFinalize2 { }";
+like($@, qr/Required method\(s\) \[FINALIZE\] are not allowed in MultipleFinalizeMethods unless class is declared abstract/);
+
+role WithNew1 {
+    method new { }
+}
+
+role WithNew2 {
+    method new { }
+}
+
+eval "class MultipleNewMethods with WithNew1, WithNew2 { }";
+like($@, qr/Required method\(s\) \[new\] are not allowed in MultipleNewMethods unless class is declared abstract/);
+
 done_testing;
