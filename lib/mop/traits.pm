@@ -190,56 +190,7 @@ sub closed {
     die "closed can only be used on classes"
         unless $class->isa('mop::class');
 
-    state $anon_index = 1;
-    my $class_meta = mop::get_meta($class);
-
-    my $new_meta = $class_meta->new_instance(
-        name       => $class->name . '::Immutable::__ANON__::' . $anon_index++,
-        version    => $class->version,
-        superclass => $class_meta->name,
-        roles      => [],
-    );
-    mop::util::install_meta($new_meta);
-
-    my @mutable_methods = qw(
-        add_attribute
-        add_method
-        add_required_method
-        add_role
-        add_submethod
-        compose_into
-        make_class_abstract
-        remove_method
-    );
-
-    for my $method (@mutable_methods) {
-        $new_meta->add_method(
-            $new_meta->method_class->new(
-                name => $method,
-                body => sub { die "Can't call $method on a closed class" },
-            )
-        );
-    }
-
-    $new_meta->add_method(
-        $new_meta->method_class->new(
-            name => 'is_closed',
-            body => sub { 1 },
-        )
-    );
-
-    $new_meta->FINALIZE;
-
-    my $stash = mop::util::get_stash_for($class->name);
-    for my $isa (@{ mop::mro::get_linear_isa($class->name) }) {
-        if (mop::util::has_meta($isa)) {
-            for my $method (values %{ mop::get_meta($isa)->methods }) {
-                $stash->add_symbol('&' . $method->name => $method->body);
-            }
-        }
-    }
-
-    bless $class, $new_meta->name;
+    mop::util::close_class($class);
 }
 
 sub repr {
