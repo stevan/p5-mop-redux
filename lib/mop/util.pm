@@ -58,10 +58,26 @@ sub uninstall_meta {
 sub close_class {
     my ($class) = @_;
 
+    my $new_meta = _get_class_for_closing($class);
+
+    # XXX clear caches here if we end up adding any, and if we end up
+    # implementing reopening of classes
+
+    bless $class, $new_meta->name;
+}
+
+sub _get_class_for_closing {
+    my ($class) = @_;
+
     my $class_meta = find_meta($class);
 
-    my $new_meta = find_meta($class_meta)->new_instance(
-        name       => 'mop::closed::' . $class_meta->name,
+    my $closed_name = 'mop::closed::' . $class_meta->name;
+
+    my $new_meta = find_meta($closed_name);
+    return $new_meta if $new_meta;
+
+    $new_meta = find_meta($class_meta)->new_instance(
+        name       => $closed_name,
         version    => $class_meta->version,
         superclass => $class_meta->name,
         roles      => [],
@@ -106,7 +122,7 @@ sub close_class {
         }
     }
 
-    bless $class, $new_meta->name;
+    return $new_meta;
 }
 
 sub fix_metaclass_compatibility {
