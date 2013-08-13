@@ -58,11 +58,10 @@ sub uninstall_meta {
 sub close_class {
     my ($class) = @_;
 
-    state $anon_index = 1;
     my $class_meta = find_meta($class);
 
     my $new_meta = $class_meta->new_instance(
-        name       => $class->name . '::Immutable::__ANON__::' . $anon_index++,
+        name       => 'mop::closed::' . $class->name,
         version    => $class->version,
         superclass => $class_meta->name,
         roles      => [],
