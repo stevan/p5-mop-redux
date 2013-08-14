@@ -130,14 +130,21 @@ sub namespace_parser {
     my @classes_to_load;
 
     my $extends;
-    if ($extends = parse_modifier_with_single_value('extends')) {
-        push @classes_to_load => $extends;
+    if ($type eq 'class') {
+        if ($extends = parse_modifier_with_single_value('extends')) {
+            push @classes_to_load => $extends;
+        }
+        else {
+            $extends = 'mop::object';
+        }
+
+        lex_read_space;
     }
     else {
-        $extends = 'mop::object';
+        if (lex_peek(8) =~ /^extends\b/) {
+            die "Roles cannot use 'extends'";
+        }
     }
-
-    lex_read_space;
 
     my @with;
     if (@with = parse_modifier_with_multiple_values('with')) {
