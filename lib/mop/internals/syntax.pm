@@ -133,6 +133,9 @@ sub namespace_parser {
     if ($extends = parse_modifier_with_single_value('extends')) {
         push @classes_to_load => $extends;
     }
+    else {
+        $extends = 'mop::object';
+    }
 
     lex_read_space;
 
@@ -146,6 +149,9 @@ sub namespace_parser {
     my $metaclass;
     if ($metaclass = parse_modifier_with_single_value('metaclass')) {
         push @classes_to_load => $metaclass;
+    }
+    else {
+        $metaclass = "mop::$type";
     }
 
     lex_read_space;
@@ -164,12 +170,13 @@ sub namespace_parser {
     local $CURRENT_CLASS_NAME     = $pkg;
     local $CURRENT_ATTRIBUTE_LIST = [];
 
-    my $meta = ($type eq 'class' ? \&build_class : \&build_role)->(
-        name      => $pkg,
-        extends   => $extends,
-        with      => \@with,
-        metaclass => $metaclass,
-        version   => $version,
+    my $meta = $metaclass->new(
+        name       => $pkg,
+        version    => $version,
+        roles      => [ map { mop::util::find_meta($_) } @with ],
+        ($type eq 'class'
+            ? (superclass => $extends)
+            : ()),
     );
     mop::util::install_meta($meta);
     my $g = guard {
@@ -230,39 +237,6 @@ sub namespace_parser {
     #}
 
     return (sub { $pkg }, 1);
-}
-
-sub build_class {
-    my %metadata = @_;
-
-    my $class_Class = 'mop::class';
-    if ( defined $metadata{ 'metaclass' } ) {
-        $class_Class = delete $metadata{ 'metaclass' };
-    }
-
-    if ( defined $metadata{ 'extends' } ) {
-        $metadata{ 'superclass' } = delete $metadata{ 'extends' };
-    } else {
-        $metadata{ 'superclass' } = 'mop::object';
-    }
-
-    if ( defined $metadata{ 'with' } ) {
-        $metadata{ 'with' }  = [ $metadata{ 'with' } ] unless ref($metadata{ 'with' }) eq q(ARRAY);
-        $metadata{ 'roles' } = [ map { mop::util::find_meta($_) } @{ delete $metadata{ 'with' } } ];
-    }
-
-    $class_Class->new(%metadata);
-}
-
-sub build_role {
-    my %metadata = @_;
-
-    if ( defined $metadata{ 'with' } ) {
-        $metadata{ 'with' }  = [ $metadata{ 'with' } ] unless ref($metadata{ 'with' }) eq q(ARRAY);
-        $metadata{ 'roles' } = [ map { mop::util::find_meta($_) } @{ delete $metadata{ 'with' } } ];
-    }
-
-    mop::role->new(%metadata);
 }
 
 sub method {
