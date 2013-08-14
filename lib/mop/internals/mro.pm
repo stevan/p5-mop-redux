@@ -73,14 +73,9 @@ sub _find_method {
     # this is ugly, needs work
     # - SL
     if ( defined $super_of ) {
-        #warn "got super-of";
-        #warn "MRO: " . $mro[0];
-        #warn "SUPEROF: " . $super_of->name;
         while ( $mro[0] && $mro[0] ne $super_of->name ) {
-            #warn "no match, shifting until we find it";
             shift( @mro );
         }
-        #warn "got it, shifting";
         shift( @mro );
     }
 
@@ -173,10 +168,6 @@ sub call_method {
     sub invoke_method {
         my ($caller, @args) = @_;
 
-        # NOTE: this warning can be used to
-        # diagnose the double-invoke/no-fetch bug
-        #warn "++++ $method_called called without wizard->fetch" if not $is_fetched;
-
         # so perl keeps an additional cache of DESTROY methods, beyond the
         # normal method caching. this cache isn't affected by the mro stuff.
         # DESTROY is the only method (so far) cached in this way, so we can
@@ -186,10 +177,6 @@ sub call_method {
             $method_called = 'DESTROY';
         }
         $is_fetched = 0;
-
-        # NOTE: this warning can be used to
-        # diagnose the double-invoke/no-fetch bug
-        #warn join ", " => "invoke_method: ", $caller, $method_called, @args;
 
         call_method($caller, $method_called, \@args);
     }
@@ -203,18 +190,10 @@ sub call_method {
                    || $_[2] eq 'unimport';  # and they certainly don't export
             return if $_[2] eq 'DESTROY' && in_global_destruction;
 
-            # NOTE: this warning can be used to
-            # diagnose the double-invoke/no-fetch bug
-            #warn join ", " => "wizard->fetch: ", ${$_[1]->[1]}, ${$_[1]->[0]}, $_[2];
-
             ${ $_[1]->[1] } = 1;
             ${ $_[1]->[0] } = $_[2];
             $_[2] = 'invoke_method';
             mro::method_changed_in('UNIVERSAL');
-
-            # NOTE: this warning can be used to
-            # diagnose the double-invoke/no-fetch bug
-            #Carp::cluck("HI");
 
             ();
         }
