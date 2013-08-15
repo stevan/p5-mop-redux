@@ -41,6 +41,10 @@ sub init_attribute_storage (\%) {
 
 sub install_meta {
     my ($meta) = @_;
+
+    die "Metaclasses must inherit from mop::class or mop::role"
+        unless $meta->isa('mop::class') || $meta->isa('mop::role');
+
     my $stash = mop::util::get_stash_for($meta->name);
     $stash->add_symbol('$METACLASS', \$meta);
     $stash->add_symbol('$VERSION', \$meta->version);
@@ -49,6 +53,10 @@ sub install_meta {
 
 sub uninstall_meta {
     my ($meta) = @_;
+
+    die "Metaclasses must inherit from mop::class or mop::role"
+        unless $meta->isa('mop::class') || $meta->isa('mop::role');
+
     my $stash = mop::util::get_stash_for($meta->name);
     $stash->remove_symbol('$METACLASS');
     $stash->remove_symbol('$VERSION');
