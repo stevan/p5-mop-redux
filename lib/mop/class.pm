@@ -27,6 +27,10 @@ sub new {
 
     if ($args{'superclass'} && (my $meta = find_meta($args{'superclass'}))) {
         $instance_generator{ $self } = \$meta->instance_generator;
+
+        # merge required methods with superclass
+        $self->add_required_method($_)
+            for $meta->required_methods;
     }
     else {
         $instance_generator{ $self } = \(sub { \(my $anon) });
@@ -117,15 +121,6 @@ sub has_submethod {
 sub FINALIZE {
     my $self = shift;
     $self->fire('before:FINALIZE');
-
-    # inherit required methods ...
-    if (my $super = $self->superclass) {
-        if (my $meta = find_meta($super)) {
-            # merge required methods with superclass
-            $self->add_required_method($_)
-                for $meta->required_methods;
-        }
-    }
 
     $self->mop::role::FINALIZE;
 
