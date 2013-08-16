@@ -102,6 +102,7 @@ sub add_method {
     $self->method_map->{ $method->name } = $method;
     mop::internals::mro::clear_method_cache_for($self->name);
     $method->set_associated_meta($self);
+    $self->remove_required_method($method->name);
 }
 
 sub get_method {
@@ -118,6 +119,7 @@ sub remove_method {
     my ($self, $name) = @_;
     mop::internals::mro::clear_method_cache_for($self->name);
     delete $self->method_map->{ $name };
+    # XXX need to add a method requirement here if any roles required this
 }
 
 # required methods
@@ -181,8 +183,10 @@ sub compose_into {
     }
 
     # merge required methods ...
-    $other->add_required_method($_)
-        for $self->required_methods;
+    for my $method ($self->required_methods) {
+        $other->add_required_method($method)
+            unless $other->has_method($method);
+    }
 
     $self->fire('after:COMPOSE' => $ultimate_target);
 }
@@ -202,11 +206,6 @@ sub FINALIZE {
     }
 
     $composite->compose_into( $self );
-
-    # rectify required methods
-    # after composition
-    $self->remove_required_method($_)
-        for map { $_->name } $self->methods;
 
     $self->fire('after:FINALIZE');
 }
