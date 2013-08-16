@@ -130,6 +130,9 @@ sub bootstrap {
         #   - Class is a subclass of Object
         # is true.
         @{ $Class_stash->get_symbol('@ISA') } = ('mop::object');
+
+        # remove the temporary clone methods used in the bootstrap
+        $Method_stash->remove_symbol('&clone');
     }
 
     {

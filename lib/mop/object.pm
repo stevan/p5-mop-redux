@@ -31,6 +31,11 @@ sub new {
     }
 }
 
+sub clone {
+    my ($self, %args) = @_;
+    return find_meta($self)->clone_instance($self, %args);
+}
+
 sub BUILDALL {
     my ($self, @args) = @_;
     foreach my $class (reverse @{ mop::mro::get_linear_isa($self) }) {
@@ -119,6 +124,7 @@ sub __INIT_METACLASS__ {
         authority => $AUTHORITY,
     );
     $METACLASS->add_method( mop::method->new( name => 'new',       body => \&new ) );
+    $METACLASS->add_method( mop::method->new( name => 'clone',     body => \&clone ) );
     $METACLASS->add_method( mop::method->new( name => 'BUILDALL',  body => \&BUILDALL ) );
     $METACLASS->add_method( mop::method->new( name => 'id',        body => \&id ) );
     $METACLASS->add_method( mop::method->new( name => 'dump',      body => \&dump ) );

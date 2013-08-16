@@ -90,6 +90,32 @@ sub new_instance {
     return $instance;
 }
 
+sub clone_instance {
+    my $self = shift;
+    my ($instance, %args) = @_;
+
+    my $attributes = {
+        map {
+            if (my $m = find_meta($_)) {
+                %{ $m->attribute_map }
+            }
+        } reverse @{ mop::mro::get_linear_isa($self->name) }
+    };
+
+    %args = (
+        (map {
+            my $attr = $attributes->{$_};
+            my $val = $attr->fetch_data_in_slot_for($instance);
+            defined($val) ? ($attr->key_name => $val) : ()
+        } keys %$attributes),
+        %args,
+    );
+
+    my $clone = $self->new_instance(%args);
+
+    return $clone;
+}
+
 sub instance_generator { ${ $instance_generator{ $_[0] } } }
 sub set_instance_generator { $instance_generator{ $_[0] } = \$_[1] }
 
@@ -180,6 +206,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'is_closed',         body => \&is_closed ) );
 
     $METACLASS->add_method( mop::method->new( name => 'new_instance', body => \&new_instance ) );
+    $METACLASS->add_method( mop::method->new( name => 'clone_instance', body => \&clone_instance ) );
     $METACLASS->add_method( mop::method->new( name => 'instance_generator', body => \&instance_generator ) );
     $METACLASS->add_method( mop::method->new( name => 'set_instance_generator', body => \&set_instance_generator ) );
     $METACLASS->add_method( mop::method->new( name => 'create_fresh_instance_structure', body => \&create_fresh_instance_structure ) );

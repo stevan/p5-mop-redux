@@ -24,6 +24,12 @@ sub new {
     $self;
 }
 
+# temporary, for bootstrapping
+sub clone {
+    my $self = shift;
+    return ref($self)->new(name => $self->name, body => $self->body);
+}
+
 sub name { ${ $name{ $_[0] } } }
 sub body { ${ $body{ $_[0] } } }
 

@@ -158,7 +158,7 @@ sub compose_into {
         die 'Attribute conflict ' . $attribute->name . ' when composing ' . $self->name . ' into ' . $other->name
             if $other->has_attribute( $attribute->name )
             && $other->get_attribute( $attribute->name )->id ne $attribute->id;
-        $other->add_attribute( $attribute );
+        $other->add_attribute( $attribute->clone(associated_meta => $other) );
     }
 
     foreach my $method ($self->methods) {
@@ -175,10 +175,12 @@ sub compose_into {
                 $other->add_required_method( $method->name );
                 $other->remove_method( $method->name );
             } else {
-                $other->add_method( $method );
+                $other->add_method(
+                    $method->clone(associated_meta => $other)
+                );
             }
         } elsif ($other->isa('mop::class')) {
-            $other->add_method( $method )
+            $other->add_method( $method->clone(associated_meta => $other) )
                 unless $other->has_method( $method->name );
         }
 
