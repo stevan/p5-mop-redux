@@ -15,6 +15,7 @@ use Sub::Exporter -setup => {
         find_meta
         has_meta
         find_or_create_meta
+        apply_all_roles
         get_stash_for
         init_attribute_storage
         get_object_id
@@ -65,6 +66,20 @@ sub find_or_create_meta {
 
         return $new_meta;
     }
+}
+
+sub apply_all_roles {
+    my ($to, @roles) = @_;
+
+    my $composite = mop::role->new(
+        name => 'COMPOSITE::OF::[' . (join ', ' => map { $_->name } @roles) . ']'
+    );
+
+    foreach my $role ( @roles ) {
+        $role->compose_into( $composite, $to );
+    }
+
+    $composite->compose_into( $to );
 }
 
 sub get_stash_for {

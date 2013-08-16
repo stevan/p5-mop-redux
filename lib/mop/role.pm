@@ -3,7 +3,7 @@ package mop::role;
 use v5.16;
 use warnings;
 
-use mop::util qw[ init_attribute_storage ];
+use mop::util qw[ init_attribute_storage apply_all_roles ];
 
 use Module::Runtime qw[ is_module_name module_notional_filename ];
 
@@ -197,15 +197,7 @@ sub FINALIZE {
     my $self = shift;
     $self->fire('before:FINALIZE');
 
-    my $composite = mop::role->new(
-        name => 'COMPOSITE::OF::[' . (join ', ' => map { $_->name } @{ $self->roles }) . ']'
-    );
-
-    foreach my $role ( @{ $self->roles } ) {
-        $role->compose_into( $composite, $self );
-    }
-
-    $composite->compose_into( $self );
+    apply_all_roles($self, @{ $self->roles });
 
     $self->fire('after:FINALIZE');
 }
