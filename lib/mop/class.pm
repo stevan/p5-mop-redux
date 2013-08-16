@@ -25,7 +25,13 @@ sub new {
     $is_abstract{ $self }        = \($args{'is_abstract'} // 0);
     $superclass{ $self }         = \($args{'superclass'});
     $submethods{ $self }         = \({});
-    $instance_generator{ $self } = \(sub { \(my $anon) });
+
+    if ($args{'superclass'} && (my $meta = find_meta($args{'superclass'}))) {
+        $instance_generator{ $self } = \$meta->instance_generator;
+    }
+    else {
+        $instance_generator{ $self } = \(sub { \(my $anon) });
+    }
 
     if ( defined( $args{'name'} ) && is_module_name( $args{'name'} ) ) {
         $INC{ module_notional_filename( $args{'name'} ) } //= '(mop)';
