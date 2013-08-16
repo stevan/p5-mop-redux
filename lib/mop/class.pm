@@ -3,7 +3,7 @@ package mop::class;
 use v5.16;
 use warnings;
 
-use mop::util qw[ init_attribute_storage find_meta fix_metaclass_compatibility ];
+use mop::util qw[ init_attribute_storage has_meta find_meta fix_metaclass_compatibility ];
 
 use List::AllUtils qw[ uniq ];
 use Module::Runtime qw[ is_module_name module_notional_filename ];
@@ -58,7 +58,34 @@ sub is_closed { 0 }
 
 # instance creation
 
-sub new_instance { (shift)->name->new( @_ ) }
+sub new_instance {
+    my $self = shift;
+    my (%args) = @_;
+
+    die 'Cannot instantiate abstract class (' . $self->name . ')'
+        if $self->is_abstract;
+
+    my $instance = bless $self->create_fresh_instance_structure, $self->name;
+    mop::util::register_object($instance);
+
+    my %attributes = map {
+        if (my $m = find_meta($_)) {
+            %{ $m->attributes }
+        }
+    } reverse @{ mop::mro::get_linear_isa($self->name) };
+
+    foreach my $attr (values %attributes) {
+        if ( exists $args{ $attr->key_name }) {
+            $attr->store_data_in_slot_for( $instance, $args{ $attr->key_name } )
+        } else {
+            $attr->store_default_in_slot_for( $instance );
+        }
+    }
+
+    $instance->BUILDALL( \%args );
+
+    return $instance;
+}
 
 sub instance_generator { ${ $instance_generator{ $_[0] } } }
 sub set_instance_generator { $instance_generator{ $_[0] } = \$_[1] }

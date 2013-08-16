@@ -14,6 +14,7 @@ use Sub::Exporter -setup => {
     exports => [qw[
         find_meta
         has_meta
+        find_or_create_meta
         get_stash_for
         init_attribute_storage
         get_object_id
@@ -23,6 +24,48 @@ use Sub::Exporter -setup => {
 
 sub find_meta { ${ get_stash_for( shift )->get_symbol('$METACLASS') || \undef } }
 sub has_meta  {    get_stash_for( shift )->has_symbol('$METACLASS')  }
+
+sub find_or_create_meta {
+    my ($class) = @_;
+
+    if (my $meta = find_meta($class)) {
+        return $meta;
+    }
+    else {
+        # creating a metaclass from an existing non-mop class
+        my $stash = get_stash_for($class);
+
+        my $name      = $stash->name;
+        my $version   = $stash->get_symbol('$VERSION');
+        my $authority = $stash->get_symbol('$AUTHORITY');
+        my $isa       = $stash->get_symbol('@ISA');
+
+        die "Multiple inheritance is not supported in mop classes"
+            if @$isa > 1;
+
+        my $new_meta = mop::class->new(
+            name       => $name,
+            version    => $version,
+            authority  => $authority,
+            superclass => $isa->[0],
+        );
+
+        for my $method ($stash->list_all_symbols('CODE')) {
+            $new_meta->add_method(
+                mop::method->new(
+                    name => $method,
+                    body => $stash->get_symbol('&' . $method),
+                )
+            );
+        }
+
+        # can't just use install_meta, because applying the mop mro to a
+        # non-mop class will break things (SUPER, for instance)
+        $stash->add_symbol('$METACLASS', \$new_meta);
+
+        return $new_meta;
+    }
+}
 
 sub get_stash_for {
     state %STASHES;

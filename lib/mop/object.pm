@@ -3,7 +3,7 @@ package mop::object;
 use v5.16;
 use warnings;
 
-use mop::util    qw[ has_meta find_meta get_object_id ];
+use mop::util    qw[ has_meta find_or_create_meta find_meta get_object_id ];
 use Scalar::Util qw[ blessed ];
 
 our $VERSION   = '0.01';
@@ -27,35 +27,7 @@ sub new {
         return $self;
     }
     else {
-        my @mro = grep { has_meta($_) } @{ mop::mro::get_linear_isa($class) };
-
-        # we'll always at least get mop::object in the mro
-        my $meta = find_meta($mro[0]);
-
-        die 'Cannot instantiate abstract class (' . $class . ')'
-            if $meta->is_abstract;
-
-        my $instance = $meta->create_fresh_instance_structure;
-        my $self = bless $instance, $class;
-        mop::util::register_object($self);
-
-        my %attributes = map {
-            if (my $m = find_meta($_)) {
-                %{ $m->attributes }
-            }
-        } reverse @mro;
-
-        foreach my $attr (values %attributes) {
-            if ( exists $args{ $attr->key_name }) {
-                $attr->store_data_in_slot_for( $self, $args{ $attr->key_name } )
-            } else {
-                $attr->store_default_in_slot_for( $self );
-            }
-        }
-
-        $self->BUILDALL( \%args );
-
-        return $self;
+        return find_or_create_meta($class)->new_instance(%args);
     }
 }
 
