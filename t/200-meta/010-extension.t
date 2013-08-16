@@ -11,7 +11,7 @@ use mop;
 class ClassAccessorMeta extends mop::class {
     method FINALIZE {
 
-        foreach my $attribute ( values %{ $self->attributes } ) {
+        foreach my $attribute ( $self->attributes ) {
             $self->add_method(
                 mop::method->new(
                     name => $attribute->key_name,

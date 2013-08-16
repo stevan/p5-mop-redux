@@ -48,7 +48,7 @@ sub dump {
 
     my %attributes = map {
         if (my $m = find_meta($_)) {
-            %{ $m->attributes }
+            %{ $m->attribute_map }
         }
     } reverse @{ mop::mro::get_linear_isa($self) };
 

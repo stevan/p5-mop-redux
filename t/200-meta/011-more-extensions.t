@@ -18,7 +18,7 @@ class ValidatedAccessorMeta extends mop::class {
 
     method FINALIZE {
 
-        foreach my $attribute ( values %{ $self->attributes } ) {
+        foreach my $attribute ( $self->attributes ) {
             my $name          = $attribute->name;
             my $validator     = $attribute->validator;
             my $accessor_name = $attribute->key_name;

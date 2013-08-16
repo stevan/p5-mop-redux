@@ -35,7 +35,7 @@ sub rw {
     }
     elsif ($_[0]->isa('mop::class')) {
         my ($meta) = @_;
-        foreach my $attr ( values %{ $meta->attributes } ) {
+        foreach my $attr ( $meta->attributes ) {
             $meta->add_method(
                 $meta->method_class->new(
                     name => $attr->key_name,
@@ -67,7 +67,7 @@ sub ro {
     }
     elsif ($_[0]->isa('mop::class')) {
         my ($meta) = @_;
-        foreach my $attr ( values %{ $meta->attributes } ) {
+        foreach my $attr ( $meta->attributes ) {
             $meta->add_method(
                 $meta->method_class->new(
                     name => $attr->key_name,

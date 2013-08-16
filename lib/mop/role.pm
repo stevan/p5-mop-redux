@@ -71,22 +71,24 @@ sub does_role {
 
 sub attribute_class { 'mop::attribute' }
 
-sub attributes { ${ $attributes{ $_[0] } } }
+sub attribute_map { ${ $attributes{ $_[0] } } }
+
+sub attributes { values %{ $_[0]->attribute_map } }
 
 sub add_attribute {
     my ($self, $attr) = @_;
-    $self->attributes->{ $attr->name } = $attr;
+    $self->attribute_map->{ $attr->name } = $attr;
     $attr->set_associated_meta($self);
 }
 
 sub get_attribute {
     my ($self, $name) = @_;
-    $self->attributes->{ $name }
+    $self->attribute_map->{ $name }
 }
 
 sub has_attribute {
     my ($self, $name) = @_;
-    exists $self->attributes->{ $name };
+    exists $self->attribute_map->{ $name };
 }
 
 # methods
@@ -152,7 +154,7 @@ sub compose_into {
 
     $self->fire('before:COMPOSE' => $ultimate_target);
 
-    foreach my $attribute (values %{ $self->attributes }) {
+    foreach my $attribute ($self->attributes) {
         die 'Attribute conflict ' . $attribute->name . ' when composing ' . $self->name . ' into ' . $other->name
             if $other->has_attribute( $attribute->name )
             && $other->get_attribute( $attribute->name )->id ne $attribute->id;
@@ -264,6 +266,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'does_role', body => \&does_role ) );
 
     $METACLASS->add_method( mop::method->new( name => 'attribute_class', body => \&attribute_class ) );
+    $METACLASS->add_method( mop::method->new( name => 'attribute_map',   body => \&attribute_map   ) );
     $METACLASS->add_method( mop::method->new( name => 'attributes',      body => \&attributes      ) );
     $METACLASS->add_method( mop::method->new( name => 'get_attribute',   body => \&get_attribute   ) );
     $METACLASS->add_method( mop::method->new( name => 'add_attribute',   body => \&add_attribute   ) );
