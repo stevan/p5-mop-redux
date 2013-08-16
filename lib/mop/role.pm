@@ -5,7 +5,6 @@ use warnings;
 
 use mop::util qw[ init_attribute_storage ];
 
-use List::AllUtils qw[ uniq ];
 use Module::Runtime qw[ is_module_name module_notional_filename ];
 
 our $VERSION   = '0.01';
@@ -35,7 +34,7 @@ sub new {
     $roles{ $self }            = \($args{'roles'} || []);
     $attributes{ $self }       = \({});
     $methods{ $self }          = \({});
-    $required_methods{ $self } = \([]);
+    $required_methods{ $self } = \({});
 
     if ( defined( $args{'name'} ) && is_module_name( $args{'name'} ) ) {
         $INC{ module_notional_filename( $args{'name'} ) } //= '(mop)';
@@ -123,16 +122,23 @@ sub remove_method {
 
 # required methods
 
-sub required_methods { ${ $required_methods{ $_[0] } } }
+sub required_method_map { ${ $required_methods{ $_[0] } } }
+
+sub required_methods { keys %{ $_[0]->required_method_map } }
 
 sub add_required_method {
-    my ($self, $required_method) = @_;
-    push @{ $self->required_methods } => $required_method;
+    my ($self, $name) = @_;
+    $self->required_method_map->{ $name } = 1;
+}
+
+sub remove_required_method {
+    my ($self, $name) = @_;
+    delete $self->required_method_map->{ $name };
 }
 
 sub requires_method {
     my ($self, $name) = @_;
-    scalar grep { $_ eq $name } @{ $self->required_methods };
+    defined $self->required_method_map->{ $name };
 }
 
 # composition
@@ -175,10 +181,8 @@ sub compose_into {
     }
 
     # merge required methods ...
-    @{ $other->required_methods } = uniq(
-        @{ $self->required_methods },
-        @{ $other->required_methods }
-    );
+    $other->add_required_method($_)
+        for $self->required_methods;
 
     $self->fire('after:COMPOSE' => $ultimate_target);
 }
@@ -201,9 +205,8 @@ sub FINALIZE {
 
     # rectify required methods
     # after composition
-    @{ $self->required_methods } = grep {
-        !$self->has_method( $_ )
-    } @{ $self->required_methods };
+    $self->remove_required_method($_)
+        for map { $_->name } $self->methods;
 
     $self->fire('after:FINALIZE');
 }
@@ -256,7 +259,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$required_methods',
         storage => \%required_methods,
-        default => \sub { [] },
+        default => \sub { {} },
     ));
 
     $METACLASS->add_method( mop::method->new( name => 'new', body => \&new ) );
@@ -284,7 +287,9 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'remove_method', body => \&remove_method ) );
 
     $METACLASS->add_method( mop::method->new( name => 'required_methods',    body => \&required_methods    ) );
+    $METACLASS->add_method( mop::method->new( name => 'required_method_map', body => \&required_method_map ) );
     $METACLASS->add_method( mop::method->new( name => 'add_required_method', body => \&add_required_method ) );
+    $METACLASS->add_method( mop::method->new( name => 'remove_required_method', body => \&remove_required_method ) );
     $METACLASS->add_method( mop::method->new( name => 'requires_method',     body => \&requires_method     ) );
 
 

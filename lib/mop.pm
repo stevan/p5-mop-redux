@@ -244,7 +244,7 @@ This is a prototype for a new object system for Perl 5.
         has $roles            is ro = [];
         has $attributes       is ro = {};
         has $methods          is ro = {};
-        has $required_methods is ro = [];
+        has $required_methods is ro = {};
 
         method add_role ($role) { ... }
         method does_role ($name) { ... }

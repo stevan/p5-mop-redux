@@ -5,7 +5,6 @@ use warnings;
 
 use mop::util qw[ init_attribute_storage has_meta find_meta fix_metaclass_compatibility ];
 
-use List::AllUtils qw[ uniq ];
 use Module::Runtime qw[ is_module_name module_notional_filename ];
 
 our $VERSION   = '0.01';
@@ -122,21 +121,17 @@ sub FINALIZE {
     # inherit required methods ...
     if (my $super = $self->superclass) {
         if (my $meta = find_meta($super)) {
-            if (scalar @{ $meta->required_methods }) {
-                # merge required methods with superclass
-                @{ $self->required_methods } = uniq(
-                    @{ $self->required_methods },
-                    @{ $meta->required_methods }
-                );
-            }
+            # merge required methods with superclass
+            $self->add_required_method($_)
+                for $meta->required_methods;
         }
     }
 
     $self->mop::role::FINALIZE;
 
-    if (scalar @{ $self->required_methods } != 0 && not $self->is_abstract) {
+    if ($self->required_methods && not $self->is_abstract) {
         die 'Required method(s) ['
-            . (join ', ' => @{ $self->required_methods })
+            . (join ', ' => $self->required_methods)
             . '] are not allowed in '
             . $self->name
             . ' unless class is declared abstract';
