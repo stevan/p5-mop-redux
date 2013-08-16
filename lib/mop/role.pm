@@ -94,29 +94,31 @@ sub has_attribute {
 
 sub method_class { 'mop::method' }
 
-sub methods { ${ $methods{ $_[0] } } }
+sub method_map { ${ $methods{ $_[0] } } }
+
+sub methods { values %{ $_[0]->method_map } }
 
 sub add_method {
     my ($self, $method) = @_;
-    $self->methods->{ $method->name } = $method;
+    $self->method_map->{ $method->name } = $method;
     mop::internals::mro::clear_method_cache_for($self->name);
     $method->set_associated_meta($self);
 }
 
 sub get_method {
     my ($self, $name) = @_;
-    $self->methods->{ $name }
+    $self->method_map->{ $name }
 }
 
 sub has_method {
     my ($self, $name) = @_;
-    exists $self->methods->{ $name };
+    exists $self->method_map->{ $name };
 }
 
 sub remove_method {
     my ($self, $name) = @_;
     mop::internals::mro::clear_method_cache_for($self->name);
-    delete $self->methods->{ $name };
+    delete $self->method_map->{ $name };
 }
 
 # required methods
@@ -149,7 +151,7 @@ sub compose_into {
         $other->add_attribute( $attribute );
     }
 
-    foreach my $method (values %{ $self->methods }) {
+    foreach my $method ($self->methods) {
         # FIXME:
         # This is a bootstrap special case
         # that needs to be fixed. But for now
@@ -274,6 +276,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'has_attribute',   body => \&has_attribute   ) );
 
     $METACLASS->add_method( mop::method->new( name => 'method_class',  body => \&method_class  ) );
+    $METACLASS->add_method( mop::method->new( name => 'method_map',    body => \&method_map    ) );
     $METACLASS->add_method( mop::method->new( name => 'methods',       body => \&methods       ) );
     $METACLASS->add_method( mop::method->new( name => 'get_method',    body => \&get_method    ) );
     $METACLASS->add_method( mop::method->new( name => 'add_method',    body => \&add_method    ) );

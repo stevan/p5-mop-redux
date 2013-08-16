@@ -167,7 +167,7 @@ sub _get_class_for_closing {
     my $stash = get_stash_for($class->name);
     for my $isa (@{ mop::mro::get_linear_isa($class->name) }) {
         if (has_meta($isa)) {
-            for my $method (values %{ find_meta($isa)->methods }) {
+            for my $method (find_meta($isa)->methods) {
                 $stash->add_symbol('&' . $method->name => $method->body);
             }
         }

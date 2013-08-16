@@ -103,14 +103,14 @@ sub bootstrap {
         # between mop::class and mop::role
         # are correct and code is reused.
         # - SL
-        foreach my $method ( values %{ $Role->methods }) {
+        foreach my $method ($Role->methods) {
             $Class_stash->add_symbol( '&' . $method->name, $method->body )
                 unless $Class_stash->has_symbol( '&' . $method->name );
         }
 
         # now make sure the Observable roles are
         # completely intergrated into the stashes
-        foreach my $method ( values %{ $Observable->methods }) {
+        foreach my $method ($Observable->methods) {
             foreach my $stash ( $Role_stash, $Method_stash, $Attribute_stash ) {
                 $stash->add_symbol( '&' . $method->name, $method->body )
                     unless $stash->has_symbol( '&' . $method->name );
