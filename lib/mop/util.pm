@@ -209,11 +209,72 @@ sub fix_metaclass_compatibility {
 
     return $meta_name  if $meta->isa($super_name);
     return $super_name if $super->isa($meta_name);
-    # XXX we should be able to fix up simple role incompatibilities too
+
+    my $rebased_meta_name = _rebase_metaclasses($meta_name, $super_name);
+    return $rebased_meta_name if $rebased_meta_name;
 
     die "Can't fix metaclass compatibility between "
       . $meta->name . " (" . $meta_name . ") and "
       . $super->name . " (" . $super_name . ")";
+}
+
+sub _rebase_metaclasses {
+    my ($meta_name, $super_name) = @_;
+
+    my $common_base = _find_common_base($meta_name, $super_name);
+    return unless $common_base;
+
+    my @meta_isa = @{ mop::mro::get_linear_isa($meta_name) };
+    pop @meta_isa until $meta_isa[-1] eq $common_base;
+    pop @meta_isa;
+    @meta_isa = reverse map { find_meta($_) } @meta_isa;
+
+    my @super_isa = @{ mop::mro::get_linear_isa($super_name) };
+    pop @super_isa until $super_isa[-1] eq $common_base;
+    pop @super_isa;
+    @super_isa = reverse map { find_meta($_) } @super_isa;
+
+    # XXX i just haven't thought through exactly what this would mean - this
+    # restriction may be able to be lifted in the future
+    return if grep { $_->is_abstract } @meta_isa, @super_isa;
+
+    my %super_method_overrides    = map { %{ $_->method_map    } } @super_isa;
+    my %super_attribute_overrides = map { %{ $_->attribute_map } } @super_isa;
+
+    my $current = $super_name;
+    for my $class (@meta_isa) {
+        return if grep {
+            $super_method_overrides{$_->name}
+        } $class->methods;
+
+        return if grep {
+            $super_attribute_overrides{$_->name}
+        } $class->attributes;
+
+        my $clone = $class->clone(
+            name       => 'mop::class::rebased::' . $class->name,
+            superclass => $current,
+        );
+
+        install_meta($clone);
+
+        $current = $clone->name;
+    }
+
+    return $current;
+}
+
+sub _find_common_base {
+    my ($meta_name, $super_name) = @_;
+
+    my %meta_ancestors =
+        map { $_ => 1 } @{ mop::mro::get_linear_isa($meta_name) };
+
+    for my $super_ancestor (@{ mop::mro::get_linear_isa($super_name) }) {
+        return $super_ancestor if $meta_ancestors{$super_ancestor};
+    }
+
+    return;
 }
 
 package mop::mro;

@@ -5,9 +5,13 @@ use Test::More;
 
 use mop;
 
-class FooMeta extends mop::class { }
+class FooMeta extends mop::class {
+    method foo { 'FooMeta' }
+}
 
-class BarMeta extends mop::class { }
+class BarMeta extends mop::class {
+    method foo { 'BarMeta' }
+}
 
 class Foo metaclass FooMeta is closed { }
 
