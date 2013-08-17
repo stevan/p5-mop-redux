@@ -33,10 +33,10 @@ sub clone {
 sub name { ${ $name{ $_[0] } } }
 sub body { ${ $body{ $_[0] } } }
 
-sub associated_meta { ${ $associated_meta{ $_[0] } } }
+sub associated_meta { $associated_meta{ $_[0] } }
 sub set_associated_meta {
-    $associated_meta{ $_[0] } = \$_[1];
-    weaken(${ $associated_meta{ $_[0] } });
+    $associated_meta{ $_[0] } = $_[1];
+    weaken($associated_meta{ $_[0] });
 }
 
 sub execute {
