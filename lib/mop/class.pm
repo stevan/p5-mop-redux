@@ -105,8 +105,9 @@ sub clone_instance {
     %args = (
         (map {
             my $attr = $attributes->{$_};
-            my $val = $attr->fetch_data_in_slot_for($instance);
-            defined($val) ? ($attr->key_name => $val) : ()
+            $attr->has_data_in_slot_for($instance)
+                ? ($attr->key_name => $attr->fetch_data_in_slot_for($instance))
+                : ()
         } keys %$attributes),
         %args,
     );

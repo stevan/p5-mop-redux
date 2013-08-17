@@ -25,6 +25,9 @@ my $Foo = mop::get_meta('Foo');
     is($clone->get_attribute('$foo')->associated_meta, $clone);
     is($Foo->get_method('foo')->associated_meta, $Foo);
     is($Foo->get_attribute('$foo')->associated_meta, $Foo);
+
+    is($Foo->version, undef);
+    is($clone->version, undef);
 }
 
 done_testing;

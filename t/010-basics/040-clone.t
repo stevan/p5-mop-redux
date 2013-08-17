@@ -62,4 +62,9 @@ is($bar->baz, 'BAZ');
     is($clone->baz, 'BAZ');
 }
 
+my $bar2 = Bar->new;
+is($bar2->foo, undef);
+is($bar2->clone->foo, undef);
+is($bar2->clone(foo => 'FOO')->foo, 'FOO');
+
 done_testing;
