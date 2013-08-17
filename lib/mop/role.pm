@@ -43,6 +43,36 @@ sub new {
     $self;
 }
 
+sub clone {
+    my $self = shift;
+    my (%args) = @_;
+
+    die "You must specify a name when cloning a metaclass"
+        unless $args{name};
+
+    my $methods = $self->method_map;
+    $args{methods} //= {
+        map { $_ => $methods->{$_}->clone } keys %$methods
+    };
+
+    my $attributes = $self->attribute_map;
+    $args{attributes} //= {
+        map { $_ => $attributes->{$_}->clone } keys %$attributes
+    };
+
+    my $clone = $self->SUPER::clone(%args);
+
+    for my $method (keys %{ $args{methods} }) {
+        $clone->get_method($method)->set_associated_meta($clone);
+    }
+
+    for my $attribute (keys %{ $args{attributes} }) {
+        $clone->get_attribute($attribute)->set_associated_meta($clone);
+    }
+
+    return $clone;
+}
+
 # identity
 
 sub name       { ${ $name{ $_[0] } } }
@@ -258,6 +288,7 @@ sub __INIT_METACLASS__ {
     ));
 
     $METACLASS->add_method( mop::method->new( name => 'new', body => \&new ) );
+    $METACLASS->add_method( mop::method->new( name => 'clone', body => \&clone ) );
 
     $METACLASS->add_method( mop::method->new( name => 'name',       body => \&name       ) );
     $METACLASS->add_method( mop::method->new( name => 'version',    body => \&version    ) );
