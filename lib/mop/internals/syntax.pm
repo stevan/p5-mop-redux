@@ -113,9 +113,9 @@ sub namespace_parser {
 
     my $name   = parse_name($type, 1);
     my $caller = compiling_package;
-    my $pkg    = $caller eq 'main'
+    my $pkg    = $name =~ /::/
         ? $name
-        : join "::" => $caller, $name;
+        : join "::" => ($caller eq 'main' ? () : ($caller)), $name;
 
     lex_read_space;
 
