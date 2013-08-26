@@ -12,29 +12,29 @@ init_attribute_storage(my %callbacks);
 
 sub bind {
     my ($self, $event_name, $callback) = @_;
-    $callbacks{ $self } = {}
-        unless defined $callbacks{ $self };
-    $callbacks{ $self }->{ $event_name } = []
-        unless exists $callbacks{ $self }->{ $event_name };
-    push @{ $callbacks{ $self }->{ $event_name } } => $callback;
+    $callbacks{ $self } = \{}
+        unless exists $callbacks{ $self } && defined ${ $callbacks{ $self } };
+    ${$callbacks{ $self }}->{ $event_name } = []
+        unless exists ${$callbacks{ $self }}->{ $event_name };
+    push @{ ${$callbacks{ $self }}->{ $event_name } } => $callback;
     $self;
 }
 
 sub unbind {
     my ($self, $event_name, $callback) = @_;
-    return $self unless defined $callbacks{ $self };
-    return $self unless exists $callbacks{ $self }->{ $event_name };
-    @{ $callbacks{ $self }->{ $event_name } } = grep {
+    return $self unless exists $callbacks{ $self } && defined ${ $callbacks{ $self } };
+    return $self unless exists ${$callbacks{ $self }}->{ $event_name };
+    @{ ${$callbacks{ $self }}->{ $event_name } } = grep {
         "$_" ne "$callback"
-    } @{ $callbacks{ $self }->{ $event_name } };
+    } @{ ${$callbacks{ $self }}->{ $event_name } };
     $self;
 }
 
 sub fire {
     my ($self, $event_name, @args) = @_;
-    return $self unless defined $callbacks{ $self };
-    return $self unless exists $callbacks{ $self }->{ $event_name };
-    $self->$_( @args ) foreach @{ $callbacks{ $self }->{ $event_name } };
+    return $self unless exists $callbacks{ $self } && defined ${ $callbacks{ $self } };
+    return $self unless exists ${$callbacks{ $self }}->{ $event_name };
+    $self->$_( @args ) foreach @{ ${$callbacks{ $self }}->{ $event_name } };
     return $self;
 }
 
