@@ -73,12 +73,12 @@ sub clone_repos {
 sub installdeps {
     each_dir {
         if (-e 'Makefile.PL' || -e 'Build.PL') {
-            _system(qw(cpanm --installdeps -q --notest .));
+            _cpanm(qw(cpanm --installdeps -q --notest .));
         }
         elsif (-e 'dist.ini') {
-            _system("cpanm -q --notest Dist::Zilla");
-            _system("dzil authordeps --missing | cpanm -q --notest");
-            _system("dzil listdeps --missing | grep -v 'find abstract in' | cpanm -q --notest");
+            _cpanm(qw(cpanm -q --notest Dist::Zilla));
+            _cpanm("dzil authordeps --missing | cpanm -q --notest");
+            _cpanm("dzil listdeps --missing | grep -v 'find abstract in' | cpanm -q --notest");
         }
         else {
             warn "Don't know how to install deps";
@@ -117,6 +117,12 @@ sub test {
 sub _system {
     print join(" ", @_), "\n";
     system(@_);
+}
+
+sub _cpanm {
+    my $ret = _system(@_);
+    _system(qw(cat ~/.cpanm/build.log)) if $ret;
+    return $ret;
 }
 
 1;
