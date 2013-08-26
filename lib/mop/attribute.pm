@@ -12,6 +12,7 @@ our $AUTHORITY = 'cpan:STEVAN';
 use parent 'mop::object', 'mop::observable';
 
 init_attribute_storage(my %name);
+init_attribute_storage(my %original_id);
 init_attribute_storage(my %default);
 init_attribute_storage(my %storage);
 init_attribute_storage(my %associated_meta);
@@ -23,6 +24,14 @@ sub new {
     $name{ $self }    = \($args{'name'});
     $default{ $self } = \($args{'default'}) if exists $args{'default'};
     $storage{ $self } = \($args{'storage'}) if exists $args{'storage'};
+
+    # NOTE:
+    # keep track of the original ID here
+    # so that we can still detect attribute 
+    # conflicts in roles even after something 
+    # has been cloned
+    # - SL 
+    $original_id{ $self } = \($self->id);
     $self
 }
 
@@ -66,6 +75,8 @@ sub set_associated_meta {
     $associated_meta{ $_[0] } = $_[1];
     weaken($associated_meta{ $_[0] });
 }
+
+sub conflicts_with { ${ $original_id{ $_[0] } } ne ${ $original_id{ $_[1] } } }
 
 sub has_data_in_slot_for {
     my ($self, $instance) = @_;
@@ -116,6 +127,11 @@ sub __INIT_METACLASS__ {
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$original_id',
+        storage => \%original_id
+    ));
+
+    $METACLASS->add_attribute(mop::attribute->new(
         name    => '$default',
         storage => \%default
     ));
@@ -140,6 +156,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'storage',             body => \&storage             ) );
     $METACLASS->add_method( mop::method->new( name => 'associated_meta',     body => \&associated_meta     ) );
     $METACLASS->add_method( mop::method->new( name => 'set_associated_meta', body => \&set_associated_meta ) );
+    $METACLASS->add_method( mop::method->new( name => 'conflicts_with',      body => \&conflicts_with      ) );
 
     $METACLASS->add_method( mop::method->new( name => 'fetch_data_in_slot_for',    body => \&fetch_data_in_slot_for    ) );
     $METACLASS->add_method( mop::method->new( name => 'store_data_in_slot_for',    body => \&store_data_in_slot_for    ) );

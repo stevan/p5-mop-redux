@@ -187,7 +187,7 @@ sub compose_into {
     foreach my $attribute ($self->attributes) {
         die 'Attribute conflict ' . $attribute->name . ' when composing ' . $self->name . ' into ' . $other->name
             if $other->has_attribute( $attribute->name )
-            && $other->get_attribute( $attribute->name )->id ne $attribute->id;
+            && $other->get_attribute( $attribute->name )->conflicts_with( $attribute );
         $other->add_attribute( $attribute->clone(associated_meta => $other) );
     }
 
