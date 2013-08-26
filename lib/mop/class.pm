@@ -108,7 +108,7 @@ sub clone_instance {
             $attr->has_data_in_slot_for($instance)
                 ? ($attr->key_name => $attr->fetch_data_in_slot_for($instance))
                 : ()
-        } grep { 
+        } grep {
             !exists $args{ $_ }
         } keys %$attributes),
         %args,
