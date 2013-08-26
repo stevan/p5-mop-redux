@@ -28,7 +28,7 @@ my @repos = (
     [ 'perigrin/promises-perl',             'p5-mop'              ],
     [ 'perigrin/http-thin-useragent',       'p5-mop-redux'        ],
     [ 'doy/reply',                          'p5-mop'              ],
-    [ 'dams/Action-Retry',                  'experimental/p5-mop' ],
+    # [ 'dams/Action-Retry',                  'experimental/p5-mop' ],
 );
 my @dirs = ($mop_repo, (map { $_->[0] } @repos));
 
