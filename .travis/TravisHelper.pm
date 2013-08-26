@@ -121,7 +121,7 @@ sub _system {
 
 sub _cpanm {
     my $ret = _system(@_);
-    _system(qw(cat ~/.cpanm/build.log)) if $ret;
+    _system('cat', "$ENV{HOME}/.cpanm/build.log") if $ret;
     return $ret;
 }
 
