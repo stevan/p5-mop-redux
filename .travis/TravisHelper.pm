@@ -25,6 +25,7 @@ my @repos = (
     [ 'stevan/Plack',                       'master'              ],
     [ 'stevan/Forward-Routes-p5-mop-redux', 'master'              ],
     [ 'stevan/http-headers-actionpack',     'p5-mop'              ],
+    [ 'stevan/Bread-Board',                 'p5-mop'              ],
     [ 'perigrin/promises-perl',             'p5-mop'              ],
     [ 'perigrin/http-thin-useragent',       'p5-mop-redux'        ],
     [ 'doy/reply',                          'p5-mop'              ],
