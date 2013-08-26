@@ -27,10 +27,10 @@ sub new {
 
     # NOTE:
     # keep track of the original ID here
-    # so that we can still detect attribute 
-    # conflicts in roles even after something 
+    # so that we can still detect attribute
+    # conflicts in roles even after something
     # has been cloned
-    # - SL 
+    # - SL
     $original_id{ $self } = \($self->id);
     $self
 }
