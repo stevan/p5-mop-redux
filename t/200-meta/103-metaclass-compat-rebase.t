@@ -13,9 +13,9 @@ class BarMeta extends mop::class {
     method bar { 'BAR' }
 }
 
-class Foo metaclass FooMeta { }
+class Foo meta FooMeta { }
 
-class Bar extends Foo metaclass BarMeta { }
+class Bar extends Foo meta BarMeta { }
 
 {
     my $BarMeta = mop::get_meta('Bar');
@@ -27,7 +27,7 @@ class BazMeta extends mop::class {
     method foo { 'BAZ' }
 }
 
-eval "class Baz extends Foo metaclass BazMeta { }";
+eval "class Baz extends Foo meta BazMeta { }";
 like($@, qr/Can't fix metaclass compatibility between Baz \(BazMeta\) and Foo \(FooMeta\)/);
 
 done_testing;

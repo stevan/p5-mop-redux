@@ -154,7 +154,7 @@ sub namespace_parser {
     lex_read_space;
 
     my $metaclass;
-    if ($metaclass = parse_modifier_with_single_value('metaclass')) {
+    if ($metaclass = parse_modifier_with_single_value('meta')) {
         push @classes_to_load => $metaclass;
     }
     else {
@@ -387,7 +387,7 @@ sub has_parser {
     lex_read_space;
 
     my $metaclass;
-    if ($metaclass = parse_modifier_with_single_value('metaclass')) {
+    if ($metaclass = parse_modifier_with_single_value('meta')) {
         Module::Runtime::use_package_optimistically($metaclass);
     }
 

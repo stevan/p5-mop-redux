@@ -28,7 +28,7 @@ class ClassAccessorMeta extends mop::class {
     }
 }
 
-class Foo metaclass ClassAccessorMeta {
+class Foo meta ClassAccessorMeta {
     has $bar;
     has $baz;
 }

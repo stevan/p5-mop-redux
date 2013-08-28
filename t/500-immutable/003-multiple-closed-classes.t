@@ -11,19 +11,19 @@ class MetaMeta extends mop::class {
     submethod BUILD { $built++ }
 }
 
-class Meta extends mop::class metaclass MetaMeta { }
+class Meta extends mop::class meta MetaMeta { }
 
-class Foo metaclass Meta is closed {
+class Foo meta Meta is closed {
     method foo { 'FOO' }
     method bar { 'BAR' }
 }
 
-class Bar metaclass Meta is closed {
+class Bar meta Meta is closed {
     method foo { 'FOOBAR' }
     method baz { 'BAZ' }
 }
 
-class Baz metaclass Meta is closed {
+class Baz meta Meta is closed {
     method quux { 'QUUX' }
 }
 

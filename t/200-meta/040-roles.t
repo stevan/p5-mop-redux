@@ -18,7 +18,7 @@ class RoleMeta extends mop::class {
     method method_class { 'RoleMeta::Method' }
 }
 
-role FooRole metaclass RoleMeta {
+role FooRole meta RoleMeta {
     method foo { 42 }
     method bar { 'bar' }
 }

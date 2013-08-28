@@ -13,11 +13,11 @@ class Meta extends mop::class {
 }
 
 BEGIN { is($built, 0); is($demolished, 0) }
-class Foo metaclass Meta { }
+class Foo meta Meta { }
 BEGIN { is($built, 1); is($demolished, 0) }
-class Bar metaclass Meta { }
+class Bar meta Meta { }
 BEGIN { is($built, 2); is($demolished, 0) }
-class Baz metaclass Meta { }
+class Baz meta Meta { }
 BEGIN { is($built, 3); is($demolished, 0) }
 
 mop::util::uninstall_meta(mop::get_meta('Foo'));

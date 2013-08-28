@@ -32,7 +32,7 @@ role FooRole {
     method foo { }
 }
 
-class Foo with FooRole metaclass FooMeta is my_trait {
+class Foo with FooRole meta FooMeta is my_trait {
 }
 
 is_deeply(

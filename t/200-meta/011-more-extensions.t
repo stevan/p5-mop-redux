@@ -50,7 +50,7 @@ sub validated {
     $meta_attr->store_data_in_slot_for($meta, $validator);
 }
 
-class Foo metaclass ValidatedAccessorMeta {
+class Foo meta ValidatedAccessorMeta {
     has $bar;
     has $baz;
     has $age is validated(sub { $_[0] =~ /^\d+$/ });

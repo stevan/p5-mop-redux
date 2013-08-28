@@ -13,19 +13,19 @@ class BarMeta extends mop::class {
     method foo { 'BarMeta' }
 }
 
-class Foo metaclass FooMeta { }
+class Foo meta FooMeta { }
 
-class Bar metaclass BarMeta { }
+class Bar meta BarMeta { }
 
 class Baz { }
 
 class Foo::Sub extends Foo { }
 
-class Foo::Sub2 extends Foo metaclass FooMeta { }
+class Foo::Sub2 extends Foo meta FooMeta { }
 
 class Bar::Sub extends Bar { }
 
-class Bar::Sub2 extends Bar metaclass BarMeta { }
+class Bar::Sub2 extends Bar meta BarMeta { }
 
 class Baz::Sub extends Baz { }
 
@@ -50,7 +50,7 @@ isa_ok(mop::get_meta('Baz::Sub'), 'mop::class');
 ok(!mop::get_meta('Baz::Sub')->isa('FooMeta'));
 ok(!mop::get_meta('Baz::Sub')->isa('BarMeta'));
 
-eval "class Quux extends Foo metaclass BarMeta { }";
+eval "class Quux extends Foo meta BarMeta { }";
 like($@, qr/Can't fix metaclass compatibility between Quux \(BarMeta\) and Foo \(FooMeta\)/);
 
 done_testing;

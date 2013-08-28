@@ -10,7 +10,7 @@ use mop;
 class MyAttribute extends mop::attribute { }
 
 class Thingy {
-	has $doodah metaclass MyAttribute;
+	has $doodah meta MyAttribute;
 }
 
 isa_ok(

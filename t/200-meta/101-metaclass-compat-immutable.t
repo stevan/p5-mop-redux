@@ -13,9 +13,9 @@ class BarMeta extends mop::class {
     method foo { 'BarMeta' }
 }
 
-class Foo metaclass FooMeta is closed { }
+class Foo meta FooMeta is closed { }
 
-class Bar metaclass BarMeta is closed { }
+class Bar meta BarMeta is closed { }
 
 class Baz is closed { }
 
@@ -24,7 +24,7 @@ class Foo::Sub extends Foo {
     method foo { $foo }
 }
 
-class Foo::Sub2 extends Foo metaclass FooMeta {
+class Foo::Sub2 extends Foo meta FooMeta {
     has $foo;
     method foo { $foo }
 }
@@ -34,7 +34,7 @@ class Bar::Sub extends Bar {
     method bar { $bar }
 }
 
-class Bar::Sub2 extends Bar metaclass BarMeta {
+class Bar::Sub2 extends Bar meta BarMeta {
     has $bar;
     method bar { $bar }
 }
@@ -65,7 +65,7 @@ isa_ok(mop::get_meta('Baz::Sub'), 'mop::class');
 ok(!mop::get_meta('Baz::Sub')->isa('FooMeta'));
 ok(!mop::get_meta('Baz::Sub')->isa('BarMeta'));
 
-eval "class Quux extends Foo metaclass BarMeta { }";
+eval "class Quux extends Foo meta BarMeta { }";
 like($@, qr/Can't fix metaclass compatibility between Quux \(BarMeta\) and Foo \(FooMeta\)/);
 
 

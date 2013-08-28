@@ -9,7 +9,7 @@ class FooMeta {
     method foo { 'FOO' }
 }
 
-eval "class Foo metaclass FooMeta { }";
+eval "class Foo meta FooMeta { }";
 like($@, qr/^Metaclasses must inherit from mop::class/);
 
 done_testing;
