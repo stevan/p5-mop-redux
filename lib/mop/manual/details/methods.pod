@@ -1,0 +1,46 @@
+# PODNAME: mop::manual::methods
+# ABSTRACT: A manual for p5-mop
+
+__END__
+
+=pod
+
+=head1 NAME
+
+mop::manual::methods - A manual for p5-mop
+
+=head1 GRAMMAR
+
+Method in the p5-mop are defined in the following way:
+
+  method NAME
+    ?( '(' VARIABLE ?(= EXPR) ?(, VARIABLE ?(= EXPR))* ')' )
+    ?(is TRAIT ?(, TRAIT)*)
+  BLOCK
+
+The C<method> keyword is followed by name.
+
+Which is optionally followed by a list of method parameters
+wrapped in parentheses. Method parameters are simple variables
+optionally followed by the assignment operator (C<=>) which
+is then followed by a perl expression.
+
+Which is optionally followed by the C<is> keyword that is
+followed by a comma seperated list of traits you wish to
+be applied to your method.
+
+After this comes a block, within which you can define
+the body of the method.
+
+=head1 AUTHOR
+
+Stevan Little <stevan.little@iinteractive.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by Infinity Interactive.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

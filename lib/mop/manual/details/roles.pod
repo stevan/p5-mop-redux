@@ -1,4 +1,4 @@
-# PODNAME: mop::manual::classes
+# PODNAME: mop::manual::roles
 # ABSTRACT: A manual for p5-mop
 
 __END__
@@ -7,36 +7,31 @@ __END__
 
 =head1 NAME
 
-mop::manual::classes - A manual for p5-mop
+mop::manual::roles - A manual for p5-mop
 
 =head1 GRAMMAR
 
-Classes in the p5-mop are defined in the following way:
+Roles in the p5-mop are defined in the following way:
 
-  class NAME
-    ?(extends NAME)
+  role NAME
     ?(with NAME ?(, NAME)*)
     ?(meta NAME)
     ?(is TRAIT ?(, TRAIT)*)
   BLOCK
 
-The C<class> keyword is followed by a name.
-
-Which is optionally followed by the C<extends> keyword
-that is followed by the name of the class you wish to
-subclass.
+The C<role> keyword is followed by a name.
 
 Which is optionally followed by the C<with> keyword that is
 followed by a comma seperated list of the names of the roles
-you wish to be composed into your class.
+you wish to be composed into your role.
 
 Which is optionally followed by the C<meta> keyword
-that is followed by the name of the metaclass you wish to
-be used in constructing this class.
+that is followed by the name of the metarole you wish to
+be used in constructing this role.
 
 Which is optionally followed by the C<is> keyword that is
 followed by a comma seperated list of traits you wish to
-be applied to your class.
+be applied to your role.
 
 After this comes a block, within which you can define
 methods and attributes (refer to those docs for more info).

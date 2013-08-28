@@ -1,0 +1,47 @@
+# PODNAME: mop::manual::attributes
+# ABSTRACT: A manual for p5-mop
+
+__END__
+
+=pod
+
+=head1 NAME
+
+mop::manual::attributes - A manual for p5-mop
+
+=head1 GRAMMAR
+
+Attributes in the p5-mop are defined in the following way:
+
+  has SCALAR
+    ?(meta NAME)
+    ?(is TRAIT ?(, TRAIT)*)
+    ?(= EXPR);
+
+The C<has> keyword is followed by a scalar variable name.
+
+Which is optionally followed by the C<meta> keyword
+that is followed by the name of the attribute metaclass
+you wish to be used in constructing this attribute.
+
+Which is optionally followed by the C<is> keyword that is
+followed by a comma seperated list of traits you wish to
+be applied to your attribute.
+
+Which is optionally followed by the assignment operator
+(C<=>) which is then followed by a perl expression.
+
+An attribute definition must be terminated by a semicolon.
+
+=head1 AUTHOR
+
+Stevan Little <stevan.little@iinteractive.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by Infinity Interactive.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
