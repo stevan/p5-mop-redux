@@ -22,7 +22,17 @@ use twigil;
     is "$!foo$.bar", 12;
 }
 
-eval 'warn $!foo';
-like $@, qr/twigil variable \$!foo not found/;
+{
+    eval 'warn $!foo';
+    like $@, qr/twigil variable \$!foo not found/;
+}
+
+{
+    $! = 123;
+    ok 0+$! eq 123;
+    $. = 123;
+    ok $. eq 123;
+}
+
 
 done_testing;
