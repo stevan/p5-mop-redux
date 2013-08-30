@@ -4,6 +4,21 @@ use Devel::CallChecker;
 
 my $callchecker_h = 'callchecker0.h';
 
+sub ccflags_dyn {
+    my ($is_dev) = @_;
+
+    my $ccflags = q<( $Config::Config{ccflags} || '' ) . ' -I.'>;
+    $ccflags .= q< . ' -Wall -Wdeclaration-after-statement'>
+        if $is_dev;
+
+    return $ccflags;
+}
+
+sub ccflags_static {
+    my $is_dev = shift;
+    return eval ccflags_dyn $is_dev;
+}
+
 sub mm_args {
     return (
         clean => { FILES => join q{ } => $callchecker_h },
