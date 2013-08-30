@@ -1,7 +1,7 @@
 package twigil;
 # ABSTRACT: Perl 6 style twigils for Perl 5
 
-require 5.010;
+require 5.012;
 use strict;
 use warnings;
 use XSLoader;
