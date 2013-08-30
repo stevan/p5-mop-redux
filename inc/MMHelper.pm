@@ -1,7 +1,5 @@
 package MMHelper;
 
-use Devel::CallChecker;
-
 my $callchecker_h = 'callchecker0.h';
 
 sub ccflags_dyn {
@@ -20,6 +18,8 @@ sub ccflags_static {
 }
 
 sub mm_args {
+    require Devel::CallChecker;
+
     return (
         clean => { FILES => join q{ } => $callchecker_h },
         OBJECT => join(q{ },
