@@ -19,6 +19,9 @@ change in the future to make it more similar to C<my>.
 
 sub intro_twigil_var {}
 
-XSLoader::load(__PACKAGE__); # TODO: VERSION
+XSLoader::load(
+    __PACKAGE__,
+    exists $twigil::{VERSION} ? ${ $twigil::{VERSION} } : (),
+);
 
 1;
