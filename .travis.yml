@@ -10,6 +10,8 @@ perl:
 install:
   - cpanm -qn Dist::Zilla
   - dzil authordeps |grep -v '^inc' |cpanm -qn
+  # should get this into authordeps somehow
+  - cpanm -qn Dist::Zilla::Plugin::MakeMaker::Awesome
   # for the generated optional pod tests that'll otherwise get skipped
   - cpanm -qn Test::Pod Test::Pod::Coverage Pod::Coverage::TrustPod
   - dzil listdeps |cpanm -qn
