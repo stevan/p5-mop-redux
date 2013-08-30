@@ -82,21 +82,21 @@ myck_rv2sv (pTHX_ OP *o)
   PADOFFSET offset;
 
   if (!(o->op_flags & OPf_KIDS))
-    return o;
+    return old_rv2sv_checker(aTHX_ o);
 
   kid = cUNOPo->op_first;
   if (kid->op_type != OP_CONST)
-    return 0;
+    return old_rv2sv_checker(aTHX_ o);
 
   sv = cSVOPx(kid)->op_sv;
   if (!SvPOK(sv))
-    return o;
+    return old_rv2sv_checker(aTHX_ o);
   if (*SvPVX(sv) != '!' && *SvPVX(sv) != '.')
-    return o;
+    return old_rv2sv_checker(aTHX_ o);
 
   name = parse_ident(aTHX, SvPVX(sv), 1);
   if (!name)
-    return o;
+    return old_rv2sv_checker(aTHX_ o);
 
   op_free(o);
   offset = pad_findmy_sv(name, 0);
