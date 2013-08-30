@@ -1,0 +1,17 @@
+language: perl
+perl:
+  - "5.19"
+  - "5.18"
+  - "5.16"
+  - "5.14"
+  - "5.12"
+  - "5.10"
+  - "5.8"
+install:
+  - cpanm -qn Dist::Zilla
+  - dzil authordeps |grep -v '^inc' |cpanm -qn
+  # for the generated optional pod tests that'll otherwise get skipped
+  - cpanm -qn Test::Pod Test::Pod::Coverage Pod::Coverage::TrustPod
+  - dzil listdeps |cpanm -qn
+script:
+  - dzil test --all
