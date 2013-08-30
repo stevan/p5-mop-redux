@@ -27,7 +27,7 @@ sub mm_args {
         clean => { FILES => join q{ } => $callchecker_h },
         OBJECT => join(q{ },
                        '$(BASEEXT)$(OBJ_EXT)',
-                       Devel::CallChecker::callchecker_linkable),
+                       Devel::CallChecker::callchecker_linkable()),
     );
 }
 
