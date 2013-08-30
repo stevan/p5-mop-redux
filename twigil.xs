@@ -94,7 +94,7 @@ myck_rv2sv (pTHX_ OP *o)
   if (*SvPVX(sv) != '!' && *SvPVX(sv) != '.')
     return old_rv2sv_checker(aTHX_ o);
 
-  name = parse_ident(aTHX, SvPVX(sv), 1);
+  name = parse_ident(aTHX_ SvPVX(sv), 1);
   if (!name)
     return old_rv2sv_checker(aTHX_ o);
 
