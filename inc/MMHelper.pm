@@ -1,3 +1,6 @@
+use strict;
+use warnings;
+
 package MMHelper;
 
 my $callchecker_h = 'callchecker0.h';
