@@ -15,6 +15,10 @@ Perl_check_t old_rv2sv_checker;
   do { ((XPVNV*)SvANY(sv))->xnv_u.xpad_cop_seq.xhigh = val; } while (0)
 #endif /* !COP_SEQ_RANGE_LOW_set */
 
+#ifndef pad_findmy_sv
+#  define pad_findmy_sv(sv, flags) pad_findmy(SvPVX(sv), SvCUR(sv), flags)
+#endif /* !pad_findmy_sv */
+
 static PADOFFSET
 pad_add_my_scalar_pvn(pTHX_ char const *namepv, STRLEN namelen)
 {
