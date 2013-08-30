@@ -1,0 +1,11 @@
+.*
+!.gitignore
+!.travis.yml
+*blib
+*META*
+Makefile*
+!Makefile.PL
+/twigil.*
+!/twigil.xs
+*.h
+twigil-*
