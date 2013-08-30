@@ -51,8 +51,10 @@ parse_ident (pTHX_ const char *prefix, STRLEN prefixlen)
   SV *sv;
 
   start = s = PL_parser->bufptr;
-  c = *s;
+  if (start > SvPVX(PL_parser->linestr) && isSPACE(*(start - 1)))
+    return NULL;
 
+  c = *s;
   if (!isIDFIRST(c))
     return NULL;
 
