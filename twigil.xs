@@ -19,6 +19,10 @@ Perl_check_t old_rv2sv_checker;
 #  define pad_findmy_sv(sv, flags) pad_findmy(SvPVX(sv), SvCUR(sv), flags)
 #endif /* !pad_findmy_sv */
 
+#ifndef PERL_PADSEQ_INTRO
+#  define PERL_PADSEQ_INTRO I32_MAX
+#endif /* !PERL_PADSEQ_INTRO */
+
 static PADOFFSET
 pad_add_my_scalar_pvn(pTHX_ char const *namepv, STRLEN namelen)
 {
