@@ -6,6 +6,11 @@ use warnings;
 use Test::More;
 use Test::Fatal;
 
+BEGIN {
+    eval { require twigil; 1 }
+        or plan skip_all => "This test requires twigil";
+}
+
 #use Data::Dumper qw[ Dumper ];
 
 =pod
