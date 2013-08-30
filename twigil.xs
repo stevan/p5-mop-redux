@@ -101,7 +101,7 @@ myck_rv2sv (pTHX_ OP *o)
   op_free(o);
   offset = pad_findmy_sv(name, 0);
   if (offset == NOT_IN_PAD)
-    croak("not found");
+    croak("twigil variable %"SVf" not found", SVfARG(name));
   o = newOP(OP_PADSV, 0);
   o->op_targ = offset;
 
