@@ -5,7 +5,13 @@ use strict;
 use warnings;
 use XSLoader;
 
-=func intro_twigil_var
+=func intro_twigil_var $varname
+
+  intro_twigil_var '$!foo';
+
+Introduces a new twigil variable. Similar to perl's built-in C<my> keyword,
+except it currently takes a string containing the variable name. This might
+change in the future to make it more similar to C<my>.
 
 =cut
 
