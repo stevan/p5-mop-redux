@@ -4,6 +4,7 @@ package twigil;
 use strict;
 use warnings;
 use XSLoader;
+use Devel::CallChecker;
 
 =func intro_twigil_var $varname
 
