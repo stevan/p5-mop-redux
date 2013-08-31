@@ -32,6 +32,15 @@ use twigils;
 }
 
 {
+    for (1 .. 2) {
+        twigils::intro_twigil_var('$!foo');
+        is $!foo, undef;
+        $!foo = $_;
+        is $!foo, $_;
+    }
+}
+
+{
     eval 'no warnings; warn $!foo';
     like $@, qr/^Missing comma after first argument to warn function/;
 

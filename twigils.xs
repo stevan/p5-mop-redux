@@ -150,7 +150,7 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
   FREETMPS;
   LEAVE;
 
-  padsv = newOP(OP_PADSV, (OPpLVAL_INTRO << 8));
+  padsv = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
   padsv->op_targ = pad_add_my_scalar_sv(aTHX_ namesv);
   op_free(o);
   return padsv;
