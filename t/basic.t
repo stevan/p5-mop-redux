@@ -38,6 +38,9 @@ use twigils;
         $!foo = $_;
         is $!foo, $_;
     }
+
+    eval 'no warnings; warn $!foo';
+    like $@, qr/^Missing comma after first argument to warn function/;
 }
 
 {
@@ -47,6 +50,9 @@ use twigils;
         $!foo = $_;
         is $!foo, $_;
     }
+
+    eval 'no warnings; warn $!foo';
+    like $@, qr/^Missing comma after first argument to warn function/;
 }
 
 {
