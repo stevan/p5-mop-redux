@@ -1,4 +1,4 @@
-package twigil;
+package twigils;
 # ABSTRACT: Perl 6 style twigils for Perl 5
 
 require 5.012;

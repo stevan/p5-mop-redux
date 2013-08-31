@@ -5,7 +5,7 @@
 *META*
 Makefile*
 !Makefile.PL
-/twigil.*
-!/twigil.xs
+/twigils.*
+!/twigils.xs
 *.h
-twigil-*
+twigils-*

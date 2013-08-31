@@ -8,7 +8,7 @@ use MMHelper;
 eval MMHelper::header_generator() or die $@;
 
 WriteMakefile(
-    NAME     => 'twigil',
+    NAME     => 'twigils',
     NORECURS => 1,
     CCFLAGS  => MMHelper::ccflags_static('dev'),
     MMHelper::mm_args,

@@ -2,11 +2,11 @@ use strict;
 use warnings;
 use Test::More;
 
-use twigil;
+use twigils;
 
 {
-    twigil::intro_twigil_var('$!foo');
-    twigil::intro_twigil_var('$.bar');
+    twigils::intro_twigil_var('$!foo');
+    twigils::intro_twigil_var('$.bar');
 
     $!=123;
     is 0+$!, 123;
