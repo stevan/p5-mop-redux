@@ -10,8 +10,8 @@ use mop;
 
 class Foo {
 
-    has $foo;
-    has $bar;
+    has $!foo;
+    has $!bar;
 
     method bar { 'Foo::bar' }
 
@@ -20,8 +20,8 @@ class Foo {
     }
 
     method test ($x) {
-        $foo = $x if $x;
-        $foo;
+        $!foo = $x if $x;
+        $!foo;
     }
 
     method test_bar { $self->bar . "x2" }

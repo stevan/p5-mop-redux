@@ -32,18 +32,18 @@ class None extends Option {
 }
 
 class Some extends Option {
-    has $val;
-    method get              { $val }
-    method get_or_else ($f) { $val }
-    method or_else     ($f) { $class->new( val => $val ) }
+    has $!val;
+    method get              { $!val }
+    method get_or_else ($f) { $!val }
+    method or_else     ($f) { $class->new( val => $!val ) }
     method is_defined       { 1 }
     method is_empty         { 0 }
-    method map         ($f) { $class->new( val => $f->( $val ) ) }
-    method flatmap     ($f) { $f->( $val ) }
-    method flatten          { $class->new( val => $val ) }
-    method foreach     ($f) { $f->( $val ) }
-    method forall      ($f) { $f->( $val ) }
-    method exists      ($f) { $f->( $val ) }
+    method map         ($f) { $class->new( val => $f->( $!val ) ) }
+    method flatmap     ($f) { $f->( $!val ) }
+    method flatten          { $class->new( val => $!val ) }
+    method foreach     ($f) { $f->( $!val ) }
+    method forall      ($f) { $f->( $!val ) }
+    method exists      ($f) { $f->( $!val ) }
 }
 
 1;

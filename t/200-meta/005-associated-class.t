@@ -8,19 +8,19 @@ use Test::More;
 use mop;
 
 class Foo {
-    has $foo;
-    method foo { $foo }
+    has $!foo;
+    method foo { $!foo }
 }
 
 role Bar {
-    has $baz;
-    method baz { $baz }
+    has $!baz;
+    method baz { $!baz }
 }
 
 {
     my $meta = mop::util::find_meta('Foo');
 
-    my $attr = $meta->get_attribute('$foo');
+    my $attr = $meta->get_attribute('$!foo');
     is($attr->associated_meta, $meta, '... got the expected meta object');
 
     my $meth = $meta->get_method('foo');
@@ -36,7 +36,7 @@ role Bar {
 {
     my $meta = mop::util::find_meta('Bar');
 
-    my $attr = $meta->get_attribute('$baz');
+    my $attr = $meta->get_attribute('$!baz');
     is($attr->associated_meta, $meta, '... got the expected meta object');
 
     my $meth = $meta->get_method('baz');

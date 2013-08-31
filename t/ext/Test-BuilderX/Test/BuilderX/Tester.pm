@@ -28,28 +28,28 @@ sub import {
 
 
 class MockOutput {
-    has $output      = [];
-    has $diagnostics = [];
+    has $!output      = [];
+    has $!diagnostics = [];
 
     method write ( $message ) {
-        push @$output => $message;
+        push @{$!output} => $message;
     }
 
     method diag ( $message ) {
-        push @$diagnostics => $message;
+        push @{$!diagnostics} => $message;
     }
 
     method output {
-        return '' unless @$output;
-        my $result = join "\n" => @$output;
-        $output = [];
+        return '' unless @{$!output};
+        my $result = join "\n" => @{$!output};
+        $!output = [];
         return $result;
     }
 
     method diagnostics {
-        return '' unless @$diagnostics;
-        my $result = join "\n" => @$diagnostics;
-        $diagnostics = [];
+        return '' unless @{$!diagnostics};
+        my $result = join "\n" => @{$!diagnostics};
+        $!diagnostics = [];
         return $result;
     }
 }

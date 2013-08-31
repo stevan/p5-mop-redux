@@ -10,29 +10,29 @@ use mop;
 
 class Foo {
 
-    has $foo = 10;
+    has $!foo = 10;
 
-    has $bar_touched is ro;
-    has $baz_touched is rw;
+    has $!bar_touched is ro;
+    has $!baz_touched is rw;
 
-    has $bar is ro, lazy = $_->_build_bar;
-    has $baz is ro, lazy = do {
+    has $!bar is ro, lazy = $_->_build_bar;
+    has $!baz is ro, lazy = do {
         $_->baz_touched(1);
         $_->bar * 2
     };
 
     submethod _build_bar {
-        $bar_touched++;
-        $foo * 5;
+        $!bar_touched++;
+        $!foo * 5;
     }
 
     method has_bar {
-        defined ${ mop::get_meta($self)->get_attribute('$bar')->storage->{ $self } || \undef }
+        defined ${ mop::get_meta($self)->get_attribute('$!bar')->storage->{ $self } || \undef }
     }
 
     method clear_bar {
-        $bar_touched--;
-        undef $bar;
+        $!bar_touched--;
+        undef $!bar;
     }
 }
 

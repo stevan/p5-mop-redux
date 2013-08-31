@@ -6,11 +6,11 @@ use Test::More;
 use mop;
 
 class Foo {
-    has $foo;
-    has $bar;
+    has $!foo;
+    has $!bar;
 
-    method foo { $foo }
-    method bar { $bar }
+    method foo { $!foo }
+    method bar { $!bar }
 }
 
 my $foo = Foo->new(foo => 'FOO', bar => 'BAR');
@@ -32,13 +32,13 @@ is($foo->bar, 'BAR');
 }
 
 class Bar extends Foo {
-    has $baz;
+    has $!baz;
 
-    method new ($_foo, $_bar, $_baz) {
-        $class->next::method(foo => $_foo, bar => $_bar, baz => $_baz);
+    method new ($foo, $bar, $baz) {
+        $class->next::method(foo => $foo, bar => $bar, baz => $baz);
     }
 
-    method baz { $baz }
+    method baz { $!baz }
 }
 
 my $bar = Bar->new('FOO', 'BAR', 'BAZ');

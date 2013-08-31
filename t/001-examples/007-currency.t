@@ -44,14 +44,14 @@ role Printable {
 }
 
 class US::Currency with Comparable, Printable {
-    has $amount is ro = 0;
+    has $!amount is ro = 0;
 
     method compare ($other) {
-        $amount <=> $other->amount;
+        $!amount <=> $other->amount;
     }
 
     method to_string {
-        sprintf '$%0.2f USD' => $amount;
+        sprintf '$%0.2f USD' => $!amount;
     }
 }
 

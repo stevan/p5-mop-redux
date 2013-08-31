@@ -18,18 +18,18 @@ class Bar {}
 class Baz {}
 
 class Foo {
-    has $bar = Bar->new;
-    has $baz = Baz->new;
+    has $!bar = Bar->new;
+    has $!baz = Baz->new;
 
-    method bar { $bar }
-    method has_bar      { defined $bar }
-    method set_bar ($b) { $bar = $b  }
-    method clear_bar    { undef $bar }
+    method bar { $!bar }
+    method has_bar      { defined $!bar }
+    method set_bar ($b) { $!bar = $b  }
+    method clear_bar    { undef $!bar }
 
-    method baz { $baz }
-    method has_baz      { defined $baz }
-    method set_baz ($b) { $baz = $b  }
-    method clear_baz    { undef $baz }
+    method baz { $!baz }
+    method has_baz      { defined $!baz }
+    method set_baz ($b) { $!baz = $b  }
+    method clear_baz    { undef $!baz }
 
 }
 

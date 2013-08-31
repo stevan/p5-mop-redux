@@ -177,24 +177,24 @@ sub __INIT_METACLASS__ {
     );
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$is_abstract',
+        name    => '$!is_abstract',
         storage => \%is_abstract,
         default => \(0)
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$superclass',
+        name    => '$!superclass',
         storage => \%superclass
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$submethods',
+        name    => '$!submethods',
         storage => \%submethods,
         default => \sub { {} },
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$instance_generator',
+        name    => '$!instance_generator',
         storage => \%instance_generator,
         default => \sub { sub { \(my $anon) } },
     ));

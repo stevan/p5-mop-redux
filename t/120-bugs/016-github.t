@@ -28,19 +28,19 @@ which have private attribute data:
 
 
 class Foo {
-    has $test;
+    has $!test;
 
     method set_test {
-        $test = $_[0];
+        $!test = $_[0];
     }
 }
 
 
 class Bar extends Foo {
-    has $test;
+    has $!test;
 
     method get_test {
-        $test
+        $!test
     }
 }
 

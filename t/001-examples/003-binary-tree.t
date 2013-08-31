@@ -10,21 +10,21 @@ use mop;
 use Scalar::Util qw[ isweak ];
 
 class BinaryTree {
-    has $node   is rw;
-    has $parent is ro, weak_ref;
-    has $left;
-    has $right;
+    has $!node   is rw;
+    has $!parent is ro, weak_ref;
+    has $!left;
+    has $!right;
 
-    method has_parent { defined $parent }
+    method has_parent { defined $!parent }
 
-    method left     { $left //= $class->new( parent => $self ) }
-    method has_left { defined $left }
+    method left     { $!left //= $class->new( parent => $self ) }
+    method has_left { defined $!left }
 
-    method right     { $right //= $class->new( parent => $self ) }
-    method has_right { defined $right }
+    method right     { $!right //= $class->new( parent => $self ) }
+    method has_right { defined $!right }
 }
 
-my $parent_store = mop::get_meta('BinaryTree')->get_attribute('$parent')->storage;
+my $parent_store = mop::get_meta('BinaryTree')->get_attribute('$!parent')->storage;
 
 {
     my $t = BinaryTree->new;

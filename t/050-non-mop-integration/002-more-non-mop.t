@@ -31,7 +31,7 @@ use mop::util qw[ find_meta ];
 }
 
 class Employee extends Person {
-    has $manager is rw;
+    has $!manager is rw;
 }
 
 #warn Dumper find_meta('Employee');

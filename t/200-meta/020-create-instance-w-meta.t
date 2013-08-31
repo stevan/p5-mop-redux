@@ -8,8 +8,8 @@ use Test::More;
 use mop;
 
 class Foo {
-    has $bar;
-    method bar { $bar }
+    has $!bar;
+    method bar { $!bar }
 }
 
 #use Data::Dumper;

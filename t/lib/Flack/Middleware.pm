@@ -4,9 +4,9 @@ use warnings;
 use mop;
 
 class Middleware extends Flack::Component is overload('inherited'), abstract {
-    has $app is rw;
+    has $!app is rw;
 
-    method wrap ($_app, @args) {
+    method wrap ($app, @args) {
         return
     }
 }

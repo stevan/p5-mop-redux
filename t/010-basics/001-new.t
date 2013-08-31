@@ -32,8 +32,8 @@ is( mop::get_meta($foo)->name, 'Foo', '... the class of this object is Foo' );
 }
 
 class Bar {
-    has $foo;
-    method foo { $foo }
+    has $!foo;
+    method foo { $!foo }
 }
 
 {
@@ -49,7 +49,7 @@ class Bar {
 }
 
 class Baz {
-    has $bar;
+    has $!bar;
 
     method new ($x) {
         # NOTE:
@@ -58,7 +58,7 @@ class Baz {
         $class->next::method( bar => $x )
     }
 
-    method bar { $bar }
+    method bar { $!bar }
 }
 
 {

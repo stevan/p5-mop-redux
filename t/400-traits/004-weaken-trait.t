@@ -11,13 +11,13 @@ use Scalar::Util qw[ isweak ];
 use mop;
 
 class Foo {
-    has $bar is rw;
+    has $!bar is rw;
 
     #submethod DEMOLISH { warn "reapin... " }
 }
 
 class Bar {
-    has $foo is rw, weak_ref;
+    has $!foo is rw, weak_ref;
 }
 
 my $foo = Foo->new;
@@ -26,7 +26,7 @@ my $bar = Bar->new;
 $bar->foo($foo);
 $foo->bar($bar);
 
-my $store = mop::get_meta('Bar')->get_attribute('$foo')->storage;
+my $store = mop::get_meta('Bar')->get_attribute('$!foo')->storage;
 
 #warn "STORAGE:  " . $store;
 #warn "INSTANCE: " . $bar;

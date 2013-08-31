@@ -13,7 +13,7 @@ sub trace {
         my $meta = shift;
         for my $method ($meta->methods) {
             my $body = $method->body;
-            my $attr = mop::get_meta($method)->get_attribute('$body');
+            my $attr = mop::get_meta($method)->get_attribute('$!body');
             $attr->store_data_in_slot_for($method, sub {
                 $called = 1;
                 $body->();

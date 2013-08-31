@@ -29,8 +29,8 @@ class ClassAccessorMeta extends mop::class {
 }
 
 class Foo meta ClassAccessorMeta {
-    has $bar;
-    has $baz;
+    has $!bar;
+    has $!baz;
 }
 
 ok(mop::get_meta('Foo')->has_method('bar'), '... the bar method was generated for us');

@@ -9,7 +9,7 @@ use Test::Fatal;
 use mop;
 
 class ValidatedAttribute extends mop::attribute {
-    has $validator is ro = sub { 1 };
+    has $!validator is ro = sub { 1 };
 }
 
 class ValidatedAccessorMeta extends mop::class {
@@ -46,14 +46,14 @@ class ValidatedAccessorMeta extends mop::class {
 
 sub validated {
     my ($meta, $validator) = @_;
-    my $meta_attr = mop::util::find_meta($meta)->get_attribute('$validator');
+    my $meta_attr = mop::util::find_meta($meta)->get_attribute('$!validator');
     $meta_attr->store_data_in_slot_for($meta, $validator);
 }
 
 class Foo meta ValidatedAccessorMeta {
-    has $bar;
-    has $baz;
-    has $age is validated(sub { $_[0] =~ /^\d+$/ });
+    has $!bar;
+    has $!baz;
+    has $!age is validated(sub { $_[0] =~ /^\d+$/ });
 }
 
 ok(mop::get_meta('Foo')->has_method('bar'), '... the bar method was generated for us');
@@ -76,7 +76,7 @@ ok(mop::get_meta('Foo')->has_method('baz'), '... the baz method was generated fo
     is($foo->baz, 'BAZ', '... and got the expected value for bar');
     is($foo->age, 34, '... and got the expected value for age');
 
-    like(exception { $foo->age( 'not an int' ) }, qr/invalid value 'not an int' for attribute '\$age'/, '... could not set to a non-int value');
+    like(exception { $foo->age( 'not an int' ) }, qr/invalid value 'not an int' for attribute '\$\!age'/, '... could not set to a non-int value');
 
     is($foo->age, 34, '... kept the old value of age');
 }

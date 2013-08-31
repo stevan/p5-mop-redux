@@ -29,15 +29,15 @@ into your class namespace.
     use Path::Class qw[ file ];
 
     class DataFile {
-        has $path;
-        has $file;
-        has $data;
+        has $!path;
+        has $!file;
+        has $!data;
 
-        method data { $data }
+        method data { $!data }
 
         submethod BUILD {
-            $file = file( $path );
-            $data = [ $file->slurp( chomp => 1 ) ];
+            $!file = file( $!path );
+            $!data = [ $!file->slurp( chomp => 1 ) ];
         }
     }
 }

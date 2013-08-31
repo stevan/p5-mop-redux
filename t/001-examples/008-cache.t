@@ -29,13 +29,13 @@ use mop;
 
 
 class Cache {
-    has $fetcher = die '$fetcher is required';
-    has $data is ro, lazy = $_->_fetch_data;
+    has $!fetcher = die '$!fetcher is required';
+    has $!data is ro, lazy = $_->_fetch_data;
 
-    method has_data { defined $data }
-    method clear { undef $data }
+    method has_data { defined $!data }
+    method clear { undef $!data }
 
-    submethod _fetch_data { $fetcher->() }
+    submethod _fetch_data { $!fetcher->() }
 }
 
 my @data = qw[

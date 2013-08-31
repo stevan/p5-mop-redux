@@ -8,26 +8,26 @@ use Test::More;
 use mop;
 
 class Foo {
-    has $val is ro;
+    has $!val is ro;
 
     method add ($b) is overload('+') {
-        $val + $b
+        $!val + $b
     }
 
     method subtract ($b) is overload('-') {
-        $val - $b
+        $!val - $b
     }
 
     method equals ($b) is overload('==') {
-        $val == $b
+        $!val == $b
     }
 
     method to_string is overload('""') {
-        "<foo value=$val />";
+        "<foo value=$!val />";
     }
 
     method to_hash is overload('%{}') {
-        { val => $val }
+        { val => $!val }
     }
 }
 

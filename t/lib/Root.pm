@@ -2,9 +2,9 @@ use strict;
 use warnings;
 use mop;
 class Root {
-    has $foo;
+    has $!foo;
 
-    method foo () { $foo }
+    method foo () { $!foo }
 }
 
 1;

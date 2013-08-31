@@ -11,9 +11,9 @@ use mop;
 warning_is {
     eval q[
         class Foo {
-            has $bar = 99;
+            has $!bar = 99;
 
-            method bar { $bar }
+            method bar { $!bar }
 
             method test ($bar) {
                 join " " => ( $self->bar, $bar );

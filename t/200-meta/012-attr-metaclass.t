@@ -10,13 +10,13 @@ use mop;
 class MyAttribute extends mop::attribute { }
 
 class Thingy {
-	has $doodah meta MyAttribute;
+	has $!doodah meta MyAttribute;
 }
 
 isa_ok(
-	mop::get_meta('Thingy')->get_attribute('$doodah'),
+	mop::get_meta('Thingy')->get_attribute('$!doodah'),
 	$_,
-	q[mop::get_meta('Thingy')->get_attribute('$doodah')]
+	q[mop::get_meta('Thingy')->get_attribute('$!doodah')]
 ) for qw( mop::attribute MyAttribute );
 
 done_testing;

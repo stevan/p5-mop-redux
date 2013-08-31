@@ -9,10 +9,10 @@ use mop;
 
 class Foo {
 
-    has $bar;
+    has $!bar;
 
     method bar_func {
-        return sub { 1; $bar }
+        return sub { 1; $!bar }
     }
 
     method self_func {

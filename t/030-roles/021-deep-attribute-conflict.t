@@ -9,7 +9,7 @@ use Test::Fatal;
 use mop;
 
 role Service {
-    has $is_locked = 0;
+    has $!is_locked = 0;
 }
 
 role WithClass        with Service {}

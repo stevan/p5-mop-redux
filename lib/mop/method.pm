@@ -72,17 +72,17 @@ sub __INIT_METACLASS__ {
     );
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$name',
+        name    => '$!name',
         storage => \%name
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$body',
+        name    => '$!body',
         storage => \%body
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$associated_meta',
+        name    => '$!associated_meta',
         storage => \%associated_meta
     ));
 

@@ -32,10 +32,10 @@ sub type {
 }
 
 class Foo {
-    has $bar is rw, type('Int');
+    has $!bar is rw, type('Int');
 
     method set_bar ($val) {
-        $bar = $val;
+        $!bar = $val;
     }
 
     method add_numbers ($a, $b) is type('Int', 'Int') {

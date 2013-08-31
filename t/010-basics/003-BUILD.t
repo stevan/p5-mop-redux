@@ -10,12 +10,12 @@ use mop;
 
 class Foo {
 
-    has $collector = [];
+    has $!collector = [];
 
-    method collector { $collector };
+    method collector { $!collector };
 
     method collect ($stuff) {
-        push @{ $collector } => $stuff;
+        push @{ $!collector } => $stuff;
     }
 
     submethod BUILD {

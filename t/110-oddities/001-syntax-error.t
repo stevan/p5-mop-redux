@@ -10,7 +10,7 @@ use mop;
 
 eval q{
     class Foo {
-        has $bar;
+        has $!bar;
 
         method bar { $baz }
     }

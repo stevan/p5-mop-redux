@@ -6,8 +6,8 @@ use Test::More;
 use mop;
 
 role FooRole {
-    has $foo;
-    method foo { $foo }
+    has $!foo;
+    method foo { $!foo }
 }
 
 class Foo with FooRole { }

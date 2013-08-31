@@ -249,40 +249,40 @@ sub __INIT_METACLASS__ {
     );
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$name',
+        name    => '$!name',
         storage => \%name
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$version',
+        name    => '$!version',
         storage => \%version
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$authority',
+        name    => '$!authority',
         storage => \%authority
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$roles',
+        name    => '$!roles',
         storage => \%roles,
         default => \sub { [] },
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$attributes',
+        name    => '$!attributes',
         storage => \%attributes,
         default => \sub { {} },
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$methods',
+        name    => '$!methods',
         storage => \%methods,
         default => \sub { {} },
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$required_methods',
+        name    => '$!required_methods',
         storage => \%required_methods,
         default => \sub { {} },
     ));

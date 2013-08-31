@@ -39,7 +39,7 @@ sub name { ${ $name{ $_[0] } } }
 
 sub key_name {
     my $self = shift;
-    substr( $self->name, 1, length $self->name )
+    substr( $self->name, 2, length $self->name )
 }
 
 # NOTE:
@@ -122,28 +122,28 @@ sub __INIT_METACLASS__ {
     );
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$name',
+        name    => '$!name',
         storage => \%name
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$original_id',
+        name    => '$!original_id',
         storage => \%original_id
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$default',
+        name    => '$!default',
         storage => \%default
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$storage',
+        name    => '$!storage',
         storage => \%storage,
         default => \(sub { init_attribute_storage(my %x) })
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$associated_meta',
+        name    => '$!associated_meta',
         storage => \%associated_meta
     ));
 

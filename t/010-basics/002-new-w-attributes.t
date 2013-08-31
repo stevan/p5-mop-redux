@@ -18,8 +18,8 @@ original data itself.
 my $BAZ = [];
 
 class Foo {
-    has $bar = { baz => $BAZ };
-    method bar { $bar }
+    has $!bar = { baz => $BAZ };
+    method bar { $!bar }
 }
 
 my $foo = Foo->new;
@@ -36,8 +36,8 @@ is( $foo->bar->{'baz'}, $BAZ, '... these are the same values' );
 }
 
 class Bar {
-    has $bar = { baz => [] };
-    method bar { $bar }
+    has $!bar = { baz => [] };
+    method bar { $!bar }
 }
 
 my $bar = Bar->new;

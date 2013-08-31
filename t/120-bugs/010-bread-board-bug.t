@@ -20,7 +20,7 @@ check for this specific issue.
 =cut
 
 role Traversable {
-    has $parent is rw, weak_ref;
+    has $!parent is rw, weak_ref;
 }
 
 {

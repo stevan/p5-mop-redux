@@ -21,13 +21,13 @@ use mop;
 }
 
 class App extends My::Component is extending_non_mop {
-    has $foo;
+    has $!foo;
 
     submethod BUILD (%args) {
-        $foo = $args{'foo'};
+        $!foo = $args{'foo'};
     }
 
-    method call { "HELLO " . $foo }
+    method call { "HELLO " . $!foo }
 }
 
 my $app = App->new( foo => 'WORLD' );

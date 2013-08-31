@@ -9,82 +9,82 @@ use Test::Fatal;
 use mop;
 
 class LinkedList {
-    has $head  is ro;
-    has $tail  is ro;
-    has $count is ro = 0;
+    has $!head  is ro;
+    has $!tail  is ro;
+    has $!count is ro = 0;
 
     method append ($node) {
-        unless($tail) {
-            $tail = $node;
-            $head = $node;
-            $count++;
+        unless($!tail) {
+            $!tail = $node;
+            $!head = $node;
+            $!count++;
             return;
         }
-        $tail->set_next($node);
-        $node->set_previous($tail);
-        $tail = $node;
-        $count++;
+        $!tail->set_next($node);
+        $node->set_previous($!tail);
+        $!tail = $node;
+        $!count++;
     }
 
     method insert ($index, $node) {
         die "Index ($index) out of bounds"
-            if $index < 0 or $index > $count - 1;
+            if $index < 0 or $index > $!count - 1;
 
-        my $tmp = $head;
+        my $tmp = $!head;
         $tmp = $tmp->get_next while($index--);
         $node->set_previous($tmp->get_previous);
         $node->set_next($tmp);
         $tmp->get_previous->set_next($node);
         $tmp->set_previous($node);
-        $count++;
+        $!count++;
     }
 
     method remove ($index) {
         die "Index ($index) out of bounds"
-            if $index < 0 or $index > $count - 1;
+            if $index < 0 or $index > $!count - 1;
 
-        my $tmp = $head;
+        my $tmp = $!head;
         $tmp = $tmp->get_next while($index--);
         $tmp->get_previous->set_next($tmp->get_next);
         $tmp->get_next->set_previous($tmp->get_previous);
-        $count--;
+        $!count--;
         $tmp->detach();
     }
 
     method prepend ($node) {
-        unless($head) {
-            $tail = $node;
-            $head = $node;
-            $count++;
+        unless($!head) {
+            $!tail = $node;
+            $!head = $node;
+            $!count++;
             return;
         }
-        $head->set_previous($node);
-        $node->set_next($head);
-        $head = $node;
-        $count++;
+        $!head->set_previous($node);
+        $node->set_next($!head);
+        $!head = $node;
+        $!count++;
     }
 
     method sum {
         my $sum = 0;
-        my $tmp = $head;
+        my $tmp = $!head;
         do { $sum += $tmp->get_value } while($tmp = $tmp->get_next);
         return $sum;
     }
 }
 
 class LinkedListNode {
-    has $previous;
-    has $next;
-    has $value;
+    has $!previous;
+    has $!next;
+    has $!value;
 
-    method get_previous { $previous }
-    method get_next { $next }
-    method get_value { $value }
-    method set_previous($x) { $previous = $x; }
-    method set_next($x) { $next = $x; }
-    method set_value($x) { $value = $x; }
+    method get_previous { $!previous }
+    method get_next { $!next }
+    method get_value { $!value }
+    method set_previous($x) { $!previous = $x; }
+    method set_next($x) { $!next = $x; }
+    method set_value($x) { $!value = $x; }
 
-    method detach { ($previous, $next) = (undef) x 2; $self }
+    method detach { ($!previous, $!next) = (undef) x 2; $self }
 }
 
 {

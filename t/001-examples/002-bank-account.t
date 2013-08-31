@@ -8,26 +8,26 @@ use Test::More;
 use mop;
 
 class BankAccount {
-    has $balance is ro = 0;
+    has $!balance is ro = 0;
 
-    method deposit ($amount) { $balance += $amount }
+    method deposit ($amount) { $!balance += $amount }
 
     method withdraw ($amount) {
-        ($balance >= $amount)
+        ($!balance >= $amount)
             || die "Account overdrawn";
-        $balance -= $amount;
+        $!balance -= $amount;
     }
 }
 
 class CheckingAccount extends BankAccount {
-    has $overdraft_account is ro;
+    has $!overdraft_account is ro;
 
     method withdraw ($amount) {
 
         my $overdraft_amount = $amount - $self->balance;
 
-        if ( $overdraft_account && $overdraft_amount > 0 ) {
-            $overdraft_account->withdraw( $overdraft_amount );
+        if ( $!overdraft_account && $overdraft_amount > 0 ) {
+            $!overdraft_account->withdraw( $overdraft_amount );
             $self->deposit( $overdraft_amount );
         }
 

@@ -18,13 +18,13 @@ use mop;
 class Bar {}
 
 class Foo {
-    has $bar = Bar->new;
+    has $!bar = Bar->new;
 
-    method bar { $bar }
+    method bar { $!bar }
 
-    method has_bar      { defined $bar }
-    method set_bar ($b) { $bar = $b  }
-    method clear_bar    { undef $bar }
+    method has_bar      { defined $!bar }
+    method set_bar ($b) { $!bar = $b  }
+    method clear_bar    { undef $!bar }
 }
 
 {

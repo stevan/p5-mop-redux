@@ -3,14 +3,15 @@ package mop::internals::syntax;
 use v5.16;
 use warnings;
 
-use Scope::Guard qw[ guard ];
-use Variable::Magic       qw[ wizard ];
+use Scope::Guard    qw[ guard ];
+use Variable::Magic qw[ wizard ];
 
 use B::Hooks::EndOfScope ();
 use Scalar::Util    ();
 use Sub::Name       ();
 use Module::Runtime ();
 use version         ();
+use twigils;
 
 use Parse::Keyword {
     class     => \&namespace_parser,
@@ -320,7 +321,7 @@ sub generic_method_parser {
     # is stored in the fieldhash storage
     foreach my $attr (@{ $CURRENT_ATTRIBUTE_LIST }) {
         $preamble .=
-            'my ' . $attr . ';'
+            'twigils::intro_twigil_my_var(q[' . $attr . ']);'
           . 'Variable::Magic::cast('
               . $attr . ', '
               . '(Scalar::Util::blessed($self) '
@@ -382,7 +383,12 @@ sub has_parser {
     die "Invalid attribute name " . read_tokenish() unless lex_peek eq '$';
     lex_read;
 
-    my $name = '$' . parse_name('attribute');
+    my $twigil = lex_peek;
+    die "Invalid attribute name " . read_tokenish() unless $twigil eq '!' || $twigil eq '.';
+    lex_read;
+
+
+    my $name = '$' . $twigil . parse_name('attribute');
 
     lex_read_space;
 

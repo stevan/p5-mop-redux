@@ -8,13 +8,13 @@ use Test::More;
 use mop;
 
 role Foo {
-    has $bar = 'bar';
-    method bar { $bar }
+    has $!bar = 'bar';
+    method bar { $!bar }
 }
 
 role Bar {
-    has $foo = 'foo';
-    method foo { $foo }
+    has $!foo = 'foo';
+    method foo { $!foo }
 }
 
 role Baz with Foo, Bar {
@@ -30,17 +30,17 @@ my $bar_method = mop::get_meta('Baz')->get_method('bar');
 ok( $bar_method->isa( 'mop::method' ), '... got a method object' );
 is( $bar_method->name, 'bar', '... got the method we expected' );
 
-my $bar_attribute = mop::get_meta('Baz')->get_attribute('$bar');
+my $bar_attribute = mop::get_meta('Baz')->get_attribute('$!bar');
 ok( $bar_attribute->isa( 'mop::attribute' ), '... got an attribute object' );
-is( $bar_attribute->name, '$bar', '... got the attribute we expected' );
+is( $bar_attribute->name, '$!bar', '... got the attribute we expected' );
 
 my $foo_method = mop::get_meta('Baz')->get_method('foo');
 ok( $foo_method->isa( 'mop::method' ), '... got a method object' );
 is( $foo_method->name, 'foo', '... got the method we expected' );
 
-my $foo_attribute = mop::get_meta('Baz')->get_attribute('$foo');
+my $foo_attribute = mop::get_meta('Baz')->get_attribute('$!foo');
 ok( $foo_attribute->isa( 'mop::attribute' ), '... got an attribute object' );
-is( $foo_attribute->name, '$foo', '... got the attribute we expected' );
+is( $foo_attribute->name, '$!foo', '... got the attribute we expected' );
 
 my $baz_method = mop::get_meta('Baz')->get_method('baz');
 ok( $baz_method->isa( 'mop::method' ), '... got a method object' );

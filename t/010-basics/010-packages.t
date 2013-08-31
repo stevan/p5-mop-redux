@@ -13,7 +13,7 @@ use Test::More;
     use mop;
 
     class Bar {
-        has $baz;
+        has $!baz;
     }
 }
 
@@ -34,9 +34,9 @@ is( mop::get_meta($foo)->name, 'Foo::Bar', '... got the correct (fully qualified
     sub do_something { $_[0] + $_[1] }
 
     class Baz {
-        has $gorch = 10;
+        has $!gorch = 10;
         method foo {
-            do_something( $gorch, $FOO )
+            do_something( $!gorch, $FOO )
         }
         method my_package { __PACKAGE__ }
     }

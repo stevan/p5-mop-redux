@@ -44,19 +44,19 @@ sub new {
 
 class Base {
 
-    has $passed      is ro;
-    has $description is ro;
-    has $number      is ro = 0;
-    has $diagnostic        = '???';
+    has $!passed      is ro;
+    has $!description is ro;
+    has $!number      is ro = 0;
+    has $!diagnostic        = '???';
 
     method status {
-        return +{ passed => $passed, description => $description }
+        return +{ passed => $!passed, description => $!description }
     }
 
     method report {
-        my $ok = $passed ? 'ok ' : 'not ok ';
-        $ok .= $number;
-        $ok .= " - $description" if $description;
+        my $ok = $!passed ? 'ok ' : 'not ok ';
+        $ok .= $!number;
+        $ok .= " - $!description" if $!description;
         return $ok;
     }
 }
@@ -65,11 +65,11 @@ class Pass extends Test::BuilderX::Test::Base {}
 class Fail extends Test::BuilderX::Test::Base {}
 
 class WithReason extends Test::BuilderX::Test::Base {
-    has $reason is ro;
+    has $!reason is ro;
 
     method status {
         my $status = $self->next::method;
-        $status->{'reason'} = $reason;
+        $status->{'reason'} = $!reason;
         $status;
     }
 }

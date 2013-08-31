@@ -74,17 +74,17 @@ class Bar {
 
 class Foo {
 
-    has $bar is ro = $_->_build_bar;
+    has $!bar is ro = $_->_build_bar;
 
-    has $baz is rw, predicate('has_baz');
+    has $!baz is rw, predicate('has_baz');
 
-    has $gorch is rw, predicate('has_gorch'), lazy = $_->_build_gorch;
+    has $!gorch is rw, predicate('has_gorch'), lazy = $_->_build_gorch;
 
-    has $bar_object is handles({ 'test_bar' => 'bar', 'test_baz' => 'baz' }) = do { die '$bar_object is required' };
+    has $!bar_object is handles({ 'test_bar' => 'bar', 'test_baz' => 'baz' }) = do { die '$bar_object is required' };
 
-    has $bling_was_triggered is rw;
+    has $!bling_was_triggered is rw;
 
-    has $bling is rw, trigger(sub { $_[0]->bling_was_triggered( $_[1] ) });
+    has $!bling is rw, trigger(sub { $_[0]->bling_was_triggered( $_[1] ) });
 
     submethod _build_bar { 100 }
 

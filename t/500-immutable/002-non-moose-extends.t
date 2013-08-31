@@ -6,9 +6,9 @@ use Test::More;
 use mop;
 
 class Foo is closed, repr('HASH') {
-    has $attr = 'ATTR';
+    has $!attr = 'ATTR';
 
-    method attr { $attr }
+    method attr { $!attr }
     method foo  { 'FOO' }
     method bar  { 'BAR' }
 }

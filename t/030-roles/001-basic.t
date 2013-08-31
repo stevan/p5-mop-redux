@@ -35,8 +35,8 @@ can_ok( mop::get_meta('Foo'), 'add_attribute' );
 is( mop::get_meta('Foo')->name, 'Foo', '... got the expected value for get_name');
 
 role Bar {
-    has $bar = 'bar';
-    method bar { $bar }
+    has $!bar = 'bar';
+    method bar { $!bar }
 }
 
 my $Bar = mop::get_meta('Bar');
@@ -52,9 +52,9 @@ my $method = $Bar->get_method( 'bar' );
 ok( $method->isa( 'mop::method' ), '... got the method we expected' );
 is( $method->name, 'bar', '... got the name of the method we expected');
 
-my $attribute = $Bar->get_attribute( '$bar' );
+my $attribute = $Bar->get_attribute( '$!bar' );
 ok( $attribute->isa( 'mop::attribute' ), '... got the attribute we expected' );
-is( $attribute->name, '$bar', '... got the name of the attribute we expected');
+is( $attribute->name, '$!bar', '... got the name of the attribute we expected');
 
 done_testing;
 

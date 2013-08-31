@@ -8,19 +8,19 @@ use Test::More;
 use mop;
 
 class Point {
-    has $x is ro = 0;
-    has $y is ro = 0;
+    has $!x is ro = 0;
+    has $!y is ro = 0;
 
-    method set_x ($new_x) {
-        $x = $new_x;
+    method set_x ($x) {
+        $!x = $x;
     }
 
-    method set_y ($new_y) {
-        $y = $new_y;
+    method set_y ($y) {
+        $!y = $y;
     }
 
     method clear {
-        ($x, $y) = (0, 0);
+        ($!x, $!y) = (0, 0);
     }
 
     method pack {
@@ -31,15 +31,15 @@ class Point {
 # ... subclass it ...
 
 class Point3D extends Point {
-    has $z is ro = 0;
+    has $!z is ro = 0;
 
-    method set_z ($new_z) {
-        $z = $new_z;
+    method set_z ($z) {
+        $!z = $z;
     }
 
     method pack {
         my $data = $self->next::method;
-        $data->{z} = $z;
+        $data->{z} = $!z;
         $data;
     }
 }

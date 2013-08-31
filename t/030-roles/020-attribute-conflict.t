@@ -9,28 +9,28 @@ use Test::Fatal;
 use mop;
 
 role Foo {
-    has $foo;
+    has $!foo;
 }
 
 {
     eval q[
         role Foo2 with Foo {
-            has $foo;
+            has $!foo;
         }
     ];
-    like("$@", qr/Attribute conflict \$foo/, '... got the expected error message (role on role)');
+    like("$@", qr/Attribute conflict \$!foo/, '... got the expected error message (role on role)');
     $@ = undef;
 }
 
 role Bar {
-    has $foo;
+    has $!foo;
 }
 
 {
     eval q[
         role FooBar with Foo, Bar {}
     ];
-    like("$@", qr/Attribute conflict \$foo/, '... got the expected error message (composite role)');
+    like("$@", qr/Attribute conflict \$!foo/, '... got the expected error message (composite role)');
     $@ = undef;
 }
 
@@ -38,10 +38,10 @@ role Bar {
 {
     eval q[
         class FooBaz with Foo {
-            has $foo;
+            has $!foo;
         }
     ];
-    like("$@", qr/Attribute conflict \$foo/, '... got the expected error message (role on class)');
+    like("$@", qr/Attribute conflict \$!foo/, '... got the expected error message (role on class)');
     $@ = undef;
 }
 

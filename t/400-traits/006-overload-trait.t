@@ -8,9 +8,9 @@ use Test::More;
 use mop;
 
 class Thing1 {
-	has $name;
+	has $!name;
 	method name is overload(q[""]) {
-		return $name;
+		return $!name;
 	}
 }
 

@@ -25,9 +25,9 @@ we are going about handling attributes.
     use strict;
     use warnings;
 
-    use Variable::Magic       qw[ wizard cast ];
+    use Variable::Magic       qw[ wizard cast dispell ];
     use Hash::Util::FieldHash qw[ fieldhash ];
-    use twigil;
+    use twigils;
 
     fieldhash my %foo;
 
@@ -42,7 +42,7 @@ we are going about handling attributes.
     sub foo {
         my $self = shift;
 
-        twigil::intro_twigil_var('$!foo');
+        twigils::intro_twigil_my_var('$!foo');
         cast $!foo, $wiz, [ \%foo, $self ];
 
         {

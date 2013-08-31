@@ -13,15 +13,15 @@ BEGIN {
 use mop;
 
 # XXX for some incredibly confusing reason, adding a do { } block to the
-# default for $stack_trace makes the stack trace start from the 'has'
+# default for $!stack_trace makes the stack trace start from the 'has'
 # declaration, while leaving it off makes it start from the place that ->throw
 # was called. no idea at all what causes this... possibly a bug in
 # Parse::Keyword, but i can't reproduce it outside of here. "just another thing
 # to fix in the real implementation" i guess.
 class Throwable {
 
-    has $message     is ro = '';
-    has $stack_trace is ro = Devel::StackTrace->new(
+    has $!message     is ro = '';
+    has $!stack_trace is ro = Devel::StackTrace->new(
         frame_filter => sub {
             $_[0]->{'caller'}->[3] !~ /^mop\:\:/ &&
             $_[0]->{'caller'}->[0] !~ /^mop\:\:/
@@ -29,7 +29,7 @@ class Throwable {
     );
 
     method throw     { die $self }
-    method as_string { $message . "\n\n" . $stack_trace->as_string }
+    method as_string { $!message . "\n\n" . $!stack_trace->as_string }
 }
 
 my $line = __LINE__;

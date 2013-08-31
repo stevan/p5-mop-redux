@@ -30,13 +30,13 @@ I will just punt until we do the real thing.
 use mop;
 
 class Foo {
-    has $bar = 10;
-    method bar { $bar }
+    has $!bar = 10;
+    method bar { $!bar }
 }
 
 class FooBar extends Foo {
-    has $bar = 100;
-    method derived_bar { $bar }
+    has $!bar = 100;
+    method derived_bar { $!bar }
 }
 
 my $foobar = FooBar->new;

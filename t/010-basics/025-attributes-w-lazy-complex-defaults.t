@@ -15,13 +15,13 @@ use mop;
 =cut
 
 class Foo {
-    has $bar;
-    method bar { $bar //= [ 5, 10, 15 ] }
+    has $!bar;
+    method bar { $!bar //= [ 5, 10, 15 ] }
 
-    method has_bar      { defined $bar }
-    method set_bar ($b) { $bar = $b  }
-    method init_bar     { $bar = [ 1, 2, 3 ] }
-    method clear_bar    { undef $bar }
+    method has_bar      { defined $!bar }
+    method set_bar ($b) { $!bar = $b  }
+    method init_bar     { $!bar = [ 1, 2, 3 ] }
+    method clear_bar    { undef $!bar }
 }
 
 {

@@ -3,17 +3,17 @@ use warnings;
 use mop;
 
 class Test::BuilderX::TestPlan {
-    has $expect;
+    has $!expect;
 
     submethod BUILD {
-        die "Invalid or missing plan" unless defined $expect;
+        die "Invalid or missing plan" unless defined $!expect;
     }
 
-    method header { "1..$expect" }
+    method header { "1..$!expect" }
 
     method footer ( $run ) {
-        return '' if $run == $expect;
-        return "Expected $expect but ran $run";
+        return '' if $run == $!expect;
+        return "Expected $!expect but ran $run";
     }
 }
 

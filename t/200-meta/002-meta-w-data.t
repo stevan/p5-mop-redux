@@ -11,12 +11,12 @@ use mop;
 # create a meta-class (class to create classes with)
 class MetaWithData extends mop::class {
 
-    has $data = [];
+    has $!data = [];
 
-    method get_data { $data }
+    method get_data { $!data }
 
     method add_to_data ($value) {
-        push @$data => $value;
+        push @{$!data} => $value;
     }
 }
 

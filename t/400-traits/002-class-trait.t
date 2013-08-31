@@ -9,8 +9,8 @@ use Test::Fatal;
 use mop;
 
 class Foo is rw {
-    has $bar;
-    has $baz;
+    has $!bar;
+    has $!baz;
 }
 
 my $foo = Foo->new;
@@ -28,8 +28,8 @@ is($foo->bar, 10, '... got the value we expected');
 is($foo->baz, 20, '... got the value we expected');
 
 class Bar is ro {
-    has $baz;
-    has $foo;
+    has $!baz;
+    has $!foo;
 }
 
 my $bar = Bar->new( baz => 10, foo => 20 );

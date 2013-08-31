@@ -20,28 +20,28 @@ class Bar meta BarMeta is closed { }
 class Baz is closed { }
 
 class Foo::Sub extends Foo {
-    has $foo;
-    method foo { $foo }
+    has $!foo;
+    method foo { $!foo }
 }
 
 class Foo::Sub2 extends Foo meta FooMeta {
-    has $foo;
-    method foo { $foo }
+    has $!foo;
+    method foo { $!foo }
 }
 
 class Bar::Sub extends Bar {
-    has $bar;
-    method bar { $bar }
+    has $!bar;
+    method bar { $!bar }
 }
 
 class Bar::Sub2 extends Bar meta BarMeta {
-    has $bar;
-    method bar { $bar }
+    has $!bar;
+    method bar { $!bar }
 }
 
 class Baz::Sub extends Baz {
-    has $baz;
-    method baz { $baz }
+    has $!baz;
+    method baz { $!baz }
 }
 
 isa_ok(mop::get_meta('Foo'), 'FooMeta');

@@ -9,7 +9,7 @@ use Test::Fatal;
 use mop;
 
 class Foo {
-    has $bar is rw;
+    has $!bar is rw;
 }
 
 my $foo = Foo->new;
@@ -23,7 +23,7 @@ is(exception{ $foo->bar(10) }, undef, '... setting the value worked');
 is($foo->bar, 10, '... got the value we expected');
 
 class Bar {
-    has $baz is ro;
+    has $!baz is ro;
 }
 
 my $bar = Bar->new( baz => 10 );

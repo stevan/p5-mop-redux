@@ -10,8 +10,8 @@ use mop;
 
 class Foo {
 
-    has $bar is ro = $_->_build_bar;
-    has $baz is ro = 200;
+    has $!bar is ro = $_->_build_bar;
+    has $!baz is ro = 200;
 
     submethod _build_bar { 100 }
 }
