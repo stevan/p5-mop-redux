@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
+use Test::Fatal;
 
 use twigils;
 
@@ -24,7 +25,14 @@ use twigils;
 
 {
     eval 'warn $!foo';
-    like $@, qr/twigil variable \$!foo not found/;
+    like $@, qr/^twigil variable \$!foo not found/;
+
+    eval 'twigils::intro_twigil_var($foo)';
+    like $@, qr/^Unable to extract compile time constant twigil variable name/;
+
+    like exception {
+        &twigils::intro_twigil_var('foo');
+    }, qr/called as a function/;
 }
 
 {
@@ -33,6 +41,5 @@ use twigils;
     $. = 123;
     ok $. eq 123;
 }
-
 
 done_testing;

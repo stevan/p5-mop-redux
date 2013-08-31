@@ -5,6 +5,7 @@ require 5.012;
 use strict;
 use warnings;
 use XSLoader;
+use Carp 'croak';
 use Devel::CallChecker;
 
 =func intro_twigil_var $varname
@@ -17,7 +18,9 @@ change in the future to make it more similar to C<my>.
 
 =cut
 
-sub intro_twigil_var {}
+sub intro_twigil_var {
+    croak "intro_twigil_var called as a function";
+}
 
 XSLoader::load(
     __PACKAGE__,

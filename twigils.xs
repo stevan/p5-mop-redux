@@ -120,7 +120,7 @@ myck_rv2sv (pTHX_ OP *o)
 
 static OP *
 myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
-  OP *pushop, *sigop;
+  OP *pushop, *sigop, *padsv;
 
   PERL_UNUSED_ARG(namegv);
   PERL_UNUSED_ARG(ckobj);
@@ -129,14 +129,13 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
   if(!pushop->op_sibling)
     pushop = cUNOPx(pushop)->op_first;
 
-  if ((sigop = pushop->op_sibling) && sigop->op_type == OP_CONST) {
-    OP *padsv = newOP(OP_PADSV, (OPpLVAL_INTRO << 8));
-    padsv->op_targ = pad_add_my_scalar_sv(aTHX_ cSVOPx_sv(sigop));
-    op_free(o);
-    return padsv;
-  }
+  if (!(sigop = pushop->op_sibling) || sigop->op_type != OP_CONST)
+    croak("Unable to extract compile time constant twigil variable name");
 
-  return o;
+  padsv = newOP(OP_PADSV, (OPpLVAL_INTRO << 8));
+  padsv->op_targ = pad_add_my_scalar_sv(aTHX_ cSVOPx_sv(sigop));
+  op_free(o);
+  return padsv;
 }
 
 MODULE = twigils  PACKAGE = twigils
