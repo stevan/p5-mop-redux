@@ -22,6 +22,10 @@ sub intro_twigil_my_var {
     croak "intro_twigil_my_var called as a function";
 }
 
+sub intro_twigil_state_var {
+    croak "intro_twigil_state_var called as a function";
+}
+
 XSLoader::load(
     __PACKAGE__,
     exists $twigil::{VERSION} ? ${ $twigil::{VERSION} } : (),

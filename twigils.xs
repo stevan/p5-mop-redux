@@ -130,7 +130,6 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
   OP *pushop, *sigop, *padsv;
 
   PERL_UNUSED_ARG(namegv);
-  PERL_UNUSED_ARG(ckobj);
 
   pushop = cUNOPo->op_first;
   if (!pushop->op_sibling)
@@ -150,7 +149,7 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
   FREETMPS;
   LEAVE;
 
-  padsv = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
+  padsv = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | SvIV(ckobj));
   padsv->op_targ = pad_add_my_scalar_sv(aTHX_ namesv);
   op_free(o);
   return padsv;
@@ -166,4 +165,8 @@ BOOT:
   old_rv2sv_checker = PL_check[OP_RV2SV];
   PL_check[OP_RV2SV] = myck_rv2sv;
   cv_set_call_checker(get_cv("twigils::intro_twigil_my_var", 0),
-                      myck_entersub_intro_twigil_var, &PL_sv_undef);
+                      myck_entersub_intro_twigil_var,
+                      sv_2mortal(newSViv(OPf_MOD)));
+  cv_set_call_checker(get_cv("twigils::intro_twigil_state_var", 0),
+                      myck_entersub_intro_twigil_var,
+                      sv_2mortal(newSViv(OPf_MOD | (OPpPAD_STATE << 8))));
