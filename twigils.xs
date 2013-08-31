@@ -98,7 +98,7 @@ myck_rv2sv (pTHX_ OP *o)
   if (kid->op_type != OP_CONST)
     return old_rv2sv_checker(aTHX_ o);
 
-  sv = cSVOPx(kid)->op_sv;
+  sv = cSVOPx_sv(kid);
   if (!SvPOK(sv))
     return old_rv2sv_checker(aTHX_ o);
   if (*SvPVX(sv) != '!' && *SvPVX(sv) != '.')
@@ -126,7 +126,7 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
   PERL_UNUSED_ARG(ckobj);
 
   pushop = cUNOPo->op_first;
-  if(!pushop->op_sibling)
+  if (!pushop->op_sibling)
     pushop = cUNOPx(pushop)->op_first;
 
   if (!(sigop = pushop->op_sibling) || sigop->op_type != OP_CONST)
