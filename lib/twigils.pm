@@ -27,4 +27,14 @@ XSLoader::load(
     exists $twigil::{VERSION} ? ${ $twigil::{VERSION} } : (),
 );
 
+sub _add_allowed_twigil {
+    my ($twigil) = @_;
+
+    my %h = map {
+        ($_ => 1)
+    } (split '', $^H{ __PACKAGE__ . '/twigils' } || '');
+
+    $^H{__PACKAGE__ . '/twigils'} = join '' => $twigil, keys %h;
+}
+
 1;

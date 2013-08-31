@@ -21,11 +21,19 @@ use twigils;
     is $.bar, 2;
 
     is "$!foo$.bar", 12;
+
+    eval 'warn $!bar';
+    like $@, qr/^twigil variable \$!bar not found/;
+
+    $! = 123;
+    ok 0+$! eq 123;
+    $. = 123;
+    ok $. eq 123;
 }
 
 {
-    eval 'warn $!foo';
-    like $@, qr/^twigil variable \$!foo not found/;
+    eval 'no warnings; warn $!foo';
+    like $@, qr/^Missing comma after first argument to warn function/;
 
     eval 'twigils::intro_twigil_var($foo)';
     like $@, qr/^Unable to extract compile time constant twigil variable name/;
@@ -37,9 +45,9 @@ use twigils;
 
 {
     $! = 123;
-    ok 0+$! eq 123;
+    ok 0+$!eq 123;
     $. = 123;
-    ok $. eq 123;
+    ok $.eq 123;
 }
 
 done_testing;

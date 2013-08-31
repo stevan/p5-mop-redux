@@ -5,6 +5,8 @@
 #include "callchecker0.h"
 
 Perl_check_t old_rv2sv_checker;
+SV *twigils_hint_key_sv;
+U32 twigils_hint_key_hash;
 
 #define SVt_PADNAME SVt_PVMG
 
@@ -89,6 +91,7 @@ myck_rv2sv (pTHX_ OP *o)
 {
   OP *kid;
   SV *sv, *name;
+  HE *he;
   PADOFFSET offset;
 
   if (!(o->op_flags & OPf_KIDS))
@@ -101,7 +104,9 @@ myck_rv2sv (pTHX_ OP *o)
   sv = cSVOPx_sv(kid);
   if (!SvPOK(sv))
     return old_rv2sv_checker(aTHX_ o);
-  if (*SvPVX(sv) != '!' && *SvPVX(sv) != '.')
+
+  he = hv_fetch_ent(GvHV(PL_hintgv), twigils_hint_key_sv, 0, twigils_hint_key_hash);
+  if (!he || memchr(SvPVX(HeVAL(he)), *SvPVX(sv), SvLEN(HeVAL(he))) == NULL)
     return old_rv2sv_checker(aTHX_ o);
 
   name = parse_ident(aTHX_ SvPVX(sv), 1);
@@ -120,6 +125,8 @@ myck_rv2sv (pTHX_ OP *o)
 
 static OP *
 myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
+  dSP;
+  SV *namesv;
   OP *pushop, *sigop, *padsv;
 
   PERL_UNUSED_ARG(namegv);
@@ -132,8 +139,19 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
   if (!(sigop = pushop->op_sibling) || sigop->op_type != OP_CONST)
     croak("Unable to extract compile time constant twigil variable name");
 
+  namesv = cSVOPx_sv(sigop);
+
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(SP);
+  XPUSHs(sv_2mortal(newSVpv(SvPVX(namesv) + 1, 1)));
+  PUTBACK;
+  call_pv("twigils::_add_allowed_twigil", 0);
+  FREETMPS;
+  LEAVE;
+
   padsv = newOP(OP_PADSV, (OPpLVAL_INTRO << 8));
-  padsv->op_targ = pad_add_my_scalar_sv(aTHX_ cSVOPx_sv(sigop));
+  padsv->op_targ = pad_add_my_scalar_sv(aTHX_ namesv);
   op_free(o);
   return padsv;
 }
@@ -143,6 +161,8 @@ MODULE = twigils  PACKAGE = twigils
 PROTOTYPES: DISABLE
 
 BOOT:
+  twigils_hint_key_sv = newSVpvs_share("twigils/twigils");
+  twigils_hint_key_hash = SvSHARED_HASH(twigils_hint_key_sv);
   old_rv2sv_checker = PL_check[OP_RV2SV];
   PL_check[OP_RV2SV] = myck_rv2sv;
   cv_set_call_checker(get_cv("twigils::intro_twigil_var", 0),
