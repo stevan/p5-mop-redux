@@ -8,9 +8,9 @@ use XSLoader;
 use Carp 'croak';
 use Devel::CallChecker;
 
-=func intro_twigil_var $varname
+=func intro_twigil_my_var $varname
 
-  intro_twigil_var '$!foo';
+  intro_twigil_my_var '$!foo';
 
 Introduces a new twigil variable. Similar to perl's built-in C<my> keyword,
 except it currently takes a string containing the variable name. This might
@@ -21,6 +21,16 @@ change in the future to make it more similar to C<my>.
 sub intro_twigil_my_var {
     croak "intro_twigil_my_var called as a function";
 }
+
+=func intro_twigil_state_var $varname
+
+  intro_twigil_state_var '$!foo';
+
+Introduces a new twigil variable. Similar to perl's built-in C<state> keyword,
+except it currently takes a string containing the variable name. This might
+change in the future to make it more similar to C<state>.
+
+=cut
 
 sub intro_twigil_state_var {
     croak "intro_twigil_state_var called as a function";
