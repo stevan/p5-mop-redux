@@ -165,5 +165,5 @@ BOOT:
   twigils_hint_key_hash = SvSHARED_HASH(twigils_hint_key_sv);
   old_rv2sv_checker = PL_check[OP_RV2SV];
   PL_check[OP_RV2SV] = myck_rv2sv;
-  cv_set_call_checker(get_cv("twigils::intro_twigil_var", 0),
+  cv_set_call_checker(get_cv("twigils::intro_twigil_my_var", 0),
                       myck_entersub_intro_twigil_var, &PL_sv_undef);

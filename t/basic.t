@@ -6,8 +6,8 @@ use Test::Fatal;
 use twigils;
 
 {
-    twigils::intro_twigil_var('$!foo');
-    twigils::intro_twigil_var('$.bar');
+    twigils::intro_twigil_my_var('$!foo');
+    twigils::intro_twigil_my_var('$.bar');
 
     $!=123;
     is 0+$!, 123;
@@ -33,7 +33,7 @@ use twigils;
 
 {
     for (1 .. 2) {
-        twigils::intro_twigil_var('$!foo');
+        twigils::intro_twigil_my_var('$!foo');
         is $!foo, undef;
         $!foo = $_;
         is $!foo, $_;
@@ -44,11 +44,11 @@ use twigils;
     eval 'no warnings; warn $!foo';
     like $@, qr/^Missing comma after first argument to warn function/;
 
-    eval 'twigils::intro_twigil_var($foo)';
+    eval 'twigils::intro_twigil_my_var($foo)';
     like $@, qr/^Unable to extract compile time constant twigil variable name/;
 
     like exception {
-        &twigils::intro_twigil_var('foo');
+        &twigils::intro_twigil_my_var('foo');
     }, qr/called as a function/;
 }
 

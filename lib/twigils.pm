@@ -18,8 +18,8 @@ change in the future to make it more similar to C<my>.
 
 =cut
 
-sub intro_twigil_var {
-    croak "intro_twigil_var called as a function";
+sub intro_twigil_my_var {
+    croak "intro_twigil_my_var called as a function";
 }
 
 XSLoader::load(
