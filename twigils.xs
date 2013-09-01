@@ -3,6 +3,7 @@
 #include "XSUB.h"
 
 #include "callchecker0.h"
+#include "callparser.h"
 
 Perl_check_t old_rv2sv_checker;
 SV *twigils_hint_key_sv;
@@ -199,21 +200,63 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
   return ret;
 }
 
+static OP *
+myparse_args_intro_twigil_var (pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
+{
+  char twigil;
+  SV *ident;
+
+  PERL_UNUSED_ARG(namegv);
+  PERL_UNUSED_ARG(psobj);
+  PERL_UNUSED_ARG(flagsp);
+
+  lex_read_space(0);
+  if (lex_peek_unichar(0) != '$')
+    croak("syntax error");
+  lex_read_unichar(0);
+
+  if (isSPACE(lex_peek_unichar(0)))
+    croak("syntax error");
+
+  twigil = lex_read_unichar(0);
+
+  ident = parse_ident(aTHX_ &twigil, 1);
+  if (!ident)
+    croak("syntax error");
+
+  return newSVOP(OP_CONST, 0, SvREFCNT_inc(ident));
+}
+
 MODULE = twigils  PACKAGE = twigils
 
 PROTOTYPES: DISABLE
 
 BOOT:
+{
+  CV *intro_twigil_my_var_cv = get_cv("twigils::intro_twigil_my_var", 0);
+  CV *intro_twigil_state_var_cv = get_cv("twigils::intro_twigil_state_var", 0);
+  CV *intro_twigil_our_var_cv = get_cv("twigils::intro_twigil_our_var", 0);
+
   twigils_hint_key_sv = newSVpvs_share("twigils/twigils");
   twigils_hint_key_hash = SvSHARED_HASH(twigils_hint_key_sv);
+
   old_rv2sv_checker = PL_check[OP_RV2SV];
   PL_check[OP_RV2SV] = myck_rv2sv;
-  cv_set_call_checker(get_cv("twigils::intro_twigil_my_var", 0),
+
+  cv_set_call_parser(intro_twigil_my_var_cv,
+                     myparse_args_intro_twigil_var, &PL_sv_undef);
+  cv_set_call_parser(intro_twigil_state_var_cv,
+                     myparse_args_intro_twigil_var, &PL_sv_undef);
+  cv_set_call_parser(intro_twigil_our_var_cv,
+                     myparse_args_intro_twigil_var, &PL_sv_undef);
+
+  cv_set_call_checker(intro_twigil_my_var_cv,
                       myck_entersub_intro_twigil_var,
                       sv_2mortal(newSViv(TWIGIL_VAR_MY)));
-  cv_set_call_checker(get_cv("twigils::intro_twigil_state_var", 0),
+  cv_set_call_checker(intro_twigil_state_var_cv,
                       myck_entersub_intro_twigil_var,
                       sv_2mortal(newSViv(TWIGIL_VAR_STATE)));
-  cv_set_call_checker(get_cv("twigils::intro_twigil_our_var", 0),
+  cv_set_call_checker(intro_twigil_our_var_cv,
                       myck_entersub_intro_twigil_var,
                       sv_2mortal(newSViv(TWIGIL_VAR_OUR)));
+}

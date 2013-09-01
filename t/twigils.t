@@ -13,7 +13,7 @@ for my $kind (qw(my state our)) {
         next if $skip{$c};
 
         my $code = qq{
-            twigils::intro_twigil_${kind}_var('\$${c}foo');
+            intro_twigil_${kind}_var \$${c}foo;
             \$${c}foo = 42;
             ::is \$${c}foo, 42;
         };
