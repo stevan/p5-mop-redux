@@ -111,10 +111,38 @@ parse_ident (pTHX_ const char *prefix, STRLEN prefixlen)
   return sv;
 }
 
+static SV *
+parse_ident_maybe_subscripted (pTHX_ const char *prefix, STRLEN prefixlen, OP **subscrp)
+{
+  OP *expr;
+  char subscript;
+  SV *sv = parse_ident(aTHX_ prefix, prefixlen);
+
+  lex_read_space(0);
+  if (lex_peek_unichar(0) != '[' && lex_peek_unichar(0) != '{')
+    return sv;
+  subscript = lex_read_unichar(0);
+
+  expr = parse_fullexpr(0);
+
+  lex_read_space(0);
+  if (lex_peek_unichar(0) != (subscript == '[' ? ']' : '}'))
+    croak("syntax error");
+  lex_read_unichar(0);
+
+  if (subscript == '[')
+    *SvPVX(sv) = '@';
+  else if (subscript == '{')
+    *SvPVX(sv) = '%';
+
+  *subscrp = expr;
+  return sv;
+}
+
 static OP *
 myck_rv2any (pTHX_ OP *o, char sigil, Perl_check_t old_checker)
 {
-  OP *kid, *ret;
+  OP *kid, *ret, *subscript = NULL;
   SV *sv, *name;
   HE *he;
   PADOFFSET offset;
@@ -138,7 +166,7 @@ myck_rv2any (pTHX_ OP *o, char sigil, Perl_check_t old_checker)
   parse_start = PL_parser->bufptr;
   prefix[0] = sigil;
   prefix[1] = *SvPVX(sv);
-  name = parse_ident(aTHX_ prefix, 2);
+  name = parse_ident_maybe_subscripted(aTHX_ prefix, 2, &subscript);
   if (!name)
     return old_checker(aTHX_ o);
 
@@ -159,6 +187,13 @@ myck_rv2any (pTHX_ OP *o, char sigil, Perl_check_t old_checker)
   else {
     ret = newOP(sigil == '$' ? OP_PADSV : sigil == '@' ? OP_PADAV : OP_PADHV, 0);
     ret->op_targ = offset;
+  }
+
+  if (subscript) {
+    if (*SvPVX(name) == '@')
+      ret = newBINOP(OP_AELEM, 0, Perl_oopsAV(aTHX_ ret), Perl_scalar(aTHX_ subscript));
+    else if (*SvPVX(name) == '%')
+      ret = newBINOP(OP_HELEM, 0, Perl_oopsHV(aTHX_ ret), Perl_jmaybe(aTHX_ subscript));
   }
 
   op_free(o);
