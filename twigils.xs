@@ -130,25 +130,23 @@ myck_rv2sv (pTHX_ OP *o)
 
   op_free(o);
   offset = pad_findmy_sv(name, 0);
-  if (offset != NOT_IN_PAD) {
-    if (PAD_COMPNAME_FLAGS_isOUR(offset)) {
-      HV *stash = PAD_COMPNAME_OURSTASH(offset);
-      HEK *stashname = HvNAME_HEK(stash);
-      SV *sym = newSVhek(stashname);
-      sv_catpvs(sym, "::");
-      sv_catsv(sym, name);
-      o = newUNOP(OP_RV2SV, 0, newSVOP(OP_CONST, 0, sym));
-      return o;
-    }
-    else {
-      o = newOP(OP_PADSV, 0);
-      o->op_targ = offset;
-      return o;
-    }
+  if (offset == NOT_IN_PAD)
+    croak("twigil variable %"SVf" not found", SVfARG(name));
+
+  if (PAD_COMPNAME_FLAGS_isOUR(offset)) {
+    HV *stash = PAD_COMPNAME_OURSTASH(offset);
+    HEK *stashname = HvNAME_HEK(stash);
+    SV *sym = newSVhek(stashname);
+    sv_catpvs(sym, "::");
+    sv_catsv(sym, name);
+    o = newUNOP(OP_RV2SV, 0, newSVOP(OP_CONST, 0, sym));
   }
   else {
-    croak("twigil variable %"SVf" not found", SVfARG(name));
+    o = newOP(OP_PADSV, 0);
+    o->op_targ = offset;
   }
+
+  return o;
 }
 
 static OP *
