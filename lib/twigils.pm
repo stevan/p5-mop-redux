@@ -12,9 +12,8 @@ use Devel::CallChecker;
 
   intro_twigil_my_var '$!foo';
 
-Introduces a new twigil variable. Similar to perl's built-in C<my> keyword,
-except it currently takes a string containing the variable name. This might
-change in the future to make it more similar to C<my>.
+Introduces a new lexical twigil variable. Similar to perl's built-in C<my>
+keyword, except it expects a string containing the variable name.
 
 =cut
 
@@ -26,9 +25,8 @@ sub intro_twigil_my_var {
 
   intro_twigil_state_var '$!foo';
 
-Introduces a new twigil variable. Similar to perl's built-in C<state> keyword,
-except it currently takes a string containing the variable name. This might
-change in the future to make it more similar to C<state>.
+Introduces a new lexical twigil state variable. Similar to perl's built-in
+C<state> keyword, except it expects a string containing the variable name.
 
 =cut
 
@@ -40,9 +38,9 @@ sub intro_twigil_state_var {
 
   intro_twigil_our_var '$!foo';
 
-Introduces a new twigil variable. Similar to perl's built-in C<our> keyword,
-except it currently takes a string containing the variable name. This might
-change in the future to make it more similar to C<our>.
+Introduces a new lexical twigil variable as an alias to a package
+variable. Similar to perl's built-in C<our> keyword, except it expects a string
+containing the variable name.
 
 =cut
 
