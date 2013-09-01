@@ -8,6 +8,11 @@ Perl_check_t old_rv2sv_checker;
 SV *twigils_hint_key_sv;
 U32 twigils_hint_key_hash;
 
+enum twigil_var_type {
+  TWIGIL_VAR_MY,
+  TWIGIL_VAR_STATE
+};
+
 #define SVt_PADNAME SVt_PVMG
 
 #ifndef COP_SEQ_RANGE_LOW_set
@@ -149,7 +154,15 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
   FREETMPS;
   LEAVE;
 
-  padsv = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | SvIV(ckobj));
+  switch (SvIV(ckobj)) {
+  case TWIGIL_VAR_MY:
+    padsv = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
+    break;
+  case TWIGIL_VAR_STATE:
+    padsv = newOP(OP_PADSV, ((OPpLVAL_INTRO | OPpPAD_STATE) << 8) | OPf_MOD);
+    break;
+  }
+
   padsv->op_targ = pad_add_my_scalar_sv(aTHX_ namesv);
   op_free(o);
   return padsv;
@@ -166,7 +179,7 @@ BOOT:
   PL_check[OP_RV2SV] = myck_rv2sv;
   cv_set_call_checker(get_cv("twigils::intro_twigil_my_var", 0),
                       myck_entersub_intro_twigil_var,
-                      sv_2mortal(newSViv(OPf_MOD)));
+                      sv_2mortal(newSViv(TWIGIL_VAR_MY)));
   cv_set_call_checker(get_cv("twigils::intro_twigil_state_var", 0),
                       myck_entersub_intro_twigil_var,
-                      sv_2mortal(newSViv(OPf_MOD | (OPpPAD_STATE << 8))));
+                      sv_2mortal(newSViv(TWIGIL_VAR_STATE)));
