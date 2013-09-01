@@ -91,12 +91,11 @@ parse_ident (pTHX_ const char *prefix, STRLEN prefixlen)
   lex_read_to(s);
 
   idlen = s - start;
-  sv = sv_2mortal(newSV(1 + prefixlen + idlen));
-  *SvPVX(sv) = '$';
-  Copy(prefix, SvPVX(sv) + 1, prefixlen, char);
-  Copy(start, SvPVX(sv) + 1 + prefixlen, idlen, char);
-  SvPVX(sv)[1 + prefixlen + idlen] = 0;
-  SvCUR_set(sv, 1 + prefixlen + idlen);
+  sv = sv_2mortal(newSV(prefixlen + idlen));
+  Copy(prefix, SvPVX(sv), prefixlen, char);
+  Copy(start, SvPVX(sv) + prefixlen, idlen, char);
+  SvPVX(sv)[prefixlen + idlen] = 0;
+  SvCUR_set(sv, prefixlen + idlen);
   SvPOK_on(sv);
 
   return sv;
@@ -109,7 +108,7 @@ myck_rv2sv (pTHX_ OP *o)
   SV *sv, *name;
   HE *he;
   PADOFFSET offset;
-  char *parse_start;
+  char *parse_start, prefix[2];
 
   if (!(o->op_flags & OPf_KIDS))
     return old_rv2sv_checker(aTHX_ o);
@@ -127,7 +126,9 @@ myck_rv2sv (pTHX_ OP *o)
     return old_rv2sv_checker(aTHX_ o);
 
   parse_start = PL_parser->bufptr;
-  name = parse_ident(aTHX_ SvPVX(sv), 1);
+  prefix[0] = '$';
+  prefix[1] = *SvPVX(sv);
+  name = parse_ident(aTHX_ prefix, 2);
   if (!name)
     return old_rv2sv_checker(aTHX_ o);
 
@@ -203,7 +204,7 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
 static OP *
 myparse_args_intro_twigil_var (pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
-  char twigil;
+  char twigil[2];
   SV *ident;
 
   PERL_UNUSED_ARG(namegv);
@@ -213,14 +214,14 @@ myparse_args_intro_twigil_var (pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
   lex_read_space(0);
   if (lex_peek_unichar(0) != '$')
     croak("syntax error");
-  lex_read_unichar(0);
+  twigil[0] = lex_read_unichar(0);
 
   if (isSPACE(lex_peek_unichar(0)))
     croak("syntax error");
 
-  twigil = lex_read_unichar(0);
+  twigil[1] = lex_read_unichar(0);
 
-  ident = parse_ident(aTHX_ &twigil, 1);
+  ident = parse_ident(aTHX_ twigil, 2);
   if (!ident)
     croak("syntax error");
 
