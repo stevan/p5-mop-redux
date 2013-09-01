@@ -123,7 +123,12 @@ myck_rv2sv (pTHX_ OP *o)
   offset = pad_findmy_sv(name, 0);
   if (offset != NOT_IN_PAD) {
     if (PAD_COMPNAME_FLAGS_isOUR(offset)) {
-      o = newGVOP(OP_GVSV, (OPpCONST_STRICT << 8), gv_fetchsv(name, GV_ADD, SVt_PV));
+      HV *stash = PAD_COMPNAME_OURSTASH(offset);
+      HEK *stashname = HvNAME_HEK(stash);
+      SV *sym = newSVhek(stashname);
+      sv_catpvs(sym, "::");
+      sv_catsv(sym, name);
+      o = newUNOP(OP_RV2SV, 0, newSVOP(OP_CONST, 0, sym));
       return o;
     }
     else {
@@ -175,7 +180,8 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
   case TWIGIL_VAR_OUR: {
     PADOFFSET ouroff = pad_add_name_pvn(SvPVX(namesv), SvCUR(namesv),
                                         padadd_OUR, NULL, PL_curstash);
-    ret = newGVOP(OP_GVSV, (OPpLVAL_INTRO << 8), gv_fetchsv(namesv, GV_ADD, SVt_PV));
+    ret = newUNOP(OP_RV2SV, 0,
+                  newSVOP(OP_CONST, (OPpCONST_ENTERED << 8), SvREFCNT_inc(namesv)));
     break;
   }
   }
