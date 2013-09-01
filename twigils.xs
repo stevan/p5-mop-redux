@@ -179,8 +179,8 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
     break;
   case TWIGIL_VAR_OUR:
     pad_add_name_pvn(SvPVX(namesv), SvCUR(namesv), padadd_OUR, NULL, PL_curstash);
-    ret = newUNOP(OP_RV2SV, 0,
-                  newSVOP(OP_CONST, (OPpCONST_ENTERED << 8), SvREFCNT_inc(namesv)));
+    ret = newUNOP(OP_RV2SV, (OPpOUR_INTRO << 8),
+                  newSVOP(OP_CONST, 0, SvREFCNT_inc(namesv)));
     break;
   }
 
