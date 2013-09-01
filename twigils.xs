@@ -90,7 +90,7 @@ parse_ident (pTHX_ const char *prefix, STRLEN prefixlen)
   lex_read_to(s);
 
   idlen = s - start;
-  sv = newSV(1 + prefixlen + idlen);
+  sv = sv_2mortal(newSV(1 + prefixlen + idlen));
   *SvPVX(sv) = '$';
   Copy(prefix, SvPVX(sv) + 1, prefixlen, char);
   Copy(start, SvPVX(sv) + 1 + prefixlen, idlen, char);
