@@ -7,13 +7,17 @@ use warnings;
 use XSLoader;
 use Carp 'croak';
 use Devel::CallChecker;
+use Devel::CallParser;
+use Exporter 'import';
+
+our @EXPORT = map { "intro_twigil_${_}_var" } qw(my state our);
 
 =func intro_twigil_my_var $varname
 
-  intro_twigil_my_var '$!foo';
+  intro_twigil_my_var $!foo;
 
 Introduces a new lexical twigil variable. Similar to perl's built-in C<my>
-keyword, except it expects a string containing the variable name.
+keyword.
 
 =cut
 
@@ -23,10 +27,10 @@ sub intro_twigil_my_var {
 
 =func intro_twigil_state_var $varname
 
-  intro_twigil_state_var '$!foo';
+  intro_twigil_state_var $!foo;
 
 Introduces a new lexical twigil state variable. Similar to perl's built-in
-C<state> keyword, except it expects a string containing the variable name.
+C<state> keyword.
 
 =cut
 
@@ -36,11 +40,10 @@ sub intro_twigil_state_var {
 
 =func intro_twigil_our_var $varname
 
-  intro_twigil_our_var '$!foo';
+  intro_twigil_our_var $!foo;
 
 Introduces a new lexical twigil variable as an alias to a package
-variable. Similar to perl's built-in C<our> keyword, except it expects a string
-containing the variable name.
+variable. Similar to perl's built-in C<our> keyword.
 
 =cut
 

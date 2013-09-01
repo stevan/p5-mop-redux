@@ -6,8 +6,8 @@ use Test::Fatal;
 use twigils;
 
 {
-    twigils::intro_twigil_my_var('$!foo');
-    twigils::intro_twigil_my_var('$.bar');
+    intro_twigil_my_var $!foo;
+    intro_twigil_my_var $.bar;
 
     $!=123;
     is 0+$!, 123;
@@ -32,7 +32,7 @@ use twigils;
 }
 
 {
-    twigils::intro_twigil_my_var('$.eq');
+    intro_twigil_my_var $.eq;
 
     $.eq = 42;
     is $.eq, 42;
@@ -41,7 +41,7 @@ use twigils;
 
 {
     for (1 .. 2) {
-        twigils::intro_twigil_my_var('$!foo');
+        intro_twigil_my_var $!foo;
         is $!foo, undef;
         $!foo = $_;
         is $!foo, $_;
@@ -53,7 +53,7 @@ use twigils;
 
 {
     for (1 .. 2) {
-        twigils::intro_twigil_state_var('$!foo');
+        intro_twigil_state_var $!foo;
         is $!foo, $_ == 1 ? undef : 1;
         $!foo = $_;
         is $!foo, $_;
@@ -71,7 +71,7 @@ use twigils;
     }
 
     for (1 .. 2) {
-        twigils::intro_twigil_our_var('$!moo');
+        intro_twigil_our_var $!moo;
         is $!moo, $_ == 1 ? 3 : 1;
         $!moo = $_;
         is $!moo, $_;
@@ -93,8 +93,11 @@ use twigils;
     eval 'twigils::intro_twigil_my_var($foo)';
     like $@, qr/^Unable to extract compile time constant twigil variable name/;
 
+    eval 'intro_twigil_my_var \'$foo\'';
+    like $@, qr/^syntax error/;
+
     like exception {
-        &twigils::intro_twigil_my_var('foo');
+        &intro_twigil_my_var('foo');
     }, qr/called as a function/;
 }
 
