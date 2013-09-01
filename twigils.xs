@@ -189,6 +189,7 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
   SV *namesv;
   OP *pushop, *sigop, *ret;
   char sigil;
+  int flags = 0;
 
   PERL_UNUSED_ARG(namegv);
 
@@ -212,7 +213,6 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
 
   sigil = *SvPVX(namesv);
   switch ((enum twigil_var_type)SvIV(ckobj)) {
-    int flags = 0;
   case TWIGIL_VAR_STATE:
     flags = (OPpPAD_STATE << 8);
     /* fall through */
