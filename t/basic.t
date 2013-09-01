@@ -26,9 +26,17 @@ use twigils;
     like $@, qr/^Missing comma after first argument to warn function/;
 
     $! = 123;
-    ok 0+$! eq 123;
+    ok 0+$!eq 123;
     $. = 123;
-    ok $. eq 123;
+    ok $.eq 123;
+}
+
+{
+    twigils::intro_twigil_my_var('$.eq');
+
+    $.eq = 42;
+    is $.eq, 42;
+    is $. eq$.eq, '';
 }
 
 {
