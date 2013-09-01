@@ -188,6 +188,7 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
   dSP;
   SV *namesv;
   OP *pushop, *sigop, *ret;
+  char sigil;
 
   PERL_UNUSED_ARG(namegv);
 
@@ -209,19 +210,21 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
   FREETMPS;
   LEAVE;
 
+  sigil = *SvPVX(namesv);
   switch ((enum twigil_var_type)SvIV(ckobj)) {
-  case TWIGIL_VAR_MY:
-    ret = newOP(OP_PADAV, (OPpLVAL_INTRO << 8) | OPf_MOD);
-    ret->op_targ = pad_add_my_sv(aTHX_ namesv);
-    break;
+    int flags = 0;
   case TWIGIL_VAR_STATE:
-    ret = newOP(OP_PADSV, ((OPpLVAL_INTRO | OPpPAD_STATE) << 8) | OPf_MOD);
+    flags = (OPpPAD_STATE << 8);
+    /* fall through */
+  case TWIGIL_VAR_MY:
+    ret = newOP(sigil == '$' ? OP_PADSV : sigil == '@' ? OP_PADAV : OP_PADHV,
+                (OPpLVAL_INTRO << 8) | OPf_MOD | flags);
     ret->op_targ = pad_add_my_sv(aTHX_ namesv);
     break;
   case TWIGIL_VAR_OUR:
     pad_add_name_pvn(SvPVX(namesv), SvCUR(namesv), padadd_OUR, NULL, PL_curstash);
-    ret = newUNOP(OP_RV2SV, (OPpOUR_INTRO << 8),
-                  newSVOP(OP_CONST, 0, SvREFCNT_inc(namesv)));
+    ret = newUNOP(sigil == '$' ? OP_RV2SV : sigil == '@' ? OP_RV2AV : OP_RV2HV,
+                  (OPpOUR_INTRO << 8), newSVOP(OP_CONST, 0, SvREFCNT_inc(namesv)));
     break;
   }
 
