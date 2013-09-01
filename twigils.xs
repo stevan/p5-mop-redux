@@ -111,7 +111,7 @@ myck_rv2sv (pTHX_ OP *o)
     return old_rv2sv_checker(aTHX_ o);
 
   he = hv_fetch_ent(GvHV(PL_hintgv), twigils_hint_key_sv, 0, twigils_hint_key_hash);
-  if (!he || memchr(SvPVX(HeVAL(he)), *SvPVX(sv), SvLEN(HeVAL(he))) == NULL)
+  if (!he || memchr(SvPVX(HeVAL(he)), *SvPVX(sv), SvCUR(HeVAL(he))) == NULL)
     return old_rv2sv_checker(aTHX_ o);
 
   name = parse_ident(aTHX_ SvPVX(sv), 1);
