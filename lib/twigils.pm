@@ -36,6 +36,16 @@ sub intro_twigil_state_var {
     croak "intro_twigil_state_var called as a function";
 }
 
+=func intro_twigil_our_var $varname
+
+  intro_twigil_our_var '$!foo';
+
+Introduces a new twigil variable. Similar to perl's built-in C<our> keyword,
+except it currently takes a string containing the variable name. This might
+change in the future to make it more similar to C<our>.
+
+=cut
+
 sub intro_twigil_our_var {
     croak "intro_twigil_our_var called as a function";
 }
