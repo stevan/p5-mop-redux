@@ -31,6 +31,15 @@ enum twigil_var_type {
 #  define PERL_PADSEQ_INTRO I32_MAX
 #endif /* !PERL_PADSEQ_INTRO */
 
+#ifndef pad_add_name_pvn
+#  define pad_add_name_pvn(name,namelen,flags,typestash,ourstash) \
+          Perl_pad_add_name(aTHX_ name, namelen, flags, typestash, ourstash)
+#endif
+
+#ifndef padadd_OUR
+#  define padadd_OUR 1
+#endif
+
 static PADOFFSET
 pad_add_my_scalar_pvn(pTHX_ char const *namepv, STRLEN namelen)
 {
