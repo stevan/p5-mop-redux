@@ -56,6 +56,29 @@ use twigils;
 }
 
 {
+    {
+        my $x = 3;
+        no strict 'refs';
+        *{'$!moo'} = \$x;
+    }
+
+    for (1 .. 2) {
+        twigils::intro_twigil_our_var('$!moo');
+        is $!moo, $_ == 1 ? 3 : 1;
+        $!moo = $_;
+        is $!moo, $_;
+    }
+
+    is do {
+        no strict 'refs';
+        ${ *{'$!moo'}{SCALAR} }
+    }, 2;
+
+    eval 'no warnings; warn $!moo';
+    like $@, qr/^Missing comma after first argument to warn function/;
+}
+
+{
     eval 'no warnings; warn $!foo';
     like $@, qr/^Missing comma after first argument to warn function/;
 
