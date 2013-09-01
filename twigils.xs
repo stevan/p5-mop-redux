@@ -10,7 +10,8 @@ U32 twigils_hint_key_hash;
 
 enum twigil_var_type {
   TWIGIL_VAR_MY,
-  TWIGIL_VAR_STATE
+  TWIGIL_VAR_STATE,
+  TWIGIL_VAR_OUR
 };
 
 #define SVt_PADNAME SVt_PVMG
@@ -120,19 +121,27 @@ myck_rv2sv (pTHX_ OP *o)
 
   op_free(o);
   offset = pad_findmy_sv(name, 0);
-  if (offset == NOT_IN_PAD)
+  if (offset != NOT_IN_PAD) {
+    if (PAD_COMPNAME_FLAGS_isOUR(offset)) {
+      o = newGVOP(OP_GVSV, (OPpCONST_STRICT << 8), gv_fetchsv(name, GV_ADD, SVt_PV));
+      return o;
+    }
+    else {
+      o = newOP(OP_PADSV, 0);
+      o->op_targ = offset;
+      return o;
+    }
+  }
+  else {
     croak("twigil variable %"SVf" not found", SVfARG(name));
-  o = newOP(OP_PADSV, 0);
-  o->op_targ = offset;
-
-  return o;
+  }
 }
 
 static OP *
 myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
   dSP;
   SV *namesv;
-  OP *pushop, *sigop, *padsv;
+  OP *pushop, *sigop, *ret;
 
   PERL_UNUSED_ARG(namegv);
 
@@ -154,18 +163,25 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
   FREETMPS;
   LEAVE;
 
-  switch (SvIV(ckobj)) {
+  switch ((enum twigil_var_type)SvIV(ckobj)) {
   case TWIGIL_VAR_MY:
-    padsv = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
+    ret = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
+    ret->op_targ = pad_add_my_scalar_sv(aTHX_ namesv);
     break;
   case TWIGIL_VAR_STATE:
-    padsv = newOP(OP_PADSV, ((OPpLVAL_INTRO | OPpPAD_STATE) << 8) | OPf_MOD);
+    ret = newOP(OP_PADSV, ((OPpLVAL_INTRO | OPpPAD_STATE) << 8) | OPf_MOD);
+    ret->op_targ = pad_add_my_scalar_sv(aTHX_ namesv);
+    break;
+  case TWIGIL_VAR_OUR: {
+    PADOFFSET ouroff = pad_add_name_pvn(SvPVX(namesv), SvCUR(namesv),
+                                        padadd_OUR, NULL, PL_curstash);
+    ret = newGVOP(OP_GVSV, (OPpLVAL_INTRO << 8), gv_fetchsv(namesv, GV_ADD, SVt_PV));
     break;
   }
+  }
 
-  padsv->op_targ = pad_add_my_scalar_sv(aTHX_ namesv);
   op_free(o);
-  return padsv;
+  return ret;
 }
 
 MODULE = twigils  PACKAGE = twigils
@@ -183,3 +199,6 @@ BOOT:
   cv_set_call_checker(get_cv("twigils::intro_twigil_state_var", 0),
                       myck_entersub_intro_twigil_var,
                       sv_2mortal(newSViv(TWIGIL_VAR_STATE)));
+  cv_set_call_checker(get_cv("twigils::intro_twigil_our_var", 0),
+                      myck_entersub_intro_twigil_var,
+                      sv_2mortal(newSViv(TWIGIL_VAR_OUR)));
