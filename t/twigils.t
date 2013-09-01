@@ -2,29 +2,27 @@ use strict;
 use warnings;
 use Test::More;
 
-BEGIN {
-    plan skip_all => 'TODO';
-}
-
 use twigils;
 
 my %skip = (map {
     ($_ => 1)
-} ' ', '#', '$');
+} ' ', '#', '$', '[', '{', "'", 0 .. 9, 'a' .. 'z');
 
-for my $c (map { chr } 32 .. 127) {
-    next if $skip{$c};
+for my $kind (qw(my state our)) {
+    for my $c (map { chr } 32 .. 127) {
+        next if $skip{$c};
 
-    my $code = qq{
-        twigils::intro_twigil_var('\$${c}foo');
-        \$${c}foo = 42;
-        ::is \$${c}foo, 42;
-    };
+        my $code = qq{
+            twigils::intro_twigil_${kind}_var('\$${c}foo');
+            \$${c}foo = 42;
+            ::is \$${c}foo, 42;
+        };
 
-    eval $code;
-    if ($@) {
-        fail $c;
-        diag "$c $@";
+        eval $code;
+        if ($@) {
+            fail $c;
+            diag "$c $@";
+        }
     }
 }
 
