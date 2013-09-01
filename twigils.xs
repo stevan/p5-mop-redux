@@ -177,13 +177,11 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
     ret = newOP(OP_PADSV, ((OPpLVAL_INTRO | OPpPAD_STATE) << 8) | OPf_MOD);
     ret->op_targ = pad_add_my_scalar_sv(aTHX_ namesv);
     break;
-  case TWIGIL_VAR_OUR: {
-    PADOFFSET ouroff = pad_add_name_pvn(SvPVX(namesv), SvCUR(namesv),
-                                        padadd_OUR, NULL, PL_curstash);
+  case TWIGIL_VAR_OUR:
+    pad_add_name_pvn(SvPVX(namesv), SvCUR(namesv), padadd_OUR, NULL, PL_curstash);
     ret = newUNOP(OP_RV2SV, 0,
                   newSVOP(OP_CONST, (OPpCONST_ENTERED << 8), SvREFCNT_inc(namesv)));
     break;
-  }
   }
 
   op_free(o);
