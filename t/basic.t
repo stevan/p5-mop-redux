@@ -22,8 +22,8 @@ use twigils;
 
     is "$!foo$.bar", 12;
 
-    eval 'warn $!bar';
-    like $@, qr/^twigil variable \$!bar not found/;
+    eval 'no warnings; warn $!bar';
+    like $@, qr/^Missing comma after first argument to warn function/;
 
     $! = 123;
     ok 0+$! eq 123;

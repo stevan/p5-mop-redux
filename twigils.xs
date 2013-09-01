@@ -108,6 +108,7 @@ myck_rv2sv (pTHX_ OP *o)
   SV *sv, *name;
   HE *he;
   PADOFFSET offset;
+  char *parse_start;
 
   if (!(o->op_flags & OPf_KIDS))
     return old_rv2sv_checker(aTHX_ o);
@@ -124,15 +125,18 @@ myck_rv2sv (pTHX_ OP *o)
   if (!he || memchr(SvPVX(HeVAL(he)), *SvPVX(sv), SvCUR(HeVAL(he))) == NULL)
     return old_rv2sv_checker(aTHX_ o);
 
+  parse_start = PL_parser->bufptr;
   name = parse_ident(aTHX_ SvPVX(sv), 1);
   if (!name)
     return old_rv2sv_checker(aTHX_ o);
 
-  op_free(o);
   offset = pad_findmy_sv(name, 0);
-  if (offset == NOT_IN_PAD)
-    croak("twigil variable %"SVf" not found", SVfARG(name));
+  if (offset == NOT_IN_PAD) {
+    PL_parser->bufptr = parse_start;
+    return old_rv2sv_checker(aTHX_ o);
+  }
 
+  op_free(o);
   if (PAD_COMPNAME_FLAGS_isOUR(offset)) {
     HV *stash = PAD_COMPNAME_OURSTASH(offset);
     HEK *stashname = HvNAME_HEK(stash);
