@@ -5,7 +5,7 @@
 #include "callchecker0.h"
 #include "callparser.h"
 
-Perl_check_t old_rv2sv_checker, old_rv2av_checker, old_rv2hv_checker;
+Perl_check_t old_rv2sv_checker;
 SV *twigils_hint_key_sv;
 U32 twigils_hint_key_hash;
 
@@ -42,21 +42,11 @@ enum twigil_var_type {
 #endif
 
 static PADOFFSET
-pad_add_my_pvn(pTHX_ char const *namepv, STRLEN namelen)
+pad_add_my_scalar_pvn(pTHX_ char const *namepv, STRLEN namelen)
 {
   PADOFFSET offset;
   SV *namesv, *myvar;
   myvar = *av_fetch(PL_comppad, AvFILLp(PL_comppad) + 1, 1);
-  switch (*namepv) {
-  case '$':
-    break;
-  case '@':
-    sv_upgrade(myvar, SVt_PVAV);
-    break;
-  case '%':
-    sv_upgrade(myvar, SVt_PVHV);
-    break;
-  }
   offset = AvFILLp(PL_comppad);
   SvPADMY_on(myvar);
   PL_curpad = AvARRAY(PL_comppad);
@@ -70,12 +60,12 @@ pad_add_my_pvn(pTHX_ char const *namepv, STRLEN namelen)
 }
 
 static PADOFFSET
-pad_add_my_sv(pTHX_ SV *namesv)
+pad_add_my_scalar_sv(pTHX_ SV *namesv)
 {
   char const *pv;
   STRLEN len;
   pv = SvPV(namesv, len);
-  return pad_add_my_pvn(aTHX_ pv, len);
+  return pad_add_my_scalar_pvn(aTHX_ pv, len);
 }
 
 static SV *
@@ -112,75 +102,57 @@ parse_ident (pTHX_ const char *prefix, STRLEN prefixlen)
 }
 
 static OP *
-myck_rv2any (pTHX_ OP *o, char sigil, Perl_check_t old_checker)
+myck_rv2sv (pTHX_ OP *o)
 {
-  OP *kid, *ret;
+  OP *kid;
   SV *sv, *name;
   HE *he;
   PADOFFSET offset;
   char *parse_start, prefix[2];
 
   if (!(o->op_flags & OPf_KIDS))
-    return old_checker(aTHX_ o);
+    return old_rv2sv_checker(aTHX_ o);
 
   kid = cUNOPo->op_first;
   if (kid->op_type != OP_CONST)
-    return old_checker(aTHX_ o);
+    return old_rv2sv_checker(aTHX_ o);
 
   sv = cSVOPx_sv(kid);
   if (!SvPOK(sv))
-    return old_checker(aTHX_ o);
+    return old_rv2sv_checker(aTHX_ o);
 
   he = hv_fetch_ent(GvHV(PL_hintgv), twigils_hint_key_sv, 0, twigils_hint_key_hash);
   if (!he || memchr(SvPVX(HeVAL(he)), *SvPVX(sv), SvCUR(HeVAL(he))) == NULL)
-    return old_checker(aTHX_ o);
+    return old_rv2sv_checker(aTHX_ o);
 
   parse_start = PL_parser->bufptr;
-  prefix[0] = sigil;
+  prefix[0] = '$';
   prefix[1] = *SvPVX(sv);
   name = parse_ident(aTHX_ prefix, 2);
   if (!name)
-    return old_checker(aTHX_ o);
+    return old_rv2sv_checker(aTHX_ o);
 
   offset = pad_findmy_sv(name, 0);
   if (offset == NOT_IN_PAD) {
     PL_parser->bufptr = parse_start;
-    return old_checker(aTHX_ o);
+    return old_rv2sv_checker(aTHX_ o);
   }
 
+  op_free(o);
   if (PAD_COMPNAME_FLAGS_isOUR(offset)) {
     HV *stash = PAD_COMPNAME_OURSTASH(offset);
     HEK *stashname = HvNAME_HEK(stash);
     SV *sym = newSVhek(stashname);
     sv_catpvs(sym, "::");
     sv_catsv(sym, name);
-    ret = newUNOP(o->op_type, 0, newSVOP(OP_CONST, 0, sym));
+    o = newUNOP(OP_RV2SV, 0, newSVOP(OP_CONST, 0, sym));
   }
   else {
-    ret = newOP(sigil == '$' ? OP_PADSV : sigil == '@' ? OP_PADAV : OP_PADHV, 0);
-    ret->op_targ = offset;
+    o = newOP(OP_PADSV, 0);
+    o->op_targ = offset;
   }
 
-  op_free(o);
-  return ret;
-}
-
-static OP *
-myck_rv2sv (pTHX_ OP *o)
-{
-  return myck_rv2any(aTHX_ o, '$', old_rv2sv_checker);
-}
-
-static OP *
-myck_rv2av (pTHX_ OP *o)
-{
-  return myck_rv2any(aTHX_ o, '@', old_rv2av_checker);
-}
-
-static OP *
-myck_rv2hv (pTHX_ OP *o)
-{
-  return myck_rv2any(aTHX_ o, '%', old_rv2hv_checker);
+  return o;
 }
 
 static OP *
@@ -211,12 +183,12 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
 
   switch ((enum twigil_var_type)SvIV(ckobj)) {
   case TWIGIL_VAR_MY:
-    ret = newOP(OP_PADAV, (OPpLVAL_INTRO << 8) | OPf_MOD);
-    ret->op_targ = pad_add_my_sv(aTHX_ namesv);
+    ret = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
+    ret->op_targ = pad_add_my_scalar_sv(aTHX_ namesv);
     break;
   case TWIGIL_VAR_STATE:
     ret = newOP(OP_PADSV, ((OPpLVAL_INTRO | OPpPAD_STATE) << 8) | OPf_MOD);
-    ret->op_targ = pad_add_my_sv(aTHX_ namesv);
+    ret->op_targ = pad_add_my_scalar_sv(aTHX_ namesv);
     break;
   case TWIGIL_VAR_OUR:
     pad_add_name_pvn(SvPVX(namesv), SvCUR(namesv), padadd_OUR, NULL, PL_curstash);
@@ -240,10 +212,9 @@ myparse_args_intro_twigil_var (pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
   PERL_UNUSED_ARG(flagsp);
 
   lex_read_space(0);
-  twigil[0] = lex_peek_unichar(0);
-  if (twigil[0] != '$' && twigil[0] != '@' && twigil[0] != '%')
+  if (lex_peek_unichar(0) != '$')
     croak("syntax error");
-  lex_read_unichar(0);
+  twigil[0] = lex_read_unichar(0);
 
   if (isSPACE(lex_peek_unichar(0)))
     croak("syntax error");
@@ -271,11 +242,7 @@ BOOT:
   twigils_hint_key_hash = SvSHARED_HASH(twigils_hint_key_sv);
 
   old_rv2sv_checker = PL_check[OP_RV2SV];
-  old_rv2av_checker = PL_check[OP_RV2AV];
-  old_rv2hv_checker = PL_check[OP_RV2HV];
   PL_check[OP_RV2SV] = myck_rv2sv;
-  PL_check[OP_RV2AV] = myck_rv2av;
-  PL_check[OP_RV2HV] = myck_rv2hv;
 
   cv_set_call_parser(intro_twigil_my_var_cv,
                      myparse_args_intro_twigil_var, &PL_sv_undef);
