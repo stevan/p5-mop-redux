@@ -7,6 +7,7 @@ use Scope::Guard    qw[ guard ];
 use Variable::Magic qw[ wizard ];
 
 use B::Hooks::EndOfScope ();
+use Carp            ();
 use Scalar::Util    ();
 use Sub::Name       ();
 use Module::Runtime ();
@@ -143,7 +144,7 @@ sub namespace_parser {
     }
     else {
         if (lex_peek(8) =~ /^extends\b/) {
-            die "Roles cannot use 'extends'";
+            syntax_error("Roles cannot use 'extends'");
         }
     }
 
@@ -173,7 +174,8 @@ sub namespace_parser {
         Module::Runtime::use_package_optimistically($class);
     }
 
-    die "$type must be followed by a block" unless lex_peek eq '{';
+    syntax_error("$type must be followed by a block")
+        unless lex_peek eq '{';
 
     local $CURRENT_CLASS_NAME     = $pkg;
     local $CURRENT_ATTRIBUTE_LIST = [];
@@ -193,13 +195,7 @@ sub namespace_parser {
 
     if (my $code = parse_block(1)) {
         local ${^META} = $meta;
-        if ($type eq 'class') {
-            $code->();
-        }
-        else {
-            $code->();
-        }
-
+        $code->();
         $g->dismiss;
     }
 
@@ -266,7 +262,7 @@ sub method {
 sub submethod {
     my ($name, $body, @traits) = @_;
 
-    die "submethods are not supported in roles"
+    syntax_error("submethods are not supported in roles")
         if ${^META}->isa('mop::role');
 
     ${^META}->add_submethod(
@@ -300,7 +296,8 @@ sub generic_method_parser {
         return (sub { $name }, 1);
     }
 
-    die "Non-required ${type}s require a body" unless lex_peek eq '{';
+    syntax_error("Non-required ${type}s require a body")
+        unless lex_peek eq '{';
     lex_read;
 
     my $preamble = '{'
@@ -358,6 +355,7 @@ sub generic_method_parser {
     $preamble .= 'BEGIN{B::Hooks::EndOfScope::on_scope_end { Parse::Keyword::lex_stuff("}") }}';
 
     my $code = parse_stuff_with_values($preamble, \&parse_block);
+    syntax_error() unless $code;
 
     return (sub { ($name, $code, @traits) }, 1);
 }
@@ -380,7 +378,8 @@ sub has {
 sub has_parser {
     lex_read_space;
 
-    die "Invalid attribute name " . read_tokenish() unless lex_peek eq '$';
+    syntax_error("Invalid attribute name " . read_tokenish())
+        unless lex_peek eq '$';
     lex_read;
 
     my $twigil = lex_peek;
@@ -416,7 +415,7 @@ sub has_parser {
         lex_read;
     }
     elsif (lex_peek ne '}') {
-        die "Couldn't parse attribute $name";
+        syntax_error("Couldn't parse attribute $name");
     }
 
     push @{ $CURRENT_ATTRIBUTE_LIST } => $name;
@@ -474,7 +473,7 @@ sub parse_traits {
         if (lex_peek eq '(') {
             lex_read;
             $params = parse_fullexpr;
-            die "Unterminated parameter list for trait $name"
+            syntax_error("Unterminated parameter list for trait $name")
                 unless lex_peek eq ')';
             lex_read;
         }
@@ -507,6 +506,7 @@ sub run_traits {
     $code .= '}';
 
     my $traits_code = parse_stuff_with_values($code, \&parse_block);
+    syntax_error() unless $traits_code;
     $traits_code->();
 }
 
@@ -526,9 +526,9 @@ sub parse_prototype {
     my @vars;
     while ((my $sigil = lex_peek) ne ')') {
         my $var = {};
-        die "Invalid sigil: $sigil"
+        syntax_error("Invalid sigil: $sigil")
             unless $sigil eq '$' || $sigil eq '@' || $sigil eq '%';
-        die "Can't declare parameters after a slurpy parameter"
+        syntax_error("Can't declare parameters after a slurpy parameter")
             if $seen_slurpy;
 
         $seen_slurpy = 1 if $sigil eq '@' || $sigil eq '%';
@@ -550,7 +550,7 @@ sub parse_prototype {
 
         push @vars, $var;
 
-        die "Unterminated prototype for $method_name"
+        syntax_error("Unterminated prototype for $method_name")
             unless lex_peek eq ')' || lex_peek eq ',';
 
         if (lex_peek eq ',') {
@@ -586,7 +586,7 @@ sub parse_name {
         elsif ($allow_package && $char eq ':') {
             if (lex_peek(3) !~ /^::(?:[^:]|$)/) {
                 my $invalid = $name . read_tokenish();
-                die "Invalid identifier: $invalid";
+                syntax_error("Invalid identifier: $invalid");
             }
             $name .= '::';
             lex_read(2);
@@ -596,7 +596,8 @@ sub parse_name {
         }
     }
 
-    die read_tokenish() . " is not a valid $what name" unless length $name;
+    syntax_error(read_tokenish() . " is not a valid $what name")
+        unless length $name;
 
     return $name;
 }
@@ -643,6 +644,18 @@ sub read_tokenish {
         last if ($next . lex_peek) =~ /^\S\b/;
     }
     return $token;
+}
+
+sub syntax_error {
+    my ($err) = @_;
+    $err //= $@;
+    die $err if ref $err;
+    die(
+        join("",
+            ($err ? ($@ ? $err : Carp::shortmess($err)) : ()),
+            "Execution of $0 aborted due to compilation errors.\n"
+        )
+    );
 }
 
 1;
