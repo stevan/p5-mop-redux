@@ -48,6 +48,11 @@ enum subscript_type {
 #  define padadd_OUR 1
 #endif
 
+#ifndef ref
+extern OP *Perl_ref(pTHX_ OP *, I32);
+#  define ref(o,type) Perl_ref(aTHX_ o, type)
+#endif
+
 static PADOFFSET
 pad_add_my_pvn(pTHX_ char const *namepv, STRLEN namelen)
 {
@@ -219,12 +224,12 @@ myck_rv2any (pTHX_ OP *o, char sigil, Perl_check_t old_checker)
     case SUBSCRIPT_ARRAY_SLICE:
       ret = op_prepend_elem(OP_ASLICE, newOP(OP_PUSHMARK, 0),
                             newLISTOP(OP_ASLICE, 0, Perl_list(aTHX_ subscript),
-                                      Perl_ref(aTHX_ ret, OP_ASLICE)));
+                                      ref(ret, OP_ASLICE)));
       break;
     case SUBSCRIPT_HASH_SLICE:
       ret = op_prepend_elem(OP_HSLICE, newOP(OP_PUSHMARK, 0),
                             newLISTOP(OP_HSLICE, 0, Perl_list(aTHX_ subscript),
-                                      Perl_ref(aTHX_ Perl_oopsHV(aTHX_ ret), OP_HSLICE)));
+                                      ref(Perl_oopsHV(aTHX_ ret), OP_HSLICE)));
       break;
     }
   }
