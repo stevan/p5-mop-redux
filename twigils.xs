@@ -15,6 +15,13 @@ enum twigil_var_type {
   TWIGIL_VAR_OUR
 };
 
+enum subscript_type {
+  SUBSCRIPT_ARRAY,
+  SUBSCRIPT_HASH,
+  SUBSCRIPT_ARRAY_SLICE,
+  SUBSCRIPT_HASH_SLICE
+};
+
 #define SVt_PADNAME SVt_PVMG
 
 #ifndef COP_SEQ_RANGE_LOW_set
@@ -112,7 +119,7 @@ parse_ident (pTHX_ const char *prefix, STRLEN prefixlen)
 }
 
 static SV *
-parse_ident_maybe_subscripted (pTHX_ const char *prefix, STRLEN prefixlen, OP **subscrp)
+parse_ident_maybe_subscripted (pTHX_ const char *prefix, STRLEN prefixlen, enum subscript_type *subscrtp, OP **subscrp)
 {
   OP *expr;
   char subscript;
@@ -130,10 +137,21 @@ parse_ident_maybe_subscripted (pTHX_ const char *prefix, STRLEN prefixlen, OP **
     croak("syntax error");
   lex_read_unichar(0);
 
-  if (subscript == '[')
+  if (*SvPVX(sv) == '$' && subscript == '[') {
     *SvPVX(sv) = '@';
-  else if (subscript == '{')
+    *subscrtp = SUBSCRIPT_ARRAY;
+  }
+  else if (*SvPVX(sv) == '$' && subscript == '{') {
     *SvPVX(sv) = '%';
+    *subscrtp = SUBSCRIPT_HASH;
+  }
+  else if (*SvPVX(sv) == '@' && subscript == '[') {
+    *subscrtp = SUBSCRIPT_ARRAY_SLICE;
+  }
+  else if (*SvPVX(sv) == '@' && subscript == '{') {
+    *SvPVX(sv) = '%';
+    *subscrtp = SUBSCRIPT_HASH_SLICE;
+  }
 
   *subscrp = expr;
   return sv;
@@ -147,6 +165,7 @@ myck_rv2any (pTHX_ OP *o, char sigil, Perl_check_t old_checker)
   HE *he;
   PADOFFSET offset;
   char *parse_start, prefix[2];
+  enum subscript_type subscript_type;
 
   if (!(o->op_flags & OPf_KIDS))
     return old_checker(aTHX_ o);
@@ -166,7 +185,7 @@ myck_rv2any (pTHX_ OP *o, char sigil, Perl_check_t old_checker)
   parse_start = PL_parser->bufptr;
   prefix[0] = sigil;
   prefix[1] = *SvPVX(sv);
-  name = parse_ident_maybe_subscripted(aTHX_ prefix, 2, &subscript);
+  name = parse_ident_maybe_subscripted(aTHX_ prefix, 2, &subscript_type, &subscript);
   if (!name)
     return old_checker(aTHX_ o);
 
@@ -190,10 +209,24 @@ myck_rv2any (pTHX_ OP *o, char sigil, Perl_check_t old_checker)
   }
 
   if (subscript) {
-    if (*SvPVX(name) == '@')
+    switch (subscript_type) {
+    case SUBSCRIPT_ARRAY:
       ret = newBINOP(OP_AELEM, 0, Perl_oopsAV(aTHX_ ret), Perl_scalar(aTHX_ subscript));
-    else if (*SvPVX(name) == '%')
+      break;
+    case SUBSCRIPT_HASH:
       ret = newBINOP(OP_HELEM, 0, Perl_oopsHV(aTHX_ ret), Perl_jmaybe(aTHX_ subscript));
+      break;
+    case SUBSCRIPT_ARRAY_SLICE:
+      ret = op_prepend_elem(OP_ASLICE, newOP(OP_PUSHMARK, 0),
+                            newLISTOP(OP_ASLICE, 0, Perl_list(aTHX_ subscript),
+                                      Perl_ref(aTHX_ ret, OP_ASLICE)));
+      break;
+    case SUBSCRIPT_HASH_SLICE:
+      ret = op_prepend_elem(OP_HSLICE, newOP(OP_PUSHMARK, 0),
+                            newLISTOP(OP_HSLICE, 0, Perl_list(aTHX_ subscript),
+                                      Perl_ref(aTHX_ Perl_oopsHV(aTHX_ ret), OP_HSLICE)));
+      break;
+    }
   }
 
   op_free(o);
