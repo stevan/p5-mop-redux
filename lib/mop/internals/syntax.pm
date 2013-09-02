@@ -643,11 +643,13 @@ sub read_tokenish {
 }
 
 sub syntax_error {
-    die $@ if ref $@;
-    Carp::croak(
-        join("\n",
-            ($@ ? $@ : ()),
-            "Compilation aborted"
+    my ($err) = @_;
+    $err //= $@;
+    die $err if ref $err;
+    die(
+        join("",
+            ($err ? ($@ ? $err : Carp::shortmess($err)) : ()),
+            "Execution of $0 aborted due to compilation errors.\n"
         )
     );
 }

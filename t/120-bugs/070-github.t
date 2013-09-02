@@ -24,7 +24,7 @@ https://github.com/stevan/p5-mop-redux/issues/70
     ];
     like(
         $@,
-        qr/syntax error at.*near.*glurg.*\nCompilation aborted/s,
+        qr/syntax error at.*near.*glurg.*\nExecution.*aborted/s,
         '... got the error we expected'
     );
 }
