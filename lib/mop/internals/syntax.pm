@@ -7,6 +7,7 @@ use Scope::Guard qw[ guard ];
 use Variable::Magic       qw[ wizard ];
 
 use B::Hooks::EndOfScope ();
+use Carp            ();
 use Scalar::Util    ();
 use Sub::Name       ();
 use Module::Runtime ();
@@ -357,6 +358,7 @@ sub generic_method_parser {
     $preamble .= 'BEGIN{B::Hooks::EndOfScope::on_scope_end { Parse::Keyword::lex_stuff("}") }}';
 
     my $code = parse_stuff_with_values($preamble, \&parse_block);
+    syntax_error() unless $code;
 
     return (sub { ($name, $code, @traits) }, 1);
 }
@@ -501,6 +503,7 @@ sub run_traits {
     $code .= '}';
 
     my $traits_code = parse_stuff_with_values($code, \&parse_block);
+    syntax_error() unless $traits_code;
     $traits_code->();
 }
 
@@ -637,6 +640,16 @@ sub read_tokenish {
         last if ($next . lex_peek) =~ /^\S\b/;
     }
     return $token;
+}
+
+sub syntax_error {
+    die $@ if ref $@;
+    Carp::croak(
+        join("\n",
+            ($@ ? $@ : ()),
+            "Compilation aborted"
+        )
+    );
 }
 
 1;

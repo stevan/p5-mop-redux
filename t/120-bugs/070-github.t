@@ -14,7 +14,6 @@ https://github.com/stevan/p5-mop-redux/issues/70
 =cut
 
 {
-    local $TODO = 'need to figure out the best way to handle this';
     eval q[
         class Foo {
             method glurg {
@@ -25,7 +24,7 @@ https://github.com/stevan/p5-mop-redux/issues/70
     ];
     like(
         $@,
-        qr/^Error while parsing body for method glurg in Foo. Will not continue./,
+        qr/syntax error at.*near.*glurg.*\nCompilation aborted/s,
         '... got the error we expected'
     );
 }
