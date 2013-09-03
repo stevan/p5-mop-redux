@@ -69,8 +69,6 @@ sub _add_allowed_twigil {
 =head1 CAVEATS
 
 =for :list
-* Only scalars are supported
-This limitation might be removed in the future.
 * Special punctuation variables and alphanumeric infix operators
 Code such as C<$.eq 42> would normally be interpreted as comparing the contents
 of the special variable C<$.> with the constant C<42> using the C<eq> infix
@@ -89,6 +87,13 @@ will most likely cause a compile time error.
 When storing references in twigil variables, the long-hand circumfix
 dereferencing notation has to be used. C<@$!foo> doesn't cause the twigil
 variable C<$!foo> to be dereferenced as an array. C<@{ $!foo }>, however, does.
+* Issues when interpolating in strings
+Interpolating twigil variables in strings, such as in
+C<my $str = "foo: $.foo";>, currently only works reliably for plain scalar
+twigil variables. Interpolating twigil arrays will not work as expected when
+trying to interpolate the entire array, a slice of the array, or even just a
+single element of it. Postfix dereferencing, such as
+C<my $str = "$.hash_ref->{foo}"> isn't currently supported either.
 
 =cut
 
