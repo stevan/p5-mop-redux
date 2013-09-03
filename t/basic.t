@@ -40,6 +40,22 @@ use twigils;
 }
 
 {
+    intro_twigil_my_var $!bar;
+
+    eval 'no warnings; warn $!bar[42]';
+    like $@, qr/^Missing comma after first argument to warn function/;
+
+    eval 'no warnings; warn $!bar{42}';
+    like $@, qr/^Missing comma after first argument to warn function/;
+
+    eval 'no warnings; warn @!bar[42,23]';
+    like $@, qr/^syntax error/;
+
+    eval 'no warnings; warn @!bar{42,23}';
+    like $@, qr/^syntax error/;
+}
+
+{
     for (1 .. 2) {
         intro_twigil_my_var $!foo;
         is $!foo, undef;
