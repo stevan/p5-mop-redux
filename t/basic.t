@@ -22,6 +22,14 @@ use twigils;
 
     is "$!foo$.bar", 12;
 
+    $!foo = [42];
+    TODO: {
+        local $TODO = 'dereference interpolation';
+        is "$!foo->[0]", 42;
+    }
+    is $!foo->[0], 42;
+    is "${ \$!foo->[0] }", 42;
+
     eval 'no warnings; warn $!bar';
     like $@, qr/^Missing comma after first argument to warn function/;
 
