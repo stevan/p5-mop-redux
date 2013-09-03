@@ -42,6 +42,7 @@ after register_prereqs => sub {
         { phase => 'configure' },
         'IO::File'           => 0,
         'Devel::CallChecker' => 0,
+        'Devel::CallParser'  => 0,
     );
 };
 
