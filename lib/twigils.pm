@@ -12,6 +12,30 @@ use Exporter 'import';
 
 our @EXPORT = map { "intro_twigil_${_}_var" } qw(my state our);
 
+=head1 SYNOPSIS
+
+    use twigils;
+
+    intro_twigil_my_var $!foo;
+
+    $!foo = 42;
+
+    say $!foo;
+
+=head1 DESCRIPTION
+
+This module implements Perl 6 style twigils for Perl 5.
+
+Twigils are similar to Perl's sigils (C<$>, C<@>, and C<%>, most importantly),
+but consist of two characters. This module doesn't give any particular meaning
+to any twigils and leaves that as the user's responsibility.
+
+=head1 WARNING
+
+This is a B<ALPHA> release made mostly to make it easier for the p5-mop project
+to experiment with using twigils. I don't recommend anyone using this module for
+production code. See also: L</CAVEATS>.
+
 =func intro_twigil_my_var $varname
 
   intro_twigil_my_var $!foo;
