@@ -38,6 +38,24 @@ use twigils;
 }
 
 {
+    intro_twigil_my_var @!bar;
+
+    eval 'no warnings; $!bar';
+    like $@, qr/^syntax error/;
+
+    eval 'no warnings; @!bar{42, 23}';
+    like $@, qr/^syntax error/;
+
+    intro_twigil_my_var $!bar;
+    $!bar = 42;
+    is eval 'no warnings; $!bar', 42;
+
+    intro_twigil_my_var %!bar;
+    %!bar = (42 => 1, 23 => 2);
+    is eval 'no warnings; join q[] => @!bar{42, 23}', '12';
+}
+
+{
     for (1 .. 2) {
         intro_twigil_my_var @!foo;
         is_deeply \@!foo, [];
