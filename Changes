@@ -1,2 +1,5 @@
+0.02  2013-09-03  TRIAL
+  * Add configure_requires on Devel::CallParser (Jesse Luehrs)
+
 0.01  2013-09-03  TRIAL
   * Initial release.
