@@ -1,3 +1,6 @@
+0.03  2013-09-03  TRIAL
+  * Add an option to provide better error messages.
+
 0.02  2013-09-03  TRIAL
   * Add configure_requires on Devel::CallParser (Jesse Luehrs)
 
