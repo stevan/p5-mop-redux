@@ -53,6 +53,10 @@ extern OP *Perl_ref(pTHX_ OP *, I32);
 #  define ref(o,type) Perl_ref(aTHX_ o, type)
 #endif
 
+#ifndef LEX_INTERPEND
+#  define LEX_INTERPEND 5
+#endif
+
 static PADOFFSET
 pad_add_my_pvn(pTHX_ char const *namepv, STRLEN namelen)
 {
@@ -129,6 +133,9 @@ parse_ident_maybe_subscripted (pTHX_ const char *prefix, STRLEN prefixlen, enum 
   OP *expr;
   char subscript;
   SV *sv = parse_ident(aTHX_ prefix, prefixlen);
+
+  if (PL_parser->lex_state == LEX_INTERPEND)
+    return sv;
 
   lex_read_space(0);
   if (lex_peek_unichar(0) != '[' && lex_peek_unichar(0) != '{')
