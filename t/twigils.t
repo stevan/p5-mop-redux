@@ -18,7 +18,11 @@ for my $kind (qw(my state our)) {
             ::is \$${c}foo, 42;
         };
 
-        eval $code;
+        {
+            no warnings 'syntax', 'deprecated';
+            eval $code;
+        }
+
         if ($@) {
             fail $c;
             diag "$c $@";
