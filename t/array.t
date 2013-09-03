@@ -22,7 +22,7 @@ use twigils;
 
     TODO: {
         local $TODO = 'array interpolation';
-        is "@!foo", "1 2 2 3";
+        is "@!foo@.bar", "1 2 2 3";
     }
 
     eval 'no warnings; warn @!bar';
