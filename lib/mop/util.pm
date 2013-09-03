@@ -203,9 +203,9 @@ sub fix_metaclass_compatibility {
     # otherwise, subclasses of closed classes won't be able to do things
     # like add attributes or methods to themselves
     $meta_name = mop::get_meta($meta_name)->superclass
-        if $meta->is_closed;
+        if $meta->isa('mop::class') && $meta->is_closed;
     $super_name = mop::get_meta($super_name)->superclass
-        if $super->is_closed;
+        if $super->isa('mop::class') && $super->is_closed;
 
     return $meta_name  if $meta->isa($super_name);
     return $super_name if $super->isa($meta_name);

@@ -6,6 +6,7 @@ use warnings;
 use mop::util qw[ init_attribute_storage has_meta find_meta apply_all_roles fix_metaclass_compatibility ];
 
 use Module::Runtime qw[ is_module_name module_notional_filename ];
+use Scalar::Util qw[ blessed ];
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -123,6 +124,52 @@ sub instance_generator { ${ $instance_generator{ $_[0] } } }
 sub set_instance_generator { $instance_generator{ $_[0] } = \$_[1] }
 
 sub create_fresh_instance_structure { (shift)->instance_generator->() }
+
+# methods
+
+sub add_method {
+    my $self = shift;
+    my ($method) = @_;
+
+    my @super_methods = (
+        map { $_ ? $_->get_method($method->name) : undef }
+        map { find_meta($_) }
+        @{ mop::mro::get_linear_isa($self->name) }
+    );
+    shift @super_methods;
+    @super_methods = grep { defined } @super_methods;
+
+    if (my $super = $super_methods[0]) {
+        my $meta = mop::util::fix_metaclass_compatibility($method, $super);
+        bless $method, $meta
+            if $meta ne blessed($method);
+    }
+
+    $self->mop::role::add_method($method);
+}
+
+# attributes
+
+sub add_attribute {
+    my $self = shift;
+    my ($attr) = @_;
+
+    my @super_attrs = (
+        map { $_ ? $_->get_attribute($attr->name) : undef }
+        map { find_meta($_) }
+        @{ mop::mro::get_linear_isa($self->name) }
+    );
+    shift @super_attrs;
+    @super_attrs = grep { defined } @super_attrs;
+
+    if (my $super = $super_attrs[0]) {
+        my $meta = mop::util::fix_metaclass_compatibility($attr, $super);
+        bless $attr, $meta
+            if $meta ne blessed($attr);
+    }
+
+    $self->mop::role::add_attribute($attr);
+}
 
 # submethods
 
