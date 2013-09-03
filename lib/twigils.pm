@@ -8,7 +8,7 @@ use XSLoader;
 use Carp 'croak';
 use Devel::CallChecker;
 use Devel::CallParser;
-use Exporter 'import';
+use Exporter ();
 
 our @EXPORT = map { "intro_twigil_${_}_var" } qw(my state our);
 
@@ -73,6 +73,15 @@ variable. Similar to perl's built-in C<our> keyword.
 
 sub intro_twigil_our_var {
     croak "intro_twigil_our_var called as a function";
+}
+
+sub import {
+    if (defined $_[1] && $_[1] eq 'fatal_lookup_errors') {
+        $^H{__PACKAGE__ . '/not_in_pad_fatal'} = 1;
+        splice(@_, 1, 1, ());
+    }
+
+    goto &Exporter::import;
 }
 
 XSLoader::load(

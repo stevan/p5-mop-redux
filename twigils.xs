@@ -6,8 +6,8 @@
 #include "callparser.h"
 
 Perl_check_t old_rv2sv_checker, old_rv2av_checker, old_rv2hv_checker;
-SV *twigils_hint_key_sv;
-U32 twigils_hint_key_hash;
+SV *twigils_hint_key_sv, *not_in_pad_fatal_hint_key_sv;
+U32 twigils_hint_key_hash, not_in_pad_fatal_hint_key_hash;
 
 enum twigil_var_type {
   TWIGIL_VAR_MY,
@@ -203,6 +203,12 @@ myck_rv2any (pTHX_ OP *o, char sigil, Perl_check_t old_checker)
 
   offset = pad_findmy_sv(name, 0);
   if (offset == NOT_IN_PAD) {
+    he = hv_fetch_ent(GvHV(PL_hintgv), not_in_pad_fatal_hint_key_sv, 0,
+                      not_in_pad_fatal_hint_key_hash);
+
+    if (he && SvTRUE(HeVAL(he)))
+      croak("Not such twigil variable %"SVf, SVfARG(name));
+
     PL_parser->bufptr = parse_start;
     return old_checker(aTHX_ o);
   }
@@ -352,6 +358,8 @@ BOOT:
 
   twigils_hint_key_sv = newSVpvs_share("twigils/twigils");
   twigils_hint_key_hash = SvSHARED_HASH(twigils_hint_key_sv);
+  not_in_pad_fatal_hint_key_sv = newSVpvs_share("twigils/not_in_pad_fatal");
+  not_in_pad_fatal_hint_key_hash = SvSHARED_HASH(not_in_pad_fatal_hint_key_sv);
 
   old_rv2sv_checker = PL_check[OP_RV2SV];
   old_rv2av_checker = PL_check[OP_RV2AV];
