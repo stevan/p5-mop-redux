@@ -19,7 +19,7 @@ class Foo {
     method foo { $!foo }
 }
 
-isa_ok(mop::get_meta('Foo')->get_attribute('$foo'), 'MyAttribute');
+isa_ok(mop::get_meta('Foo')->get_attribute('$!foo'), 'MyAttribute');
 is(Foo->new->foo, 'Foo');
 
 class Bar extends Foo {
@@ -29,9 +29,9 @@ class Bar extends Foo {
     method bar { $!bar }
 }
 
-isa_ok(mop::get_meta('Bar')->get_attribute('$foo'), 'MyAttribute');
+isa_ok(mop::get_meta('Bar')->get_attribute('$!foo'), 'MyAttribute');
 is(Bar->new->foo, 'Bar');
-isa_ok(mop::get_meta('Bar')->get_attribute('$bar'), 'mop::attribute');
+isa_ok(mop::get_meta('Bar')->get_attribute('$!bar'), 'mop::attribute');
 is(Bar->new->bar, 'BAR');
 
 sub myotherattribute {
@@ -70,13 +70,13 @@ class Quux extends Foo {
 }
 
 { local $TODO = "manual blessing won't be able to handle compat here";
-can_ok(mop::get_meta('Quux')->get_attribute('$foo'), 'foo');
+can_ok(mop::get_meta('Quux')->get_attribute('$!foo'), 'foo');
 }
-can_ok(mop::get_meta('Quux')->get_attribute('$foo'), 'bar');
+can_ok(mop::get_meta('Quux')->get_attribute('$!foo'), 'bar');
 { local $TODO = "manual blessing won't be able to handle compat here";
-fail; # is(mop::get_meta('Quux')->get_attribute('$foo')->foo, 'MyAttribute');
+fail; # is(mop::get_meta('Quux')->get_attribute('$!foo')->foo, 'MyAttribute');
 }
-is(mop::get_meta('Quux')->get_attribute('$foo')->bar, 'MyThirdAttribute');
+is(mop::get_meta('Quux')->get_attribute('$!foo')->bar, 'MyThirdAttribute');
 is(Quux->new->foo, 'Quux');
 
 done_testing;
