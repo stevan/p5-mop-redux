@@ -77,8 +77,8 @@ sub installdeps {
             _cpanm(qw(cpanm --installdeps -q --notest .));
         }
         elsif (-e 'dist.ini') {
-            _cpanm(qw(cpanm -q --notest Dist::Zilla));
-            _cpanm("dzil authordeps --missing | cpanm -q --notest");
+            _cpanm(qw(cpanm -q --notest Dist::Zilla)) ||
+            _cpanm("dzil authordeps --missing | cpanm -q --notest") ||
             _cpanm("dzil listdeps --missing | grep -v 'find abstract in' | grep -v '^mop\$' | cpanm -q --notest");
         }
         else {
