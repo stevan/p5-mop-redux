@@ -15,18 +15,18 @@ class MyAttribute extends mop::attribute {
 }
 
 class Foo {
-    has $foo is myattribute = 'Foo';
-    method foo { $foo }
+    has $!foo is myattribute = 'Foo';
+    method foo { $!foo }
 }
 
 isa_ok(mop::get_meta('Foo')->get_attribute('$foo'), 'MyAttribute');
 is(Foo->new->foo, 'Foo');
 
 class Bar extends Foo {
-    has $foo = 'Bar';
-    has $bar = 'BAR';
-    method foo { $foo }
-    method bar { $bar }
+    has $!foo = 'Bar';
+    has $!bar = 'BAR';
+    method foo { $!foo }
+    method bar { $!bar }
 }
 
 isa_ok(mop::get_meta('Bar')->get_attribute('$foo'), 'MyAttribute');
@@ -46,8 +46,8 @@ class MyOtherAttribute extends mop::attribute {
 
 eval '
 class Baz extends Foo {
-    has $foo is myotherattribute = "Baz";
-    method foo { $foo }
+    has $!foo is myotherattribute = "Baz";
+    method foo { $!foo }
 }
 ';
 { local $TODO = "manual blessing won't be able to handle compat here";
@@ -65,8 +65,8 @@ class MyThirdAttribute extends mop::attribute {
 }
 
 class Quux extends Foo {
-    has $foo is mythirdattribute = "Quux";
-    method foo { $foo }
+    has $!foo is mythirdattribute = "Quux";
+    method foo { $!foo }
 }
 
 { local $TODO = "manual blessing won't be able to handle compat here";
