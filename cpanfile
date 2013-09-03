@@ -14,6 +14,7 @@ requires 'List::AllUtils'           => 0;
 requires 'Scalar::Util'             => 0;
 requires 'Sub::Exporter'            => 0;
 requires 'parent'                   => 0;
+requires 'twigils'                  => 0;
 
 build_requires 'Test::More'     => 0.88;
 build_requires 'Test::Warn'     => 0;

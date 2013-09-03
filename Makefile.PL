@@ -25,6 +25,7 @@ my %WriteMakefileArgs = (
     'Parse::Keyword'           => '0.04',
     'Scope::Guard'             => 0,
     'Variable::Magic'          => 0,
+    'twigils'                  => 0,
 
     # utility modules needed
     # for implementation

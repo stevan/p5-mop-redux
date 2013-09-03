@@ -6,6 +6,7 @@ perl:
 before_install:
     - perl -I .travis -MTravisHelper -E'exit clone_repos'
 install:
+    - cpanm -q --dev twigils || (cat /home/travis/.cpanm/build.log; false)
     - perl -I .travis -MTravisHelper -E'exit installdeps'
 script:
     - perl -I .travis -MTravisHelper -E'exit test'
