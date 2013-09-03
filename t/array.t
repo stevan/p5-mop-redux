@@ -23,6 +23,8 @@ use twigils;
     TODO: {
         local $TODO = 'array interpolation';
         is "@!foo@.bar", "1 2 2 3";
+        no warnings 'uninitialized';
+        is "$!foo[0]$.bar[0]", '12';
     }
 
     eval 'no warnings; warn @!bar';
