@@ -26,6 +26,11 @@ use Sub::Exporter -setup => {
 sub find_meta { ${ get_stash_for( shift )->get_symbol('$METACLASS') || \undef } }
 sub has_meta  {    get_stash_for( shift )->has_symbol('$METACLASS')  }
 
+# this shouldn't be used, generally. the only case where this is necessary is
+# when we have a class which doesn't use the mop inheriting from a class which
+# does. in that case, we need to inflate a basic metaclass for that class in
+# order to be able to instantiate new instances via new_instance. see
+# mop::object::new.
 sub find_or_create_meta {
     my ($class) = @_;
 
