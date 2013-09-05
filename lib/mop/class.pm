@@ -40,10 +40,6 @@ sub new {
         $instance_generator{ $self } = \(sub { \(my $anon) });
     }
 
-    # if we already have subclasses, then something went wrong and we need to
-    # fix that
-    mop::mro::clear_isa_cache_subclasses($self->name);
-
     if ( defined( $args{'name'} ) && is_module_name( $args{'name'} ) ) {
         $INC{ module_notional_filename( $args{'name'} ) } //= '(mop)';
     }

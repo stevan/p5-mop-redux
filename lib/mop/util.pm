@@ -311,15 +311,6 @@ use warnings;
         delete $ISA_CACHE{$class};
     }
 
-    # XXX we should cache the equivalent of mro::get_isarev too
-    sub clear_isa_cache_subclasses {
-        my ($class) = ref($_[0]) || $_[0];
-        for my $cached (keys %ISA_CACHE) {
-            clear_isa_cache($cached)
-                if grep { $_ eq $class } @{ $ISA_CACHE{$cached} };
-        }
-    }
-
     sub get_linear_isa {
         my $class = ref($_[0]) || $_[0];
 
