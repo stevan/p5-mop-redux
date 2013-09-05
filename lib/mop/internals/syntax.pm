@@ -177,6 +177,9 @@ sub namespace_parser {
     syntax_error("$type must be followed by a block")
         unless lex_peek eq '{';
 
+    die "The metaclass for $pkg does not inherit from mop::$type"
+        unless $metaclass->isa("mop::$type");
+
     local $CURRENT_CLASS_NAME     = $pkg;
     local $CURRENT_ATTRIBUTE_LIST = [];
 
