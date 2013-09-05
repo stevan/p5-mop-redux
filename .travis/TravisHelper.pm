@@ -23,7 +23,7 @@ $ENV{LIVE_HTTP_TESTS} = 1;
 (my $mop_repo = $mop_dir) =~ s{^.*/([^/]+/[^/]+)/?$}{$1};
 my @repos = (
     [ 'stevan/Plack',                       'master'              ],
-    [ 'stevan/Forward-Routes-p5-mop-redux', 'master'              ],
+    # [ 'stevan/Forward-Routes-p5-mop-redux', 'master'              ],
     [ 'stevan/http-headers-actionpack',     'p5-mop'              ],
     [ 'stevan/BreadBoard',                  'p5-mop'              ],
     [ 'iinteractive/promises-perl',         'p5-mop'              ],
