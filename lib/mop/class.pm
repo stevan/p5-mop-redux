@@ -34,6 +34,9 @@ sub new {
             for $meta->required_methods;
     }
     else {
+        mop::util::mark_nonmop_class($args{'superclass'})
+            if $args{'superclass'};
+
         $instance_generator{ $self } = \(sub { \(my $anon) });
     }
 

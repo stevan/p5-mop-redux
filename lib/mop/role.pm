@@ -3,7 +3,7 @@ package mop::role;
 use v5.16;
 use warnings;
 
-use mop::util qw[ init_attribute_storage apply_all_roles ];
+use mop::util qw[ init_attribute_storage apply_all_roles find_meta ];
 
 use Module::Runtime qw[ is_module_name module_notional_filename ];
 
@@ -35,6 +35,10 @@ sub new {
     $attributes{ $self }       = \({});
     $methods{ $self }          = \({});
     $required_methods{ $self } = \({});
+
+    if (my @nometa = grep { !find_meta($_) } @${ $roles{$self} }) {
+        die "No metaclass found for these roles: @nometa";
+    }
 
     if ( defined( $args{'name'} ) && is_module_name( $args{'name'} ) ) {
         $INC{ module_notional_filename( $args{'name'} ) } //= '(mop)';

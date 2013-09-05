@@ -102,6 +102,13 @@ sub init_attribute_storage (\%) {
     &Hash::Util::FieldHash::fieldhash( $_[0] )
 }
 
+my %NONMOP_CLASSES;
+
+sub mark_nonmop_class {
+    my ($class) = @_;
+    $NONMOP_CLASSES{$class} = 1;
+}
+
 sub install_meta {
     my ($meta) = @_;
 
@@ -112,6 +119,10 @@ sub install_meta {
 
     die "The metaclass for $name has already been created"
         if find_meta($name);
+
+    die "$name has already been used as a non-mop class. "
+      . "Does your code have a circular dependency?"
+        if $NONMOP_CLASSES{$name};
 
     my $stash = mop::util::get_stash_for($name);
     $stash->add_symbol('$METACLASS', \$meta);
