@@ -372,6 +372,41 @@ sub can {
     return $method;
 }
 
+package mop;
+
+sub bless ($;$) {
+    my ($object, $into) = @_;
+
+    my $from = Scalar::Util::blessed($object);
+    my $common_base = mop::util::_find_common_base($from, $into);
+
+    my @from_isa = @{ mop::mro::get_linear_isa($from) };
+    if ($common_base) {
+        pop @from_isa until $from_isa[-1] eq $common_base;
+        pop @from_isa;
+    }
+    @from_isa = grep { defined } map { mop::util::find_meta($_) } @from_isa;
+
+    my @into_isa = @{ mop::mro::get_linear_isa($into) };
+    if ($common_base) {
+        pop @into_isa until $into_isa[-1] eq $common_base;
+        pop @into_isa;
+    }
+    @into_isa = grep { defined } map { mop::util::find_meta($_) } @into_isa;
+
+    for my $attr (map { $_->attributes } @from_isa) {
+        delete $attr->storage->{$object};
+    }
+
+    CORE::bless($object, $into);
+
+    for my $attr (map { $_->attributes } reverse @into_isa) {
+        $attr->store_default_in_slot_for($object);
+    }
+
+    $object
+}
+
 1;
 
 __END__
