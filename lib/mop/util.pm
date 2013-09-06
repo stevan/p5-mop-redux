@@ -275,12 +275,12 @@ sub _rebase_metaclasses {
         my $class_name = $class->name;
         my $rebased = "mop::class::rebased::${class_name}::for::${current}";
         if (!has_meta($rebased)) {
-            install_meta(
-                $class->clone(
-                    name       => $rebased,
-                    superclass => $current,
-                )
+            my $clone = $class->clone(
+                name       => $rebased,
+                superclass => $current,
             );
+            install_meta($clone);
+            close_class($clone);
         }
         $current = $rebased;
     }
