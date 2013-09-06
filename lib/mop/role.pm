@@ -3,9 +3,15 @@ package mop::role;
 use v5.16;
 use warnings;
 
-use mop::util qw[ init_attribute_storage apply_all_roles find_meta ];
+use mop::util qw[
+    init_attribute_storage
+    apply_all_roles
+    find_meta
+    fix_metaclass_compatibility
+];
 
 use Module::Runtime qw[ is_module_name module_notional_filename ];
+use Scalar::Util qw[ blessed ];
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -214,8 +220,14 @@ sub compose_into {
                 );
             }
         } elsif ($other->isa('mop::class')) {
-            $other->add_method( $method->clone(associated_meta => $other) )
-                unless $other->has_method( $method->name );
+            if (my $other_method = $other->get_method($method->name)) {
+                my $meta = fix_metaclass_compatibility($other_method, $method);
+                bless $other_method, $meta
+                    if $meta ne blessed($other_method);
+            }
+            else {
+                $other->add_method($method->clone(associated_meta => $other));
+            }
         }
 
     }
