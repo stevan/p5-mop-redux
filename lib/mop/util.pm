@@ -272,14 +272,17 @@ sub _rebase_metaclasses {
             $super_attribute_overrides{$_->name}
         } $class->attributes;
 
-        my $clone = $class->clone(
-            name       => 'mop::class::rebased::' . $class->name,
-            superclass => $current,
-        );
-
-        install_meta($clone);
-
-        $current = $clone->name;
+        my $class_name = $class->name;
+        my $rebased = "mop::class::rebased::${class_name}::for::${current}";
+        if (!has_meta($rebased)) {
+            install_meta(
+                $class->clone(
+                    name       => $rebased,
+                    superclass => $current,
+                )
+            );
+        }
+        $current = $rebased;
     }
 
     return $current;
