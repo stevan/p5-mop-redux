@@ -186,7 +186,7 @@ sub namespace_parser {
     my $meta = $metaclass->new(
         name       => $pkg,
         version    => $version,
-        roles      => [ map { mop::util::find_meta($_) } @with ],
+        roles      => [ map { mop::util::find_meta($_) or die "Could not find metaclass for role: $_" } @with ],
         ($type eq 'class'
             ? (superclass => $extends)
             : ()),
