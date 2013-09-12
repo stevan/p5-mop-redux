@@ -339,11 +339,7 @@ sub generic_method_parser {
           . ');';
     }
 
-    $preamble .= '{';
-
-    # inject this after the attributes so that
-    # it is overriding the attr and not the
-    # other way around.
+    # now we unpack the prototype
     if (@prototype) {
         my @names = map { $_->{name} } @prototype;
         $preamble .= 'my (' . join(', ', @names) . ') = @_;';
@@ -354,8 +350,6 @@ sub generic_method_parser {
                   . ' unless @_ > ' . $var->{index} . ';';
         }
     }
-
-    $preamble .= 'BEGIN{B::Hooks::EndOfScope::on_scope_end { Parse::Keyword::lex_stuff("}") }}';
 
     my $code = parse_stuff_with_values($preamble, \&parse_block);
     syntax_error() unless $code;
