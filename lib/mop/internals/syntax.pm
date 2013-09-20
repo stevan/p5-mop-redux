@@ -311,7 +311,8 @@ sub generic_method_parser {
         . '} else {'
            . '$class = shift(@_);'
         . '}'
-        . 'local ${^CALLER} = [ $self, q[' . $name . '], $' . $CURRENT_CLASS_NAME . '::METACLASS ];';
+        . 'local ${^CALLER} = [ $self, q[' . $name . '], $' . $CURRENT_CLASS_NAME . '::METACLASS ];'
+        . '();';
 
     # this is our method preamble, it
     # basically creates a method local
