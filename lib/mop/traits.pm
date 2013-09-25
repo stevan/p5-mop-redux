@@ -9,6 +9,7 @@ our $AUTHORITY = 'cpan:STEVAN';
 our @AVAILABLE_TRAITS = qw[
     rw
     ro
+    required
     weak_ref
     lazy
     abstract
@@ -49,6 +50,16 @@ sub ro {
                 }
             )
         );
+    }
+}
+
+sub required {
+    if ($_[0]->isa('mop::attribute')) {
+        my ($attr) = @_;
+        $attr->has_default()
+          and die "in '" . $attr->name
+            . "' attribute definition: 'required' trait is incompatible with default value";
+        $attr->set_default(sub { die "'" . $attr->name . "' is required" });
     }
 }
 
