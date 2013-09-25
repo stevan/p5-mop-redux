@@ -33,21 +33,6 @@ sub rw {
             )
         );
     }
-    elsif ($_[0]->isa('mop::class')) {
-        my ($meta) = @_;
-        foreach my $attr ( $meta->attributes ) {
-            $meta->add_method(
-                $meta->method_class->new(
-                    name => $attr->key_name,
-                    body => sub {
-                        my $self = shift;
-                        $attr->store_data_in_slot_for($self, shift) if @_;
-                        $attr->fetch_data_in_slot_for($self);
-                    }
-                )
-            );
-        }
-    }
 }
 
 sub ro {
@@ -64,21 +49,6 @@ sub ro {
                 }
             )
         );
-    }
-    elsif ($_[0]->isa('mop::class')) {
-        my ($meta) = @_;
-        foreach my $attr ( $meta->attributes ) {
-            $meta->add_method(
-                $meta->method_class->new(
-                    name => $attr->key_name,
-                    body => sub {
-                        my $self = shift;
-                        die "Cannot assign to a read-only accessor" if @_;
-                        $attr->fetch_data_in_slot_for($self);
-                    }
-                )
-            );
-        }
     }
 }
 
