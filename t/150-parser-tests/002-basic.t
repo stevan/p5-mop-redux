@@ -11,7 +11,7 @@ sub cached   {}
 
 class Bar {}
 class Foo extends Bar is abstract {
-    has $!foo is rw, required = 10;
+    has $!foo is rw, required;
     has $!bar is rw;
     has $!gorch is cached({});
 
