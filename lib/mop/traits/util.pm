@@ -4,11 +4,12 @@ use v5.16;
 use warnings;
 
 use Try::Tiny;
+use Hash::Util::FieldHash qw[ fieldhash ];
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-my %TRAIT_REGISTRATION = ();
+fieldhash my %TRAIT_REGISTRATION;
 
 sub apply_trait {
     my ($trait, $meta, @args) = @_;
