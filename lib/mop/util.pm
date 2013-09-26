@@ -215,28 +215,32 @@ sub _get_class_for_closing {
 sub fix_metaclass_compatibility {
     my ($meta, $super) = @_;
 
-    my $meta_name  = blessed($meta);
+    my $meta_name  = blessed($meta) // $meta;
     return $meta_name if !defined $super; # non-mop inheritance
 
-    my $super_name = blessed($super);
+    my $super_name = blessed($super) // $super;
 
     # immutability is on a per-class basis, it shouldn't be inherited.
     # otherwise, subclasses of closed classes won't be able to do things
     # like add attributes or methods to themselves
     $meta_name = mop::get_meta($meta_name)->superclass
-        if $meta->isa('mop::class') && $meta->is_closed;
+        if $meta_name->isa('mop::class') && $meta_name->is_closed;
     $super_name = mop::get_meta($super_name)->superclass
-        if $super->isa('mop::class') && $super->is_closed;
+        if $super_name->isa('mop::class') && $super_name->is_closed;
 
-    return $meta_name  if $meta->isa($super_name);
-    return $super_name if $super->isa($meta_name);
+    return $meta_name  if $meta_name->isa($super_name);
+    return $super_name if $super_name->isa($meta_name);
 
     my $rebased_meta_name = _rebase_metaclasses($meta_name, $super_name);
     return $rebased_meta_name if $rebased_meta_name;
 
-    die "Can't fix metaclass compatibility between "
-      . $meta->name . " (" . $meta_name . ") and "
-      . $super->name . " (" . $super_name . ")";
+    my $meta_desc = blessed($meta)
+        ? $meta->name . " ($meta_name)"
+        : $meta_name;
+    my $super_desc = blessed($super)
+        ? $super->name . " ($super_name)"
+        : $super_name;
+    die "Can't fix metaclass compatibility between $meta_desc and $super_desc";
 }
 
 sub _rebase_metaclasses {
