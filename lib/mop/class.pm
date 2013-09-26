@@ -151,29 +151,6 @@ sub add_method {
     $self->mop::role::add_method($method);
 }
 
-# attributes
-
-sub add_attribute {
-    my $self = shift;
-    my ($attr) = @_;
-
-    my @super_attrs = (
-        map { $_ ? $_->get_attribute($attr->name) : undef }
-        map { find_meta($_) }
-        @{ mop::mro::get_linear_isa($self->name) }
-    );
-    shift @super_attrs;
-    @super_attrs = grep { defined } @super_attrs;
-
-    if (my $super = $super_attrs[0]) {
-        my $meta = mop::util::fix_metaclass_compatibility($attr, $super);
-        bless $attr, $meta
-            if $meta ne blessed($attr);
-    }
-
-    $self->mop::role::add_attribute($attr);
-}
-
 # submethods
 
 sub submethod_class { 'mop::method' }
