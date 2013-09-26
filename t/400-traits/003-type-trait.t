@@ -81,6 +81,16 @@ like(
     '... this failed correctly'
 );
 
+{
+    my @traits = mop::traits::util::applied_traits(
+        mop::get_meta('Foo')->get_attribute('$!bar')
+    );
+
+    is($traits[0]->{'trait'}, \&rw, '... the read-write trait was applied');
+    is($traits[1]->{'trait'}, \&type, '... the type trait was applied');
+    is_deeply($traits[1]->{'args'}, ['Int'], '... the type trait was applied with the Int arg');
+}
+
 done_testing;
 
 

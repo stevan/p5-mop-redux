@@ -22,6 +22,7 @@ use mop::internals::syntax;
 use mop::internals::mro;
 
 use mop::traits;
+use mop::traits::util;
 use mop::util;
 
 sub import {

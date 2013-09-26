@@ -491,13 +491,13 @@ sub run_traits {
 
     for my $trait (@traits) {
         if ($trait->{params}) {
-            $code .= $trait->{name} . '('
+            $code .= 'mop::traits::util::apply_trait(\&' . $trait->{name} . ', '
                 . "$meta_stuff,"
                 . stuff_value($trait->{params}) . '->()'
             . ');';
         }
         else {
-            $code .= $trait->{name} . "($meta_stuff);";
+            $code .= 'mop::traits::util::apply_trait(\&' . $trait->{name} . ", $meta_stuff);";
         }
     }
 
