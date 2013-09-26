@@ -31,6 +31,14 @@ is( mop::get_meta($foo)->name, 'Foo', '... the class of this object is Foo' );
     is( mop::get_meta($foo), mop::get_meta($foo2), '... these two objects share the same class' );
 }
 
+{
+    my $foo3 = $foo->new;
+    ok( $foo3->isa( 'Foo' ), '... the object is from class Foo' );
+
+    isnt( $foo, $foo3, '... these are not the same objects' );
+    is( mop::get_meta($foo), mop::get_meta($foo3), '... these two objects share the same class' );
+}
+
 class Bar {
     has $!foo;
     method foo { $!foo }
