@@ -177,6 +177,8 @@ sub namespace_parser {
     syntax_error("$type must be followed by a block")
         unless lex_peek eq '{';
 
+    lex_read;
+
     die "The metaclass for $pkg does not inherit from mop::$type"
         unless $metaclass->isa("mop::$type");
 
@@ -196,6 +198,11 @@ sub namespace_parser {
         mop::util::uninstall_meta($meta);
     };
 
+    my $preamble = '{'
+        . 'sub __' . uc($type) . '__ () { "' . $pkg . '" }'
+        . 'BEGIN { B::Hooks::EndOfScope::on_scope_end { mop::util::get_stash_for(__PACKAGE__)->remove_glob("__' . uc($type) . '__") } }';
+
+    lex_stuff($preamble);
     if (my $code = parse_block(1)) {
         local ${^META} = $meta;
         $code->();
