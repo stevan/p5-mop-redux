@@ -4,6 +4,7 @@ use warnings;
 use Test::More;
 
 use mop;
+use mop::util 'fix_metaclass_compatibility';
 
 sub mymethod {
     my ($meta) = @_;
@@ -34,7 +35,7 @@ is(Bar->bar, 'BAR');
 sub myothermethod {
     my ($meta) = @_;
     # XXX this isn't going to work, do we need mop::bless or something?
-    bless $meta, 'MyOtherMethod';
+    bless $meta, fix_metaclass_compatibility('MyOtherMethod', $meta);
 }
 
 class MyOtherMethod extends mop::method {
@@ -46,14 +47,12 @@ class Baz extends Foo {
     method foo is myothermethod { 'Baz' }
 }
 ";
-{ local $TODO = "manual blessing won't be able to handle compat here";
-like($@, qr/compatible/);
-}
+like($@, qr/compatib/);
 
 sub mythirdmethod {
     my ($meta) = @_;
     # XXX this isn't going to work, do we need mop::bless or something?
-    bless $meta, 'MyThirdMethod';
+    bless $meta, fix_metaclass_compatibility('MyThirdMethod', $meta);
 }
 
 class MyThirdMethod extends mop::method {
@@ -64,13 +63,9 @@ class Quux extends Foo {
     method foo is mythirdmethod { 'Quux' }
 }
 
-{ local $TODO = "manual blessing won't be able to handle compat here";
 can_ok(mop::get_meta('Quux')->get_method('foo'), 'foo');
-}
 can_ok(mop::get_meta('Quux')->get_method('foo'), 'bar');
-{ local $TODO = "manual blessing won't be able to handle compat here";
-fail; # is(mop::get_meta('Quux')->get_method('foo')->foo, 'MyMethod');
-}
+is(mop::get_meta('Quux')->get_method('foo')->foo, 'MyMethod');
 is(mop::get_meta('Quux')->get_method('foo')->bar, 'MyThirdMethod');
 is(Quux->foo, 'Quux');
 
