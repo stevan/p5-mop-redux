@@ -27,7 +27,6 @@ sub data {
         my $class = mop::get_meta($meta);
         my $new_subclass = ref(mop::get_meta($class))->new(
             name       => sprintf("mop::instance_application::%d", ++state($i)),
-            version    => $class->version,
             superclass => $class->name,
             roles      => [ mop::get_meta('WithData') ],
         );

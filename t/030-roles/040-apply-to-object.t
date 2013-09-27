@@ -34,7 +34,6 @@ sub apply_role_to_instance {
     my $class = mop::get_meta($instance);
     my $new_subclass = ref(mop::get_meta($class))->new(
         name       => sprintf("mop::instance_application::%d", ++state($i)),
-        version    => $class->version,
         superclass => $class->name,
         roles      => [ $role ],
     );
