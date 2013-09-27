@@ -12,23 +12,21 @@ our $AUTHORITY = 'cpan:STEVAN';
 sub new {
     my $class = shift;
     my %args  = scalar(@_) == 1 && ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
+    die $class if $mop::BOOTSTRAPPED;
 
-    if (!$mop::BOOTSTRAPPED) {
-        # NOTE:
-        # prior to the bootstrapping being
-        # finished, we need to not try and
-        # build classes, it will all be done
-        # manually in the mop:: classes.
-        # - SL
-        my $self = bless \(my $x) => $class;
+    # NOTE:
+    # prior to the bootstrapping being
+    # finished, we need to not try and
+    # build classes, it will all be done
+    # manually in the mop:: classes.
+    # this method will be replaced once
+    # bootstrapping is done.
+    # - SL
+    my $self = bless \(my $x) => $class;
 
-        mop::util::register_object( $self );
+    mop::util::register_object( $self );
 
-        return $self;
-    }
-    else {
-        return find_or_create_meta($class)->new_instance(%args);
-    }
+    return $self;
 }
 
 sub clone {

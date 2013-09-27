@@ -67,6 +67,8 @@ sub bootstrap {
         mop::observable
     ];
 
+    my $Object = mop::util::find_meta('mop::object');
+
     my $Role  = mop::util::find_meta('mop::role');
     my $Class = mop::util::find_meta('mop::class');
 
@@ -101,6 +103,7 @@ sub bootstrap {
     }
 
     {
+        my $Object_stash    = mop::util::get_stash_for('mop::object');
         my $Class_stash     = mop::util::get_stash_for('mop::class');
         my $Role_stash      = mop::util::get_stash_for('mop::role');
         my $Method_stash    = mop::util::get_stash_for('mop::method');
@@ -143,6 +146,17 @@ sub bootstrap {
 
         # remove the temporary clone methods used in the bootstrap
         $Method_stash->remove_symbol('&clone');
+
+        # replace the temporary implementation of mop::object::new
+        my $new = mop::method->new(
+            name => 'new',
+            body => sub {
+                my ($class, %args) = @_;
+                mop::util::find_or_create_meta($class)->new_instance(%args);
+            },
+        );
+        $Object->add_method($new);
+        $Object_stash->add_symbol('&new', $new->body);
     }
 
     {
