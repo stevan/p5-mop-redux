@@ -138,7 +138,7 @@ sub call_method {
     $method    = find_method( $invocant, $method_name, $super_of )
         unless defined $method;
 
-    die "Could not find $method_name in " . $invocant
+    die "Could not find $method_name in " . overload::StrVal($invocant)
         unless defined $method;
 
     if ( blessed $method && $method->isa('mop::method') ) {
