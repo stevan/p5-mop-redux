@@ -141,9 +141,7 @@ sub add_method {
     @super_methods = grep { defined } @super_methods;
 
     if (my $super = $super_methods[0]) {
-        my $meta = mop::util::fix_metaclass_compatibility($method, $super);
-        bless $method, $meta
-            if $meta ne blessed($method);
+        apply_metaclass($method, $super);
     }
 
     $self->mop::role::add_method($method);
