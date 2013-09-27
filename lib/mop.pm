@@ -151,7 +151,10 @@ sub bootstrap {
         my $new = mop::method->new(
             name => 'new',
             body => sub {
-                my ($class, %args) = @_;
+                my $class = shift;
+                my %args  = scalar(@_) == 1 && ref $_[0] eq 'HASH'
+                    ? %{$_[0]}
+                    : @_;
                 mop::util::find_or_create_meta($class)->new_instance(%args);
             },
         );
