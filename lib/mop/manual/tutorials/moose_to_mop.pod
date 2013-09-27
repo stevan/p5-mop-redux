@@ -97,9 +97,9 @@ first then stored in the C<$double_bar> attribute.
     class Foo {
         has $double_bar;
 
-        submethod BUILD (%args) {
-            $double_bar = $args{'bar'} * 2
-                if exists $args{'bar'};
+        submethod BUILD ($args) {
+            $double_bar = $args->{'bar'} * 2
+                if exists $args->{'bar'};
         }
     }
 
