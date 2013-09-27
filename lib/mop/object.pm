@@ -12,7 +12,6 @@ our $AUTHORITY = 'cpan:STEVAN';
 sub new {
     my $class = shift;
     my %args  = scalar(@_) == 1 && ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
-    die $class if $mop::BOOTSTRAPPED;
 
     # NOTE:
     # prior to the bootstrapping being
