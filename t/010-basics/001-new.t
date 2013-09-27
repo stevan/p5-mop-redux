@@ -59,7 +59,7 @@ class Bar {
 class Baz {
     has $!bar;
 
-    method new ($x) {
+    method new ($class: $x) {
         # NOTE:
         # this is how we do argument mangling
         # - SL

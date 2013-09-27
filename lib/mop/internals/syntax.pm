@@ -305,13 +305,7 @@ sub generic_method_parser {
     lex_read;
 
     my $preamble = '{'
-        . 'my (' . $invocant . ', $class);'
-        . 'if (Scalar::Util::blessed($_[0])) {'
-           . $invocant . ' = shift(@_);'
-           . '$class = Scalar::Util::blessed(' . $invocant . ');'
-        . '} else {'
-           . $invocant . ' = shift(@_);'
-        . '}'
+        . 'my ' . $invocant . ' = shift;'
         . 'local ${^CALLER} = [ ' . $invocant . ', q[' . $name . '], $' . $CURRENT_CLASS_NAME . '::METACLASS ];'
         . '();';
 

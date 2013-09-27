@@ -17,10 +17,10 @@ class BinaryTree {
 
     method has_parent { defined $!parent }
 
-    method left     { $!left //= $class->new( parent => $self ) }
+    method left     { $!left //= ref($self)->new( parent => $self ) }
     method has_left { defined $!left }
 
-    method right     { $!right //= $class->new( parent => $self ) }
+    method right     { $!right //= ref($self)->new( parent => $self ) }
     method has_right { defined $!right }
 }
 

@@ -16,7 +16,7 @@ class Foo {
     method bar { 'Foo::bar' }
 
     method baz ($x) {
-        join "::" => ($self || $class), 'baz', $x
+        join "::" => $self, 'baz', $x
     }
 
     method test ($x) {

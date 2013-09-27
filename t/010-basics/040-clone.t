@@ -34,7 +34,7 @@ is($foo->bar, 'BAR');
 class Bar extends Foo {
     has $!baz;
 
-    method new ($foo, $bar, $baz) {
+    method new ($class: $foo, $bar, $baz) {
         $class->next::method(foo => $foo, bar => $bar, baz => $baz);
     }
 

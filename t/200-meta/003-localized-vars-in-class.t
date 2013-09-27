@@ -16,7 +16,6 @@ class Foo {
 	is(undef, ${^CALLER},  '... no value for ${^CALLER} in class body');
 
 	method bar {
-		is($class, 'Foo', '... got the value for $class we expected');
 		is($self, ${^CALLER}->[0],  '... got the right values in ${^CALLER}');
 		is('bar', ${^CALLER}->[1],  '... got the right values in ${^CALLER}');
 		is(mop::get_meta('Foo'), ${^CALLER}->[2],  '... got the right values in ${^CALLER}');
