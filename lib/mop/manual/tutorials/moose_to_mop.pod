@@ -73,13 +73,12 @@ in a Moose class. Here is a short example:
     class Foo {
         has $bar;
 
-        method new ($b) {
+        method new ($class: $b) {
             $class->next::method( bar => $b );
         }
     }
 
-It should be noted that C<$self> inside the C<new> method
-will be undefined, and any attempt to assign to an attribute
+It should be noted that any attempt to assign to an attribute
 will result in an error. So if you either need access to
 C<$self> or attributes, you can do this inside of the C<BUILD>
 submethod, which will be automatically called from C<new>.
