@@ -202,14 +202,6 @@ sub compose_into {
     }
 
     foreach my $method ($self->methods) {
-        # FIXME:
-        # This is a bootstrap special case
-        # that needs to be fixed. But for now
-        # we can just punt.
-        # - SL
-        next if !$mop::BOOTSTRAPPED
-             && ($method->name eq 'FINALIZE' || $method->name eq 'new');
-
         if ($other->isa('mop::role')) {
             if ($other->has_method( $method->name )) {
                 $other->add_required_method( $method->name );
