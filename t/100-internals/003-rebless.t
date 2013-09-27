@@ -4,6 +4,7 @@ use warnings;
 use Test::More;
 
 use mop;
+use mop::util 'rebless';
 
 class Foo {
     has $!foo is rw = 'FOO';
@@ -33,19 +34,19 @@ class Quux extends Bar {
     ok(!$baz_attr->storage->{$foo});
     ok(!$quux_attr->storage->{$foo});
 
-    mop::bless $foo, 'Bar';
+    rebless $foo, 'Bar';
     ok(!$foo_attr->storage->{$foo});
     is(${ $bar_attr->storage->{$foo} }, 'BAR');
     ok(!$baz_attr->storage->{$foo});
     ok(!$quux_attr->storage->{$foo});
 
-    mop::bless $foo, 'Baz';
+    rebless $foo, 'Baz';
     is(${ $foo_attr->storage->{$foo} }, 'FOO');
     ok(!$bar_attr->storage->{$foo});
     is(${ $baz_attr->storage->{$foo} }, 'BAZ');
     ok(!$quux_attr->storage->{$foo});
 
-    mop::bless $foo, 'Quux';
+    rebless $foo, 'Quux';
     ok(!$foo_attr->storage->{$foo});
     is(${ $bar_attr->storage->{$foo} }, 'BAR');
     ok(!$baz_attr->storage->{$foo});
@@ -58,16 +59,16 @@ class Quux extends Bar {
     $foo->foo('abc');
     is($foo->foo, 'abc');
 
-    mop::bless $foo, 'Baz';
+    rebless $foo, 'Baz';
     is($foo->foo, 'abc');
     is($foo->baz, 'BAZ');
 
-    mop::bless $foo, 'Bar';
+    rebless $foo, 'Bar';
     ok(!$foo->can('foo'));
     ok(!$foo->can('baz'));
     is($foo->bar, 'BAR');
 
-    mop::bless $foo, 'Baz';
+    rebless $foo, 'Baz';
     is($foo->foo, 'FOO');
     is($foo->baz, 'BAZ');
 }
