@@ -73,6 +73,7 @@ sub abstract {
 sub overload {
     if ($_[0]->isa('mop::method')) {
         my ($method, $operator) = @_;
+        my $method_name = $method->name;
 
         # NOTE:
         # We are actually installing the overloads
@@ -89,7 +90,10 @@ sub overload {
         overload::OVERLOAD(
             $method->associated_meta->name,
             $operator,
-            sub { $method->execute( shift( @_ ), [ @_ ] ) },
+            sub {
+                my $self = shift;
+                $self->$method_name(@_)
+            },
             fallback => 1
         );
     } elsif ($_[0]->isa('mop::class')) {
