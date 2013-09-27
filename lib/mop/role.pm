@@ -85,9 +85,9 @@ sub clone {
 
 # identity
 
-sub name       { ${ $name{ $_[0] } } }
-sub version    { ${ $version{ $_[0] } } }
-sub authority  { ${ $authority{ $_[0] } } }
+sub name       { ${ $name{ $_[0] } // \undef } }
+sub version    { ${ $version{ $_[0] } // \undef } }
+sub authority  { ${ $authority{ $_[0] } // \undef } }
 
 # roles
 
