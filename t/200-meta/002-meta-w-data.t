@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use 5.016;
 
 use Test::More;
 use Test::Fatal;
@@ -9,7 +10,7 @@ use Test::Fatal;
 use mop;
 
 # create a meta-class (class to create classes with)
-class MetaWithData extends mop::class {
+role WithData {
 
     has $!data = [];
 
@@ -20,38 +21,48 @@ class MetaWithData extends mop::class {
     }
 }
 
-# XXX eventually, the trait should handle applying the metaclass itself, but that requires mop-level reblessing and/or role application to instances
 sub data {
     my ($meta, @data) = @_;
+    if (!$meta->does('WithData')) {
+        my $class = mop::get_meta($meta);
+        my $new_subclass = ref(mop::get_meta($class))->new(
+            name       => sprintf("mop::instance_application::%d", ++state($i)),
+            version    => $class->version,
+            superclass => $class->name,
+            roles      => [ mop::get_meta('WithData') ],
+        );
+        # hopefully these two steps can be implicit in the future? or something?
+        mop::util::install_meta($new_subclass);
+        $new_subclass->FINALIZE;
+
+        mop::util::rebless $meta, $new_subclass->name;
+    }
     $meta->add_to_data($_) for @data;
 }
 
 # create a class (using our meta-class)
-class Foo meta MetaWithData {
+class Foo is data {
     method get_meta_data {
         mop::get_meta($self)->get_data
     }
 }
 
 # create a class (using our meta-class and extra data)
-class Bar meta MetaWithData is data(1, 2, 3) {
+class Bar is data(1, 2, 3) {
     method get_meta_data {
         mop::get_meta($self)->get_data
     }
 }
 
-ok(MetaWithData->isa( 'mop::object' ), '... MetaWithData is an Object');
-ok(MetaWithData->isa( 'mop::class' ), '... MetaWithData is a Class');
-
 ok(mop::get_meta('Foo')->isa( 'mop::object' ), '... Foo is an Object');
 ok(mop::get_meta('Foo')->isa( 'mop::class' ), '... Foo is a Class');
-ok(mop::get_meta('Foo')->isa( 'MetaWithData' ), '... Foo is a MetaWithData');
+ok(mop::get_meta('Foo')->does( 'WithData' ), '... Foo does WithData');
 
 is_deeply(mop::get_meta('Foo')->get_data, [], '... called the static method on Foo');
 
 ok(mop::get_meta('Bar')->isa( 'mop::object' ), '... Bar is an Object');
 ok(mop::get_meta('Bar')->isa( 'mop::class' ), '... Bar is a Class');
-ok(mop::get_meta('Bar')->isa( 'MetaWithData' ), '... Bar is a MetaWithData');
+ok(mop::get_meta('Bar')->does( 'WithData' ), '... Bar does WithData');
 
 is_deeply(mop::get_meta('Bar')->get_data, [ 1, 2, 3 ], '... called the static method on Bar');
 
