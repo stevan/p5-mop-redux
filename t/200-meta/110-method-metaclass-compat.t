@@ -34,7 +34,6 @@ is(Bar->bar, 'BAR');
 
 sub myothermethod {
     my ($meta) = @_;
-    # XXX this isn't going to work, do we need mop::bless or something?
     bless $meta, fix_metaclass_compatibility('MyOtherMethod', $meta);
 }
 
@@ -51,7 +50,6 @@ like($@, qr/compatib/);
 
 sub mythirdmethod {
     my ($meta) = @_;
-    # XXX this isn't going to work, do we need mop::bless or something?
     bless $meta, fix_metaclass_compatibility('MyThirdMethod', $meta);
 }
 
