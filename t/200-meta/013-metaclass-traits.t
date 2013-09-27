@@ -22,8 +22,7 @@ class MyOtherMeta extends mop::class {
 }
 
 sub myothermeta {
-    # what's the right thing to do here?
-    bless $_[0], mop::util::fix_metaclass_compatibility(ref($_[0]), 'MyOtherMeta');
+    mop::util::apply_metaclass($_[0], 'MyOtherMeta');
 }
 
 eval "

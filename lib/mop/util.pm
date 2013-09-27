@@ -21,6 +21,7 @@ use Sub::Exporter -setup => {
         get_object_id
         fix_metaclass_compatibility
         rebless
+        apply_metaclass
     ]]
 };
 
@@ -337,6 +338,11 @@ sub rebless ($;$) {
     }
 
     $object
+}
+
+sub apply_metaclass {
+    my ($instance, $new_meta) = @_;
+    bless $instance, fix_metaclass_compatibility($new_meta, $instance);
 }
 
 package mop::mro;
