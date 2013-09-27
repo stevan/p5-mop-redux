@@ -542,6 +542,7 @@ sub parse_prototype {
             lex_read;
             lex_read_space;
             $var->{default} = parse_arithexpr;
+            lex_read_space;
         }
 
         $var->{index} = @vars;
