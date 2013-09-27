@@ -286,7 +286,8 @@ sub generic_method_parser {
 
     lex_read_space;
 
-    my @prototype = parse_prototype($name);
+    my ($invocant, @prototype) = parse_prototype($name);
+    $invocant //= '$self';
 
     lex_read_space;
 
@@ -304,14 +305,14 @@ sub generic_method_parser {
     lex_read;
 
     my $preamble = '{'
-        . 'my ($self, $class);'
+        . 'my (' . $invocant . ', $class);'
         . 'if (Scalar::Util::blessed($_[0])) {'
-           . '$self  = shift(@_);'
-           . '$class = Scalar::Util::blessed($self);'
+           . $invocant . ' = shift(@_);'
+           . '$class = Scalar::Util::blessed(' . $invocant . ');'
         . '} else {'
-           . '$class = shift(@_);'
+           . $invocant . ' = shift(@_);'
         . '}'
-        . 'local ${^CALLER} = [ $self, q[' . $name . '], $' . $CURRENT_CLASS_NAME . '::METACLASS ];'
+        . 'local ${^CALLER} = [ ' . $invocant . ', q[' . $name . '], $' . $CURRENT_CLASS_NAME . '::METACLASS ];'
         . '();';
 
     # this is our method preamble, it
@@ -325,14 +326,14 @@ sub generic_method_parser {
             'twigils::intro_twigil_my_var(q[' . $attr . ']);'
           . 'Variable::Magic::cast('
               . $attr . ', '
-              . '(Scalar::Util::blessed($self) '
+              . '(Scalar::Util::blessed(' . $invocant . ') '
                   . '? $' . __PACKAGE__ . '::ATTR_WIZARD'
                   . ': $' . __PACKAGE__ . '::ERR_WIZARD'
               . '), '
-              . '(Scalar::Util::blessed($self) '
+              . '(Scalar::Util::blessed(' . $invocant . ') '
                   . '? {'
                       . 'meta => $' . $CURRENT_CLASS_NAME . '::METACLASS,'
-                      . 'oid  => mop::util::get_object_id($self),'
+                      . 'oid  => mop::util::get_object_id(' . $invocant . '),'
                       . 'name => q[' . $attr . ']'
                   . '}'
                   . ': q[' . $attr . ']'
@@ -520,6 +521,7 @@ sub parse_prototype {
         return;
     }
 
+    my $invocant;
     my $seen_slurpy;
     my @vars;
     while ((my $sigil = lex_peek) ne ')') {
@@ -545,22 +547,32 @@ sub parse_prototype {
             lex_read_space;
         }
 
-        $var->{index} = @vars;
-
-        push @vars, $var;
-
-        syntax_error("Unterminated prototype for $method_name")
-            unless lex_peek eq ')' || lex_peek eq ',';
-
-        if (lex_peek eq ',') {
+        if (lex_peek eq ':') {
+            syntax_error("Cannot specify multiple invocants")
+                if $invocant;
+            syntax_error("Cannot specify a default for the invocant")
+                if $var->{default};
+            $invocant = $var->{name};
             lex_read;
             lex_read_space;
+        }
+        else {
+            $var->{index} = @vars;
+            push @vars, $var;
+
+            syntax_error("Unterminated prototype for $method_name")
+                unless lex_peek eq ')' || lex_peek eq ',';
+
+            if (lex_peek eq ',') {
+                lex_read;
+                lex_read_space;
+            }
         }
     }
 
     lex_read;
 
-    return @vars;
+    return $invocant, @vars;
 }
 
 # XXX push back into Parse::Keyword?
