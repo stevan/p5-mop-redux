@@ -66,7 +66,7 @@ ok(!mop::get_meta('Baz::Sub')->isa('FooMeta'));
 ok(!mop::get_meta('Baz::Sub')->isa('BarMeta'));
 
 eval "class Quux extends Foo meta BarMeta { }";
-like($@, qr/Can't fix metaclass compatibility between Quux \(BarMeta\) and Foo \(FooMeta\)/);
+like($@, qr/Can't fix metaclass compatibility between Foo \(FooMeta\) and Quux \(BarMeta\)/);
 
 
 done_testing;

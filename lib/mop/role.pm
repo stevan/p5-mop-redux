@@ -7,7 +7,7 @@ use mop::util qw[
     init_attribute_storage
     apply_all_roles
     find_meta
-    fix_metaclass_compatibility
+    apply_metaclass
 ];
 
 use Module::Runtime qw[ is_module_name module_notional_filename ];
@@ -213,9 +213,7 @@ sub compose_into {
             }
         } elsif ($other->isa('mop::class')) {
             if (my $other_method = $other->get_method($method->name)) {
-                my $meta = fix_metaclass_compatibility($other_method, $method);
-                bless $other_method, $meta
-                    if $meta ne blessed($other_method);
+                apply_metaclass($other_method, $method);
             }
             else {
                 $other->add_method($method->clone(associated_meta => $other));

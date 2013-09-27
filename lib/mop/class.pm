@@ -3,7 +3,7 @@ package mop::class;
 use v5.16;
 use warnings;
 
-use mop::util qw[ init_attribute_storage has_meta find_meta apply_all_roles fix_metaclass_compatibility ];
+use mop::util qw[ init_attribute_storage has_meta find_meta apply_all_roles apply_metaclass ];
 
 use Module::Runtime qw[ is_module_name module_notional_filename ];
 use Scalar::Util qw[ blessed ];
@@ -45,9 +45,7 @@ sub new {
     }
 
     if (defined(my $super = $self->superclass)) {
-        my $meta = fix_metaclass_compatibility($self, find_meta($super));
-        bless $self, $meta
-            if $meta ne $class;
+        apply_metaclass($self, find_meta($super)) if find_meta($super);
     }
 
     $self;

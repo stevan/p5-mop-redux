@@ -28,6 +28,6 @@ class BazMeta extends mop::class {
 }
 
 eval "class Baz extends Foo meta BazMeta { }";
-like($@, qr/Can't fix metaclass compatibility between Baz \(BazMeta\) and Foo \(FooMeta\)/);
+like($@, qr/Can't fix metaclass compatibility between Foo \(FooMeta\) and Baz \(BazMeta\)/);
 
 done_testing;
