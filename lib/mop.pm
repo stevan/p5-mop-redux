@@ -83,14 +83,12 @@ sub bootstrap {
     #   - Role is instance of Class
     #   - Role does Role
     # is true.
-    $Class->add_role( $Role );
-    $Role->compose_into( $Class );
+    $Class->consume_role( $Role );
 
     # make attribute and method into
     # observables
     foreach my $meta ( $Method, $Attribute, $Class, $Role ) {
-        $meta->add_role( $Observable );
-        $Observable->compose_into( $meta );
+        $meta->consume_role($Observable);
     }
 
     {
@@ -268,6 +266,7 @@ This is a prototype for a new object system for Perl 5.
         has $required_methods is ro = {};
 
         method add_role ($role) { ... }
+        method consume_role ($role) { ... }
         method does_role ($name) { ... }
 
         method attribute_class { 'Attribute' }
@@ -285,8 +284,6 @@ This is a prototype for a new object system for Perl 5.
 
         method add_required_method ($required_method) { ... }
         method requires_method ($name) { ... }
-
-        method compose_into ($other) { ... }
 
         sub FINALIZE { ... }
     }

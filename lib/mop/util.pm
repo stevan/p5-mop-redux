@@ -83,10 +83,10 @@ sub apply_all_roles {
     );
 
     foreach my $role ( @roles ) {
-        $role->compose_into( $composite, $to );
+        $composite->consume_role($role);
     }
 
-    $composite->compose_into( $to );
+    $to->consume_role($composite);
 }
 
 sub get_stash_for {
@@ -179,7 +179,7 @@ sub _get_class_for_closing {
         add_required_method
         add_role
         add_submethod
-        compose_into
+        consume_role
         make_class_abstract
         remove_method
     );

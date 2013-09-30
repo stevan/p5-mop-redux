@@ -187,48 +187,50 @@ sub requires_method {
 
 # composition
 
-sub compose_into {
-    my ($self, $other, $ultimate_target) = @_;
+sub consume_role {
+    my ($self, $other) = @_;
 
-    $ultimate_target //= $other;
+    $self->fire('before:CONSUME' => $other);
+    $other->fire('before:COMPOSE' => $self);
 
-    $self->fire('before:COMPOSE' => $ultimate_target);
-
-    foreach my $attribute ($self->attributes) {
-        die 'Attribute conflict ' . $attribute->name . ' when composing ' . $self->name . ' into ' . $other->name
-            if $other->has_attribute( $attribute->name )
-            && $other->get_attribute( $attribute->name )->conflicts_with( $attribute );
-        $other->add_attribute( $attribute->clone(associated_meta => $other) );
+    foreach my $attribute ($other->attributes) {
+        die 'Attribute conflict ' . $attribute->name . ' when composing ' . $other->name . ' into ' . $self->name
+            if $self->has_attribute( $attribute->name )
+            && $self->get_attribute( $attribute->name )->conflicts_with( $attribute );
+        $self->add_attribute( $attribute->clone(associated_meta => $self) );
     }
 
-    foreach my $method ($self->methods) {
-        if ($other->isa('mop::class')) {
-            if (my $other_method = $other->get_method($method->name)) {
-                apply_metaclass($other_method, $method);
+    foreach my $method ($other->methods) {
+        if ($self->isa('mop::class')) {
+            if (my $existing_method = $self->get_method($method->name)) {
+                apply_metaclass($existing_method, $method);
             }
             else {
-                $other->add_method($method->clone(associated_meta => $other));
+                $self->add_method($method->clone(associated_meta => $self));
             }
         }
-        elsif ($other->isa('mop::role')) {
-            if ($other->has_method( $method->name )) {
-                $other->add_required_method( $method->name );
-                $other->remove_method( $method->name );
+        elsif ($self->isa('mop::role')) {
+            if ($self->has_method( $method->name )) {
+                $self->add_required_method( $method->name );
+                $self->remove_method( $method->name );
             } else {
-                $other->add_method(
-                    $method->clone(associated_meta => $other)
+                $self->add_method(
+                    $method->clone(associated_meta => $self)
                 );
             }
         }
     }
 
     # merge required methods ...
-    for my $method ($self->required_methods) {
-        $other->add_required_method($method)
-            unless $other->has_method($method);
+    for my $method ($other->required_methods) {
+        $self->add_required_method($method)
+            unless $self->has_method($method);
     }
 
-    $self->fire('after:COMPOSE' => $ultimate_target);
+    $self->add_role($other);
+
+    $other->fire('after:COMPOSE' => $self);
+    $self->fire('after:CONSUME' => $other);
 }
 
 # events
@@ -326,7 +328,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'requires_method',     body => \&requires_method     ) );
 
 
-    $METACLASS->add_method( mop::method->new( name => 'compose_into', body => \&compose_into ) );
+    $METACLASS->add_method( mop::method->new( name => 'consume_role', body => \&consume_role ) );
 
     $METACLASS->add_method( mop::method->new( name => 'FINALIZE', body => \&FINALIZE ) );
 
