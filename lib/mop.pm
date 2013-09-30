@@ -316,7 +316,7 @@ This is a prototype for a new object system for Perl 5.
     # you would expect
     class mop::class extends mop::object with mop::role {
         has $!superclass is ro;
-        has $!submethods is ro = {};
+        has $!submethods = {};
         has $!is_abstract is ro;
         has $!instance_generator is ro = sub { \(my $anon) };
 
@@ -331,6 +331,9 @@ This is a prototype for a new object system for Perl 5.
         method create_fresh_instance_structure { ... }
 
         method submethod_class { 'mop::method' }
+
+        method submethods { ... }
+        method submethod_map { ... }
 
         method add_submethod ($attr) { ... }
         method get_submethod ($name) { ... }

@@ -151,21 +151,23 @@ sub add_method {
 
 sub submethod_class { 'mop::method' }
 
-sub submethods { ${ $submethods{ $_[0] } } }
+sub submethod_map { ${ $submethods{ $_[0] } } }
+
+sub submethods { values %{ $_[0]->submethod_map } }
 
 sub add_submethod {
     my ($self, $submethod) = @_;
-    $self->submethods->{ $submethod->name } = $submethod;
+    $self->submethod_map->{ $submethod->name } = $submethod;
 }
 
 sub get_submethod {
     my ($self, $name) = @_;
-    $self->submethods->{ $name }
+    $self->submethod_map->{ $name }
 }
 
 sub has_submethod {
     my ($self, $name) = @_;
-    exists $self->submethods->{ $name };
+    exists $self->submethod_map->{ $name };
 }
 
 # events
@@ -239,6 +241,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'create_fresh_instance_structure', body => \&create_fresh_instance_structure ) );
 
     $METACLASS->add_method( mop::method->new( name => 'submethod_class', body => \&submethod_class ) );
+    $METACLASS->add_method( mop::method->new( name => 'submethod_map',   body => \&submethod_map   ) );
     $METACLASS->add_method( mop::method->new( name => 'submethods',      body => \&submethods      ) );
     $METACLASS->add_method( mop::method->new( name => 'get_submethod',   body => \&get_submethod   ) );
     $METACLASS->add_method( mop::method->new( name => 'add_submethod',   body => \&add_submethod   ) );
