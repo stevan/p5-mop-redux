@@ -5,7 +5,6 @@ use warnings;
 
 use mop::util qw[
     init_attribute_storage
-    apply_all_roles
     find_meta
     apply_metaclass
 ];
@@ -188,7 +187,9 @@ sub requires_method {
 # composition
 
 sub consume_role {
-    my ($self, $other) = @_;
+    my ($self, @other) = @_;
+
+    my $other = mop::util::create_composite_role(@other);
 
     $self->fire('before:CONSUME' => $other);
     $other->fire('before:COMPOSE' => $self);
@@ -239,7 +240,7 @@ sub FINALIZE {
     my $self = shift;
     $self->fire('before:FINALIZE');
 
-    apply_all_roles($self, @{ $self->roles });
+    $self->consume_role(@{ $self->roles });
 
     $self->fire('after:FINALIZE');
 }

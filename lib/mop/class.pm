@@ -3,7 +3,7 @@ package mop::class;
 use v5.16;
 use warnings;
 
-use mop::util qw[ init_attribute_storage has_meta find_meta apply_all_roles apply_metaclass ];
+use mop::util qw[ init_attribute_storage has_meta find_meta apply_metaclass ];
 
 use Module::Runtime qw[ is_module_name module_notional_filename ];
 use Scalar::Util qw[ blessed ];
@@ -174,7 +174,7 @@ sub FINALIZE {
     my $self = shift;
     $self->fire('before:FINALIZE');
 
-    apply_all_roles($self, @{ $self->roles });
+    $self->consume_role(@{ $self->roles });
 
     if ($self->required_methods && not $self->is_abstract) {
         die 'Required method(s) ['
