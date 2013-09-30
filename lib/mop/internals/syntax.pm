@@ -334,7 +334,7 @@ sub generic_method_parser {
               . '(Scalar::Util::blessed(' . $invocant . ') '
                   . '? {'
                       . 'meta => $' . $CURRENT_CLASS_NAME . '::METACLASS,'
-                      . 'oid  => mop::util::get_object_id(' . $invocant . '),'
+                      . 'oid  => ' . $invocant . ','
                       . 'name => q[' . $attr . ']'
                   . '}'
                   . ': q[' . $attr . ']'
