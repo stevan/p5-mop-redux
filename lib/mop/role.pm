@@ -228,8 +228,6 @@ sub consume_role {
             unless $self->has_method($method);
     }
 
-    $self->add_role($other);
-
     $other->fire('after:COMPOSE' => $self);
     $self->fire('after:CONSUME' => $other);
 }

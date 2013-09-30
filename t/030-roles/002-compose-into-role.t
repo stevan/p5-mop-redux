@@ -34,6 +34,7 @@ is( $baz_method->name, 'baz', '... got the method we expected' );
 
 my $gorch = Gorch->new;
 isa_ok($gorch, 'Gorch');
+is_deeply(mop::get_meta('Gorch')->roles, [ mop::get_meta('Baz') ]);
 ok($gorch->does('Baz'), '... gorch does Baz');
 ok($gorch->does('Foo'), '... gorch does Foo');
 

@@ -83,12 +83,16 @@ sub bootstrap {
     #   - Role is instance of Class
     #   - Role does Role
     # is true.
-    $Class->consume_role( $Role );
+    $Class->add_role( $Role );
 
     # make attribute and method into
     # observables
     foreach my $meta ( $Method, $Attribute, $Class, $Role ) {
-        $meta->consume_role($Observable);
+        $meta->add_role($Observable);
+    }
+
+    foreach my $meta ( $Object, $Method, $Attribute, $Class, $Role ) {
+        $meta->FINALIZE;
     }
 
     {
