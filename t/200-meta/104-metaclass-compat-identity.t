@@ -14,10 +14,6 @@ class Foo meta CanDebug { }
 class Bar extends Foo meta IsSpecial { }
 
 can_ok(mop::get_meta('Bar'), 'debug');
-isa_ok(mop::get_meta('Bar'), 'IsSpecial');
-{ local $TODO = "making this work would be complicated - do we care?";
-isa_ok(mop::get_meta('Bar'), 'CanDebug');
-}
 
 role IsSpecialRole { }
 class IsSpecial2 extends mop::class with IsSpecialRole { }
