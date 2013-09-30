@@ -202,7 +202,15 @@ sub compose_into {
     }
 
     foreach my $method ($self->methods) {
-        if ($other->isa('mop::role')) {
+        if ($other->isa('mop::class')) {
+            if (my $other_method = $other->get_method($method->name)) {
+                apply_metaclass($other_method, $method);
+            }
+            else {
+                $other->add_method($method->clone(associated_meta => $other));
+            }
+        }
+        elsif ($other->isa('mop::role')) {
             if ($other->has_method( $method->name )) {
                 $other->add_required_method( $method->name );
                 $other->remove_method( $method->name );
@@ -211,15 +219,7 @@ sub compose_into {
                     $method->clone(associated_meta => $other)
                 );
             }
-        } elsif ($other->isa('mop::class')) {
-            if (my $other_method = $other->get_method($method->name)) {
-                apply_metaclass($other_method, $method);
-            }
-            else {
-                $other->add_method($method->clone(associated_meta => $other));
-            }
         }
-
     }
 
     # merge required methods ...

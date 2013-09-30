@@ -83,17 +83,8 @@ sub bootstrap {
     #   - Role is instance of Class
     #   - Role does Role
     # is true.
-    # FINALIZE and new will conflict, so we need to resolve that here too
-    {
-        my $FINALIZE = $Class->get_method('FINALIZE');
-        my $new      = $Class->get_method('new');
-
-        $Class->add_role( $Role );
-        $Role->compose_into( $Class );
-
-        $Class->add_method($FINALIZE);
-        $Class->add_method($new);
-    }
+    $Class->add_role( $Role );
+    $Role->compose_into( $Class );
 
     # make attribute and method into
     # observables
