@@ -18,7 +18,7 @@ role Bar {
 }
 
 {
-    my $meta = mop::util::find_meta('Foo');
+    my $meta = mop::meta('Foo');
 
     my $attr = $meta->get_attribute('$!foo');
     is($attr->associated_meta, $meta, '... got the expected meta object');
@@ -34,7 +34,7 @@ role Bar {
 }
 
 {
-    my $meta = mop::util::find_meta('Bar');
+    my $meta = mop::meta('Bar');
 
     my $attr = $meta->get_attribute('$!baz');
     is($attr->associated_meta, $meta, '... got the expected meta object');

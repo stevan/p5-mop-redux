@@ -12,7 +12,6 @@ BEGIN {
 }
 
 use mop;
-use mop::util qw[ find_meta ];
 
 {
     package Person;
@@ -34,7 +33,7 @@ class Employee extends Person {
     has $!manager is rw;
 }
 
-#warn Dumper find_meta('Employee');
+#warn Dumper mop::meta('Employee');
 
 my $e = Employee->new;
 isa_ok($e, 'Employee');
@@ -53,7 +52,7 @@ $e->manager($m);
 is_deeply($e->manager, $m, '... got the expected manager');
 
 #warn Dumper $e;
-#warn Dumper find_meta('Employee');
+#warn Dumper mop::meta('Employee');
 
 is_deeply(
     mop::mro::get_linear_isa('Employee'),

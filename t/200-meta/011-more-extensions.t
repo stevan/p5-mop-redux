@@ -46,7 +46,7 @@ class ValidatedAccessorMeta extends mop::class {
 
 sub validated {
     my ($meta, $validator) = @_;
-    my $meta_attr = mop::util::find_meta($meta)->get_attribute('$!validator');
+    my $meta_attr = mop::meta($meta)->get_attribute('$!validator');
     $meta_attr->store_data_in_slot_for($meta, $validator);
 }
 

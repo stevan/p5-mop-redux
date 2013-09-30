@@ -45,7 +45,7 @@ like "$@", qr/^Global symbol \"\$baz\" requires explicit package name/, '... got
     );
 }
 
-ok(!mop::util::find_meta($_), "$_ no longer exists")
+ok(!eval { mop::meta($_) }, "$_ no longer exists")
     for qw(Foo Bar Boo Goo);
 
 done_testing
