@@ -6,7 +6,6 @@ use warnings;
 use mop::util qw[
     has_meta
     find_meta
-    get_stash_for
 ];
 
 use Devel::GlobalDestruction;
@@ -84,7 +83,7 @@ sub _find_method {
             return $meta->get_method( $method_name )
                 if $meta->has_method( $method_name );
         } else {
-            my $stash = get_stash_for( $class );
+            my $stash = mop::internals::util::get_stash_for( $class );
             return $stash->get_symbol( '&' . $method_name )
                 if $stash->has_symbol( '&' . $method_name );
         }

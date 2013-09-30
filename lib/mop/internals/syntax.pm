@@ -200,7 +200,7 @@ sub namespace_parser {
 
     my $preamble = '{'
         . 'sub __' . uc($type) . '__ () { "' . $pkg . '" }'
-        . 'BEGIN { B::Hooks::EndOfScope::on_scope_end { mop::util::get_stash_for(__PACKAGE__)->remove_glob("__' . uc($type) . '__") } }';
+        . 'BEGIN { B::Hooks::EndOfScope::on_scope_end { mop::internals::util::get_stash_for(__PACKAGE__)->remove_glob("__' . uc($type) . '__") } }';
 
     lex_stuff($preamble);
     if (my $code = parse_block(1)) {
@@ -627,7 +627,7 @@ sub parse_name {
         my ($value) = @_;
         state $index = 1;
         my $symbol = '&value' . $index;
-        my $stash = mop::util::get_stash_for('mop::internals::syntax::STUFF');
+        my $stash = mop::internals::util::get_stash_for('mop::internals::syntax::STUFF');
         $stash->add_symbol($symbol, sub () { $value });
         my $code = "mop::internals::syntax::STUFF::value$index";
         push @guards, guard { $stash->remove_symbol($symbol); };

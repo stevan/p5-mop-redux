@@ -3,7 +3,7 @@ package mop::attribute;
 use v5.16;
 use warnings;
 
-use mop::util qw[ init_attribute_storage get_object_id ];
+use mop::util qw[ get_object_id ];
 use Scalar::Util qw[ blessed weaken ];
 
 our $VERSION   = '0.01';
@@ -11,11 +11,11 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use parent 'mop::object', 'mop::observable';
 
-init_attribute_storage(my %name);
-init_attribute_storage(my %original_id);
-init_attribute_storage(my %default);
-init_attribute_storage(my %storage);
-init_attribute_storage(my %associated_meta);
+mop::internals::util::init_attribute_storage(my %name);
+mop::internals::util::init_attribute_storage(my %original_id);
+mop::internals::util::init_attribute_storage(my %default);
+mop::internals::util::init_attribute_storage(my %storage);
+mop::internals::util::init_attribute_storage(my %associated_meta);
 
 sub new {
     my $class = shift;
@@ -140,7 +140,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!storage',
         storage => \%storage,
-        default => \(sub { init_attribute_storage(my %x) })
+        default => \(sub { mop::internals::util::init_attribute_storage(my %x) })
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(

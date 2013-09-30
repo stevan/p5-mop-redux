@@ -3,7 +3,7 @@ package mop::object;
 use v5.16;
 use warnings;
 
-use mop::util    qw[ has_meta find_or_create_meta find_meta ];
+use mop::util    qw[ has_meta find_meta ];
 use Scalar::Util qw[ blessed ];
 
 our $VERSION   = '0.01';
@@ -22,7 +22,7 @@ sub new {
     # - SL
     my $self = bless \(my $x) => $class;
 
-    mop::util::register_object( $self );
+    mop::internals::util::register_object( $self );
 
     return $self;
 }

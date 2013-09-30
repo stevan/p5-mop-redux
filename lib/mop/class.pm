@@ -3,7 +3,8 @@ package mop::class;
 use v5.16;
 use warnings;
 
-use mop::util qw[ init_attribute_storage has_meta find_meta apply_metaclass ];
+use mop::util qw[ has_meta find_meta apply_metaclass ];
+use mop::internals::util;
 
 use Module::Runtime qw[ is_module_name module_notional_filename ];
 use Scalar::Util qw[ blessed ];
@@ -13,10 +14,10 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use parent 'mop::role';
 
-init_attribute_storage(my %is_abstract);
-init_attribute_storage(my %superclass);
-init_attribute_storage(my %submethods);
-init_attribute_storage(my %instance_generator);
+mop::internals::util::init_attribute_storage(my %is_abstract);
+mop::internals::util::init_attribute_storage(my %superclass);
+mop::internals::util::init_attribute_storage(my %submethods);
+mop::internals::util::init_attribute_storage(my %instance_generator);
 
 sub new {
     my $class = shift;
@@ -34,7 +35,7 @@ sub new {
             for $meta->required_methods;
     }
     else {
-        mop::util::mark_nonmop_class($args{'superclass'})
+        mop::internals::util::mark_nonmop_class($args{'superclass'})
             if $args{'superclass'};
 
         $instance_generator{ $self } = \(sub { \(my $anon) });
@@ -71,7 +72,7 @@ sub new_instance {
         if $self->is_abstract;
 
     my $instance = bless $self->create_fresh_instance_structure, $self->name;
-    mop::util::register_object($instance);
+    mop::internals::util::register_object($instance);
 
     my %attributes = map {
         if (my $m = find_meta($_)) {

@@ -106,8 +106,8 @@ sub overload {
         ($meta->superclass)
             || die "You don't have a superclass on " . $meta->name;
 
-        my $local_stash = mop::util::get_stash_for( $meta->name );
-        my $super_stash = mop::util::get_stash_for( $meta->superclass );
+        my $local_stash = mop::internals::util::get_stash_for( $meta->name );
+        my $super_stash = mop::internals::util::get_stash_for( $meta->superclass );
         my $all_symbols = $super_stash->get_all_symbols('CODE');
 
         foreach my $symbol ( grep { /^\(/ && !/^\(\)/ && !/^\(\(/ } keys %$all_symbols ) {
@@ -163,7 +163,7 @@ sub extending_non_mop {
                 body => sub {
                     my $class = shift;
                     my $self  = $class->$super_constructor( @_ );
-                    mop::util::register_object( $self );
+                    mop::internals::util::register_object( $self );
                     $BUILDALL->execute( $self, [ @_ ] );
                     $self;
                 }

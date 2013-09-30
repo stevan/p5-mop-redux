@@ -6,7 +6,8 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use Package::Stash;
+use mop::internals::util;
+
 use Hash::Util::FieldHash;
 use Scalar::Util qw[ blessed ];
 
@@ -14,65 +15,24 @@ use Sub::Exporter -setup => {
     exports => [qw[
         find_meta
         has_meta
-        find_or_create_meta
-        get_stash_for
-        init_attribute_storage
         get_object_id
+        get_object_from_id
         apply_all_roles
-        fix_metaclass_compatibility
         apply_metaclass
     ]]
 };
 
-sub find_meta { ${ get_stash_for( shift )->get_symbol('$METACLASS') || \undef } }
-sub has_meta  {    get_stash_for( shift )->has_symbol('$METACLASS')  }
-
-# this shouldn't be used, generally. the only case where this is necessary is
-# when we have a class which doesn't use the mop inheriting from a class which
-# does. in that case, we need to inflate a basic metaclass for that class in
-# order to be able to instantiate new instances via new_instance. see
-# mop::object::new.
-sub find_or_create_meta {
-    my ($class) = @_;
-
-    if (my $meta = find_meta($class)) {
-        return $meta;
-    }
-    else {
-        # creating a metaclass from an existing non-mop class
-        my $stash = get_stash_for($class);
-
-        my $name      = $stash->name;
-        my $version   = $stash->get_symbol('$VERSION');
-        my $authority = $stash->get_symbol('$AUTHORITY');
-        my $isa       = $stash->get_symbol('@ISA');
-
-        die "Multiple inheritance is not supported in mop classes"
-            if @$isa > 1;
-
-        my $new_meta = mop::class->new(
-            name       => $name,
-            version    => $version,
-            authority  => $authority,
-            superclass => $isa->[0],
-        );
-
-        for my $method ($stash->list_all_symbols('CODE')) {
-            $new_meta->add_method(
-                mop::method->new(
-                    name => $method,
-                    body => $stash->get_symbol('&' . $method),
-                )
-            );
-        }
-
-        # can't just use install_meta, because applying the mop mro to a
-        # non-mop class will break things (SUPER, for instance)
-        $stash->add_symbol('$METACLASS', \$new_meta);
-
-        return $new_meta;
-    }
+sub find_meta {
+    ${ mop::internals::util::get_stash_for( shift )->get_symbol('$METACLASS') || \undef }
 }
+
+sub has_meta  {
+    mop::internals::util::get_stash_for( shift )->has_symbol('$METACLASS')
+}
+
+sub get_object_id { Hash::Util::FieldHash::id( $_[0] ) }
+
+sub get_object_from_id { Hash::Util::FieldHash::id_2obj( $_[0] ) }
 
 sub apply_all_roles {
     my ($to, @roles) = @_;
@@ -116,6 +76,138 @@ sub apply_all_roles {
 
     $composite->fire('after:COMPOSE' => $to);
     $to->fire('after:CONSUME' => $composite);
+}
+
+sub apply_metaclass {
+    my ($instance, $new_meta) = @_;
+    bless $instance, fix_metaclass_compatibility($new_meta, $instance);
+}
+
+# this shouldn't be used, generally. the only case where this is necessary is
+# when we have a class which doesn't use the mop inheriting from a class which
+# does. in that case, we need to inflate a basic metaclass for that class in
+# order to be able to instantiate new instances via new_instance. see
+# mop::object::new.
+sub find_or_inflate_meta {
+    my ($class) = @_;
+
+    if (my $meta = find_meta($class)) {
+        return $meta;
+    }
+    else {
+        return inflate_meta($class);
+    }
+}
+
+sub inflate_meta {
+    my ($class) = @_;
+
+    my $stash = mop::internals::util::get_stash_for($class);
+
+    my $name      = $stash->name;
+    my $version   = $stash->get_symbol('$VERSION');
+    my $authority = $stash->get_symbol('$AUTHORITY');
+    my $isa       = $stash->get_symbol('@ISA');
+
+    die "Multiple inheritance is not supported in mop classes"
+        if @$isa > 1;
+
+    my $new_meta = mop::class->new(
+        name       => $name,
+        version    => $version,
+        authority  => $authority,
+        superclass => $isa->[0],
+    );
+
+    for my $method ($stash->list_all_symbols('CODE')) {
+        $new_meta->add_method(
+            mop::method->new(
+                name => $method,
+                body => $stash->get_symbol('&' . $method),
+            )
+        );
+    }
+
+    # can't just use install_meta, because applying the mop mro to a
+    # non-mop class will break things (SUPER, for instance)
+    $stash->add_symbol('$METACLASS', \$new_meta);
+
+    return $new_meta;
+}
+
+sub install_meta {
+    my ($meta) = @_;
+
+    die "Metaclasses must inherit from mop::class or mop::role"
+        unless $meta->isa('mop::class') || $meta->isa('mop::role');
+
+    my $name = $meta->name;
+
+    die "The metaclass for $name has already been created"
+        if find_meta($name);
+
+    die "$name has already been used as a non-mop class. "
+      . "Does your code have a circular dependency?"
+        if mop::internals::util::is_nonmop_class($name);
+
+    my $stash = mop::internals::util::get_stash_for($name);
+    $stash->add_symbol('$METACLASS', \$meta);
+    $stash->add_symbol('$VERSION', \$meta->version);
+    mro::set_mro($name, 'mop');
+}
+
+sub uninstall_meta {
+    my ($meta) = @_;
+
+    die "Metaclasses must inherit from mop::class or mop::role"
+        unless $meta->isa('mop::class') || $meta->isa('mop::role');
+
+    my $stash = mop::internals::util::get_stash_for($meta->name);
+    $stash->remove_symbol('$METACLASS');
+    $stash->remove_symbol('$VERSION');
+    mro::set_mro($meta->name, 'dfs');
+}
+
+sub close_class {
+    my ($class) = @_;
+
+    my $new_meta = _get_class_for_closing($class);
+
+    # XXX clear caches here if we end up adding any, and if we end up
+    # implementing reopening of classes
+
+    bless $class, $new_meta->name;
+}
+
+sub fix_metaclass_compatibility {
+    my ($meta, $super) = @_;
+
+    my $meta_name  = blessed($meta) // $meta;
+    return $meta_name if !defined $super; # non-mop inheritance
+
+    my $super_name = blessed($super) // $super;
+
+    # immutability is on a per-class basis, it shouldn't be inherited.
+    # otherwise, subclasses of closed classes won't be able to do things
+    # like add attributes or methods to themselves
+    $meta_name = find_meta($meta_name)->superclass
+        if $meta_name->isa('mop::class') && $meta_name->is_closed;
+    $super_name = find_meta($super_name)->superclass
+        if $super_name->isa('mop::class') && $super_name->is_closed;
+
+    return $meta_name  if $meta_name->isa($super_name);
+    return $super_name if $super_name->isa($meta_name);
+
+    my $rebased_meta_name = _rebase_metaclasses($meta_name, $super_name);
+    return $rebased_meta_name if $rebased_meta_name;
+
+    my $meta_desc = blessed($meta)
+        ? $meta->name . " ($meta_name)"
+        : $meta_name;
+    my $super_desc = blessed($super)
+        ? $super->name . " ($super_name)"
+        : $super_name;
+    die "Can't fix metaclass compatibility between $meta_desc and $super_desc";
 }
 
 sub _create_composite_role {
@@ -193,72 +285,6 @@ sub _create_composite_role {
     return $composite;
 }
 
-sub get_stash_for {
-    state %STASHES;
-    my $class = ref($_[0]) || $_[0];
-    $STASHES{ $class } //= Package::Stash->new( $class )
-}
-
-sub get_object_id { Hash::Util::FieldHash::id( $_[0] ) }
-
-sub register_object    { Hash::Util::FieldHash::register( $_[0] ) }
-sub get_object_from_id { Hash::Util::FieldHash::id_2obj( $_[0] ) }
-
-sub init_attribute_storage (\%) {
-    &Hash::Util::FieldHash::fieldhash( $_[0] )
-}
-
-my %NONMOP_CLASSES;
-
-sub mark_nonmop_class {
-    my ($class) = @_;
-    $NONMOP_CLASSES{$class} = 1;
-}
-
-sub install_meta {
-    my ($meta) = @_;
-
-    die "Metaclasses must inherit from mop::class or mop::role"
-        unless $meta->isa('mop::class') || $meta->isa('mop::role');
-
-    my $name = $meta->name;
-
-    die "The metaclass for $name has already been created"
-        if find_meta($name);
-
-    die "$name has already been used as a non-mop class. "
-      . "Does your code have a circular dependency?"
-        if $NONMOP_CLASSES{$name};
-
-    my $stash = mop::util::get_stash_for($name);
-    $stash->add_symbol('$METACLASS', \$meta);
-    $stash->add_symbol('$VERSION', \$meta->version);
-    mro::set_mro($name, 'mop');
-}
-
-sub uninstall_meta {
-    my ($meta) = @_;
-
-    die "Metaclasses must inherit from mop::class or mop::role"
-        unless $meta->isa('mop::class') || $meta->isa('mop::role');
-
-    my $stash = mop::util::get_stash_for($meta->name);
-    $stash->remove_symbol('$METACLASS');
-    $stash->remove_symbol('$VERSION');
-    mro::set_mro($meta->name, 'dfs');
-}
-
-sub close_class {
-    my ($class) = @_;
-
-    my $new_meta = _get_class_for_closing($class);
-
-    # XXX clear caches here if we end up adding any, and if we end up
-    # implementing reopening of classes
-
-    bless $class, $new_meta->name;
-}
-
 sub _get_class_for_closing {
     my ($class) = @_;
 
@@ -304,7 +330,7 @@ sub _get_class_for_closing {
 
     $new_meta->FINALIZE;
 
-    my $stash = get_stash_for($class->name);
+    my $stash = mop::internals::util::get_stash_for($class->name);
     for my $isa (@{ mop::mro::get_linear_isa($class->name) }) {
         if (has_meta($isa)) {
             for my $method (find_meta($isa)->methods) {
@@ -314,37 +340,6 @@ sub _get_class_for_closing {
     }
 
     return $new_meta;
-}
-
-sub fix_metaclass_compatibility {
-    my ($meta, $super) = @_;
-
-    my $meta_name  = blessed($meta) // $meta;
-    return $meta_name if !defined $super; # non-mop inheritance
-
-    my $super_name = blessed($super) // $super;
-
-    # immutability is on a per-class basis, it shouldn't be inherited.
-    # otherwise, subclasses of closed classes won't be able to do things
-    # like add attributes or methods to themselves
-    $meta_name = find_meta($meta_name)->superclass
-        if $meta_name->isa('mop::class') && $meta_name->is_closed;
-    $super_name = find_meta($super_name)->superclass
-        if $super_name->isa('mop::class') && $super_name->is_closed;
-
-    return $meta_name  if $meta_name->isa($super_name);
-    return $super_name if $super_name->isa($meta_name);
-
-    my $rebased_meta_name = _rebase_metaclasses($meta_name, $super_name);
-    return $rebased_meta_name if $rebased_meta_name;
-
-    my $meta_desc = blessed($meta)
-        ? $meta->name . " ($meta_name)"
-        : $meta_name;
-    my $super_desc = blessed($super)
-        ? $super->name . " ($super_name)"
-        : $super_name;
-    die "Can't fix metaclass compatibility between $meta_desc and $super_desc";
 }
 
 sub _rebase_metaclasses {
@@ -407,11 +402,6 @@ sub _find_common_base {
     }
 
     return;
-}
-
-sub apply_metaclass {
-    my ($instance, $new_meta) = @_;
-    bless $instance, fix_metaclass_compatibility($new_meta, $instance);
 }
 
 package mop::mro;

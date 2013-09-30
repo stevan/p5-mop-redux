@@ -3,12 +3,12 @@ package mop::observable;
 use v5.16;
 use warnings;
 
-use mop::util qw[ init_attribute_storage ];
+use mop::internals::util;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-init_attribute_storage(my %callbacks);
+mop::internals::util::init_attribute_storage(my %callbacks);
 
 sub bind {
     my ($self, $event_name, $callback) = @_;

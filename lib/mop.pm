@@ -43,7 +43,7 @@ sub import {
 
 sub unimport {
     my $pkg = caller;
-    mop::util::get_stash_for($pkg)->remove_glob($_)
+    mop::internals::util::get_stash_for($pkg)->remove_glob($_)
         for (
             qw(class role method submethod has),
             @mop::traits::AVAILABLE_TRAITS
@@ -181,11 +181,11 @@ sub bootstrap {
     }
 
     {
-        my $Object_stash    = mop::util::get_stash_for('mop::object');
-        my $Class_stash     = mop::util::get_stash_for('mop::class');
-        my $Role_stash      = mop::util::get_stash_for('mop::role');
-        my $Method_stash    = mop::util::get_stash_for('mop::method');
-        my $Attribute_stash = mop::util::get_stash_for('mop::attribute');
+        my $Object_stash    = mop::internals::util::get_stash_for('mop::object');
+        my $Class_stash     = mop::internals::util::get_stash_for('mop::class');
+        my $Role_stash      = mop::internals::util::get_stash_for('mop::role');
+        my $Method_stash    = mop::internals::util::get_stash_for('mop::method');
+        my $Attribute_stash = mop::internals::util::get_stash_for('mop::attribute');
 
         # NOTE:
         # This is ugly, but we need to do
@@ -233,7 +233,7 @@ sub bootstrap {
                 my %args  = scalar(@_) == 1 && ref $_[0] eq 'HASH'
                     ? %{$_[0]}
                     : @_;
-                mop::util::find_or_create_meta($class)->new_instance(%args);
+                mop::util::find_or_inflate_meta($class)->new_instance(%args);
             },
         );
         $Object->add_method($new);

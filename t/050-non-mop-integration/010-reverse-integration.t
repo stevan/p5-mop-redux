@@ -17,7 +17,7 @@ can explore this more later.
 sub subclasseable_by_non_mop {
     if ($_[0]->isa('mop::class')) {
         my $meta  = shift;
-        my $stash = mop::util::get_stash_for( $meta->name );
+        my $stash = mop::internals::util::get_stash_for( $meta->name );
 
         foreach my $method ($meta->methods) {
             $stash->add_symbol('&' . $method->name, $method->body);

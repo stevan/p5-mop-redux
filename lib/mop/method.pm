@@ -3,7 +3,7 @@ package mop::method;
 use v5.16;
 use warnings;
 
-use mop::util qw[ init_attribute_storage get_object_id ];
+use mop::util qw[ get_object_id ];
 use Scalar::Util 'weaken';
 
 our $VERSION   = '0.01';
@@ -11,10 +11,10 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use parent 'mop::object', 'mop::observable';
 
-init_attribute_storage(my %name);
-init_attribute_storage(my %body);
-init_attribute_storage(my %original_id);
-init_attribute_storage(my %associated_meta);
+mop::internals::util::init_attribute_storage(my %name);
+mop::internals::util::init_attribute_storage(my %body);
+mop::internals::util::init_attribute_storage(my %original_id);
+mop::internals::util::init_attribute_storage(my %associated_meta);
 
 sub new {
     my $class = shift;

@@ -3,11 +3,8 @@ package mop::role;
 use v5.16;
 use warnings;
 
-use mop::util qw[
-    init_attribute_storage
-    find_meta
-    apply_metaclass
-];
+use mop::util qw[ find_meta apply_metaclass ];
+use mop::internals::util;
 
 use Module::Runtime qw[ is_module_name module_notional_filename ];
 use Scalar::Util qw[ blessed ];
@@ -17,14 +14,14 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use parent 'mop::object', 'mop::observable';
 
-init_attribute_storage(my %name);
-init_attribute_storage(my %version);
-init_attribute_storage(my %authority);
+mop::internals::util::init_attribute_storage(my %name);
+mop::internals::util::init_attribute_storage(my %version);
+mop::internals::util::init_attribute_storage(my %authority);
 
-init_attribute_storage(my %roles);
-init_attribute_storage(my %attributes);
-init_attribute_storage(my %methods);
-init_attribute_storage(my %required_methods);
+mop::internals::util::init_attribute_storage(my %roles);
+mop::internals::util::init_attribute_storage(my %attributes);
+mop::internals::util::init_attribute_storage(my %methods);
+mop::internals::util::init_attribute_storage(my %required_methods);
 
 sub new {
     my $class = shift;
