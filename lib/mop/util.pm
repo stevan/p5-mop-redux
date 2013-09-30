@@ -92,23 +92,11 @@ sub apply_all_roles {
     }
 
     foreach my $method ($composite->methods) {
-        if ($to->isa('mop::class')) {
-            if (my $existing_method = $to->get_method($method->name)) {
-                apply_metaclass($existing_method, $method);
-            }
-            else {
-                $to->add_method($method->clone(associated_meta => $to));
-            }
+        if (my $existing_method = $to->get_method($method->name)) {
+            apply_metaclass($existing_method, $method);
         }
-        elsif ($to->isa('mop::role')) {
-            if ($to->has_method( $method->name )) {
-                $to->add_required_method( $method->name );
-                $to->remove_method( $method->name );
-            } else {
-                $to->add_method(
-                    $method->clone(associated_meta => $to)
-                );
-            }
+        else {
+            $to->add_method($method->clone(associated_meta => $to));
         }
     }
 

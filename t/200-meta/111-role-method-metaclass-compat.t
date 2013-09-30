@@ -35,17 +35,13 @@ role BarRole with FooRole {
     method foo { 'BarRole' }
 }
 
-{ local $TODO = "need to work out the issues with role composition first";
 isa_ok(mop::get_meta('BarRole')->get_method('foo'), 'MyMethod');
-}
 
 class Baz with BarRole {
     method foo { 'Baz' }
 }
 
-{ local $TODO = "this will require us to do better tracking of conflicts";
 isa_ok(mop::get_meta('Baz')->get_method('foo'), 'MyMethod');
-}
 is(Baz->foo, 'Baz');
 
 role R1 {

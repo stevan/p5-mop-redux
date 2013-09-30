@@ -20,8 +20,8 @@ role Bar {
     method foo { 'Bar::foo' }
 }
 
-is_deeply([mop::get_meta('Foo2')->required_methods], ['foo'], '... method conflict between roles results in required method');
-ok(!mop::get_meta('Foo2')->has_method('foo'), '... Foo2 does not have the foo method');
+is_deeply([mop::get_meta('Foo2')->required_methods], [], '... no method conflict here');
+ok(mop::get_meta('Foo2')->has_method('foo'), '... Foo2 has the foo method');
 
 role FooBar with Foo, Bar {}
 
