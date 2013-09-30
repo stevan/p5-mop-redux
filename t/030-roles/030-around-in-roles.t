@@ -20,7 +20,7 @@ sub modifier {
                     return $other->bind('after:COMPOSE' => __SUB__)
                         unless $other->isa('mop::class');
                     if ($other->has_method( $method->name )) {
-                        my $old_method = $other->remove_method( $method->name );
+                        my $old_method = $other->get_method( $method->name );
                         $other->add_method(
                             $other->method_class->new(
                                 name => $method->name,

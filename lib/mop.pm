@@ -300,7 +300,6 @@ This is a prototype for a new object system for Perl 5.
         method add_method ($attr) { ... }
         method get_method ($name) { ... }
         method has_method ($name) { ... }
-        method remove_method ($name) { ... }
 
         method required_methods { ... }
         method required_method_map { ... }

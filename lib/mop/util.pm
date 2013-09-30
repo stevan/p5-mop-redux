@@ -286,7 +286,6 @@ sub _get_class_for_closing {
         add_role
         add_submethod
         make_class_abstract
-        remove_method
     );
 
     for my $method (@mutable_methods) {

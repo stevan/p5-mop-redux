@@ -156,13 +156,6 @@ sub has_method {
     exists $self->method_map->{ $name };
 }
 
-sub remove_method {
-    my ($self, $name) = @_;
-    mop::internals::mro::clear_method_cache_for($self->name);
-    delete $self->method_map->{ $name };
-    # XXX need to add a method requirement here if any roles required this
-}
-
 # required methods
 
 sub required_method_map { ${ $required_methods{ $_[0] } } }
@@ -271,7 +264,6 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'get_method',    body => \&get_method    ) );
     $METACLASS->add_method( mop::method->new( name => 'add_method',    body => \&add_method    ) );
     $METACLASS->add_method( mop::method->new( name => 'has_method',    body => \&has_method    ) );
-    $METACLASS->add_method( mop::method->new( name => 'remove_method', body => \&remove_method ) );
 
     $METACLASS->add_method( mop::method->new( name => 'required_methods',    body => \&required_methods    ) );
     $METACLASS->add_method( mop::method->new( name => 'required_method_map', body => \&required_method_map ) );
