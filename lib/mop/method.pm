@@ -13,6 +13,7 @@ use parent 'mop::object', 'mop::observable';
 
 init_attribute_storage(my %name);
 init_attribute_storage(my %body);
+init_attribute_storage(my %original_id);
 init_attribute_storage(my %associated_meta);
 
 sub new {
@@ -21,6 +22,14 @@ sub new {
     my $self = $class->SUPER::new;
     $name{ $self } = \($args{'name'});
     $body{ $self } = \($args{'body'});
+
+    # NOTE:
+    # keep track of the original ID here
+    # so that we can still detect method
+    # conflicts in roles even after something
+    # has been cloned
+    # - SL
+    $original_id{ $self } = \($self->id);
     $self;
 }
 
@@ -39,6 +48,8 @@ sub set_associated_meta {
     $associated_meta{ $self } = \$meta;
     weaken(${ $associated_meta{ $self } });
 }
+
+sub conflicts_with { ${ $original_id{ $_[0] } } ne ${ $original_id{ $_[1] } } }
 
 sub execute {
     my ($self, $invocant, $args) = @_;
@@ -87,12 +98,18 @@ sub __INIT_METACLASS__ {
         storage => \%associated_meta
     ));
 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$!original_id',
+        storage => \%original_id
+    ));
+
     $METACLASS->add_method( mop::method->new( name => 'new', body => \&new ) );
 
     $METACLASS->add_method( mop::method->new( name => 'name',                body => \&name                ) );
     $METACLASS->add_method( mop::method->new( name => 'body',                body => \&body                ) );
     $METACLASS->add_method( mop::method->new( name => 'associated_meta',     body => \&associated_meta     ) );
     $METACLASS->add_method( mop::method->new( name => 'set_associated_meta', body => \&set_associated_meta ) );
+    $METACLASS->add_method( mop::method->new( name => 'conflicts_with',      body => \&conflicts_with      ) );
 
     $METACLASS->add_method( mop::method->new( name => 'execute', body => \&execute ) );
 
