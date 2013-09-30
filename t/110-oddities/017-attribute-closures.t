@@ -34,8 +34,6 @@ for (1..2) {
     $c->();
 }
 
-{ local $TODO = "closures over attributes need to also close over \$self";
 is_deeply(\@seen, [11, 12, 11, 12]);
-}
 
 done_testing;
