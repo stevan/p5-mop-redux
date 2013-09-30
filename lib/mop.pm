@@ -56,6 +56,14 @@ sub meta {
     mop::util::find_meta( $class );
 }
 
+sub id {
+    my $obj = shift;
+    my $id = mop::util::get_object_id($obj);
+    die "Could not find an object id for $obj"
+      unless $id;
+    return $id;
+}
+
 sub bootstrap {
     return if $BOOTSTRAPPED;
     $_->__INIT_METACLASS__ for qw[
