@@ -18,6 +18,7 @@ use Sub::Exporter -setup => {
         get_stash_for
         init_attribute_storage
         get_object_id
+        apply_all_roles
         fix_metaclass_compatibility
         rebless
         apply_metaclass
@@ -74,7 +75,53 @@ sub find_or_create_meta {
     }
 }
 
-sub create_composite_role {
+sub apply_all_roles {
+    my ($to, @roles) = @_;
+
+    my $composite = _create_composite_role(@roles);
+
+    $to->fire('before:CONSUME' => $composite);
+    $composite->fire('before:COMPOSE' => $to);
+
+    foreach my $attribute ($composite->attributes) {
+        die 'Attribute conflict ' . $attribute->name . ' when composing ' . $composite->name . ' into ' . $to->name
+            if $to->has_attribute( $attribute->name )
+            && $to->get_attribute( $attribute->name )->conflicts_with( $attribute );
+        $to->add_attribute( $attribute->clone(associated_meta => $to) );
+    }
+
+    foreach my $method ($composite->methods) {
+        if ($to->isa('mop::class')) {
+            if (my $existing_method = $to->get_method($method->name)) {
+                apply_metaclass($existing_method, $method);
+            }
+            else {
+                $to->add_method($method->clone(associated_meta => $to));
+            }
+        }
+        elsif ($to->isa('mop::role')) {
+            if ($to->has_method( $method->name )) {
+                $to->add_required_method( $method->name );
+                $to->remove_method( $method->name );
+            } else {
+                $to->add_method(
+                    $method->clone(associated_meta => $to)
+                );
+            }
+        }
+    }
+
+    # merge required methods ...
+    for my $method ($composite->required_methods) {
+        $to->add_required_method($method)
+            unless $to->has_method($method);
+    }
+
+    $composite->fire('after:COMPOSE' => $to);
+    $to->fire('after:CONSUME' => $composite);
+}
+
+sub _create_composite_role {
     my (@roles) = @_;
 
     return $roles[0] if @roles == 1;
@@ -238,7 +285,6 @@ sub _get_class_for_closing {
         add_required_method
         add_role
         add_submethod
-        consume_role
         make_class_abstract
         remove_method
     );

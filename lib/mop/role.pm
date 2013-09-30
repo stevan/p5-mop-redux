@@ -184,61 +184,13 @@ sub requires_method {
     defined $self->required_method_map->{ $name };
 }
 
-# composition
-
-sub consume_role {
-    my ($self, @other) = @_;
-
-    my $other = mop::util::create_composite_role(@other);
-
-    $self->fire('before:CONSUME' => $other);
-    $other->fire('before:COMPOSE' => $self);
-
-    foreach my $attribute ($other->attributes) {
-        die 'Attribute conflict ' . $attribute->name . ' when composing ' . $other->name . ' into ' . $self->name
-            if $self->has_attribute( $attribute->name )
-            && $self->get_attribute( $attribute->name )->conflicts_with( $attribute );
-        $self->add_attribute( $attribute->clone(associated_meta => $self) );
-    }
-
-    foreach my $method ($other->methods) {
-        if ($self->isa('mop::class')) {
-            if (my $existing_method = $self->get_method($method->name)) {
-                apply_metaclass($existing_method, $method);
-            }
-            else {
-                $self->add_method($method->clone(associated_meta => $self));
-            }
-        }
-        elsif ($self->isa('mop::role')) {
-            if ($self->has_method( $method->name )) {
-                $self->add_required_method( $method->name );
-                $self->remove_method( $method->name );
-            } else {
-                $self->add_method(
-                    $method->clone(associated_meta => $self)
-                );
-            }
-        }
-    }
-
-    # merge required methods ...
-    for my $method ($other->required_methods) {
-        $self->add_required_method($method)
-            unless $self->has_method($method);
-    }
-
-    $other->fire('after:COMPOSE' => $self);
-    $self->fire('after:CONSUME' => $other);
-}
-
 # events
 
 sub FINALIZE {
     my $self = shift;
     $self->fire('before:FINALIZE');
 
-    $self->consume_role(@{ $self->roles });
+    mop::util::apply_all_roles($self, @{ $self->roles });
 
     $self->fire('after:FINALIZE');
 }
@@ -326,8 +278,6 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'remove_required_method', body => \&remove_required_method ) );
     $METACLASS->add_method( mop::method->new( name => 'requires_method',     body => \&requires_method     ) );
 
-
-    $METACLASS->add_method( mop::method->new( name => 'consume_role', body => \&consume_role ) );
 
     $METACLASS->add_method( mop::method->new( name => 'FINALIZE', body => \&FINALIZE ) );
 
