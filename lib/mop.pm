@@ -59,10 +59,9 @@ sub meta {
 
 sub id {
     my $obj = shift;
-    my $id = mop::util::get_object_id($obj);
     die "Could not find an object id for $obj"
-      unless $id;
-    return $id;
+      unless mop::util::is_mop_object($obj);
+    mop::util::get_object_id($obj);
 }
 
 sub rebless ($;$) {
