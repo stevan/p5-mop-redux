@@ -45,51 +45,6 @@ sub BUILDALL {
 
 sub id { get_object_id( shift ) }
 
-sub dump {
-    my $self = shift;
-
-    my %attributes = map {
-        if (my $m = find_meta($_)) {
-            %{ $m->attribute_map }
-        }
-    } reverse @{ mop::mro::get_linear_isa($self) };
-
-    my $temp = {
-        __ID__    => get_object_id($self),
-        __CLASS__ => find_meta($self)->name,
-        __SELF__  => $self,
-    };
-
-    foreach my $attr (values %attributes) {
-        if ($attr->name eq '$storage') {
-            $temp->{ $attr->name } = '__INTERNAL_DETAILS__';
-        } else {
-            $temp->{ $attr->name } = _dumper(
-                $attr->fetch_data_in_slot_for( $self )
-            );
-        }
-    }
-
-    $temp;
-}
-
-sub _dumper {
-    my ($data) = @_;
-    if (blessed($data)) {
-        return $data->dump;
-    } elsif (ref $data) {
-        if (ref $data eq 'ARRAY') {
-            return [ map { _dumper( $_ ) } @$data ];
-        } elsif (ref $data eq 'HASH') {
-            return { map { $_ => _dumper( $data->{$_} ) } keys %$data };
-        } else {
-            return $data;
-        }
-    } else {
-        return $data;
-    }
-}
-
 sub does {
     my ($self, $role) = @_;
     scalar grep { find_meta($_)->does_role($role) } @{ mop::mro::get_linear_isa($self) }
@@ -124,7 +79,6 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'clone',     body => \&clone ) );
     $METACLASS->add_method( mop::method->new( name => 'BUILDALL',  body => \&BUILDALL ) );
     $METACLASS->add_method( mop::method->new( name => 'id',        body => \&id ) );
-    $METACLASS->add_method( mop::method->new( name => 'dump',      body => \&dump ) );
     $METACLASS->add_method( mop::method->new( name => 'does',      body => \&does ) );
     $METACLASS->add_method( mop::method->new( name => 'DOES',      body => \&DOES ) );
     $METACLASS->add_method( mop::method->new(

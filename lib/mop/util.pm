@@ -22,6 +22,7 @@ use Sub::Exporter -setup => {
         fix_metaclass_compatibility
         rebless
         apply_metaclass
+        dump_object
     ]]
 };
 
@@ -448,6 +449,51 @@ sub rebless ($;$) {
 sub apply_metaclass {
     my ($instance, $new_meta) = @_;
     bless $instance, fix_metaclass_compatibility($new_meta, $instance);
+}
+
+sub dump_object {
+    my ($obj) = @_;
+
+    my %attributes = map {
+        if (my $m = find_meta($_)) {
+            %{ $m->attribute_map }
+        }
+    } reverse @{ mop::mro::get_linear_isa($obj) };
+
+    my $temp = {
+        __ID__    => get_object_id($obj),
+        __CLASS__ => find_meta($obj)->name,
+        __SELF__  => $obj,
+    };
+
+    foreach my $attr (values %attributes) {
+        if ($attr->name eq '$storage') {
+            $temp->{ $attr->name } = '__INTERNAL_DETAILS__';
+        } else {
+            $temp->{ $attr->name } = _dumper(
+                $attr->fetch_data_in_slot_for( $obj )
+            );
+        }
+    }
+
+    $temp;
+}
+
+sub _dumper {
+    my ($data) = @_;
+    if (blessed($data)) {
+        return dump_object($data);
+    } elsif (ref $data) {
+        if (ref $data eq 'ARRAY') {
+            return [ map { _dumper( $_ ) } @$data ];
+        } elsif (ref $data eq 'HASH') {
+            return { map { $_ => _dumper( $data->{$_} ) } keys %$data };
+        } else {
+            return $data;
+        }
+    } else {
+        return $data;
+    }
 }
 
 package mop::mro;

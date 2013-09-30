@@ -13,7 +13,7 @@ class Foo {
 }
 
 #use Data::Dumper;
-#warn Dumper(mop::get_meta('Foo')->dump);
+#warn Dumper(mop::util::dump_object(mop::get_meta('Foo')));
 
 {
     my $foo = mop::get_meta('Foo')->new_instance;
