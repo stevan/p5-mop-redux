@@ -34,7 +34,7 @@ sub data {
         mop::util::install_meta($new_subclass);
         $new_subclass->FINALIZE;
 
-        mop::util::rebless $meta, $new_subclass->name;
+        mop::rebless $meta, $new_subclass->name;
     }
     $meta->add_to_data($_) for @data;
 }

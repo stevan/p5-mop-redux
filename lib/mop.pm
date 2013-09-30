@@ -4,6 +4,7 @@ use v5.16;
 use mro;
 use warnings;
 
+use Scalar::Util;
 use Sub::Install;
 
 our $VERSION   = '0.01';
@@ -62,6 +63,82 @@ sub id {
     die "Could not find an object id for $obj"
       unless $id;
     return $id;
+}
+
+sub rebless ($;$) {
+    my ($object, $into) = @_;
+
+    my $from = Scalar::Util::blessed($object);
+    my $common_base = mop::util::_find_common_base($from, $into);
+
+    my @from_isa = @{ mop::mro::get_linear_isa($from) };
+    if ($common_base) {
+        pop @from_isa until $from_isa[-1] eq $common_base;
+        pop @from_isa;
+    }
+    @from_isa = grep { defined } map { mop::util::find_meta($_) } @from_isa;
+
+    my @into_isa = @{ mop::mro::get_linear_isa($into) };
+    if ($common_base) {
+        pop @into_isa until $into_isa[-1] eq $common_base;
+        pop @into_isa;
+    }
+    @into_isa = grep { defined } map { mop::util::find_meta($_) } @into_isa;
+
+    for my $attr (map { $_->attributes } @from_isa) {
+        delete $attr->storage->{$object};
+    }
+
+    bless($object, $into);
+
+    for my $attr (map { $_->attributes } reverse @into_isa) {
+        $attr->store_default_in_slot_for($object);
+    }
+
+    $object
+}
+
+sub dump_object {
+    my ($obj) = @_;
+
+    my %attributes = map {
+        if (my $m = mop::util::find_meta($_)) {
+            %{ $m->attribute_map }
+        }
+    } reverse @{ mop::mro::get_linear_isa($obj) };
+
+    my $temp = {
+        __ID__    => id($obj),
+        __CLASS__ => meta($obj)->name,
+        __SELF__  => $obj,
+    };
+
+    foreach my $attr (values %attributes) {
+        if ($attr->name eq '$storage') {
+            $temp->{ $attr->name } = '__INTERNAL_DETAILS__';
+        } else {
+            $temp->{ $attr->name } = sub {
+                my ($data) = @_;
+                if (Scalar::Util::blessed($data)) {
+                    return dump_object($data);
+                } elsif (ref $data) {
+                    if (ref $data eq 'ARRAY') {
+                        return [ map { __SUB__->( $_ ) } @$data ];
+                    } elsif (ref $data eq 'HASH') {
+                        return {
+                            map { $_ => __SUB__->( $data->{$_} ) } keys %$data
+                        };
+                    } else {
+                        return $data;
+                    }
+                } else {
+                    return $data;
+                }
+            }->( $attr->fetch_data_in_slot_for( $obj ) );
+        }
+    }
+
+    $temp;
 }
 
 sub bootstrap {

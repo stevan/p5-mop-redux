@@ -20,9 +20,7 @@ use Sub::Exporter -setup => {
         get_object_id
         apply_all_roles
         fix_metaclass_compatibility
-        rebless
         apply_metaclass
-        dump_object
     ]]
 };
 
@@ -411,87 +409,9 @@ sub _find_common_base {
     return;
 }
 
-sub rebless ($;$) {
-    my ($object, $into) = @_;
-
-    my $from = Scalar::Util::blessed($object);
-    my $common_base = mop::util::_find_common_base($from, $into);
-
-    my @from_isa = @{ mop::mro::get_linear_isa($from) };
-    if ($common_base) {
-        pop @from_isa until $from_isa[-1] eq $common_base;
-        pop @from_isa;
-    }
-    @from_isa = grep { defined } map { mop::util::find_meta($_) } @from_isa;
-
-    my @into_isa = @{ mop::mro::get_linear_isa($into) };
-    if ($common_base) {
-        pop @into_isa until $into_isa[-1] eq $common_base;
-        pop @into_isa;
-    }
-    @into_isa = grep { defined } map { mop::util::find_meta($_) } @into_isa;
-
-    for my $attr (map { $_->attributes } @from_isa) {
-        delete $attr->storage->{$object};
-    }
-
-    bless($object, $into);
-
-    for my $attr (map { $_->attributes } reverse @into_isa) {
-        $attr->store_default_in_slot_for($object);
-    }
-
-    $object
-}
-
 sub apply_metaclass {
     my ($instance, $new_meta) = @_;
     bless $instance, fix_metaclass_compatibility($new_meta, $instance);
-}
-
-sub dump_object {
-    my ($obj) = @_;
-
-    my %attributes = map {
-        if (my $m = find_meta($_)) {
-            %{ $m->attribute_map }
-        }
-    } reverse @{ mop::mro::get_linear_isa($obj) };
-
-    my $temp = {
-        __ID__    => get_object_id($obj),
-        __CLASS__ => find_meta($obj)->name,
-        __SELF__  => $obj,
-    };
-
-    foreach my $attr (values %attributes) {
-        if ($attr->name eq '$storage') {
-            $temp->{ $attr->name } = '__INTERNAL_DETAILS__';
-        } else {
-            $temp->{ $attr->name } = _dumper(
-                $attr->fetch_data_in_slot_for( $obj )
-            );
-        }
-    }
-
-    $temp;
-}
-
-sub _dumper {
-    my ($data) = @_;
-    if (blessed($data)) {
-        return dump_object($data);
-    } elsif (ref $data) {
-        if (ref $data eq 'ARRAY') {
-            return [ map { _dumper( $_ ) } @$data ];
-        } elsif (ref $data eq 'HASH') {
-            return { map { $_ => _dumper( $data->{$_} ) } keys %$data };
-        } else {
-            return $data;
-        }
-    } else {
-        return $data;
-    }
 }
 
 package mop::mro;

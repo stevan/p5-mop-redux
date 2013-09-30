@@ -41,7 +41,7 @@ sub apply_role_to_instance {
     mop::util::install_meta($new_subclass);
     $new_subclass->FINALIZE;
 
-    mop::util::rebless $instance, $new_subclass->name;
+    mop::rebless $instance, $new_subclass->name;
 }
 
 done_testing;
