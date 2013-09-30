@@ -17,18 +17,14 @@ is($@, '');
 eval "class C2 with R1, R2 { }";
 like($@, qr/Required method\(s\) \[foo\] are not allowed in C2 unless class is declared abstract/);
 
-{ local $TODO = "currently broken";
 eval "class C3 with R1, R2, R3 { }";
 like($@, qr/Required method\(s\) \[foo\] are not allowed in C3 unless class is declared abstract/);
-}
 
 eval "class C4 with R1, R2, R3, R4 { }";
 like($@, qr/Required method\(s\) \[foo\] are not allowed in C4 unless class is declared abstract/);
 
-{ local $TODO = "currently broken";
 eval "class C5 with R1, R2, R3, R4, R5 { }";
 like($@, qr/Required method\(s\) \[foo\] are not allowed in C5 unless class is declared abstract/);
-}
 
 role R1_required { method foo; }
 

@@ -83,9 +83,67 @@ sub create_composite_role {
         name => 'COMPOSITE::OF::[' . (join ', ' => map { $_->name } @roles) . ']'
     );
 
-    foreach my $role ( @roles ) {
-        $composite->consume_role($role);
+    $composite->fire('before:CONSUME' => $_)
+        for @roles;
+    $_->fire('before:COMPOSE' => $composite)
+        for @roles;
+
+    {
+        my %attributes;
+        for my $role (@roles) {
+            for my $attribute ($role->attributes) {
+                my $name = $attribute->name;
+                my $seen = $attributes{$name};
+                die "Attribute conflict $name when composing "
+                  . $seen->associated_meta->name . " with " . $role->name
+                  if $seen && $seen->conflicts_with($attribute);
+                $attributes{$name} = $attribute;
+                $composite->add_attribute(
+                    $attribute->clone(associated_meta => $composite)
+                );
+            }
+        }
     }
+
+    {
+        my %methods;
+        my %conflicts;
+        for my $role (@roles) {
+            for my $method ($role->methods) {
+                my $name = $method->name;
+                if ($conflicts{$name}) {
+                    next;
+                }
+                elsif ($methods{$name}) {
+                    next unless $methods{$name}->conflicts_with($method);
+                    $conflicts{$name} = delete $methods{$name};
+                }
+                else {
+                    $methods{$name} = $method;
+                }
+            }
+        }
+        for my $name (keys %methods) {
+            $composite->add_method(
+                $methods{$name}->clone(associated_meta => $composite)
+            );
+        }
+        for my $requirement (keys %conflicts) {
+            $composite->add_required_method($requirement);
+        }
+    }
+
+    for my $role (@roles) {
+        for my $requirement ($role->required_methods) {
+            $composite->add_required_method($requirement)
+                unless $composite->has_method($requirement);
+        }
+    }
+
+    $_->fire('after:COMPOSE' => $composite)
+        for @roles;
+    $composite->fire('after:CONSUME' => $_)
+        for @roles;
 
     return $composite;
 }
