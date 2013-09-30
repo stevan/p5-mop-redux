@@ -175,7 +175,9 @@ sub closed {
     die "closed can only be used on classes"
         unless $class->isa('mop::class');
 
-    mop::util::close_class($class);
+    $class->bind('after:FINALIZE' => sub {
+        mop::util::close_class($class);
+    });
 }
 
 sub repr {
