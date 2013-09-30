@@ -222,8 +222,11 @@ This is a prototype for a new object system for Perl 5.
 
 =head1 The MOP
 
-    class Object {
-        method new (%args) { ... }
+    class mop::object {
+        method new   (%args) { ... }
+        method clone (%args) { ... }
+
+        method BUILDALL ($args) { ... }
 
         method can  ($name)  { ... }
         method isa  ($class) { ... }
@@ -233,78 +236,105 @@ This is a prototype for a new object system for Perl 5.
         method DESTROY { ... }
     }
 
-    class Attribute extends Object {
-        has $name is ro;
-        has $default;
-        has $storage is ro = {};
+    class mop::attribute extends mop::object {
+        has $!name is ro;
+        has $!default;
+        has $!storage is ro = {};
+        has $!associated_meta is ro;
+        has $!original_id;
 
         method key_name { ... }
 
         method has_default   { ... }
-        method set_default   { ... }
-        method clear_default { ... }
         method get_default   { ... }
+
+        method set_associated_meta ($meta) { ... }
+
+        method conflicts_with ($attr) { ... }
 
         method fetch_data_in_slot_for ($instance) { ... }
         method store_data_in_slot_for ($instance, $data) { ... }
         method store_default_in_slot_for ($instance) { ... }
     }
 
-    class Method extends Object {
-        has $name is ro;
-        has $body is ro;
+    class mop::method extends mop::object {
+        has $!name is ro;
+        has $!body is ro;
+        has $!associated_meta is ro;
+        has $!original_id;
 
         method execute ($invocant, $args) { ... }
+
+        method set_associated_meta ($meta) { ... }
+
+        method conflicts_with ($method) { ... }
     }
 
-    role Role {
-        has $name      is ro;
-        has $version   is ro;
-        has $authority is ro;
+    class mop::role extends mop::object {
+        has $!name      is ro;
+        has $!version   is ro;
+        has $!authority is ro;
 
-        has $roles            is ro = [];
-        has $attributes       is ro = {};
-        has $methods          is ro = {};
-        has $required_methods is ro = {};
+        has $!roles            is ro = [];
+        has $!attributes             = {};
+        has $!methods                = {};
+        has $!required_methods       = {};
 
         method add_role ($role) { ... }
         method does_role ($name) { ... }
 
-        method attribute_class { 'Attribute' }
+        method attribute_class { 'mop::attribute' }
+
+        method attributes { ... }
+        method attribute_map { ... }
 
         method add_attribute ($attr) { ... }
         method get_attribute ($name) { ... }
         method has_attribute ($name) { ... }
 
-        method method_class { 'Method' }
+        method method_class { 'mop::method' }
+
+        method methods { ... }
+        method method_map { ... }
 
         method add_method ($attr) { ... }
         method get_method ($name) { ... }
         method has_method ($name) { ... }
         method remove_method ($name) { ... }
 
+        method required_methods { ... }
+        method required_method_map { ... }
+
         method add_required_method ($required_method) { ... }
+        method remove_required_method ($required_method) { ... }
         method requires_method ($name) { ... }
 
         sub FINALIZE { ... }
     }
 
-    class Class extends Object with Role {
-        has $superclass  is ro;
-        has $submethods  is ro = {};
-        has $is_abstract is ro;
+    # 'with mop::role' is odd because mop::role is a class, but it works as
+    # you would expect
+    class mop::class extends mop::object with mop::role {
+        has $!superclass is ro;
+        has $!submethods is ro = {};
+        has $!is_abstract is ro;
+        has $!instance_generator is ro = sub { \(my $anon) };
 
         method make_class_abstract { ... }
 
-        method new_instance { ... }
+        method is_closed { ... }
 
-        method submethod_class { 'Method' }
+        method new_instance { ... }
+        method clone_instance { ... }
+
+        method set_instance_generator ($generator) { ... }
+        method create_fresh_instance_structure { ... }
+
+        method submethod_class { 'mop::method' }
 
         method add_submethod ($attr) { ... }
         method get_submethod ($name) { ... }
         method has_submethod ($name) { ... }
-
-        method FINALIZE { ... }
     }
 
 =head1 BOOTSTRAPPING GOALS
