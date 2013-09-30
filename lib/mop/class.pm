@@ -55,8 +55,7 @@ sub new {
 sub BUILD {
     my $self = shift;
 
-    mop::internals::util::install_meta($self)
-        if $self->name;
+    mop::internals::util::install_meta($self);
 }
 
 # identity

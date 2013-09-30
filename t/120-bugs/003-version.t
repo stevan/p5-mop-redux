@@ -5,8 +5,7 @@ use Test::More;
 
 use mop;
 
-my $Foo = mop::class->new;
-is($Foo->name, undef);
+my $Foo = mop::class->new(name => 'Foo');
 is($Foo->version, undef);
 is($Foo->authority, undef);
 is($Foo->superclass, undef);

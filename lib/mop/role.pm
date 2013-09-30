@@ -29,6 +29,9 @@ sub new {
 
     my $self = $class->SUPER::new( @_ );
 
+    die "name is required when creating a role or a class"
+        unless defined $args{'name'};
+
     $name{ $self }       = \($args{'name'});
     $version{ $self }    = \($args{'version'});
     $authority{ $self }  = \($args{'authority'});
@@ -52,8 +55,7 @@ sub new {
 sub BUILD {
     my $self = shift;
 
-    mop::internals::util::install_meta($self)
-        if $self->name;
+    mop::internals::util::install_meta($self);
 }
 
 sub clone {
