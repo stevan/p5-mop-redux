@@ -29,7 +29,7 @@ my @repos = (
     [ 'iinteractive/promises-perl',         'p5-mop'              ],
     [ 'perigrin/http-thin-useragent',       'p5-mop-redux'        ],
     [ 'doy/reply',                          'p5-mop'              ],
-    # [ 'dams/Action-Retry',                  'experimental/p5-mop' ],
+    [ 'dams/Action-Retry',                  'experimental/p5-mop' ],
     [ 'stevan/react',                       'master'              ],
     [ 'zakame/hashids.pm',                  'p5-mop'              ],
 );
