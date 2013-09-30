@@ -16,7 +16,6 @@ use Sub::Exporter -setup => {
         find_meta
         has_meta
         get_object_id
-        get_object_from_id
         apply_all_roles
         apply_metaclass
     ]]
@@ -31,8 +30,6 @@ sub has_meta  {
 }
 
 sub get_object_id { Hash::Util::FieldHash::id( $_[0] ) }
-
-sub get_object_from_id { Hash::Util::FieldHash::id_2obj( $_[0] ) }
 
 sub apply_all_roles {
     my ($to, @roles) = @_;
