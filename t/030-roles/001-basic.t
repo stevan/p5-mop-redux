@@ -12,7 +12,6 @@ role Foo {}
 can_ok( mop::get_meta('Foo'), 'new' );
 can_ok( mop::get_meta('Foo'), 'does' );
 can_ok( mop::get_meta('Foo'), 'DOES' );
-can_ok( mop::get_meta('Foo'), 'id' );
 can_ok( mop::get_meta('Foo'), 'isa' );
 can_ok( mop::get_meta('Foo'), 'can' );
 

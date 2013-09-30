@@ -3,7 +3,7 @@ package mop::method;
 use v5.16;
 use warnings;
 
-use mop::util qw[ init_attribute_storage ];
+use mop::util qw[ init_attribute_storage get_object_id ];
 use Scalar::Util 'weaken';
 
 our $VERSION   = '0.01';
@@ -29,7 +29,7 @@ sub new {
     # conflicts in roles even after something
     # has been cloned
     # - SL
-    $original_id{ $self } = \($self->id);
+    $original_id{ $self } = \(get_object_id($self));
     $self;
 }
 

@@ -3,7 +3,7 @@ package mop::object;
 use v5.16;
 use warnings;
 
-use mop::util    qw[ has_meta find_or_create_meta find_meta get_object_id ];
+use mop::util    qw[ has_meta find_or_create_meta find_meta ];
 use Scalar::Util qw[ blessed ];
 
 our $VERSION   = '0.01';
@@ -43,8 +43,6 @@ sub BUILDALL {
     }
 }
 
-sub id { get_object_id( shift ) }
-
 sub does {
     my ($self, $role) = @_;
     scalar grep { find_meta($_)->does_role($role) } @{ mop::mro::get_linear_isa($self) }
@@ -78,7 +76,6 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'new',       body => \&new ) );
     $METACLASS->add_method( mop::method->new( name => 'clone',     body => \&clone ) );
     $METACLASS->add_method( mop::method->new( name => 'BUILDALL',  body => \&BUILDALL ) );
-    $METACLASS->add_method( mop::method->new( name => 'id',        body => \&id ) );
     $METACLASS->add_method( mop::method->new( name => 'does',      body => \&does ) );
     $METACLASS->add_method( mop::method->new( name => 'DOES',      body => \&DOES ) );
     $METACLASS->add_method( mop::method->new(

@@ -225,8 +225,6 @@ This is a prototype for a new object system for Perl 5.
     class Object {
         method new (%args) { ... }
 
-        method id { ... }
-
         method can  ($name)  { ... }
         method isa  ($class) { ... }
         method does ($role)  { ... }
