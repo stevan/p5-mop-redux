@@ -30,8 +30,6 @@ sub data {
             superclass => $class->name,
             roles      => [ mop::meta('WithData') ],
         );
-        # hopefully these two steps can be implicit in the future? or something?
-        mop::util::install_meta($new_subclass);
         $new_subclass->FINALIZE;
 
         mop::rebless $meta, $new_subclass->name;

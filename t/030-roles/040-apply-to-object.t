@@ -37,8 +37,6 @@ sub apply_role_to_instance {
         superclass => $class->name,
         roles      => [ $role ],
     );
-    # hopefully these two steps can be implicit in the future? or something?
-    mop::util::install_meta($new_subclass);
     $new_subclass->FINALIZE;
 
     mop::rebless $instance, $new_subclass->name;

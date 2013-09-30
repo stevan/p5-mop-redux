@@ -52,6 +52,13 @@ sub new {
     $self;
 }
 
+sub BUILD {
+    my $self = shift;
+
+    mop::internals::util::install_meta($self)
+        if $self->name;
+}
+
 # identity
 
 sub superclass { ${ $superclass{ $_[0] } } }
@@ -188,6 +195,9 @@ sub FINALIZE {
             . ' unless class is declared abstract';
     }
 
+    my $stash = mop::internals::util::get_stash_for($self->name);
+    $stash->add_symbol('$VERSION', \$self->version);
+
     $self->fire('after:FINALIZE');
 }
 
@@ -225,6 +235,8 @@ sub __INIT_METACLASS__ {
         storage => \%instance_generator,
         default => \sub { sub { \(my $anon) } },
     ));
+
+    $METACLASS->add_submethod( mop::method->new( name => 'BUILD', body => \&BUILD ) );
 
     $METACLASS->add_method( mop::method->new( name => 'new', body => \&new ) );
 

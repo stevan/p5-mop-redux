@@ -36,4 +36,21 @@ sub register_object {
     }
 }
 
+sub install_meta {
+    my ($meta) = @_;
+
+    my $name = $meta->name;
+
+    die "The metaclass for $name has already been created"
+        if mop::util::find_meta($name);
+
+    die "$name has already been used as a non-mop class. "
+      . "Does your code have a circular dependency?"
+        if is_nonmop_class($name);
+
+    my $stash = get_stash_for($name);
+    $stash->add_symbol('$METACLASS', \$meta);
+    mro::set_mro($name, 'mop');
+}
+
 1;

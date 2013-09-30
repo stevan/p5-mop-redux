@@ -193,9 +193,9 @@ sub namespace_parser {
             ? (superclass => $extends)
             : ()),
     );
-    mop::util::install_meta($meta);
     my $g = guard {
-        mop::util::uninstall_meta($meta);
+        mop::util::remove_meta($pkg);
+        mro::set_mro($pkg, 'dfs');
     };
 
     my $preamble = '{'

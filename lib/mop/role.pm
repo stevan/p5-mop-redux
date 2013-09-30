@@ -49,6 +49,13 @@ sub new {
     $self;
 }
 
+sub BUILD {
+    my $self = shift;
+
+    mop::internals::util::install_meta($self)
+        if $self->name;
+}
+
 sub clone {
     my $self = shift;
     my (%args) = @_;
@@ -183,6 +190,9 @@ sub FINALIZE {
     mop::util::apply_all_roles($self, @{ $self->roles })
         if @{ $self->roles };
 
+    my $stash = mop::internals::util::get_stash_for($self->name);
+    $stash->add_symbol('$VERSION', \$self->version);
+
     $self->fire('after:FINALIZE');
 }
 
@@ -236,6 +246,8 @@ sub __INIT_METACLASS__ {
         storage => \%required_methods,
         default => \sub { {} },
     ));
+
+    $METACLASS->add_submethod( mop::method->new( name => 'BUILD', body => \&BUILD ) );
 
     $METACLASS->add_method( mop::method->new( name => 'new', body => \&new ) );
     $METACLASS->add_method( mop::method->new( name => 'clone', body => \&clone ) );

@@ -15,6 +15,7 @@ use Sub::Exporter -setup => {
     exports => [qw[
         find_meta
         has_meta
+        remove_meta
         get_object_id
         is_mop_object
         apply_all_roles
@@ -28,6 +29,10 @@ sub find_meta {
 
 sub has_meta  {
     mop::internals::util::get_stash_for( shift )->has_symbol('$METACLASS')
+}
+
+sub remove_meta {
+    mop::internals::util::get_stash_for( shift )->remove_symbol('$METACLASS')
 }
 
 sub get_object_id { Hash::Util::FieldHash::id( $_[0] ) }
@@ -114,12 +119,15 @@ sub inflate_meta {
     die "Multiple inheritance is not supported in mop classes"
         if @$isa > 1;
 
+    # can't use the mop mro for non-mop classes, it confuses things like SUPER
+    my $mro = mro::get_mro($name);
     my $new_meta = mop::class->new(
         name       => $name,
         version    => $version,
         authority  => $authority,
         superclass => $isa->[0],
     );
+    mro::set_mro($name, $mro);
 
     for my $method ($stash->list_all_symbols('CODE')) {
         $new_meta->add_method(
@@ -130,44 +138,7 @@ sub inflate_meta {
         );
     }
 
-    # can't just use install_meta, because applying the mop mro to a
-    # non-mop class will break things (SUPER, for instance)
-    $stash->add_symbol('$METACLASS', \$new_meta);
-
     return $new_meta;
-}
-
-sub install_meta {
-    my ($meta) = @_;
-
-    die "Metaclasses must inherit from mop::class or mop::role"
-        unless $meta->isa('mop::class') || $meta->isa('mop::role');
-
-    my $name = $meta->name;
-
-    die "The metaclass for $name has already been created"
-        if find_meta($name);
-
-    die "$name has already been used as a non-mop class. "
-      . "Does your code have a circular dependency?"
-        if mop::internals::util::is_nonmop_class($name);
-
-    my $stash = mop::internals::util::get_stash_for($name);
-    $stash->add_symbol('$METACLASS', \$meta);
-    $stash->add_symbol('$VERSION', \$meta->version);
-    mro::set_mro($name, 'mop');
-}
-
-sub uninstall_meta {
-    my ($meta) = @_;
-
-    die "Metaclasses must inherit from mop::class or mop::role"
-        unless $meta->isa('mop::class') || $meta->isa('mop::role');
-
-    my $stash = mop::internals::util::get_stash_for($meta->name);
-    $stash->remove_symbol('$METACLASS');
-    $stash->remove_symbol('$VERSION');
-    mro::set_mro($meta->name, 'dfs');
 }
 
 sub close_class {
@@ -217,8 +188,11 @@ sub _create_composite_role {
 
     return $roles[0] if @roles == 1;
 
+    my $name = 'COMPOSITE::OF::' . (join '::' => map { $_->name } @roles);
+    return find_meta($name) if has_meta($name);
+
     my $composite = mop::role->new(
-        name  => 'COMPOSITE::OF::[' . (join ', ' => map { $_->name } @roles) . ']',
+        name  => $name,
         roles => [ @roles ],
     );
 
@@ -303,7 +277,6 @@ sub _get_class_for_closing {
         superclass => $class_meta->name,
         roles      => [],
     );
-    install_meta($new_meta);
 
     my @mutable_methods = qw(
         add_attribute
@@ -384,7 +357,6 @@ sub _rebase_metaclasses {
                 name       => $rebased,
                 superclass => $current,
             );
-            install_meta($clone);
             close_class($clone);
         }
         $current = $rebased;
