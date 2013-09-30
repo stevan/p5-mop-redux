@@ -13,18 +13,18 @@ use mop ();
 # afterwards.
 mop::bootstrap;
 
-ok(mop::get_meta('mop::object')->isa('mop::class'), '... object->class is instance of class');
+ok(mop::meta('mop::object')->isa('mop::class'), '... object->class is instance of class');
 ok(mop::class->isa('mop::object'), '... class isa object');
-ok(mop::get_meta('mop::class')->isa('mop::class'), '... class->class is instance of class');
+ok(mop::meta('mop::class')->isa('mop::class'), '... class->class is instance of class');
 
 ok(mop::role->isa('mop::object'), '... role isa object');
-ok(mop::get_meta('mop::role')->isa('mop::class'), '... role->class is instance of class');
+ok(mop::meta('mop::role')->isa('mop::class'), '... role->class is instance of class');
 
 ok(mop::attribute->isa('mop::object'), '... attribute isa object');
-ok(mop::get_meta('mop::attribute')->isa('mop::class'), '... attribute->class is instance of class');
+ok(mop::meta('mop::attribute')->isa('mop::class'), '... attribute->class is instance of class');
 
 ok(mop::method->isa('mop::object'), '... method isa object');
-ok(mop::get_meta('mop::method')->isa('mop::class'), '... method->class is instance of class');
+ok(mop::meta('mop::method')->isa('mop::class'), '... method->class is instance of class');
 
 isa_ok('mop::method', 'mop::object');
 isa_ok('mop::attribute', 'mop::object');
@@ -60,11 +60,11 @@ is_deeply(
 );
 
 {
-    my $class     = mop::get_meta('mop::class');
-    my $object    = mop::get_meta('mop::object');
-    my $role      = mop::get_meta('mop::role');
-    my $method    = mop::get_meta('mop::method');
-    my $attribute = mop::get_meta('mop::attribute');
+    my $class     = mop::meta('mop::class');
+    my $object    = mop::meta('mop::object');
+    my $role      = mop::meta('mop::role');
+    my $method    = mop::meta('mop::method');
+    my $attribute = mop::meta('mop::attribute');
 
     ok($class->isa('mop::class'), '... class is an instance of class');
     ok($object->isa('mop::class'), '... object is an instance of class');

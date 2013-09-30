@@ -49,7 +49,7 @@ sub unimport {
         );
 }
 
-sub get_meta {
+sub meta {
     my $class = shift;
     die "Could not find metaclass for $class"
       unless mop::util::has_meta( $class );

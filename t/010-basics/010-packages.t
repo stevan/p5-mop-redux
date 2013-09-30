@@ -20,7 +20,7 @@ use Test::More;
 my $foo = Foo::Bar->new;
 ok( $foo->isa( 'Foo::Bar' ), '... the object is from class Foo' );
 ok( $foo->isa( 'mop::object' ), '... the object is derived from class Object' );
-is( mop::get_meta($foo)->name, 'Foo::Bar', '... got the correct (fully qualified) name of the class');
+is( mop::meta($foo)->name, 'Foo::Bar', '... got the correct (fully qualified) name of the class');
 
 
 {
@@ -45,7 +45,7 @@ is( mop::get_meta($foo)->name, 'Foo::Bar', '... got the correct (fully qualified
 my $baz = Bar::Baz->new;
 ok( $baz->isa( 'Bar::Baz' ), '... the object is from class Baz' );
 ok( $baz->isa( 'mop::object' ), '... the object is derived from class Object' );
-is( mop::get_meta($baz)->name, 'Bar::Baz', '... the class of this object is Baz' );
+is( mop::meta($baz)->name, 'Bar::Baz', '... the class of this object is Baz' );
 
 is( $baz->foo, 100_010, '... got the value we expected' );
 is( $baz->my_package, 'Bar', '... got the value we expected' );

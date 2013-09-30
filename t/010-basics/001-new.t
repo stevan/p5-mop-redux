@@ -19,16 +19,16 @@ class Foo {}
 my $foo = Foo->new;
 ok( $foo->isa( 'Foo' ), '... the object is from class Foo' );
 ok( $foo->isa( 'mop::object' ), '... the object is derived from class Object' );
-is( mop::get_meta($foo)->name, 'Foo', '... the class of this object is Foo' );
+is( mop::meta($foo)->name, 'Foo', '... the class of this object is Foo' );
 
 {
     my $foo2 = Foo->new;
     ok( $foo2->isa( 'Foo' ), '... the object is from class Foo' );
     ok( $foo2->isa( 'mop::object' ), '... the object is derived from class Object' );
-    is( mop::get_meta($foo2)->name, 'Foo', '... the class of this object is Foo' );
+    is( mop::meta($foo2)->name, 'Foo', '... the class of this object is Foo' );
 
     isnt( $foo, $foo2, '... these are not the same objects' );
-    is( mop::get_meta($foo), mop::get_meta($foo2), '... these two objects share the same class' );
+    is( mop::meta($foo), mop::meta($foo2), '... these two objects share the same class' );
 }
 
 {
@@ -36,7 +36,7 @@ is( mop::get_meta($foo)->name, 'Foo', '... the class of this object is Foo' );
     ok( $foo3->isa( 'Foo' ), '... the object is from class Foo' );
 
     isnt( $foo, $foo3, '... these are not the same objects' );
-    is( mop::get_meta($foo), mop::get_meta($foo3), '... these two objects share the same class' );
+    is( mop::meta($foo), mop::meta($foo3), '... these two objects share the same class' );
 }
 
 class Bar {

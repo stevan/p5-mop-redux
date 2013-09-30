@@ -24,8 +24,8 @@ class Bar with FooRole { }
     is($bar->foo, 'FOO');
 }
 
-is(mop::get_meta('FooRole')->get_method('foo')->associated_meta, mop::get_meta('FooRole'));
-is(mop::get_meta('Foo')->get_method('foo')->associated_meta, mop::get_meta('Foo'));
-is(mop::get_meta('Bar')->get_method('foo')->associated_meta, mop::get_meta('Bar'));
+is(mop::meta('FooRole')->get_method('foo')->associated_meta, mop::meta('FooRole'));
+is(mop::meta('Foo')->get_method('foo')->associated_meta, mop::meta('Foo'));
+is(mop::meta('Bar')->get_method('foo')->associated_meta, mop::meta('Bar'));
 
 done_testing;

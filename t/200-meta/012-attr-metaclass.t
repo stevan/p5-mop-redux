@@ -14,9 +14,9 @@ class Thingy {
 }
 
 isa_ok(
-	mop::get_meta('Thingy')->get_attribute('$!doodah'),
+	mop::meta('Thingy')->get_attribute('$!doodah'),
 	$_,
-	q[mop::get_meta('Thingy')->get_attribute('$!doodah')]
+	q[mop::meta('Thingy')->get_attribute('$!doodah')]
 ) for qw( mop::attribute MyAttribute );
 
 done_testing;

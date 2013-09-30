@@ -20,13 +20,13 @@ BEGIN { is($built, 2); is($demolished, 0) }
 class Baz meta Meta { }
 BEGIN { is($built, 3); is($demolished, 0) }
 
-mop::util::uninstall_meta(mop::get_meta('Foo'));
+mop::util::uninstall_meta(mop::meta('Foo'));
 is($built, 3);
 is($demolished, 1);
-mop::util::uninstall_meta(mop::get_meta('Bar'));
+mop::util::uninstall_meta(mop::meta('Bar'));
 is($built, 3);
 is($demolished, 2);
-mop::util::uninstall_meta(mop::get_meta('Baz'));
+mop::util::uninstall_meta(mop::meta('Baz'));
 is($built, 3);
 is($demolished, 3);
 

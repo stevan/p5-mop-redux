@@ -29,26 +29,26 @@ class Bar::Sub2 extends Bar meta BarMeta { }
 
 class Baz::Sub extends Baz { }
 
-isa_ok(mop::get_meta('Foo'), 'FooMeta');
-ok(!mop::get_meta('Foo')->isa('BarMeta'));
-isa_ok(mop::get_meta('Foo::Sub'), 'FooMeta');
-ok(!mop::get_meta('Foo::Sub')->isa('BarMeta'));
-isa_ok(mop::get_meta('Foo::Sub2'), 'FooMeta');
-ok(!mop::get_meta('Foo::Sub2')->isa('BarMeta'));
+isa_ok(mop::meta('Foo'), 'FooMeta');
+ok(!mop::meta('Foo')->isa('BarMeta'));
+isa_ok(mop::meta('Foo::Sub'), 'FooMeta');
+ok(!mop::meta('Foo::Sub')->isa('BarMeta'));
+isa_ok(mop::meta('Foo::Sub2'), 'FooMeta');
+ok(!mop::meta('Foo::Sub2')->isa('BarMeta'));
 
-isa_ok(mop::get_meta('Bar'), 'BarMeta');
-ok(!mop::get_meta('Bar')->isa('FooMeta'));
-isa_ok(mop::get_meta('Bar::Sub'), 'BarMeta');
-ok(!mop::get_meta('Bar::Sub')->isa('FooMeta'));
-isa_ok(mop::get_meta('Bar::Sub2'), 'BarMeta');
-ok(!mop::get_meta('Bar::Sub2')->isa('FooMeta'));
+isa_ok(mop::meta('Bar'), 'BarMeta');
+ok(!mop::meta('Bar')->isa('FooMeta'));
+isa_ok(mop::meta('Bar::Sub'), 'BarMeta');
+ok(!mop::meta('Bar::Sub')->isa('FooMeta'));
+isa_ok(mop::meta('Bar::Sub2'), 'BarMeta');
+ok(!mop::meta('Bar::Sub2')->isa('FooMeta'));
 
-isa_ok(mop::get_meta('Baz'), 'mop::class');
-ok(!mop::get_meta('Baz')->isa('FooMeta'));
-ok(!mop::get_meta('Baz')->isa('BarMeta'));
-isa_ok(mop::get_meta('Baz::Sub'), 'mop::class');
-ok(!mop::get_meta('Baz::Sub')->isa('FooMeta'));
-ok(!mop::get_meta('Baz::Sub')->isa('BarMeta'));
+isa_ok(mop::meta('Baz'), 'mop::class');
+ok(!mop::meta('Baz')->isa('FooMeta'));
+ok(!mop::meta('Baz')->isa('BarMeta'));
+isa_ok(mop::meta('Baz::Sub'), 'mop::class');
+ok(!mop::meta('Baz::Sub')->isa('FooMeta'));
+ok(!mop::meta('Baz::Sub')->isa('BarMeta'));
 
 eval "class Quux extends Foo meta BarMeta { }";
 like($@, qr/Can't fix metaclass compatibility between Foo \(FooMeta\) and Quux \(BarMeta\)/);

@@ -15,7 +15,7 @@ sub mymeta {
 
 class Foo is mymeta { }
 
-isa_ok(mop::get_meta('Foo'), 'MyMeta');
+isa_ok(mop::meta('Foo'), 'MyMeta');
 
 class MyOtherMeta extends mop::class {
     method foo { 'MyOtherMeta' }

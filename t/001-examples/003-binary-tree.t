@@ -24,7 +24,7 @@ class BinaryTree {
     method has_right { defined $!right }
 }
 
-my $parent_store = mop::get_meta('BinaryTree')->get_attribute('$!parent')->storage;
+my $parent_store = mop::meta('BinaryTree')->get_attribute('$!parent')->storage;
 
 {
     my $t = BinaryTree->new;

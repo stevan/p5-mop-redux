@@ -23,10 +23,10 @@ class Quux extends Bar {
 }
 
 {
-    my $foo_attr  = mop::get_meta('Foo')->get_attribute('$!foo');
-    my $bar_attr  = mop::get_meta('Bar')->get_attribute('$!bar');
-    my $baz_attr  = mop::get_meta('Baz')->get_attribute('$!baz');
-    my $quux_attr = mop::get_meta('Quux')->get_attribute('$!quux');
+    my $foo_attr  = mop::meta('Foo')->get_attribute('$!foo');
+    my $bar_attr  = mop::meta('Bar')->get_attribute('$!bar');
+    my $baz_attr  = mop::meta('Baz')->get_attribute('$!baz');
+    my $quux_attr = mop::meta('Quux')->get_attribute('$!quux');
 
     my $foo = Foo->new;
     is(${ $foo_attr->storage->{$foo} }, 'FOO');

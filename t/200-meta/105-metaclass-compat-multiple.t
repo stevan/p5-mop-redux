@@ -29,13 +29,13 @@ class Bar meta MetaBar { }
 class Baz extends Foo meta MetaBaz { }
 class Quux extends Bar meta MetaBaz { }
 
-can_ok(mop::get_meta('Baz'), 'foo');
-cant_ok(mop::get_meta('Baz'), 'bar');
-can_ok(mop::get_meta('Baz'), 'baz');
+can_ok(mop::meta('Baz'), 'foo');
+cant_ok(mop::meta('Baz'), 'bar');
+can_ok(mop::meta('Baz'), 'baz');
 
-cant_ok(mop::get_meta('Quux'), 'foo');
-can_ok(mop::get_meta('Quux'), 'bar');
-can_ok(mop::get_meta('Quux'), 'baz');
+cant_ok(mop::meta('Quux'), 'foo');
+can_ok(mop::meta('Quux'), 'bar');
+can_ok(mop::meta('Quux'), 'baz');
 
 class Foo2 meta MetaFoo { }
 class Bar2 meta MetaBar { }
@@ -43,16 +43,16 @@ class Bar2 meta MetaBar { }
 class Baz2 extends Foo2 meta MetaBaz { }
 class Quux2 extends Bar2 meta MetaBaz { }
 
-can_ok(mop::get_meta('Baz'), 'foo');
-cant_ok(mop::get_meta('Baz'), 'bar');
-can_ok(mop::get_meta('Baz'), 'baz');
+can_ok(mop::meta('Baz'), 'foo');
+cant_ok(mop::meta('Baz'), 'bar');
+can_ok(mop::meta('Baz'), 'baz');
 
-cant_ok(mop::get_meta('Quux'), 'foo');
-can_ok(mop::get_meta('Quux'), 'bar');
-can_ok(mop::get_meta('Quux'), 'baz');
+cant_ok(mop::meta('Quux'), 'foo');
+can_ok(mop::meta('Quux'), 'bar');
+can_ok(mop::meta('Quux'), 'baz');
 
-is(mop::get_meta(mop::get_meta('Baz')), mop::get_meta(mop::get_meta('Baz2')));
-is(mop::get_meta(mop::get_meta('Quux')), mop::get_meta(mop::get_meta('Quux2')));
+is(mop::meta(mop::meta('Baz')), mop::meta(mop::meta('Baz2')));
+is(mop::meta(mop::meta('Quux')), mop::meta(mop::meta('Quux2')));
 
 class M1 extends mop::class { method m1 { 'M1' } }
 class M2 extends mop::class { method m2 { 'M2' } }
@@ -67,19 +67,19 @@ class C2 meta M5 { }
 class C3 extends C1 meta M6 { }
 class C4 extends C2 meta M6 { }
 
-can_ok(mop::get_meta('C3'), 'm1');
-cant_ok(mop::get_meta('C3'), 'm2');
-can_ok(mop::get_meta('C3'), 'm3');
-can_ok(mop::get_meta('C3'), 'm4');
-cant_ok(mop::get_meta('C3'), 'm5');
-can_ok(mop::get_meta('C3'), 'm6');
+can_ok(mop::meta('C3'), 'm1');
+cant_ok(mop::meta('C3'), 'm2');
+can_ok(mop::meta('C3'), 'm3');
+can_ok(mop::meta('C3'), 'm4');
+cant_ok(mop::meta('C3'), 'm5');
+can_ok(mop::meta('C3'), 'm6');
 
-cant_ok(mop::get_meta('C4'), 'm1');
-can_ok(mop::get_meta('C4'), 'm2');
-can_ok(mop::get_meta('C4'), 'm3');
-cant_ok(mop::get_meta('C4'), 'm4');
-can_ok(mop::get_meta('C4'), 'm5');
-can_ok(mop::get_meta('C4'), 'm6');
+cant_ok(mop::meta('C4'), 'm1');
+can_ok(mop::meta('C4'), 'm2');
+can_ok(mop::meta('C4'), 'm3');
+cant_ok(mop::meta('C4'), 'm4');
+can_ok(mop::meta('C4'), 'm5');
+can_ok(mop::meta('C4'), 'm6');
 
 class C12 meta M4 { }
 class C22 meta M5 { }
@@ -87,23 +87,23 @@ class C22 meta M5 { }
 class C32 extends C12 meta M6 { }
 class C42 extends C22 meta M6 { }
 
-can_ok(mop::get_meta('C32'), 'm1');
-cant_ok(mop::get_meta('C32'), 'm2');
-can_ok(mop::get_meta('C32'), 'm3');
-can_ok(mop::get_meta('C32'), 'm4');
-cant_ok(mop::get_meta('C32'), 'm5');
-can_ok(mop::get_meta('C32'), 'm6');
+can_ok(mop::meta('C32'), 'm1');
+cant_ok(mop::meta('C32'), 'm2');
+can_ok(mop::meta('C32'), 'm3');
+can_ok(mop::meta('C32'), 'm4');
+cant_ok(mop::meta('C32'), 'm5');
+can_ok(mop::meta('C32'), 'm6');
 
-cant_ok(mop::get_meta('C42'), 'm1');
-can_ok(mop::get_meta('C42'), 'm2');
-can_ok(mop::get_meta('C42'), 'm3');
-cant_ok(mop::get_meta('C42'), 'm4');
-can_ok(mop::get_meta('C42'), 'm5');
-can_ok(mop::get_meta('C42'), 'm6');
+cant_ok(mop::meta('C42'), 'm1');
+can_ok(mop::meta('C42'), 'm2');
+can_ok(mop::meta('C42'), 'm3');
+cant_ok(mop::meta('C42'), 'm4');
+can_ok(mop::meta('C42'), 'm5');
+can_ok(mop::meta('C42'), 'm6');
 
-is(mop::get_meta(mop::get_meta('C3')), mop::get_meta(mop::get_meta('C32')));
-is(mop::get_meta(mop::get_meta('C4')), mop::get_meta(mop::get_meta('C42')));
-is(mop::get_meta(mop::get_meta('C3'))->superclass, mop::get_meta(mop::get_meta('C32'))->superclass);
-is(mop::get_meta(mop::get_meta('C4'))->superclass, mop::get_meta(mop::get_meta('C42'))->superclass);
+is(mop::meta(mop::meta('C3')), mop::meta(mop::meta('C32')));
+is(mop::meta(mop::meta('C4')), mop::meta(mop::meta('C42')));
+is(mop::meta(mop::meta('C3'))->superclass, mop::meta(mop::meta('C32'))->superclass);
+is(mop::meta(mop::meta('C4'))->superclass, mop::meta(mop::meta('C42'))->superclass);
 
 done_testing;

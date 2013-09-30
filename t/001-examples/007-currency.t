@@ -55,14 +55,14 @@ class US::Currency with Comparable, Printable {
     }
 }
 
-ok(mop::get_meta('Comparable')->does_role( 'Eq' ), '... Comparable does the Eq role');
+ok(mop::meta('Comparable')->does_role( 'Eq' ), '... Comparable does the Eq role');
 
-ok(mop::get_meta('US::Currency')->does_role( 'Eq' ), '... US::Currency does Eq');
-ok(mop::get_meta('US::Currency')->does_role( 'Comparable' ), '... US::Currency does Comparable');
-ok(mop::get_meta('US::Currency')->does_role( 'Printable' ), '... US::Currency does Printable');
+ok(mop::meta('US::Currency')->does_role( 'Eq' ), '... US::Currency does Eq');
+ok(mop::meta('US::Currency')->does_role( 'Comparable' ), '... US::Currency does Comparable');
+ok(mop::meta('US::Currency')->does_role( 'Printable' ), '... US::Currency does Printable');
 
-ok(mop::get_meta('Eq')->requires_method('equal_to'), '... EQ::equal_to is a stub method');
-ok(!mop::get_meta('Eq')->requires_method('not_equal_to'), '... EQ::not_equal_to is NOT a stub method');
+ok(mop::meta('Eq')->requires_method('equal_to'), '... EQ::equal_to is a stub method');
+ok(!mop::meta('Eq')->requires_method('not_equal_to'), '... EQ::not_equal_to is NOT a stub method');
 
 my $dollar = US::Currency->new( amount => 10 );
 ok($dollar->isa( 'US::Currency' ), '... the dollar is a US::Currency instance');

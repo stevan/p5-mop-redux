@@ -34,7 +34,7 @@ can_ok('Bar', 'foo');
 can_ok('Bar', 'baz');
 ok(!Bar->can('bar'));
 
-is(mop::get_meta(mop::get_meta('Foo')), mop::get_meta(mop::get_meta('Bar')));
+is(mop::meta(mop::meta('Foo')), mop::meta(mop::meta('Bar')));
 # should have one instance built for Meta, and one for the closed form of Meta.
 # in other words, closing multiple classes that all use the same metaclass
 # shouldn't end up creating multiple closed versions of the metaclass

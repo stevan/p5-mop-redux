@@ -12,8 +12,8 @@ class Foo {
     method bar { __PACKAGE__ }
 }
 {
-    my $method = mop::get_meta('Foo')->get_method('foo');
-    my $body = mop::get_meta($method)->get_attribute('$!body')->fetch_data_in_slot_for($method);
+    my $method = mop::meta('Foo')->get_method('foo');
+    my $body = mop::meta($method)->get_attribute('$!body')->fetch_data_in_slot_for($method);
     unlike(B::Deparse->new->coderef2text($body), qr/__CLASS__/);
 }
 
@@ -26,8 +26,8 @@ role Bar {
 }
 class Baz with Bar { }
 {
-    my $method = mop::get_meta('Bar')->get_method('foo');
-    my $body = mop::get_meta($method)->get_attribute('$!body')->fetch_data_in_slot_for($method);
+    my $method = mop::meta('Bar')->get_method('foo');
+    my $body = mop::meta($method)->get_attribute('$!body')->fetch_data_in_slot_for($method);
     unlike(B::Deparse->new->coderef2text($body), qr/__ROLE__/);
 }
 

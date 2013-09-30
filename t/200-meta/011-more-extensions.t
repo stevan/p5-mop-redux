@@ -56,8 +56,8 @@ class Foo meta ValidatedAccessorMeta {
     has $!age is validated(sub { $_[0] =~ /^\d+$/ });
 }
 
-ok(mop::get_meta('Foo')->has_method('bar'), '... the bar method was generated for us');
-ok(mop::get_meta('Foo')->has_method('baz'), '... the baz method was generated for us');
+ok(mop::meta('Foo')->has_method('bar'), '... the bar method was generated for us');
+ok(mop::meta('Foo')->has_method('baz'), '... the baz method was generated for us');
 
 {
     my $foo = Foo->new;

@@ -10,7 +10,7 @@ use mop;
 
 class Foo is abstract {}
 
-ok(mop::get_meta('Foo')->is_abstract, '... Foo is an abstract class');
+ok(mop::meta('Foo')->is_abstract, '... Foo is an abstract class');
 
 like(
     exception { Foo->new },
@@ -20,7 +20,7 @@ like(
 
 class Bar extends Foo {}
 
-ok(!mop::get_meta('Bar')->is_abstract, '... Bar is not an abstract class');
+ok(!mop::meta('Bar')->is_abstract, '... Bar is not an abstract class');
 
 {
     my $bar;

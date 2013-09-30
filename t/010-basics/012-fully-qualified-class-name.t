@@ -23,6 +23,6 @@ class Foo::Bar {};
 my $foo = Foo::Bar->new;
 ok( $foo->isa( 'Foo::Bar' ), '... the object is from class Foo::Bar' );
 ok( $foo->isa( 'mop::object' ), '... the object is derived from class Object' );
-is( mop::get_meta($foo)->name, 'Foo::Bar', '... got the correct (fully qualified) name of the class');
+is( mop::meta($foo)->name, 'Foo::Bar', '... got the correct (fully qualified) name of the class');
 
 done_testing;

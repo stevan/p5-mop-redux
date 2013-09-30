@@ -13,14 +13,14 @@ class CanDebug extends mop::class {
 class Foo meta CanDebug { }
 class Bar extends Foo meta IsSpecial { }
 
-can_ok(mop::get_meta('Bar'), 'debug');
+can_ok(mop::meta('Bar'), 'debug');
 
 role IsSpecialRole { }
 class IsSpecial2 extends mop::class with IsSpecialRole { }
 
 class Baz extends Foo meta IsSpecial2 { }
 
-can_ok(mop::get_meta('Baz'), 'debug');
-ok(mop::get_meta('Baz')->does('IsSpecialRole'));
+can_ok(mop::meta('Baz'), 'debug');
+ok(mop::meta('Baz')->does('IsSpecialRole'));
 
 done_testing;

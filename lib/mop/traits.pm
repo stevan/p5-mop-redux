@@ -3,6 +3,8 @@ package mop::traits;
 use v5.16;
 use warnings;
 
+use mop::util qw[ find_meta ];
+
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
@@ -149,7 +151,7 @@ sub lazy {
 
 sub extending_non_mop {
     if ($_[0]->isa('mop::class')) {
-        state $BUILDALL = mop::get_meta('mop::object')->get_method('BUILDALL');
+        state $BUILDALL = find_meta('mop::object')->get_method('BUILDALL');
 
         my $meta              = shift;
         my $constructor_name  = shift // 'new';

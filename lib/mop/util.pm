@@ -329,9 +329,9 @@ sub fix_metaclass_compatibility {
     # immutability is on a per-class basis, it shouldn't be inherited.
     # otherwise, subclasses of closed classes won't be able to do things
     # like add attributes or methods to themselves
-    $meta_name = mop::get_meta($meta_name)->superclass
+    $meta_name = find_meta($meta_name)->superclass
         if $meta_name->isa('mop::class') && $meta_name->is_closed;
-    $super_name = mop::get_meta($super_name)->superclass
+    $super_name = find_meta($super_name)->superclass
         if $super_name->isa('mop::class') && $super_name->is_closed;
 
     return $meta_name  if $meta_name->isa($super_name);

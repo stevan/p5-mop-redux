@@ -12,8 +12,8 @@ class Foo is abstract {
     method bar;
 }
 
-ok(mop::get_meta('Foo')->requires_method('bar'), '... bar is a required method');
-ok(mop::get_meta('Foo')->is_abstract, '... Foo is an abstract class');
+ok(mop::meta('Foo')->requires_method('bar'), '... bar is a required method');
+ok(mop::meta('Foo')->is_abstract, '... Foo is an abstract class');
 
 like(
     exception { Foo->new },
@@ -25,8 +25,8 @@ class Bar extends Foo {
     method bar { 'Bar::bar' }
 }
 
-ok(!mop::get_meta('Bar')->requires_method('bar'), '... bar is a not required method');
-ok(!mop::get_meta('Bar')->is_abstract, '... Bar is not an abstract class');
+ok(!mop::meta('Bar')->requires_method('bar'), '... bar is a not required method');
+ok(!mop::meta('Bar')->is_abstract, '... Bar is not an abstract class');
 
 {
     my $bar;
@@ -39,9 +39,9 @@ class Baz extends Bar is abstract {
     method baz;
 }
 
-ok(!mop::get_meta('Baz')->requires_method('bar'), '... bar is a not required method');
-ok(mop::get_meta('Baz')->requires_method('baz'), '... baz is a required method');
-ok(mop::get_meta('Baz')->is_abstract, '... Baz is an abstract class');
+ok(!mop::meta('Baz')->requires_method('bar'), '... bar is a not required method');
+ok(mop::meta('Baz')->requires_method('baz'), '... baz is a required method');
+ok(mop::meta('Baz')->is_abstract, '... Baz is an abstract class');
 
 like(
     exception { Baz->new },
@@ -51,8 +51,8 @@ like(
 
 class Gorch extends Foo is abstract {}
 
-ok(mop::get_meta('Gorch')->requires_method('bar'), '... bar is a required method');
-ok(mop::get_meta('Gorch')->is_abstract, '... Gorch is an abstract class');
+ok(mop::meta('Gorch')->requires_method('bar'), '... bar is a required method');
+ok(mop::meta('Gorch')->is_abstract, '... Gorch is an abstract class');
 
 like(
     exception { Gorch->new },

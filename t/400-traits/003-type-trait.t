@@ -83,7 +83,7 @@ like(
 
 {
     my @traits = mop::traits::util::applied_traits(
-        mop::get_meta('Foo')->get_attribute('$!bar')
+        mop::meta('Foo')->get_attribute('$!bar')
     );
 
     is($traits[0]->{'trait'}, \&rw, '... the read-write trait was applied');

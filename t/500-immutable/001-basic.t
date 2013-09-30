@@ -13,7 +13,7 @@ class Foo {
 {
     is(Foo->new->bar, 1);
 
-    my $Foo = mop::get_meta('Foo');
+    my $Foo = mop::meta('Foo');
     $Foo->add_method(
         $Foo->method_class->new(
             name => 'baz',
@@ -30,7 +30,7 @@ class Bar is closed {
 {
     is(Bar->new->bar, 1);
 
-    my $Bar = mop::get_meta('Bar');
+    my $Bar = mop::meta('Bar');
     like(
         exception {
             $Bar->add_method(

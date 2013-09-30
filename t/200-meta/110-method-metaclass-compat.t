@@ -18,7 +18,7 @@ class Foo {
     method foo is mymethod { 'Foo' }
 }
 
-isa_ok(mop::get_meta('Foo')->get_method('foo'), 'MyMethod');
+isa_ok(mop::meta('Foo')->get_method('foo'), 'MyMethod');
 is(Foo->foo, 'Foo');
 
 class Bar extends Foo {
@@ -26,9 +26,9 @@ class Bar extends Foo {
     method bar { 'BAR' }
 }
 
-isa_ok(mop::get_meta('Bar')->get_method('foo'), 'MyMethod');
+isa_ok(mop::meta('Bar')->get_method('foo'), 'MyMethod');
 is(Bar->foo, 'Bar');
-isa_ok(mop::get_meta('Bar')->get_method('bar'), 'mop::method');
+isa_ok(mop::meta('Bar')->get_method('bar'), 'mop::method');
 is(Bar->bar, 'BAR');
 
 sub myothermethod {
@@ -60,10 +60,10 @@ class Quux extends Foo {
     method foo is mythirdmethod { 'Quux' }
 }
 
-can_ok(mop::get_meta('Quux')->get_method('foo'), 'foo');
-can_ok(mop::get_meta('Quux')->get_method('foo'), 'bar');
-is(mop::get_meta('Quux')->get_method('foo')->foo, 'MyMethod');
-is(mop::get_meta('Quux')->get_method('foo')->bar, 'MyThirdMethod');
+can_ok(mop::meta('Quux')->get_method('foo'), 'foo');
+can_ok(mop::meta('Quux')->get_method('foo'), 'bar');
+is(mop::meta('Quux')->get_method('foo')->foo, 'MyMethod');
+is(mop::meta('Quux')->get_method('foo')->bar, 'MyThirdMethod');
 is(Quux->foo, 'Quux');
 
 done_testing;

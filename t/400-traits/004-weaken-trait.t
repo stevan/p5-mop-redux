@@ -26,7 +26,7 @@ my $bar = Bar->new;
 $bar->foo($foo);
 $foo->bar($bar);
 
-my $store = mop::get_meta('Bar')->get_attribute('$!foo')->storage;
+my $store = mop::meta('Bar')->get_attribute('$!foo')->storage;
 
 #warn "STORAGE:  " . $store;
 #warn "INSTANCE: " . $bar;

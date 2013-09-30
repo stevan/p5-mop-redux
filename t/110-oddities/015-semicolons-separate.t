@@ -11,7 +11,7 @@ use mop;
 }
 
 my $obj  = Foo->new(bar => 42);
-my $attr = mop::get_meta('Foo')->get_attribute('$!bar');
+my $attr = mop::meta('Foo')->get_attribute('$!bar');
 
 is($attr->fetch_data_in_slot_for($obj), 42);
 

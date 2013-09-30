@@ -10,7 +10,7 @@ class Foo {
     method foo { $!foo }
 }
 
-my $Foo = mop::get_meta('Foo');
+my $Foo = mop::meta('Foo');
 
 {
     my $clone = $Foo->clone(name => 'Bar');

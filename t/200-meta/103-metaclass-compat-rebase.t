@@ -18,7 +18,7 @@ class Foo meta FooMeta { }
 class Bar extends Foo meta BarMeta { }
 
 {
-    my $BarMeta = mop::get_meta('Bar');
+    my $BarMeta = mop::meta('Bar');
     is($BarMeta->foo, 'FOO');
     is($BarMeta->bar, 'BAR');
 }

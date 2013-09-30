@@ -17,8 +17,8 @@ class Bar {
     method foo_closure { sub { ++$!foo } }
 }
 
-my $foo_storage = mop::get_meta('Bar')->get_attribute('$!foo')->storage;
-my $bar_storage = mop::get_meta('Foo')->get_attribute('$!bar')->storage;
+my $foo_storage = mop::meta('Bar')->get_attribute('$!foo')->storage;
+my $bar_storage = mop::meta('Foo')->get_attribute('$!bar')->storage;
 
 {
     my $bar_id;

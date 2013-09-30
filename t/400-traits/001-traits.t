@@ -24,7 +24,7 @@ is($foo->bar, 10, '... got the value we expected');
 
 {
     my @traits = mop::traits::util::applied_traits(
-        mop::get_meta('Foo')->get_attribute('$!bar')
+        mop::meta('Foo')->get_attribute('$!bar')
     );
 
     is($traits[0]->{'trait'}, \&rw, '... the read-write trait was applied');
@@ -48,7 +48,7 @@ like(
 
 {
     my @traits = mop::traits::util::applied_traits(
-        mop::get_meta('Bar')->get_attribute('$!baz')
+        mop::meta('Bar')->get_attribute('$!baz')
     );
 
     is($traits[0]->{'trait'}, \&ro, '... the read-only trait was applied');
@@ -56,11 +56,11 @@ like(
 
 class Baz is abstract {}
 
-ok(mop::get_meta('Baz')->is_abstract, '... class is abstract');
+ok(mop::meta('Baz')->is_abstract, '... class is abstract');
 
 {
     my @traits = mop::traits::util::applied_traits(
-        mop::get_meta('Baz')
+        mop::meta('Baz')
     );
 
     is($traits[0]->{'trait'}, \&abstract, '... the abstract trait was applied');
