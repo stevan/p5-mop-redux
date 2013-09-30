@@ -174,7 +174,8 @@ sub FINALIZE {
     my $self = shift;
     $self->fire('before:FINALIZE');
 
-    mop::util::apply_all_roles($self, @{ $self->roles });
+    mop::util::apply_all_roles($self, @{ $self->roles })
+        if @{ $self->roles };
 
     if ($self->required_methods && not $self->is_abstract) {
         die 'Required method(s) ['
