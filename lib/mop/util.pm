@@ -101,9 +101,19 @@ sub apply_all_roles {
     }
 
     # merge required methods ...
-    for my $method ($composite->required_methods) {
-        $to->add_required_method($method)
-            unless $to->has_method($method);
+    for my $conflict ($composite->required_methods) {
+        if (my $method = $to->get_method($conflict)) {
+            my @conflicting_methods =
+                grep { $_->name eq $conflict }
+                map { $_->methods }
+                @{ $composite->roles };
+            for my $conflicting_method (@conflicting_methods) {
+                apply_metaclass($method, $conflicting_method);
+            }
+        }
+        else {
+            $to->add_required_method($conflict);
+        }
     }
 
     $composite->fire('after:COMPOSE' => $to);
@@ -116,7 +126,8 @@ sub _create_composite_role {
     return $roles[0] if @roles == 1;
 
     my $composite = mop::role->new(
-        name => 'COMPOSITE::OF::[' . (join ', ' => map { $_->name } @roles) . ']'
+        name  => 'COMPOSITE::OF::[' . (join ', ' => map { $_->name } @roles) . ']',
+        roles => [ @roles ],
     );
 
     $composite->fire('before:CONSUME' => $_)

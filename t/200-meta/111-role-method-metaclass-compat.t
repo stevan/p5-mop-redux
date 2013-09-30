@@ -56,9 +56,7 @@ class C1 with R1, R2 {
     method foo { 'C1' }
 }
 
-{ local $TODO = "this will require us to do better tracking of conflicts";
 isa_ok(mop::get_meta('C1')->get_method('foo'), 'MyMethod');
-}
 is(C1->foo, 'C1');
 
 done_testing;
