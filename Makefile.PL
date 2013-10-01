@@ -37,7 +37,6 @@ my %WriteMakefileArgs = (
 
     # general utility modules
     'Carp'                     => 0,
-    'List::AllUtils'           => 0,
     'Scalar::Util'             => 0,
     'Sub::Exporter'            => 0,
 
@@ -53,7 +52,6 @@ my %WriteMakefileArgs = (
     'Test::More'                   => '0.88',
     'Test::Warn'                   => 0,
     'Test::Fatal'                  => 0,
-    'Test::EOL'                    => 0,
 
     # core utility pragma
     'lib'                          => 0,
