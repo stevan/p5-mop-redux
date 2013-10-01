@@ -3,6 +3,8 @@ use warnings;
 use Test::More;
 
 eval 'use Test::NoTabs';
-plan skip_all => 'Test::NoTabs required' if $@;
+if ($@) {
+    $ENV{RELEASE_TESTING} ? die : plan skip_all => 'Test::NoTabs required';
+}
 
 all_perl_files_ok();
