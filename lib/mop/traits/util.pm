@@ -15,15 +15,14 @@ sub apply_trait {
     my ($trait, $meta, @args) = @_;
     try {
         $trait->( $meta, @args );
-    } catch {
-        die "Trait application failed: $_";
-    } finally {
         $TRAIT_REGISTRATION{ $meta } = []
             unless exists $TRAIT_REGISTRATION{ $meta };
         push @{ $TRAIT_REGISTRATION{ $meta } } => {
             trait => $trait,
             args  => \@args,
         };
+    } catch {
+        die "Trait application failed: $_";
     }
 }
 
