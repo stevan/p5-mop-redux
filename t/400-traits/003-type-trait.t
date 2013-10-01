@@ -8,7 +8,9 @@ use Test::Fatal;
 
 BEGIN {
     eval { require Moose::Util::TypeConstraints; 1 }
-        or plan skip_all => "This test requires Moose::Util::TypeConstraints";
+        or ($ENV{RELEASE_TESTING}
+            ? die
+            : plan skip_all => "This test requires Moose::Util::TypeConstraints");
 }
 
 use mop;

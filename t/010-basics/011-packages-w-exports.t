@@ -7,7 +7,9 @@ use Test::More;
 
 BEGIN {
     eval { require Path::Class; 1 }
-        or plan skip_all => "This test requires Path::Class";
+        or ($ENV{RELEASE_TESTING}
+            ? die
+            : plan skip_all => "This test requires Path::Class");
 }
 
 =pod

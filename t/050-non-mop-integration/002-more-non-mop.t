@@ -8,7 +8,9 @@ use Test::Fatal;
 
 BEGIN {
     eval { require Moose; 1 }
-        or plan skip_all => "This test requires Moose";
+        or ($ENV{RELEASE_TESTING}
+            ? die
+            : plan skip_all => "This test requires Moose");
 }
 
 use mop;
