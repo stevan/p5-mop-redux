@@ -321,7 +321,7 @@ sub _get_class_for_closing {
 sub _rebase_metaclasses {
     my ($meta_name, $super_name) = @_;
 
-    my $common_base = _find_common_base($meta_name, $super_name);
+    my $common_base = mop::internals::util::find_common_base($meta_name, $super_name);
     return unless $common_base;
 
     my @meta_isa = @{ mop::mro::get_linear_isa($meta_name) };
@@ -364,19 +364,6 @@ sub _rebase_metaclasses {
     }
 
     return $current;
-}
-
-sub _find_common_base {
-    my ($meta_name, $super_name) = @_;
-
-    my %meta_ancestors =
-        map { $_ => 1 } @{ mop::mro::get_linear_isa($meta_name) };
-
-    for my $super_ancestor (@{ mop::mro::get_linear_isa($super_name) }) {
-        return $super_ancestor if $meta_ancestors{$super_ancestor};
-    }
-
-    return;
 }
 
 package mop::mro;

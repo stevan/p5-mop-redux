@@ -53,4 +53,17 @@ sub install_meta {
     mro::set_mro($name, 'mop');
 }
 
+sub find_common_base {
+    my ($meta_name, $super_name) = @_;
+
+    my %meta_ancestors =
+        map { $_ => 1 } @{ mop::mro::get_linear_isa($meta_name) };
+
+    for my $super_ancestor (@{ mop::mro::get_linear_isa($super_name) }) {
+        return $super_ancestor if $meta_ancestors{$super_ancestor};
+    }
+
+    return;
+}
+
 1;

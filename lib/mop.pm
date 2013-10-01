@@ -68,7 +68,7 @@ sub rebless ($;$) {
     my ($object, $into) = @_;
 
     my $from = Scalar::Util::blessed($object);
-    my $common_base = mop::util::_find_common_base($from, $into);
+    my $common_base = mop::internals::util::find_common_base($from, $into);
 
     my @from_isa = @{ mop::mro::get_linear_isa($from) };
     if ($common_base) {
