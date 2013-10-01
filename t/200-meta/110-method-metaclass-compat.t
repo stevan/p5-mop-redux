@@ -7,7 +7,7 @@ use mop;
 
 sub mymethod {
     my ($meta) = @_;
-    bless $meta, 'MyMethod';
+    mop::apply_metaclass($meta, 'MyMethod');
 }
 
 class MyMethod extends mop::method {

@@ -10,7 +10,7 @@ class MyMeta extends mop::class {
 }
 
 sub mymeta {
-    bless $_[0], 'MyMeta';
+    mop::apply_metaclass($_[0], 'MyMeta');
 }
 
 class Foo is mymeta { }
