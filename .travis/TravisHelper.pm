@@ -95,22 +95,23 @@ sub installdeps {
 sub test {
     each_dir {
         my $failed = 0;
+        my $env = "RELEASE_TESTING=1";
 
         if (-e 'Build.PL') {
-            $failed ||= _system("perl Build.PL && ./Build test");
+            $failed ||= _system("$env perl Build.PL && $env ./Build test");
         }
         elsif (-e 'Makefile.PL') {
-            $failed ||= _system("perl Makefile.PL && make test");
+            $failed ||= _system("$env perl Makefile.PL && $env make test");
         }
         elsif (-e 'dist.ini') {
-            $failed ||= _system("dzil test");
+            $failed ||= _system("$env dzil test");
         }
         else {
-            $failed ||= _system("prove -lr t");
+            $failed ||= _system("$env prove -lr t");
         }
 
         if (-e 'xt') {
-            $failed ||= _system("prove -lr xt");
+            $failed ||= _system("$env prove -lr xt");
         }
 
         return $failed;
