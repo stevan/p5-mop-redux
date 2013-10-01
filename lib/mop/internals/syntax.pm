@@ -3,6 +3,8 @@ package mop::internals::syntax;
 use v5.16;
 use warnings;
 
+use mop::util qw[ find_meta has_meta remove_meta ];
+
 use Scope::Guard    qw[ guard ];
 use Variable::Magic qw[ wizard ];
 
@@ -40,7 +42,7 @@ our $CURRENT_ATTRIBUTE_LIST;
 # attribute variable is read from or written
 # to it will get/set that data to the
 # underlying fieldhash storage.
-our $ATTR_WIZARD = Variable::Magic::wizard(
+our $ATTR_WIZARD = wizard(
     data => sub {
         my (undef, $config) = @_;
         return $config;
@@ -68,7 +70,7 @@ our $ATTR_WIZARD = Variable::Magic::wizard(
 # this wizard if for class methods only
 # that throws an error if the user tries
 # to access or assign to an attribute
-our $ERR_WIZARD = Variable::Magic::wizard(
+our $ERR_WIZARD = wizard(
     data => sub {
         my (undef, $name) = @_;
         return $name;
@@ -170,7 +172,7 @@ sub namespace_parser {
     lex_read_space;
 
     for my $class (@classes_to_load) {
-        next if mop::util::has_meta($class);
+        next if has_meta($class);
         Module::Runtime::use_package_optimistically($class);
     }
 
@@ -188,13 +190,13 @@ sub namespace_parser {
     my $meta = $metaclass->new(
         name       => $pkg,
         version    => $version,
-        roles      => [ map { mop::util::find_meta($_) or die "Could not find metaclass for role: $_" } @with ],
+        roles      => [ map { find_meta($_) or die "Could not find metaclass for role: $_" } @with ],
         ($type eq 'class'
             ? (superclass => $extends)
             : ()),
     );
     my $g = guard {
-        mop::util::remove_meta($pkg);
+        remove_meta($pkg);
         mro::set_mro($pkg, 'dfs');
     };
 

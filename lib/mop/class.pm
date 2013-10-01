@@ -3,11 +3,10 @@ package mop::class;
 use v5.16;
 use warnings;
 
-use mop::util qw[ has_meta find_meta apply_metaclass ];
+use mop::util qw[ find_meta apply_all_roles apply_metaclass ];
 use mop::internals::util;
 
 use Module::Runtime qw[ is_module_name module_notional_filename ];
-use Scalar::Util qw[ blessed ];
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -183,7 +182,7 @@ sub FINALIZE {
     my $self = shift;
     $self->fire('before:FINALIZE');
 
-    mop::util::apply_all_roles($self, @{ $self->roles })
+    apply_all_roles($self, @{ $self->roles })
         if @{ $self->roles };
 
     if ($self->required_methods && not $self->is_abstract) {

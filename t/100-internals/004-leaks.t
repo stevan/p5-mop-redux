@@ -26,7 +26,7 @@ my $bar_storage = mop::meta('Foo')->get_attribute('$!bar')->storage;
         my $closure;
         {
             my $bar = Bar->new;
-            $bar_id = mop::util::get_object_id($bar);
+            $bar_id = mop::id($bar);
             ok(exists $foo_storage->{$bar_id});
             {
                 is($bar->foo, 10);
@@ -47,9 +47,9 @@ my $bar_storage = mop::meta('Foo')->get_attribute('$!bar')->storage;
         my ($foo_closure, $bar_closure);
         {
             my $foo = Foo->new;
-            $foo_id = mop::util::get_object_id($foo);
+            $foo_id = mop::id($foo);
             my $bar = $foo->bar;
-            $bar_id = mop::util::get_object_id($bar);
+            $bar_id = mop::id($bar);
             ok(exists $foo_storage->{$bar_id});
             ok(exists $bar_storage->{$foo_id});
             {

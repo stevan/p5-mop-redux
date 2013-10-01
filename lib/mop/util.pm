@@ -10,7 +10,7 @@ use mop::internals::util;
 use mop::mro;
 
 use Hash::Util::FieldHash;
-use Scalar::Util qw[ blessed ];
+use Scalar::Util;
 
 use Sub::Exporter -setup => {
     exports => [qw[
@@ -156,10 +156,10 @@ sub close_class {
 sub fix_metaclass_compatibility {
     my ($meta, $super) = @_;
 
-    my $meta_name  = blessed($meta) // $meta;
+    my $meta_name  = Scalar::Util::blessed($meta) // $meta;
     return $meta_name if !defined $super; # non-mop inheritance
 
-    my $super_name = blessed($super) // $super;
+    my $super_name = Scalar::Util::blessed($super) // $super;
 
     # immutability is on a per-class basis, it shouldn't be inherited.
     # otherwise, subclasses of closed classes won't be able to do things
@@ -175,10 +175,10 @@ sub fix_metaclass_compatibility {
     my $rebased_meta_name = _rebase_metaclasses($meta_name, $super_name);
     return $rebased_meta_name if $rebased_meta_name;
 
-    my $meta_desc = blessed($meta)
+    my $meta_desc = Scalar::Util::blessed($meta)
         ? $meta->name . " ($meta_name)"
         : $meta_name;
-    my $super_desc = blessed($super)
+    my $super_desc = Scalar::Util::blessed($super)
         ? $super->name . " ($super_name)"
         : $super_name;
     die "Can't fix metaclass compatibility between $meta_desc and $super_desc";

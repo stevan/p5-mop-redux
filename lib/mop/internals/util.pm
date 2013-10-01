@@ -2,11 +2,11 @@ package mop::internals::util;
 use v5.16;
 use warnings;
 
-our $VERSION   = '0.01';
-our $AUTHORITY = 'cpan:STEVAN';
-
 use Hash::Util::FieldHash;
 use Package::Stash;
+
+our $VERSION   = '0.01';
+our $AUTHORITY = 'cpan:STEVAN';
 
 sub get_stash_for {
     state %STASHES;

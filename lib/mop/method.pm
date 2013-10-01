@@ -4,7 +4,7 @@ use v5.16;
 use warnings;
 
 use mop::util qw[ get_object_id ];
-use Scalar::Util 'weaken';
+use Scalar::Util qw[ weaken ];
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';

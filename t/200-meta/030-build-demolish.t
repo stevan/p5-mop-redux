@@ -4,6 +4,7 @@ use warnings;
 use Test::More;
 
 use mop;
+use mop::util qw[ remove_meta ];
 
 my ($built, $demolished);
 BEGIN { ($built, $demolished) = (0, 0) }
@@ -20,13 +21,13 @@ BEGIN { is($built, 2); is($demolished, 0) }
 class Baz meta Meta { }
 BEGIN { is($built, 3); is($demolished, 0) }
 
-mop::util::remove_meta('Foo');
+remove_meta('Foo');
 is($built, 3);
 is($demolished, 1);
-mop::util::remove_meta('Bar');
+remove_meta('Bar');
 is($built, 3);
 is($demolished, 2);
-mop::util::remove_meta('Baz');
+remove_meta('Baz');
 is($built, 3);
 is($demolished, 3);
 

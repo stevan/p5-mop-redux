@@ -3,7 +3,7 @@ package mop::object;
 use v5.16;
 use warnings;
 
-use mop::util    qw[ has_meta find_meta ];
+use mop::util    qw[ find_meta ];
 use Scalar::Util qw[ blessed ];
 
 our $VERSION   = '0.01';

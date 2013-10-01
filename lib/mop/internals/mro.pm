@@ -3,10 +3,7 @@ package mop::internals::mro;
 use v5.16;
 use warnings;
 
-use mop::util qw[
-    has_meta
-    find_meta
-];
+use mop::util qw[ find_meta ];
 
 use Devel::GlobalDestruction;
 use MRO::Define;
