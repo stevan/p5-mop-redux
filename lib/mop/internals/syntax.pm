@@ -3,8 +3,6 @@ package mop::internals::syntax;
 use v5.16;
 use warnings;
 
-use mop::util qw[ find_meta has_meta remove_meta ];
-
 use Scope::Guard    qw[ guard ];
 use Variable::Magic qw[ wizard ];
 
@@ -172,7 +170,7 @@ sub namespace_parser {
     lex_read_space;
 
     for my $class (@classes_to_load) {
-        next if has_meta($class);
+        next if mop::has_meta($class);
         Module::Runtime::use_package_optimistically($class);
     }
 
@@ -190,13 +188,13 @@ sub namespace_parser {
     my $meta = $metaclass->new(
         name       => $pkg,
         version    => $version,
-        roles      => [ map { find_meta($_) or die "Could not find metaclass for role: $_" } @with ],
+        roles      => [ map { mop::find_meta($_) or die "Could not find metaclass for role: $_" } @with ],
         ($type eq 'class'
             ? (superclass => $extends)
             : ()),
     );
     my $g = guard {
-        remove_meta($pkg);
+        mop::remove_meta($pkg);
         mro::set_mro($pkg, 'dfs');
     };
 

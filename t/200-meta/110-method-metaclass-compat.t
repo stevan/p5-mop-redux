@@ -4,7 +4,6 @@ use warnings;
 use Test::More;
 
 use mop;
-use mop::util 'apply_metaclass';
 
 sub mymethod {
     my ($meta) = @_;
@@ -34,7 +33,7 @@ is(Bar->bar, 'BAR');
 
 sub myothermethod {
     my ($meta) = @_;
-    apply_metaclass($meta, 'MyOtherMethod');
+    mop::apply_metaclass($meta, 'MyOtherMethod');
 }
 
 class MyOtherMethod extends mop::method {
@@ -50,7 +49,7 @@ like($@, qr/compatib/);
 
 sub mythirdmethod {
     my ($meta) = @_;
-    apply_metaclass($meta, 'MyThirdMethod');
+    mop::apply_metaclass($meta, 'MyThirdMethod');
 }
 
 class MyThirdMethod extends mop::method {

@@ -4,7 +4,6 @@ use warnings;
 use Test::More;
 
 use mop;
-use mop::util 'apply_metaclass';
 
 class MyMeta extends mop::class {
     method foo { 'MyMeta' }
@@ -23,7 +22,7 @@ class MyOtherMeta extends mop::class {
 }
 
 sub myothermeta {
-    apply_metaclass($_[0], 'MyOtherMeta');
+    mop::apply_metaclass($_[0], 'MyOtherMeta');
 }
 
 eval "

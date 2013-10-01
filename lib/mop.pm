@@ -20,10 +20,12 @@ use mop::observable;
 
 use mop::internals::syntax;
 use mop::internals::mro;
+use mop::internals::util;
+
+use mop::mro;
 
 use mop::traits;
 use mop::traits::util;
-use mop::util;
 
 sub import {
     shift;
@@ -52,15 +54,82 @@ sub unimport {
 sub meta {
     my $class = shift;
     die "Could not find metaclass for $class"
-      unless mop::util::has_meta( $class );
-    mop::util::find_meta( $class );
+      unless has_meta( $class );
+    find_meta( $class );
 }
 
 sub id {
     my $obj = shift;
     die "Could not find an object id for $obj"
-      unless mop::util::is_mop_object($obj);
-    mop::util::get_object_id($obj);
+      unless is_mop_object($obj);
+    get_object_id($obj);
+}
+
+sub find_meta {
+    ${ mop::internals::util::get_stash_for( shift )->get_symbol('$METACLASS') || \undef }
+}
+
+sub has_meta  {
+    mop::internals::util::get_stash_for( shift )->has_symbol('$METACLASS')
+}
+
+sub remove_meta {
+    mop::internals::util::get_stash_for( shift )->remove_symbol('$METACLASS')
+}
+
+sub get_object_id { Hash::Util::FieldHash::id( $_[0] ) }
+
+sub is_mop_object {
+    defined Hash::Util::FieldHash::id_2obj( get_object_id( $_[0] ) );
+}
+
+sub apply_all_roles {
+    my ($to, @roles) = @_;
+
+    my $composite = mop::internals::util::create_composite_role(@roles);
+
+    $to->fire('before:CONSUME' => $composite);
+    $composite->fire('before:COMPOSE' => $to);
+
+    foreach my $attribute ($composite->attributes) {
+        die 'Attribute conflict ' . $attribute->name . ' when composing ' . $composite->name . ' into ' . $to->name
+            if $to->has_attribute( $attribute->name )
+            && $to->get_attribute( $attribute->name )->conflicts_with( $attribute );
+        $to->add_attribute( $attribute->clone(associated_meta => $to) );
+    }
+
+    foreach my $method ($composite->methods) {
+        if (my $existing_method = $to->get_method($method->name)) {
+            apply_metaclass($existing_method, $method);
+        }
+        else {
+            $to->add_method($method->clone(associated_meta => $to));
+        }
+    }
+
+    # merge required methods ...
+    for my $conflict ($composite->required_methods) {
+        if (my $method = $to->get_method($conflict)) {
+            my @conflicting_methods =
+                grep { $_->name eq $conflict }
+                map { $_->methods }
+                @{ $composite->roles };
+            for my $conflicting_method (@conflicting_methods) {
+                apply_metaclass($method, $conflicting_method);
+            }
+        }
+        else {
+            $to->add_required_method($conflict);
+        }
+    }
+
+    $composite->fire('after:COMPOSE' => $to);
+    $to->fire('after:CONSUME' => $composite);
+}
+
+sub apply_metaclass {
+    my ($instance, $new_meta) = @_;
+    bless $instance, mop::internals::util::fix_metaclass_compatibility($new_meta, $instance);
 }
 
 sub rebless ($;$) {
@@ -74,14 +143,14 @@ sub rebless ($;$) {
         pop @from_isa until $from_isa[-1] eq $common_base;
         pop @from_isa;
     }
-    @from_isa = grep { defined } map { mop::util::find_meta($_) } @from_isa;
+    @from_isa = grep { defined } map { find_meta($_) } @from_isa;
 
     my @into_isa = @{ mop::mro::get_linear_isa($into) };
     if ($common_base) {
         pop @into_isa until $into_isa[-1] eq $common_base;
         pop @into_isa;
     }
-    @into_isa = grep { defined } map { mop::util::find_meta($_) } @into_isa;
+    @into_isa = grep { defined } map { find_meta($_) } @into_isa;
 
     for my $attr (map { $_->attributes } @from_isa) {
         delete $attr->storage->{$object};
@@ -100,7 +169,7 @@ sub dump_object {
     my ($obj) = @_;
 
     my %attributes = map {
-        if (my $m = mop::util::find_meta($_)) {
+        if (my $m = find_meta($_)) {
             %{ $m->attribute_map }
         }
     } reverse @{ mop::mro::get_linear_isa($obj) };
@@ -150,14 +219,14 @@ sub bootstrap {
         mop::observable
     ];
 
-    my $Object = mop::util::find_meta('mop::object');
+    my $Object = find_meta('mop::object');
 
-    my $Role  = mop::util::find_meta('mop::role');
-    my $Class = mop::util::find_meta('mop::class');
+    my $Role  = find_meta('mop::role');
+    my $Class = find_meta('mop::class');
 
-    my $Method     = mop::util::find_meta('mop::method');
-    my $Attribute  = mop::util::find_meta('mop::attribute');
-    my $Observable = mop::util::find_meta('mop::observable');
+    my $Method     = find_meta('mop::method');
+    my $Attribute  = find_meta('mop::attribute');
+    my $Observable = find_meta('mop::observable');
 
     # At this point the metaclass
     # layer class to role relationship
@@ -244,7 +313,7 @@ sub bootstrap {
         no warnings 'redefine';
         *next::method = sub {
             my $invocant = shift;
-            if ( mop::util::has_meta( $invocant ) ) {
+            if ( has_meta( $invocant ) ) {
                 $invocant->mop::next::method( @_ )
             } else {
                 $invocant->$old_next_method( @_ )
@@ -253,7 +322,7 @@ sub bootstrap {
 
         *next::can = sub {
             my $invocant = shift;
-            if ( mop::util::has_meta( $invocant ) ) {
+            if ( has_meta( $invocant ) ) {
                 $invocant->mop::next::can( @_ )
             } else {
                 $invocant->$old_next_can( @_ )

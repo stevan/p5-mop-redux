@@ -19,7 +19,6 @@ my %WriteMakefileArgs = (
   'PREREQ_PM'          => {
     # core
     'Carp'                  => 0,
-    'Exporter'              => 0,
     'Hash::Util::FieldHash' => 0,
     'Scalar::Util'          => 0,
     'mro'                   => 0,

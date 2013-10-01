@@ -3,7 +3,6 @@ package mop::role;
 use v5.16;
 use warnings;
 
-use mop::util qw[ find_meta apply_all_roles ];
 use mop::internals::util;
 
 use Module::Runtime qw[ is_module_name module_notional_filename ];
@@ -40,7 +39,7 @@ sub new {
     $methods{ $self }          = \({});
     $required_methods{ $self } = \({});
 
-    if (my @nometa = grep { !find_meta($_) } @${ $roles{$self} }) {
+    if (my @nometa = grep { !mop::find_meta($_) } @${ $roles{$self} }) {
         die "No metaclass found for these roles: @nometa";
     }
 

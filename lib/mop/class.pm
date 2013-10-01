@@ -3,7 +3,6 @@ package mop::class;
 use v5.16;
 use warnings;
 
-use mop::util qw[ find_meta apply_all_roles apply_metaclass ];
 use mop::internals::util;
 
 use Module::Runtime qw[ is_module_name module_notional_filename ];
@@ -26,7 +25,7 @@ sub new {
     $superclass{ $self }         = \($args{'superclass'});
     $submethods{ $self }         = \({});
 
-    if ($args{'superclass'} && (my $meta = find_meta($args{'superclass'}))) {
+    if ($args{'superclass'} && (my $meta = mop::find_meta($args{'superclass'}))) {
         $instance_generator{ $self } = \$meta->instance_generator;
 
         # merge required methods with superclass
@@ -45,7 +44,8 @@ sub new {
     }
 
     if (defined(my $super = $self->superclass)) {
-        apply_metaclass($self, find_meta($super)) if find_meta($super);
+        mop::apply_metaclass($self, mop::find_meta($super))
+            if mop::find_meta($super);
     }
 
     $self;
@@ -80,7 +80,7 @@ sub new_instance {
     mop::internals::util::register_object($instance);
 
     my %attributes = map {
-        if (my $m = find_meta($_)) {
+        if (my $m = mop::find_meta($_)) {
             %{ $m->attribute_map }
         }
     } reverse @{ mop::mro::get_linear_isa($self->name) };
@@ -104,7 +104,7 @@ sub clone_instance {
 
     my $attributes = {
         map {
-            if (my $m = find_meta($_)) {
+            if (my $m = mop::find_meta($_)) {
                 %{ $m->attribute_map }
             }
         } reverse @{ mop::mro::get_linear_isa($self->name) }
@@ -140,14 +140,14 @@ sub add_method {
 
     my @super_methods = (
         map { $_ ? $_->get_method($method->name) : undef }
-        map { find_meta($_) }
+        map { mop::find_meta($_) }
         @{ mop::mro::get_linear_isa($self->name) }
     );
     shift @super_methods;
     @super_methods = grep { defined } @super_methods;
 
     if (my $super = $super_methods[0]) {
-        apply_metaclass($method, $super);
+        mop::apply_metaclass($method, $super);
     }
 
     $self->mop::role::add_method($method);

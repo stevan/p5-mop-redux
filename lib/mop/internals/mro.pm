@@ -3,8 +3,6 @@ package mop::internals::mro;
 use v5.16;
 use warnings;
 
-use mop::util qw[ find_meta ];
-
 use Devel::GlobalDestruction;
 use MRO::Define;
 use Scalar::Util    qw[ blessed ];
@@ -76,7 +74,7 @@ sub _find_method {
     }
 
     foreach my $class ( @mro ) {
-        if (my $meta = find_meta($class)) {
+        if (my $meta = mop::find_meta($class)) {
             return $meta->get_method( $method_name )
                 if $meta->has_method( $method_name );
         } else {
@@ -87,7 +85,7 @@ sub _find_method {
     }
 
     if (my $universally = UNIVERSAL->can($method_name)) {
-        if (my $method = find_meta('mop::object')->get_method($method_name)) {
+        if (my $method = mop::find_meta('mop::object')->get_method($method_name)) {
             # we're doing method lookup on a mop class which doesn't inherit
             # from mop::object (otherwise this would have been found above). we
             # need to use the mop::object version of the appropriate UNIVERSAL
@@ -108,7 +106,7 @@ sub _find_method {
 sub find_submethod {
     my ($invocant, $method_name) = @_;
 
-    if (my $meta = find_meta($invocant)) {
+    if (my $meta = mop::find_meta($invocant)) {
         return $meta->get_submethod( $method_name );
     }
 
