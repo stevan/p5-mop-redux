@@ -231,7 +231,7 @@ sub bootstrap {
                 my %args  = scalar(@_) == 1 && ref $_[0] eq 'HASH'
                     ? %{$_[0]}
                     : @_;
-                mop::util::find_or_inflate_meta($class)->new_instance(%args);
+                mop::internals::util::find_or_inflate_meta($class)->new_instance(%args);
             },
         );
         $Object->add_method($new);
