@@ -279,16 +279,18 @@ sub _get_class_for_closing {
         roles      => [],
     );
 
-    my @mutable_methods = qw(
+    my @mutator_methods = qw(
+        add_role
         add_attribute
         add_method
         add_required_method
-        add_role
-        add_submethod
+        remove_required_method
         make_class_abstract
+        set_instance_generator
+        add_submethod
     );
 
-    for my $method (@mutable_methods) {
+    for my $method (@mutator_methods) {
         $new_meta->add_method(
             $new_meta->method_class->new(
                 name => $method,
