@@ -360,7 +360,8 @@ sub _rebase_metaclasses {
                 name       => $rebased,
                 superclass => $current,
             );
-            close_class($clone);
+            mop::traits::closed($clone);
+            $clone->FINALIZE;
         }
         $current = $rebased;
     }
