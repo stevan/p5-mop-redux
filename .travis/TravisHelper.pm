@@ -17,6 +17,7 @@ $ENV{PERL5LIB} = $ENV{PERL5LIB}
     ? join(":", "$mop_dir/lib", $ENV{PERL5LIB})
     : "$mop_dir/lib";
 
+$ENV{RELEASE_TESTING} = 1;
 # for the HTTP::Thin::UserAgent test suite
 $ENV{LIVE_HTTP_TESTS} = 1;
 
@@ -95,23 +96,22 @@ sub installdeps {
 sub test {
     each_dir {
         my $failed = 0;
-        my $env = "RELEASE_TESTING=1";
 
         if (-e 'Build.PL') {
-            $failed ||= _system("$env perl Build.PL && $env ./Build test");
+            $failed ||= _system("perl Build.PL && ./Build test");
         }
         elsif (-e 'Makefile.PL') {
-            $failed ||= _system("$env perl Makefile.PL && $env make test");
+            $failed ||= _system("perl Makefile.PL && make test");
         }
         elsif (-e 'dist.ini') {
-            $failed ||= _system("$env dzil test");
+            $failed ||= _system("dzil test");
         }
         else {
-            $failed ||= _system("$env prove -lr t");
+            $failed ||= _system("prove -lr t");
         }
 
         if (-e 'xt') {
-            $failed ||= _system("$env prove -lr xt");
+            $failed ||= _system("prove -lr xt");
         }
 
         return $failed;
