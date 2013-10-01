@@ -53,6 +53,27 @@ sub install_meta {
     mro::set_mro($name, 'mop');
 }
 
+sub finalize_meta {
+    my ($meta) = @_;
+
+    $meta->fire('before:FINALIZE');
+
+    mop::util::apply_all_roles($meta, @{ $meta->roles })
+        if @{ $meta->roles };
+
+    if ($meta->isa('mop::class')) {
+        die 'Required method(s) [' . (join ', ' => $meta->required_methods)
+            . '] are not allowed in ' . $meta->name
+            . ' unless class is declared abstract'
+            if $meta->required_methods && not $meta->is_abstract;
+    }
+
+    my $stash = mop::internals::util::get_stash_for($meta->name);
+    $stash->add_symbol('$VERSION', \$meta->version);
+
+    $meta->fire('after:FINALIZE');
+}
+
 sub find_common_base {
     my ($meta_name, $super_name) = @_;
 

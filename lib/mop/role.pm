@@ -186,15 +186,7 @@ sub requires_method {
 
 sub FINALIZE {
     my $self = shift;
-    $self->fire('before:FINALIZE');
-
-    apply_all_roles($self, @{ $self->roles })
-        if @{ $self->roles };
-
-    my $stash = mop::internals::util::get_stash_for($self->name);
-    $stash->add_symbol('$VERSION', \$self->version);
-
-    $self->fire('after:FINALIZE');
+    mop::internals::util::finalize_meta($self);
 }
 
 our $METACLASS;

@@ -180,23 +180,7 @@ sub has_submethod {
 
 sub FINALIZE {
     my $self = shift;
-    $self->fire('before:FINALIZE');
-
-    apply_all_roles($self, @{ $self->roles })
-        if @{ $self->roles };
-
-    if ($self->required_methods && not $self->is_abstract) {
-        die 'Required method(s) ['
-            . (join ', ' => $self->required_methods)
-            . '] are not allowed in '
-            . $self->name
-            . ' unless class is declared abstract';
-    }
-
-    my $stash = mop::internals::util::get_stash_for($self->name);
-    $stash->add_symbol('$VERSION', \$self->version);
-
-    $self->fire('after:FINALIZE');
+    mop::internals::util::finalize_meta($self);
 }
 
 our $METACLASS;
