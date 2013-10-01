@@ -17,50 +17,46 @@ my %WriteMakefileArgs = (
   'CONFIGURE_REQUIRES' => { 'ExtUtils::MakeMaker' => '6.30' },
   'EXE_FILES'          => [],
   'PREREQ_PM'          => {
-    # internal hacking modules
-    # needed for implementation
-    'B::Hooks::EndOfScope'     => 0,
+    # core
+    'Carp'                  => 0,
+    'Exporter'              => 0,
+    'Hash::Util::FieldHash' => 0,
+    'Scalar::Util'          => 0,
+    'mro'                   => 0,
+    'overload'              => 0,
+    'parent'                => 0,
+    'strict'                => 0,
+    'version'               => 0,
+    'warnings'              => 0,
+
+    # parser
+    'B::Hooks::EndOfScope' => 0,
+    'Parse::Keyword'       => 0.04,
+    'Scope::Guard'         => 0,
+    'Sub::Name'            => 0,
+    'twigils'              => 0,
+    'Variable::Magic'      => 0,
+
+    # mro
     'Devel::GlobalDestruction' => 0,
     'MRO::Define'              => 0,
-    'Parse::Keyword'           => '0.04',
-    'Scope::Guard'             => 0,
-    'Variable::Magic'          => 0,
-    'twigils'                  => 0,
 
-    # utility modules needed
-    # for implementation
-    'Hash::Util::FieldHash'    => 0,
-    'Package::Stash'           => 0,
-    'Package::Stash::XS'       => '0.27',
-    'Module::Runtime'          => 0,
-    'Sub::Name'                => 0,
-
-    # general utility modules
-    'Carp'                     => 0,
-    'Scalar::Util'             => 0,
-    'Exporter'                 => 0,
-
-    # core pragmas
-    'mro'                      => 0,
-    'overload'                 => 0,
-    'parent'                   => 0,
-    'strict'                   => 0,
-    'warnings'                 => 0,
+    # other
+    'Module::Runtime'    => 0,
+    'Package::Stash'     => 0,
+    'Package::Stash::XS' => 0.27,
   },
   'TEST_REQUIRES' => {
-    # test modules
-    'Test::More'                   => '0.88',
-    'Test::Fatal'                  => 0,
+    # core
+    'Test::Fatal' => 0,
+    'Test::More'  => 0.88,
+    'if'          => 0,
+    'lib'         => 0,
 
-    # core utility pragma
-    'lib'                          => 0,
-
-    # modules needed in tests
-    'FindBin'                      => 0,
-    'IO::Handle'                   => 0,
-    'Moose'                        => 0,
-    'Moose::Util::TypeConstraints' => 0,
-    'Path::Class'                  => 0,
+    # other
+    'B::Deparse' => 0,
+    'FindBin'    => 0,
+    'IO::Handle' => 0,
   },
   'test' => {
     'TESTS' => 't/*.t t/*/*.t t/300-ext/*/*.t'
@@ -96,6 +92,19 @@ unless ( eval { ExtUtils::MakeMaker->VERSION(6.56) } ) {
 
 delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
   unless eval { ExtUtils::MakeMaker->VERSION(6.52) };
+
+if ($ENV{RELEASE_TESTING}) {
+    $WriteMakefileArgs{TEST_REQUIRES} = {
+        %{ $WriteMakefileArgs{TEST_REQUIRES} },
+        'Devel::StackTrace'            => 0,
+        'Moose'                        => 0,
+        'Moose::Util::TypeConstraints' => 0,
+        'Path::Class'                  => 0,
+        'Test::EOL'                    => 0,
+        'Test::NoTabs'                 => 0,
+        'Test::Pod'                    => 1.41,
+    };
+}
 
 WriteMakefile(%WriteMakefileArgs);
 
