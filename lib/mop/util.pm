@@ -12,17 +12,16 @@ use mop::mro;
 use Hash::Util::FieldHash;
 use Scalar::Util;
 
-use Sub::Exporter -setup => {
-    exports => [qw[
-        find_meta
-        has_meta
-        remove_meta
-        get_object_id
-        is_mop_object
-        apply_all_roles
-        apply_metaclass
-    ]]
-};
+use Exporter 'import';
+our @EXPORT_OK = qw[
+    find_meta
+    has_meta
+    remove_meta
+    get_object_id
+    is_mop_object
+    apply_all_roles
+    apply_metaclass
+];
 
 sub find_meta {
     ${ mop::internals::util::get_stash_for( shift )->get_symbol('$METACLASS') || \undef }

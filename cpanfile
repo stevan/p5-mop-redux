@@ -11,7 +11,7 @@ requires 'Module::Runtime'          => 0;
 requires 'Sub::Name'                => 0;
 requires 'Carp'                     => 0;
 requires 'Scalar::Util'             => 0;
-requires 'Sub::Exporter'            => 0;
+requires 'Exporter'                 => 0;
 requires 'parent'                   => 0;
 requires 'twigils'                  => 0;
 

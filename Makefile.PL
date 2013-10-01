@@ -38,7 +38,7 @@ my %WriteMakefileArgs = (
     # general utility modules
     'Carp'                     => 0,
     'Scalar::Util'             => 0,
-    'Sub::Exporter'            => 0,
+    'Exporter'                 => 0,
 
     # core pragmas
     'mro'                      => 0,
