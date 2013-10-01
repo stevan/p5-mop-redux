@@ -77,12 +77,12 @@ sub clone_repos {
 sub installdeps {
     each_dir {
         if (-e 'Makefile.PL' || -e 'Build.PL') {
-            _cpanm(qw(cpanm --installdeps -q --notest .));
+            _cpanm(qw(cpanm --installdeps -q --notest --with-develop .));
         }
         elsif (-e 'dist.ini') {
             _cpanm(qw(cpanm -q --notest Dist::Zilla)) ||
             _cpanm("dzil authordeps --missing | cpanm -q --notest") ||
-            _cpanm("dzil listdeps --missing | grep -v 'find abstract in' | grep -v '^mop\$' | cpanm -q --notest");
+            _cpanm("dzil listdeps --author --missing | grep -v 'find abstract in' | grep -v '^mop\$' | cpanm -q --notest");
         }
         else {
             warn "Don't know how to install deps";
