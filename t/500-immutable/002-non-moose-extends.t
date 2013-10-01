@@ -15,7 +15,7 @@ class Foo is closed, repr('HASH') {
 
 {
     package Bar;
-    use base 'Foo';
+    use parent 'Foo';
     sub bar { 'BAZ' }
 }
 
@@ -35,7 +35,7 @@ class Foo is closed, repr('HASH') {
 
 {
     package Baz;
-    use base 'Foo';
+    use parent 'Foo';
     sub bar { my $self = shift; $self->SUPER::bar . 'BAZ' }
 }
 
@@ -55,7 +55,7 @@ class Foo is closed, repr('HASH') {
 
 {
     package Quux;
-    use base 'Foo';
+    use parent 'Foo';
     sub new {
         my $class = shift;
         my (%opts) = @_;
