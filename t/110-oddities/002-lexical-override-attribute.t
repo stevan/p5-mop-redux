@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Warn;
 
 use mop;
 
@@ -24,7 +23,9 @@ is being done under the covers.
 
 =cut
 
-warning_is {
+{
+    my $warning;
+    local $SIG{__WARN__} = sub { $warning .= $_[0] };
     eval q[
         class Foo {
             has $!bar = 99;
@@ -36,10 +37,9 @@ warning_is {
                 join " " => ( $self->bar, $bar );
             }
         }
-    ]
+    ];
+    is($warning, undef, '... got no warning at compile time');
 }
-undef,
-'... got the warning at compile time';
 
 my $foo = Foo->new;
 

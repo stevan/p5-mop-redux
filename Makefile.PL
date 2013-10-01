@@ -50,7 +50,6 @@ my %WriteMakefileArgs = (
   'TEST_REQUIRES' => {
     # test modules
     'Test::More'                   => '0.88',
-    'Test::Warn'                   => 0,
     'Test::Fatal'                  => 0,
 
     # core utility pragma
