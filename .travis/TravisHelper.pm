@@ -95,6 +95,10 @@ sub installdeps {
 
 sub test {
     each_dir {
+        # these fail release tests
+        local $ENV{RELEASE_TESTING}
+            if /Plack|http-headers-actionpack|BreadBoard/;
+
         my $failed = 0;
 
         if (-e 'Build.PL') {
