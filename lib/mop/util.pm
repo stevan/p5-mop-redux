@@ -188,7 +188,8 @@ sub _create_composite_role {
 
     return $roles[0] if @roles == 1;
 
-    my $name = 'COMPOSITE::OF::' . (join '::' => map { $_->name } @roles);
+    my $name = 'mop::role::COMPOSITE::OF::'
+             . (join '::' => map { $_->name } @roles);
     return find_meta($name) if has_meta($name);
 
     my $composite = mop::role->new(
