@@ -77,7 +77,7 @@ sub finalize_meta {
 sub close_class {
     my ($class) = @_;
 
-    my $new_meta = _get_class_for_closing($class);
+    my $new_meta = get_class_for_closing($class);
 
     # XXX clear caches here if we end up adding any, and if we end up
     # implementing reopening of classes
@@ -85,7 +85,7 @@ sub close_class {
     bless $class, $new_meta->name;
 }
 
-sub _get_class_for_closing {
+sub get_class_for_closing {
     my ($class) = @_;
 
     my $class_meta = mop::util::find_meta($class);
