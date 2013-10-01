@@ -141,17 +141,6 @@ sub inflate_meta {
     return $new_meta;
 }
 
-sub close_class {
-    my ($class) = @_;
-
-    my $new_meta = _get_class_for_closing($class);
-
-    # XXX clear caches here if we end up adding any, and if we end up
-    # implementing reopening of classes
-
-    bless $class, $new_meta->name;
-}
-
 sub fix_metaclass_compatibility {
     my ($meta, $super) = @_;
 
@@ -260,64 +249,6 @@ sub _create_composite_role {
         for @roles;
 
     return $composite;
-}
-
-sub _get_class_for_closing {
-    my ($class) = @_;
-
-    my $class_meta = find_meta($class);
-
-    my $closed_name = 'mop::closed::' . $class_meta->name;
-
-    my $new_meta = find_meta($closed_name);
-    return $new_meta if $new_meta;
-
-    $new_meta = find_meta($class_meta)->new_instance(
-        name       => $closed_name,
-        version    => $class_meta->version,
-        superclass => $class_meta->name,
-        roles      => [],
-    );
-
-    my @mutator_methods = qw(
-        add_role
-        add_attribute
-        add_method
-        add_required_method
-        remove_required_method
-        make_class_abstract
-        set_instance_generator
-        add_submethod
-    );
-
-    for my $method (@mutator_methods) {
-        $new_meta->add_method(
-            $new_meta->method_class->new(
-                name => $method,
-                body => sub { die "Can't call $method on a closed class" },
-            )
-        );
-    }
-
-    $new_meta->add_method(
-        $new_meta->method_class->new(
-            name => 'is_closed',
-            body => sub { 1 },
-        )
-    );
-
-    $new_meta->FINALIZE;
-
-    my $stash = mop::internals::util::get_stash_for($class->name);
-    for my $isa (@{ mop::mro::get_linear_isa($class->name) }) {
-        if (has_meta($isa)) {
-            for my $method (find_meta($isa)->methods) {
-                $stash->add_symbol('&' . $method->name => $method->body);
-            }
-        }
-    }
-
-    return $new_meta;
 }
 
 sub _rebase_metaclasses {

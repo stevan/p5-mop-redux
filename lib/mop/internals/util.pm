@@ -74,6 +74,75 @@ sub finalize_meta {
     $meta->fire('after:FINALIZE');
 }
 
+sub close_class {
+    my ($class) = @_;
+
+    my $new_meta = _get_class_for_closing($class);
+
+    # XXX clear caches here if we end up adding any, and if we end up
+    # implementing reopening of classes
+
+    bless $class, $new_meta->name;
+}
+
+sub _get_class_for_closing {
+    my ($class) = @_;
+
+    my $class_meta = mop::util::find_meta($class);
+
+    my $closed_name = 'mop::closed::' . $class_meta->name;
+
+    my $new_meta = mop::util::find_meta($closed_name);
+    return $new_meta if $new_meta;
+
+    $new_meta = mop::util::find_meta($class_meta)->new_instance(
+        name       => $closed_name,
+        version    => $class_meta->version,
+        superclass => $class_meta->name,
+        roles      => [],
+    );
+
+    my @mutator_methods = qw(
+        add_role
+        add_attribute
+        add_method
+        add_required_method
+        remove_required_method
+        make_class_abstract
+        set_instance_generator
+        add_submethod
+    );
+
+    for my $method (@mutator_methods) {
+        $new_meta->add_method(
+            $new_meta->method_class->new(
+                name => $method,
+                body => sub { die "Can't call $method on a closed class" },
+            )
+        );
+    }
+
+    $new_meta->add_method(
+        $new_meta->method_class->new(
+            name => 'is_closed',
+            body => sub { 1 },
+        )
+    );
+
+    $new_meta->FINALIZE;
+
+    my $stash = get_stash_for($class->name);
+    for my $isa (@{ mop::mro::get_linear_isa($class->name) }) {
+        if (mop::util::has_meta($isa)) {
+            for my $method (mop::util::find_meta($isa)->methods) {
+                $stash->add_symbol('&' . $method->name => $method->body);
+            }
+        }
+    }
+
+    return $new_meta;
+}
+
 sub find_common_base {
     my ($meta_name, $super_name) = @_;
 

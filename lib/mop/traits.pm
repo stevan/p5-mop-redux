@@ -176,7 +176,7 @@ sub closed {
         unless $class->isa('mop::class');
 
     $class->bind('after:FINALIZE' => sub {
-        mop::util::close_class($class);
+        mop::internals::util::close_class($class);
     });
 }
 
