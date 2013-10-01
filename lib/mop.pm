@@ -5,7 +5,6 @@ use mro;
 use warnings;
 
 use Scalar::Util;
-use Sub::Install;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -32,12 +31,12 @@ sub import {
     mop::internals::syntax->setup_for( $pkg );
     bootstrap();
 
+    my $caller_stash = mop::internals::util::get_stash_for($pkg);
+    my $traits_stash = mop::internals::util::get_stash_for('mop::traits');
     foreach my $trait ( @mop::traits::AVAILABLE_TRAITS ) {
-        Sub::Install::install_sub({
-            code => $trait,
-            into => $pkg,
-            from => 'mop::traits'
-        });
+        $caller_stash->add_symbol(
+            '&' . $trait, $traits_stash->get_symbol('&' . $trait)
+        );
     }
 }
 
