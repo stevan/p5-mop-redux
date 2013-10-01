@@ -3,7 +3,6 @@ package mop::traits::util;
 use v5.16;
 use warnings;
 
-use Try::Tiny;
 use Hash::Util::FieldHash qw[ fieldhash ];
 
 our $VERSION   = '0.01';
@@ -13,17 +12,15 @@ fieldhash my %TRAIT_REGISTRATION;
 
 sub apply_trait {
     my ($trait, $meta, @args) = @_;
-    try {
-        $trait->( $meta, @args );
-        $TRAIT_REGISTRATION{ $meta } = []
-            unless exists $TRAIT_REGISTRATION{ $meta };
-        push @{ $TRAIT_REGISTRATION{ $meta } } => {
-            trait => $trait,
-            args  => \@args,
-        };
-    } catch {
-        die "Trait application failed: $_";
-    }
+
+    $trait->( $meta, @args );
+
+    $TRAIT_REGISTRATION{ $meta } = []
+        unless exists $TRAIT_REGISTRATION{ $meta };
+    push @{ $TRAIT_REGISTRATION{ $meta } } => {
+        trait => $trait,
+        args  => \@args,
+    };
 }
 
 sub applied_traits {
