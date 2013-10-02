@@ -20,33 +20,16 @@ mop::internals::util::init_attribute_storage(my %instance_generator);
 sub new {
     my $class = shift;
     my %args  = @_;
+
     my $self = $class->SUPER::new( @_ );
-    $is_abstract{ $self }        = \($args{'is_abstract'} // 0);
-    $superclass{ $self }         = \($args{'superclass'});
-    $submethods{ $self }         = \({});
 
-    if ($args{'superclass'} && (my $meta = mop::find_meta($args{'superclass'}))) {
-        $instance_generator{ $self } = \$meta->instance_generator;
-
-        # merge required methods with superclass
-        $self->add_required_method($_)
-            for $meta->required_methods;
-    }
-    else {
-        mop::internals::util::mark_nonmop_class($args{'superclass'})
-            if $args{'superclass'};
-
-        $instance_generator{ $self } = \(sub { \(my $anon) });
-    }
-
-    if ( defined( $args{'name'} ) && is_module_name( $args{'name'} ) ) {
-        $INC{ module_notional_filename( $args{'name'} ) } //= '(mop)';
-    }
-
-    if (defined(my $super = $self->superclass)) {
-        mop::apply_metaclass($self, mop::find_meta($super))
-            if mop::find_meta($super);
-    }
+    # NOTE: have to use //= here because BUILD will be called before this is
+    # run, and BUILD sets defaults for some attributes. this will be fixed up
+    # in the bootstrap, so this won't be an issue for user classes.
+    $is_abstract{ $self }        //= \($args{'is_abstract'} // 0);
+    $superclass{ $self }         //= \($args{'superclass'});
+    $submethods{ $self }         //= \({});
+    $instance_generator{ $self } //= \(sub { \(my $anon) });
 
     $self;
 }
@@ -55,11 +38,29 @@ sub BUILD {
     my $self = shift;
 
     mop::internals::util::install_meta($self);
+
+    if ($self->superclass && (my $meta = mop::find_meta($self->superclass))) {
+        $self->set_instance_generator($meta->instance_generator);
+
+        # merge required methods with superclass
+        $self->add_required_method($_)
+            for $meta->required_methods;
+
+        mop::apply_metaclass($self, $meta);
+    }
+    else {
+        mop::internals::util::mark_nonmop_class($self->superclass)
+            if $self->superclass;
+    }
+
+    if ( defined($self->name) && is_module_name($self->name) ) {
+        $INC{ module_notional_filename($self->name) } //= '(mop)';
+    }
 }
 
 # identity
 
-sub superclass { ${ $superclass{ $_[0] } } }
+sub superclass { ${ $superclass{ $_[0] } // \undef } }
 
 sub is_abstract { ${ $is_abstract{ $_[0] } } }
 
