@@ -10,6 +10,9 @@ requires 'strict'                => 0;
 requires 'version'               => 0;
 requires 'warnings'              => 0;
 
+build_requires 'B::Deparse'  => 0;
+build_requires 'FindBin'     => 0;
+build_requires 'IO::Handle'  => 0;
 build_requires 'Test::Fatal' => 0;
 build_requires 'Test::More'  => 0.88;
 build_requires 'if'          => 0;
@@ -31,10 +34,6 @@ requires 'MRO::Define'              => 0;
 requires 'Module::Runtime'    => 0;
 requires 'Package::Stash'     => 0;
 requires 'Package::Stash::XS' => 0.27;
-
-build_requires 'B::Deparse' => 0;
-build_requires 'FindBin'    => 0;
-build_requires 'IO::Handle' => 0;
 
 author_requires 'Devel::StackTrace'            => 0;
 author_requires 'Moose'                        => 0;

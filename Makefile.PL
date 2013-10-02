@@ -47,15 +47,13 @@ my %WriteMakefileArgs = (
   },
   'TEST_REQUIRES' => {
     # core
+    'B::Deparse'  => 0,
+    'FindBin'     => 0,
+    'IO::Handle'  => 0,
     'Test::Fatal' => 0,
     'Test::More'  => 0.88,
     'if'          => 0,
     'lib'         => 0,
-
-    # other
-    'B::Deparse' => 0,
-    'FindBin'    => 0,
-    'IO::Handle' => 0,
   },
   'test' => {
     'TESTS' => 't/*.t t/*/*.t t/300-ext/*/*.t'
