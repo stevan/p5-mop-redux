@@ -19,7 +19,7 @@ role WithDependencies with Service {}
 {
     local $@;
     eval q[class ConstructorInjection with WithClass, WithParameters, WithDependencies {}];
-    ok(!$@, '... this worked');
+    is($@, "", '... this worked');
 }
 
 done_testing;
