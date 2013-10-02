@@ -258,6 +258,7 @@ sub bootstrap {
 
         # remove the temporary clone methods used in the bootstrap
         $Method_stash->remove_symbol('&clone');
+        $Attribute_stash->remove_symbol('&clone');
 
         # replace the temporary implementation of mop::object::new
         my $new = mop::method->new(

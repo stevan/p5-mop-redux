@@ -34,6 +34,16 @@ sub new {
     $self
 }
 
+# temporary, for bootstrapping
+sub clone {
+    my $self = shift;
+    return ref($self)->new(
+        name => $self->name,
+        default => ${ $default{ $self } },
+        storage => $self->storage,
+    );
+}
+
 sub name { ${ $name{ $_[0] } } }
 
 sub key_name {
