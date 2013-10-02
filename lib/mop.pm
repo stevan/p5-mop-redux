@@ -88,7 +88,7 @@ sub apply_metaclass {
     bless $instance, mop::internals::util::fix_metaclass_compatibility($new_meta, $instance);
 }
 
-sub rebless ($;$) {
+sub rebless {
     my ($object, $into) = @_;
 
     my $from = Scalar::Util::blessed($object);
