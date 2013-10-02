@@ -83,50 +83,6 @@ sub is_mop_object {
     defined Hash::Util::FieldHash::id_2obj( get_object_id( $_[0] ) );
 }
 
-sub apply_all_roles {
-    my ($to, @roles) = @_;
-
-    my $composite = mop::internals::util::create_composite_role(@roles);
-
-    $to->fire('before:CONSUME' => $composite);
-    $composite->fire('before:COMPOSE' => $to);
-
-    foreach my $attribute ($composite->attributes) {
-        die 'Attribute conflict ' . $attribute->name . ' when composing ' . $composite->name . ' into ' . $to->name
-            if $to->has_attribute( $attribute->name )
-            && $to->get_attribute( $attribute->name )->conflicts_with( $attribute );
-        $to->add_attribute( $attribute->clone(associated_meta => $to) );
-    }
-
-    foreach my $method ($composite->methods) {
-        if (my $existing_method = $to->get_method($method->name)) {
-            apply_metaclass($existing_method, $method);
-        }
-        else {
-            $to->add_method($method->clone(associated_meta => $to));
-        }
-    }
-
-    # merge required methods ...
-    for my $conflict ($composite->required_methods) {
-        if (my $method = $to->get_method($conflict)) {
-            my @conflicting_methods =
-                grep { $_->name eq $conflict }
-                map { $_->methods }
-                @{ $composite->roles };
-            for my $conflicting_method (@conflicting_methods) {
-                apply_metaclass($method, $conflicting_method);
-            }
-        }
-        else {
-            $to->add_required_method($conflict);
-        }
-    }
-
-    $composite->fire('after:COMPOSE' => $to);
-    $to->fire('after:CONSUME' => $composite);
-}
-
 sub apply_metaclass {
     my ($instance, $new_meta) = @_;
     bless $instance, mop::internals::util::fix_metaclass_compatibility($new_meta, $instance);

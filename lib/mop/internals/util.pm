@@ -58,7 +58,7 @@ sub finalize_meta {
 
     $meta->fire('before:FINALIZE');
 
-    mop::apply_all_roles($meta, @{ $meta->roles })
+    apply_all_roles($meta, @{ $meta->roles })
         if @{ $meta->roles };
 
     if ($meta->isa('mop::class')) {
@@ -72,6 +72,50 @@ sub finalize_meta {
     $stash->add_symbol('$VERSION', \$meta->version);
 
     $meta->fire('after:FINALIZE');
+}
+
+sub apply_all_roles {
+    my ($to, @roles) = @_;
+
+    my $composite = create_composite_role(@roles);
+
+    $to->fire('before:CONSUME' => $composite);
+    $composite->fire('before:COMPOSE' => $to);
+
+    foreach my $attribute ($composite->attributes) {
+        die 'Attribute conflict ' . $attribute->name . ' when composing ' . $composite->name . ' into ' . $to->name
+            if $to->has_attribute( $attribute->name )
+            && $to->get_attribute( $attribute->name )->conflicts_with( $attribute );
+        $to->add_attribute( $attribute->clone(associated_meta => $to) );
+    }
+
+    foreach my $method ($composite->methods) {
+        if (my $existing_method = $to->get_method($method->name)) {
+            mop::apply_metaclass($existing_method, $method);
+        }
+        else {
+            $to->add_method($method->clone(associated_meta => $to));
+        }
+    }
+
+    # merge required methods ...
+    for my $conflict ($composite->required_methods) {
+        if (my $method = $to->get_method($conflict)) {
+            my @conflicting_methods =
+                grep { $_->name eq $conflict }
+                map { $_->methods }
+                @{ $composite->roles };
+            for my $conflicting_method (@conflicting_methods) {
+                mop::apply_metaclass($method, $conflicting_method);
+            }
+        }
+        else {
+            $to->add_required_method($conflict);
+        }
+    }
+
+    $composite->fire('after:COMPOSE' => $to);
+    $to->fire('after:CONSUME' => $composite);
 }
 
 sub close_class {
