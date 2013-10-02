@@ -84,16 +84,13 @@ sub is_mop_object {
 }
 
 sub apply_metaclass {
-    my ($instance, $new_meta) = @_;
-    # this actually needs to use rebless, but rebless requires a working
-    # bootstrap. so, we will replace this function once bootstrapping is done.
     # TODO: we should really not be calling apply_metaclass at all during
     # bootstrapping, but it's done in a couple places for simplicity, to avoid
     # needing multiple implementations of things for pre- and
     # post-bootstrapping. we should probably eventually actually do the
     # replacement in those methods, to make sure bootstrapping isn't doing
-    # unnecessary extra work.
-    bless $instance, mop::internals::util::fix_metaclass_compatibility($new_meta, $instance);
+    # unnecessary extra work. the actual implementation is replaced below.
+    return;
 }
 
 sub rebless {
