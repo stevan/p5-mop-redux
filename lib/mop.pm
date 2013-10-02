@@ -273,6 +273,12 @@ sub bootstrap {
         );
         $Object->add_method($new);
         $Object_stash->add_symbol('&new', $new->body);
+
+        # remove the temporary constructors used in the bootstrap
+        $Class_stash->remove_symbol('&new');
+        $Role_stash->remove_symbol('&new');
+        $Method_stash->remove_symbol('&new');
+        $Attribute_stash->remove_symbol('&new');
     }
 
     {

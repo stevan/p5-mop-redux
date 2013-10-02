@@ -15,6 +15,7 @@ mop::internals::util::init_attribute_storage(my %body);
 mop::internals::util::init_attribute_storage(my %original_id);
 mop::internals::util::init_attribute_storage(my %associated_meta);
 
+# temporary, for bootstrapping
 sub new {
     my $class = shift;
     my %args  = @_;
@@ -22,14 +23,18 @@ sub new {
     $name{ $self } = \($args{'name'});
     $body{ $self } = \($args{'body'});
 
+    $self;
+}
+
+sub BUILD {
+    my $self = shift;
     # NOTE:
     # keep track of the original ID here
     # so that we can still detect method
     # conflicts in roles even after something
     # has been cloned
     # - SL
-    $original_id{ $self } = \(mop::get_object_id($self));
-    $self;
+    $original_id{ $self } //= \(mop::get_object_id($self));
 }
 
 # temporary, for bootstrapping
@@ -102,7 +107,7 @@ sub __INIT_METACLASS__ {
         storage => \%original_id
     ));
 
-    $METACLASS->add_method( mop::method->new( name => 'new', body => \&new ) );
+    $METACLASS->add_submethod( mop::method->new( name => 'BUILD', body => \&BUILD ) );
 
     $METACLASS->add_method( mop::method->new( name => 'name',                body => \&name                ) );
     $METACLASS->add_method( mop::method->new( name => 'body',                body => \&body                ) );

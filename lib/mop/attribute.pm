@@ -16,6 +16,7 @@ mop::internals::util::init_attribute_storage(my %default);
 mop::internals::util::init_attribute_storage(my %storage);
 mop::internals::util::init_attribute_storage(my %associated_meta);
 
+# temporary, for bootstrapping
 sub new {
     my $class = shift;
     my %args  = @_;
@@ -24,14 +25,18 @@ sub new {
     $default{ $self } = \($args{'default'}) if exists $args{'default'};
     $storage{ $self } = \($args{'storage'}) if exists $args{'storage'};
 
+    $self
+}
+
+sub BUILD {
+    my $self = shift;
     # NOTE:
     # keep track of the original ID here
     # so that we can still detect attribute
     # conflicts in roles even after something
     # has been cloned
     # - SL
-    $original_id{ $self } = \(mop::get_object_id($self));
-    $self
+    $original_id{ $self } //= \(mop::get_object_id($self));
 }
 
 # temporary, for bootstrapping
@@ -155,7 +160,7 @@ sub __INIT_METACLASS__ {
         storage => \%associated_meta
     ));
 
-    $METACLASS->add_method( mop::method->new( name => 'new', body => \&new ) );
+    $METACLASS->add_submethod( mop::method->new( name => 'BUILD', body => \&BUILD ) );
 
     $METACLASS->add_method( mop::method->new( name => 'name',                body => \&name                ) );
     $METACLASS->add_method( mop::method->new( name => 'key_name',            body => \&key_name            ) );

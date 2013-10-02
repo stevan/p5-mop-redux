@@ -21,14 +21,12 @@ mop::internals::util::init_attribute_storage(my %attributes);
 mop::internals::util::init_attribute_storage(my %methods);
 mop::internals::util::init_attribute_storage(my %required_methods);
 
+# temporary, for bootstrapping
 sub new {
     my $class = shift;
     my %args  = @_;
 
     my $self = $class->SUPER::new( @_ );
-
-    die "name is required when creating a role or a class"
-        unless defined $args{'name'};
 
     $name{ $self }       = \($args{'name'});
     $version{ $self }    = \($args{'version'});
@@ -39,14 +37,6 @@ sub new {
     $methods{ $self }          = \({});
     $required_methods{ $self } = \({});
 
-    if (my @nometa = grep { !mop::find_meta($_) } @${ $roles{$self} }) {
-        die "No metaclass found for these roles: @nometa";
-    }
-
-    if ( defined( $args{'name'} ) && is_module_name( $args{'name'} ) ) {
-        $INC{ module_notional_filename( $args{'name'} ) } //= '(mop)';
-    }
-
     $self;
 }
 
@@ -54,6 +44,14 @@ sub BUILD {
     my $self = shift;
 
     mop::internals::util::install_meta($self);
+
+    if (my @nometa = grep { !mop::find_meta($_) } @{ $self->roles }) {
+        die "No metaclass found for these roles: @nometa";
+    }
+
+    if ( defined($self->name) && is_module_name($self->name) ) {
+        $INC{ module_notional_filename($self->name) } //= '(mop)';
+    }
 }
 
 sub clone {
@@ -202,7 +200,8 @@ sub __INIT_METACLASS__ {
 
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!name',
-        storage => \%name
+        storage => \%name,
+        default => \(sub { die "name is required when creating a role or class" }),
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
@@ -241,7 +240,6 @@ sub __INIT_METACLASS__ {
 
     $METACLASS->add_submethod( mop::method->new( name => 'BUILD', body => \&BUILD ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'new', body => \&new ) );
     $METACLASS->add_method( mop::method->new( name => 'clone', body => \&clone ) );
 
     $METACLASS->add_method( mop::method->new( name => 'name',       body => \&name       ) );

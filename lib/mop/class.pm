@@ -17,19 +17,17 @@ mop::internals::util::init_attribute_storage(my %superclass);
 mop::internals::util::init_attribute_storage(my %submethods);
 mop::internals::util::init_attribute_storage(my %instance_generator);
 
+# temporary, for bootstrapping
 sub new {
     my $class = shift;
     my %args  = @_;
 
     my $self = $class->SUPER::new( @_ );
 
-    # NOTE: have to use //= here because BUILD will be called before this is
-    # run, and BUILD sets defaults for some attributes. this will be fixed up
-    # in the bootstrap, so this won't be an issue for user classes.
-    $is_abstract{ $self }        //= \($args{'is_abstract'} // 0);
-    $superclass{ $self }         //= \($args{'superclass'});
-    $submethods{ $self }         //= \({});
-    $instance_generator{ $self } //= \(sub { \(my $anon) });
+    $is_abstract{ $self }        = \($args{'is_abstract'} // 0);
+    $superclass{ $self }         = \($args{'superclass'});
+    $submethods{ $self }         = \({});
+    $instance_generator{ $self } = \(sub { \(my $anon) });
 
     $self;
 }
@@ -221,7 +219,6 @@ sub __INIT_METACLASS__ {
 
     $METACLASS->add_submethod( mop::method->new( name => 'BUILD', body => \&BUILD ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'new', body => \&new ) );
 
     $METACLASS->add_method( mop::method->new( name => 'superclass', body => \&superclass ) );
 
