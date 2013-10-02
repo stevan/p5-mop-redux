@@ -85,6 +85,8 @@ sub is_mop_object {
 
 sub apply_metaclass {
     my ($instance, $new_meta) = @_;
+    # this actually needs to use rebless, but rebless requires a working
+    # bootstrap. so, we will replace this function once bootstrapping is done.
     bless $instance, mop::internals::util::fix_metaclass_compatibility($new_meta, $instance);
 }
 
@@ -270,6 +272,14 @@ sub bootstrap {
         );
         $Object->add_method($new);
         $Object_stash->add_symbol('&new', $new->body);
+    }
+
+    {
+        no warnings 'redefine';
+        *apply_metaclass = sub {
+            my ($instance, $new_meta) = @_;
+            rebless $instance, mop::internals::util::fix_metaclass_compatibility($new_meta, $instance);
+        };
     }
 
     {

@@ -21,9 +21,7 @@ is(mop::meta('Foo')->foo, 'FOO');
 
 class Bar extends Foo meta MetaBar { }
 
-{ local $TODO = "apply_metaclass needs to use rebless instead of bless";
 is(mop::meta('Bar')->foo, 'FOO');
-}
 is(mop::meta('Bar')->bar, 'BAR');
 
 done_testing;
