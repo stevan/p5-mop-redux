@@ -75,11 +75,6 @@ is_deeply(
     ok($role->does('mop::role'), '... role does role');
 
     ok($class->has_method('name'), '... mop::class does have the name method that was composed into it');
-
-    ok($role->does('mop::observable'), '... roles are observable');
-    ok($class->does('mop::observable'), '... classes are observable');
-    ok($method->does('mop::observable'), '... methods are observable');
-    ok($attribute->does('mop::observable'), '... attributes are observable');
 }
 
 

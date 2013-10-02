@@ -237,11 +237,20 @@ sub bootstrap {
     # is true.
     $Class->add_role( $Role );
 
-    # make attribute and method into
-    # observables
-    foreach my $meta ( $Method, $Attribute, $Class, $Role ) {
-        $meta->add_role($Observable);
+    # flatten mop::observable into wherever it's needed (it's just an
+    # implementation detail (#95), so it shouldn't end up being directly
+    # visible)
+    foreach my $meta ( $Role, $Attribute, $Method ) {
+        for my $attribute ( $Observable->attributes ) {
+            $meta->add_attribute($attribute->clone(associated_meta => $meta));
+        }
+        for my $method ( $Observable->methods ) {
+            $meta->add_method($method->clone(associated_meta => $meta));
+        }
     }
+
+    # and now this is no longer needed
+    remove_meta('mop::observable');
 
     foreach my $meta ( $Object, $Method, $Attribute, $Class, $Role ) {
         $meta->FINALIZE;

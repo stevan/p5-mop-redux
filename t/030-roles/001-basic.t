@@ -42,8 +42,6 @@ ok($Bar->isa('mop::role'));
 ok($Bar->isa('mop::object'));
 ok($Bar->DOES('mop::role'));
 ok($Bar->DOES('mop::object'));
-ok($Bar->DOES('mop::observable'));
-ok($Bar->does('mop::observable'));
 ok($Bar->can('name'));
 
 my $method = $Bar->get_method( 'bar' );
