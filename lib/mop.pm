@@ -16,7 +16,7 @@ use mop::class;
 use mop::method;
 use mop::attribute;
 
-use mop::observable;
+use mop::internals::observable;
 
 use mop::internals::syntax;
 use mop::internals::mro;
@@ -216,7 +216,7 @@ sub bootstrap {
         mop::class
         mop::attribute
         mop::method
-        mop::observable
+        mop::internals::observable
     ];
 
     my $Object = find_meta('mop::object');
@@ -226,7 +226,7 @@ sub bootstrap {
 
     my $Method     = find_meta('mop::method');
     my $Attribute  = find_meta('mop::attribute');
-    my $Observable = find_meta('mop::observable');
+    my $Observable = find_meta('mop::internals::observable');
 
     # At this point the metaclass
     # layer class to role relationship
@@ -250,7 +250,7 @@ sub bootstrap {
     }
 
     # and now this is no longer needed
-    remove_meta('mop::observable');
+    remove_meta('mop::internals::observable');
 
     foreach my $meta ( $Object, $Method, $Attribute, $Class, $Role ) {
         $meta->FINALIZE;

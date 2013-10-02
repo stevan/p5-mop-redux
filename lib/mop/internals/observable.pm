@@ -1,4 +1,4 @@
-package mop::observable;
+package mop::internals::observable;
 
 use v5.16;
 use warnings;

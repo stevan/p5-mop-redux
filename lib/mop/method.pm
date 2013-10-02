@@ -8,7 +8,7 @@ use Scalar::Util qw[ weaken ];
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use parent 'mop::object', 'mop::observable';
+use parent 'mop::object', 'mop::internals::observable';
 
 mop::internals::util::init_attribute_storage(my %name);
 mop::internals::util::init_attribute_storage(my %body);
