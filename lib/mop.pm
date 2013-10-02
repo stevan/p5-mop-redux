@@ -404,6 +404,8 @@ This is a prototype for a new object system for Perl 5.
         has $!associated_meta is ro;
         has $!original_id;
 
+        has $!callbacks;
+
         method key_name { ... }
 
         method has_default   { ... }
@@ -416,6 +418,10 @@ This is a prototype for a new object system for Perl 5.
         method fetch_data_in_slot_for ($instance) { ... }
         method store_data_in_slot_for ($instance, $data) { ... }
         method store_default_in_slot_for ($instance) { ... }
+
+        method bind   ($event_name, $cb) { ... }
+        method unbind ($event_name, $cb) { ... }
+        method fire   ($event_name) { ... }
     }
 
     class mop::method extends mop::object {
@@ -424,11 +430,17 @@ This is a prototype for a new object system for Perl 5.
         has $!associated_meta is ro;
         has $!original_id;
 
+        has $!callbacks;
+
         method execute ($invocant, $args) { ... }
 
         method set_associated_meta ($meta) { ... }
 
         method conflicts_with ($method) { ... }
+
+        method bind   ($event_name, $cb) { ... }
+        method unbind ($event_name, $cb) { ... }
+        method fire   ($event_name) { ... }
     }
 
     class mop::role extends mop::object {
@@ -440,6 +452,8 @@ This is a prototype for a new object system for Perl 5.
         has $!attributes             = {};
         has $!methods                = {};
         has $!required_methods       = {};
+
+        has $!callbacks;
 
         method add_role ($role) { ... }
         method does_role ($name) { ... }
@@ -468,6 +482,10 @@ This is a prototype for a new object system for Perl 5.
         method add_required_method ($required_method) { ... }
         method remove_required_method ($required_method) { ... }
         method requires_method ($name) { ... }
+
+        method bind   ($event_name, $cb) { ... }
+        method unbind ($event_name, $cb) { ... }
+        method fire   ($event_name) { ... }
 
         sub FINALIZE { ... }
     }
