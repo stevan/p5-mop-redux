@@ -23,6 +23,10 @@ are getting cleaned out properly.
 
 =cut
 
+BEGIN {
+    plan skip_all => "this won't work using perl's MRO, until we have lexical exports";
+}
+
 {
     package My::Test;
     use strict;

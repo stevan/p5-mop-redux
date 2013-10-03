@@ -76,22 +76,6 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'BUILDALL',  body => \&BUILDALL ) );
     $METACLASS->add_method( mop::method->new( name => 'does',      body => \&does ) );
     $METACLASS->add_method( mop::method->new( name => 'DOES',      body => \&DOES ) );
-    $METACLASS->add_method( mop::method->new(
-        name => 'isa',
-        body => sub {
-            my ($self, $class) = @_;
-            scalar grep { $class eq $_ } @{ mop::mro::get_linear_isa($self) }
-        }
-    ));
-    $METACLASS->add_method( mop::method->new(
-        name => 'can',
-        body => sub {
-            my ($self, $method_name) = @_;
-            if (my $method = mop::internals::mro::find_method($self, $method_name)) {
-                return blessed($method) ? $method->body : $method;
-            }
-        }
-    ));
     $METACLASS->add_method( mop::method->new( name => 'DESTROY', body => \&DESTROY ) );
     $METACLASS;
 }

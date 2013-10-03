@@ -41,34 +41,4 @@ our $AUTHORITY = 'cpan:STEVAN';
     END { %ISA_CACHE = () }
 }
 
-package mop::next;
-
-sub method {
-    my ($invocant, @args) = @_;
-    mop::internals::mro::call_method(
-        $invocant,
-        ${^CALLER}->[1],
-        \@args,
-        ${^CALLER}->[2]
-    );
-}
-
-sub can {
-    my ($invocant) = @_;
-    my $method = mop::internals::mro::find_method(
-        $invocant,
-        ${^CALLER}->[1],
-        ${^CALLER}->[2]
-    );
-    return unless $method;
-    # NOTE:
-    # we need to preserve any events
-    # that have been attached to this
-    # method.
-    # - SL
-    return sub { $method->execute( shift, [ @_ ] ) }
-        if Scalar::Util::blessed($method) && $method->isa('mop::method');
-    return $method;
-}
-
 1;

@@ -37,6 +37,8 @@ $Foo->add_method(
 	)
 );
 
+$Foo->FINALIZE;
+
 my $foo = Foo->new;
 isa_ok($foo, 'Foo');
 can_ok($foo, 'bar');

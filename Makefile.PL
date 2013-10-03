@@ -36,10 +36,6 @@ my %WriteMakefileArgs = (
     'twigils'              => 0,
     'Variable::Magic'      => 0,
 
-    # mro
-    'Devel::GlobalDestruction' => 0,
-    'MRO::Define'              => 0,
-
     # other
     'Module::Runtime'    => 0,
   },

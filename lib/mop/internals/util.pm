@@ -45,7 +45,6 @@ sub install_meta {
         no strict 'refs';
         *{ $name . '::METACLASS' } = \$meta;
     }
-    mro::set_mro($name, 'mop');
 }
 
 sub finalize_meta {
@@ -63,9 +62,24 @@ sub finalize_meta {
             if $meta->required_methods && not $meta->is_abstract;
     }
 
+    for my $method ($meta->methods) {
+        # XXX this should actually test to see if there are any events on the
+        # method, or if the method is using a custom method metaclass which
+        # overrides execute. checking BOOTSTRAPPED is wrong here, but it works
+        # for now.
+        my $body = $mop::BOOTSTRAPPED
+            ? sub { $method->execute(shift, \@_) }
+            : $method->body;
+        no strict 'refs';
+        no warnings 'redefine';
+        *{ $meta->name . '::' . $method->name } = $body;
+    }
+
     {
         no strict 'refs';
         *{ $meta->name . '::VERSION' } = \$meta->version;
+        @{ $meta->name . '::ISA' } = ($meta->superclass)
+            if $meta->isa('mop::class') && defined $meta->superclass;
     }
 
     $meta->fire('after:FINALIZE');
@@ -211,15 +225,12 @@ sub inflate_meta {
     die "Multiple inheritance is not supported in mop classes"
         if @$isa > 1;
 
-    # can't use the mop mro for non-mop classes, it confuses things like SUPER
-    my $mro = mro::get_mro($name);
     my $new_meta = mop::class->new(
         name       => $name,
         version    => $version,
         authority  => $authority,
         superclass => $isa->[0],
     );
-    mro::set_mro($name, $mro);
 
     for my $method (do { no strict 'refs'; keys %{ $class . '::' } }) {
         next unless $class->can($method);

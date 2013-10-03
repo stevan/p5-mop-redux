@@ -143,7 +143,6 @@ sub methods { values %{ $_[0]->method_map } }
 sub add_method {
     my ($self, $method) = @_;
     $self->method_map->{ $method->name } = $method;
-    mop::internals::mro::clear_method_cache_for($self->name);
     $method->set_associated_meta($self);
     $self->remove_required_method($method->name);
 }

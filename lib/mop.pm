@@ -20,7 +20,6 @@ use mop::attribute;
 use mop::internals::observable;
 
 use mop::internals::syntax;
-use mop::internals::mro;
 use mop::internals::util;
 
 use mop::mro;
@@ -277,30 +276,6 @@ sub bootstrap {
             my ($instance, $new_meta) = @_;
             rebless $instance, mop::internals::util::fix_metaclass_compatibility($new_meta, $instance);
         };
-    }
-
-    {
-        my $old_next_method = \&next::method;
-        my $old_next_can    = \&next::can;
-        no warnings 'redefine';
-        *next::method = sub {
-            my $invocant = shift;
-            if ( meta( $invocant ) ) {
-                $invocant->mop::next::method( @_ )
-            } else {
-                $invocant->$old_next_method( @_ )
-            }
-        };
-
-        *next::can = sub {
-            my $invocant = shift;
-            if ( meta( $invocant ) ) {
-                $invocant->mop::next::can( @_ )
-            } else {
-                $invocant->$old_next_can( @_ )
-            }
-        };
-
     }
 
     $BOOTSTRAPPED = 1;

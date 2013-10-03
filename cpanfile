@@ -25,10 +25,6 @@ requires 'Sub::Name'            => 0;
 requires 'twigils'              => 0;
 requires 'Variable::Magic'      => 0;
 
-# mro
-requires 'Devel::GlobalDestruction' => 0;
-requires 'MRO::Define'              => 0;
-
 # other
 requires 'Module::Runtime'    => 0;
 

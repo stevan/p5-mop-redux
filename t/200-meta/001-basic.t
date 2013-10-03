@@ -43,7 +43,7 @@ ok(!$foo->isa( 'mop::class' ), '... foo is not a Class');
 ok(!$foo->isa( 'FooMeta' ), '... foo is not a FooMeta');
 
 eval { $foo->static_method };
-like $@, qr/^Could not find static_method in Foo/, '... got an expection here';
+like $@, qr/^Can't locate object method "static_method" via package "Foo"/, '... got an expection here';
 
 is($foo->hello_from_class, 'STATIC', '... got the class method via the instance however');
 is($foo->hello, 'FOO', '... got the instance method however');

@@ -19,6 +19,7 @@ class Foo {
             body => sub { 2 },
         )
     );
+    $Foo->FINALIZE;
     is(Foo->new->baz, 2);
 }
 

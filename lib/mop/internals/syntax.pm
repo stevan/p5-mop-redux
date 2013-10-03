@@ -193,7 +193,6 @@ sub namespace_parser {
     );
     my $g = guard {
         mop::remove_meta($pkg);
-        mro::set_mro($pkg, 'dfs');
     };
 
     my $preamble = '{'
