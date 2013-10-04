@@ -42,7 +42,7 @@ sub install_meta {
     my $name = $meta->name;
 
     die "The metaclass for $name has already been created"
-        if mop::find_meta($name);
+        if mop::meta($name);
 
     die "$name has already been used as a non-mop class. "
       . "Does your code have a circular dependency?"
@@ -132,14 +132,14 @@ sub close_class {
 sub get_class_for_closing {
     my ($class) = @_;
 
-    my $class_meta = mop::find_meta($class);
+    my $class_meta = mop::meta($class);
 
     my $closed_name = 'mop::closed::' . $class_meta->name;
 
-    my $new_meta = mop::find_meta($closed_name);
+    my $new_meta = mop::meta($closed_name);
     return $new_meta if $new_meta;
 
-    $new_meta = mop::find_meta($class_meta)->new_instance(
+    $new_meta = mop::meta($class_meta)->new_instance(
         name       => $closed_name,
         version    => $class_meta->version,
         superclass => $class_meta->name,
@@ -177,8 +177,8 @@ sub get_class_for_closing {
 
     my $stash = get_stash_for($class->name);
     for my $isa (@{ mop::mro::get_linear_isa($class->name) }) {
-        if (mop::has_meta($isa)) {
-            for my $method (mop::find_meta($isa)->methods) {
+        if (mop::meta($isa)) {
+            for my $method (mop::meta($isa)->methods) {
                 $stash->add_symbol('&' . $method->name => $method->body);
             }
         }
@@ -195,7 +195,7 @@ sub get_class_for_closing {
 sub find_or_inflate_meta {
     my ($class) = @_;
 
-    if (my $meta = mop::find_meta($class)) {
+    if (my $meta = mop::meta($class)) {
         return $meta;
     }
     else {
@@ -249,9 +249,9 @@ sub fix_metaclass_compatibility {
     # immutability is on a per-class basis, it shouldn't be inherited.
     # otherwise, subclasses of closed classes won't be able to do things
     # like add attributes or methods to themselves
-    $meta_name = mop::find_meta($meta_name)->superclass
+    $meta_name = mop::meta($meta_name)->superclass
         if $meta_name->isa('mop::class') && $meta_name->is_closed;
-    $super_name = mop::find_meta($super_name)->superclass
+    $super_name = mop::meta($super_name)->superclass
         if $super_name->isa('mop::class') && $super_name->is_closed;
 
     return $meta_name  if $meta_name->isa($super_name);
@@ -278,12 +278,12 @@ sub rebase_metaclasses {
     my @meta_isa = @{ mop::mro::get_linear_isa($meta_name) };
     pop @meta_isa until $meta_isa[-1] eq $common_base;
     pop @meta_isa;
-    @meta_isa = reverse map { mop::find_meta($_) } @meta_isa;
+    @meta_isa = reverse map { mop::meta($_) } @meta_isa;
 
     my @super_isa = @{ mop::mro::get_linear_isa($super_name) };
     pop @super_isa until $super_isa[-1] eq $common_base;
     pop @super_isa;
-    @super_isa = reverse map { mop::find_meta($_) } @super_isa;
+    @super_isa = reverse map { mop::meta($_) } @super_isa;
 
     # XXX i just haven't thought through exactly what this would mean - this
     # restriction may be able to be lifted in the future
@@ -304,7 +304,7 @@ sub rebase_metaclasses {
 
         my $class_name = $class->name;
         my $rebased = "mop::class::rebased::${class_name}::for::${current}";
-        if (!mop::has_meta($rebased)) {
+        if (!mop::meta($rebased)) {
             my $clone = $class->clone(
                 name       => $rebased,
                 superclass => $current,
@@ -338,7 +338,7 @@ sub create_composite_role {
 
     my $name = 'mop::role::COMPOSITE::OF::'
              . (join '::' => map { $_->name } @roles);
-    return mop::find_meta($name) if mop::has_meta($name);
+    return mop::meta($name) if mop::meta($name);
 
     my $composite = mop::role->new(
         name  => $name,

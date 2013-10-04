@@ -170,7 +170,7 @@ sub namespace_parser {
     lex_read_space;
 
     for my $class (@classes_to_load) {
-        next if mop::has_meta($class);
+        next if mop::meta($class);
         Module::Runtime::use_package_optimistically($class);
     }
 
@@ -188,7 +188,7 @@ sub namespace_parser {
     my $meta = $metaclass->new(
         name       => $pkg,
         version    => $version,
-        roles      => [ map { mop::find_meta($_) or die "Could not find metaclass for role: $_" } @with ],
+        roles      => [ map { mop::meta($_) or die "Could not find metaclass for role: $_" } @with ],
         ($type eq 'class'
             ? (superclass => $extends)
             : ()),

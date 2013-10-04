@@ -36,7 +36,7 @@ sub BUILD {
     # conflicts in roles even after something
     # has been cloned
     # - SL
-    $original_id{ $self } //= \(mop::get_object_id($self));
+    $original_id{ $self } //= \(mop::id($self));
 }
 
 # temporary, for bootstrapping

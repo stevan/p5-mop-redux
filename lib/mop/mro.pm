@@ -24,7 +24,7 @@ our $AUTHORITY = 'cpan:STEVAN';
         my @isa;
         my $current = $class;
         while (defined $current) {
-            if (my $meta = mop::find_meta($current)) {
+            if (my $meta = mop::meta($current)) {
                 push @isa, $current;
                 $current = $meta->superclass;
             }

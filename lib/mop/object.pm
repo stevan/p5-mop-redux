@@ -28,13 +28,13 @@ sub new {
 
 sub clone {
     my ($self, %args) = @_;
-    return mop::find_meta($self)->clone_instance($self, %args);
+    return mop::meta($self)->clone_instance($self, %args);
 }
 
 sub BUILDALL {
     my ($self, @args) = @_;
     foreach my $class (reverse @{ mop::mro::get_linear_isa($self) }) {
-        if (my $m = mop::find_meta($class)) {
+        if (my $m = mop::meta($class)) {
             $m->get_submethod('BUILD')->execute($self, [ @args ])
                 if $m->has_submethod('BUILD');
         }
@@ -43,7 +43,7 @@ sub BUILDALL {
 
 sub does {
     my ($self, $role) = @_;
-    scalar grep { mop::find_meta($_)->does_role($role) } @{ mop::mro::get_linear_isa($self) }
+    scalar grep { mop::meta($_)->does_role($role) } @{ mop::mro::get_linear_isa($self) }
 }
 
 sub DOES {
@@ -54,7 +54,7 @@ sub DOES {
 sub DESTROY {
     my $self = shift;
     foreach my $class (@{ mop::mro::get_linear_isa($self) }) {
-        if (my $m = mop::find_meta($class)) {
+        if (my $m = mop::meta($class)) {
             $m->get_submethod('DEMOLISH')->execute($self, [])
                 if $m->has_submethod('DEMOLISH');
         }

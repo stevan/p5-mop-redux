@@ -75,7 +75,7 @@ sub _find_method {
     }
 
     foreach my $class ( @mro ) {
-        if (my $meta = mop::find_meta($class)) {
+        if (my $meta = mop::meta($class)) {
             return $meta->get_method( $method_name )
                 if $meta->has_method( $method_name );
         } else {
@@ -86,7 +86,7 @@ sub _find_method {
     }
 
     if (my $universally = UNIVERSAL->can($method_name)) {
-        if (my $method = mop::find_meta('mop::object')->get_method($method_name)) {
+        if (my $method = mop::meta('mop::object')->get_method($method_name)) {
             # we're doing method lookup on a mop class which doesn't inherit
             # from mop::object (otherwise this would have been found above). we
             # need to use the mop::object version of the appropriate UNIVERSAL
@@ -107,7 +107,7 @@ sub _find_method {
 sub find_submethod {
     my ($invocant, $method_name) = @_;
 
-    if (my $meta = mop::find_meta($invocant)) {
+    if (my $meta = mop::meta($invocant)) {
         return $meta->get_submethod( $method_name );
     }
 
