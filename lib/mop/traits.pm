@@ -83,10 +83,6 @@ sub overload {
         # to the package. This should avoid some
         # complexity (perhaps).
 
-        # don't load it unless you
-        # have too, it adds a speed
-        # penalty to the runtime
-        require overload;
         overload::OVERLOAD(
             $method->associated_meta->name,
             $operator,
