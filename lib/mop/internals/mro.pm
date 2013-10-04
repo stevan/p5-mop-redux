@@ -7,6 +7,7 @@ use Devel::GlobalDestruction;
 use MRO::Define;
 use Scalar::Util    qw[ blessed ];
 use Variable::Magic qw[ wizard cast ];
+use overload ();
 
 BEGIN {
     MRO::Define::register_mro(
