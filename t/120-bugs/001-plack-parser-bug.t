@@ -15,7 +15,7 @@ So, this is a tricky problem actually.
 When the Parse::Keyword branch landed, there was
 code inside the mop::internals::syntax::{class,role}
 that would attempt to clean out the package imports
-that it had done (class, role, has, method & submethod).
+that it had done (class, role, has & method).
 This works fine for classes being created in main::
 (essentially classes created in the same package).
 However it failed for the following:

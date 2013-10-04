@@ -8,7 +8,7 @@ class Test::BuilderX::Output {
     has $!output;
     has $!error_output;
 
-    submethod BUILD {
+    method BUILD {
         $!output = IO::Handle->new;
         $!output->fdopen( fileno( STDOUT ), "w" );
 

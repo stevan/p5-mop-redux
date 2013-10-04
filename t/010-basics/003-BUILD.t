@@ -18,21 +18,21 @@ class Foo {
         push @{ $!collector } => $stuff;
     }
 
-    submethod BUILD {
+    method BUILD {
         $self->collect( 'Foo' );
     }
 }
 
 class Bar extends Foo {
 
-    submethod BUILD {
+    method BUILD {
         $self->collect( 'Bar' );
     }
 }
 
 class Baz extends Bar {
 
-    submethod BUILD {
+    method BUILD {
         $self->collect( 'Baz' );
     }
 }

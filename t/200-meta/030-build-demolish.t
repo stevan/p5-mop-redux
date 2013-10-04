@@ -8,8 +8,8 @@ use mop;
 my ($built, $demolished);
 BEGIN { ($built, $demolished) = (0, 0) }
 class Meta extends mop::class {
-    submethod BUILD    { $built++ }
-    submethod DEMOLISH { $demolished++ }
+    method BUILD    { $built++ }
+    method DEMOLISH { $demolished++ }
 }
 
 BEGIN { is($built, 0); is($demolished, 0) }

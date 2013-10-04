@@ -37,7 +37,7 @@ into your class namespace.
 
         method data { $!data }
 
-        submethod BUILD {
+        method BUILD {
             $!file = file( $!path );
             $!data = [ $!file->slurp( chomp => 1 ) ];
         }

@@ -160,7 +160,7 @@ sub __INIT_METACLASS__ {
         storage => \%associated_meta
     ));
 
-    $METACLASS->add_submethod( mop::method->new( name => 'BUILD', body => \&BUILD ) );
+    $METACLASS->add_method( mop::method->new( name => 'BUILD', body => \&BUILD ) );
 
     $METACLASS->add_method( mop::method->new( name => 'name',                body => \&name                ) );
     $METACLASS->add_method( mop::method->new( name => 'key_name',            body => \&key_name            ) );

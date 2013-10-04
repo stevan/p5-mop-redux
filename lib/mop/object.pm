@@ -35,8 +35,8 @@ sub BUILDALL {
     my ($self, @args) = @_;
     foreach my $class (reverse @{ mop::mro::get_linear_isa($self) }) {
         if (my $m = mop::meta($class)) {
-            $m->get_submethod('BUILD')->execute($self, [ @args ])
-                if $m->has_submethod('BUILD');
+            $m->get_method('BUILD')->execute($self, [ @args ])
+                if $m->has_method('BUILD');
         }
     }
 }
@@ -55,8 +55,8 @@ sub DESTROY {
     my $self = shift;
     foreach my $class (@{ mop::mro::get_linear_isa($self) }) {
         if (my $m = mop::meta($class)) {
-            $m->get_submethod('DEMOLISH')->execute($self, [])
-                if $m->has_submethod('DEMOLISH');
+            $m->get_method('DEMOLISH')->execute($self, [])
+                if $m->has_method('DEMOLISH');
         }
     }
 }

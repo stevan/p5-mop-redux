@@ -5,7 +5,7 @@ use mop;
 class Test::BuilderX::TestPlan {
     has $!expect;
 
-    submethod BUILD {
+    method BUILD {
         die "Invalid or missing plan" unless defined $!expect;
     }
 

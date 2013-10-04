@@ -85,9 +85,9 @@ class Foo {
 
     has $!bling is rw, trigger(sub { $_[0]->bling_was_triggered( $_[1] ) });
 
-    submethod _build_bar { 100 }
+    method _build_bar { 100 }
 
-    submethod _build_gorch {
+    method _build_gorch {
         $self->bar * 3;
     }
 }

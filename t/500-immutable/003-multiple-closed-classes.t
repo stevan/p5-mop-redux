@@ -8,7 +8,7 @@ use mop;
 my $built;
 BEGIN { $built = 0 }
 class MetaMeta extends mop::class {
-    submethod BUILD { $built++ }
+    method BUILD { $built++ }
 }
 
 class Meta extends mop::class meta MetaMeta { }

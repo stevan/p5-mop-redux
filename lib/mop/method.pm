@@ -107,7 +107,7 @@ sub __INIT_METACLASS__ {
         storage => \%original_id
     ));
 
-    $METACLASS->add_submethod( mop::method->new( name => 'BUILD', body => \&BUILD ) );
+    $METACLASS->add_method( mop::method->new( name => 'BUILD', body => \&BUILD ) );
 
     $METACLASS->add_method( mop::method->new( name => 'name',                body => \&name                ) );
     $METACLASS->add_method( mop::method->new( name => 'body',                body => \&body                ) );

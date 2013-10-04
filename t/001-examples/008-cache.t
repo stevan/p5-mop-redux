@@ -35,7 +35,7 @@ class Cache {
     method has_data { defined $!data }
     method clear { undef $!data }
 
-    submethod _fetch_data { $!fetcher->() }
+    method _fetch_data { $!fetcher->() }
 }
 
 my @data = qw[

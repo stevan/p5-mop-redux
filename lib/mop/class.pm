@@ -14,7 +14,6 @@ use parent 'mop::role';
 
 mop::internals::util::init_attribute_storage(my %is_abstract);
 mop::internals::util::init_attribute_storage(my %superclass);
-mop::internals::util::init_attribute_storage(my %submethods);
 mop::internals::util::init_attribute_storage(my %instance_generator);
 
 # temporary, for bootstrapping
@@ -26,7 +25,6 @@ sub new {
 
     $is_abstract{ $self }        = \($args{'is_abstract'} // 0);
     $superclass{ $self }         = \($args{'superclass'});
-    $submethods{ $self }         = \({});
     $instance_generator{ $self } = \(sub { \(my $anon) });
 
     $self;
@@ -152,29 +150,6 @@ sub add_method {
     $self->mop::role::add_method($method);
 }
 
-# submethods
-
-sub submethod_class { 'mop::method' }
-
-sub submethod_map { ${ $submethods{ $_[0] } } }
-
-sub submethods { values %{ $_[0]->submethod_map } }
-
-sub add_submethod {
-    my ($self, $submethod) = @_;
-    $self->submethod_map->{ $submethod->name } = $submethod;
-}
-
-sub get_submethod {
-    my ($self, $name) = @_;
-    $self->submethod_map->{ $name }
-}
-
-sub has_submethod {
-    my ($self, $name) = @_;
-    exists $self->submethod_map->{ $name };
-}
-
 # events
 
 sub FINALIZE {
@@ -206,18 +181,12 @@ sub __INIT_METACLASS__ {
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$!submethods',
-        storage => \%submethods,
-        default => \sub { {} },
-    ));
-
-    $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!instance_generator',
         storage => \%instance_generator,
         default => \sub { sub { \(my $anon) } },
     ));
 
-    $METACLASS->add_submethod( mop::method->new( name => 'BUILD', body => \&BUILD ) );
+    $METACLASS->add_method( mop::method->new( name => 'BUILD', body => \&BUILD ) );
 
 
     $METACLASS->add_method( mop::method->new( name => 'superclass', body => \&superclass ) );
@@ -234,13 +203,6 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'create_fresh_instance_structure', body => \&create_fresh_instance_structure ) );
 
     $METACLASS->add_method( mop::method->new( name => 'add_method', body => \&add_method ) );
-
-    $METACLASS->add_method( mop::method->new( name => 'submethod_class', body => \&submethod_class ) );
-    $METACLASS->add_method( mop::method->new( name => 'submethod_map',   body => \&submethod_map   ) );
-    $METACLASS->add_method( mop::method->new( name => 'submethods',      body => \&submethods      ) );
-    $METACLASS->add_method( mop::method->new( name => 'get_submethod',   body => \&get_submethod   ) );
-    $METACLASS->add_method( mop::method->new( name => 'add_submethod',   body => \&add_submethod   ) );
-    $METACLASS->add_method( mop::method->new( name => 'has_submethod',   body => \&has_submethod   ) );
 
     $METACLASS->add_method( mop::method->new( name => 'FINALIZE', body => \&FINALIZE ) );
 

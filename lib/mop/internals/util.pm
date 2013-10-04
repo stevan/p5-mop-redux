@@ -151,7 +151,6 @@ sub get_class_for_closing {
         remove_required_method
         make_class_abstract
         set_instance_generator
-        add_submethod
     );
 
     for my $method (@mutator_methods) {

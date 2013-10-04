@@ -105,16 +105,6 @@ sub _find_method {
     return;
 }
 
-sub find_submethod {
-    my ($invocant, $method_name) = @_;
-
-    if (my $meta = mop::meta($invocant)) {
-        return $meta->get_submethod( $method_name );
-    }
-
-    return;
-}
-
 sub call_method {
     my ($invocant, $method_name, $args, $super_of) = @_;
 
@@ -130,9 +120,7 @@ sub call_method {
         warn $_[0] unless $_[0] =~ /\(in cleanup\)/
     };
 
-    my $method = find_submethod( $invocant, $method_name );
-    $method    = find_method( $invocant, $method_name, $super_of )
-        unless defined $method;
+    my $method = find_method( $invocant, $method_name, $super_of );
 
     die "Could not find $method_name in " . overload::StrVal($invocant)
         unless defined $method;

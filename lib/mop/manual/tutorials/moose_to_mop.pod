@@ -81,14 +81,12 @@ in a Moose class. Here is a short example:
 It should be noted that any attempt to assign to an attribute
 will result in an error. So if you either need access to
 C<$self> or attributes, you can do this inside of the C<BUILD>
-submethod, which will be automatically called from C<new>.
+method, which will be automatically called from C<new>.
 
 =head3 BUILD
 
 As with Moose, if you need to perform initialization on an
-instance, you can use the C<BUILD> method for that. In Moose
-C<BUILD> is a regular method, but in the MOP, C<BUILD> is
-actually a C<submethod> (these will be explained later).
+instance, you can use the C<BUILD> method for that.
 
 Here is a simple example where the C<bar> argument to the
 constructor is not actualy stored, but instead is processed
@@ -97,7 +95,7 @@ first then stored in the C<$double_bar> attribute.
     class Foo {
         has $double_bar;
 
-        submethod BUILD ($args) {
+        method BUILD ($args) {
             $double_bar = $args->{'bar'} * 2
                 if exists $args->{'bar'};
         }

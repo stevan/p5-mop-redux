@@ -12,11 +12,11 @@ class Test::BuilderX {
     has $!testplan;
     has $!results = [];
 
-    submethod BUILD {
+    method BUILD {
         $!output //= Test::BuilderX::Output->new;
     }
 
-    submethod DEMOLISH {
+    method DEMOLISH {
         return unless $!testplan;
         my $footer = $!testplan->footer( scalar @{$!results} );
         $!output->write( $footer ) if $footer;

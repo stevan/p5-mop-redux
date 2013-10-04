@@ -15,21 +15,21 @@ class Foo {
         push @{ $collector } => $stuff;
     }
 
-    submethod DEMOLISH {
+    method DEMOLISH {
         $self->collect( 'Foo' );
     }
 }
 
 class Bar extends Foo {
 
-    submethod DEMOLISH {
+    method DEMOLISH {
         $self->collect( 'Bar' );
     }
 }
 
 class Baz extends Bar {
 
-    submethod DEMOLISH {
+    method DEMOLISH {
         $self->collect( 'Baz' );
     }
 }

@@ -12,7 +12,7 @@ use mop;
 class Foo {
     has $!bar is rw;
 
-    #submethod DEMOLISH { warn "reapin... " }
+    #method DEMOLISH { warn "reapin... " }
 }
 
 class Bar {
