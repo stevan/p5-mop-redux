@@ -15,7 +15,6 @@ our @AVAILABLE_TRAITS = qw[
     abstract
     overload
     extending_non_mop
-    closed
     repr
 ];
 
@@ -171,16 +170,6 @@ sub extending_non_mop {
             )
         );
     }
-}
-
-sub closed {
-    my ($class) = @_;
-    die "closed can only be used on classes"
-        unless $class->isa('mop::class');
-
-    $class->bind('after:FINALIZE' => sub {
-        mop::internals::util::close_class($class);
-    });
 }
 
 sub repr {

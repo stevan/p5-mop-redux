@@ -62,8 +62,6 @@ sub is_abstract { ${ $is_abstract{ $_[0] } } }
 
 sub make_class_abstract { $is_abstract{ $_[0] } = \1 }
 
-sub is_closed { 0 }
-
 # instance creation
 
 sub new_instance {
@@ -188,8 +186,6 @@ sub __INIT_METACLASS__ {
 
     $METACLASS->add_method( mop::method->new( name => 'is_abstract',         body => \&is_abstract ) );
     $METACLASS->add_method( mop::method->new( name => 'make_class_abstract', body => \&make_class_abstract ) );
-
-    $METACLASS->add_method( mop::method->new( name => 'is_closed',         body => \&is_closed ) );
 
     $METACLASS->add_method( mop::method->new( name => 'new_instance', body => \&new_instance ) );
     $METACLASS->add_method( mop::method->new( name => 'clone_instance', body => \&clone_instance ) );

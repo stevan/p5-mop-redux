@@ -8,7 +8,7 @@ use mop;
 class MetaMeta extends mop::class { }
 class Meta extends mop::class meta MetaMeta { }
 class Foo meta Meta { }
-class Bar meta Meta is closed { }
+class Bar meta Meta { }
 class Foo::Sub extends Foo { }
 class Bar::Sub extends Bar { }
 

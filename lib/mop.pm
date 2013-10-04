@@ -437,8 +437,6 @@ This is a prototype for a new object system for Perl 5.
 
         method make_class_abstract { ... }
 
-        method is_closed { ... }
-
         method new_instance { ... }
         method clone_instance { ... }
 

@@ -5,7 +5,7 @@ use Test::More;
 
 use mop;
 
-class Foo is closed, repr('HASH') {
+class Foo is repr('HASH') {
     has $!attr = 'ATTR';
 
     method attr { $!attr }
