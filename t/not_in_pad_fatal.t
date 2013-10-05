@@ -18,7 +18,7 @@ use Test::Fatal;
     intro_twigil_my_var $!foo;
 
     eval 'warn $!bar';
-    like $@, qr/^Not such twigil variable \$!bar/;
+    like $@, qr/^No such twigil variable \$!bar/;
 }
 
 done_testing;

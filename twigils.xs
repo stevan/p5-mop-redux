@@ -207,7 +207,7 @@ myck_rv2any (pTHX_ OP *o, char sigil, Perl_check_t old_checker)
                       not_in_pad_fatal_hint_key_hash);
 
     if (he && SvTRUE(HeVAL(he)))
-      croak("Not such twigil variable %"SVf, SVfARG(name));
+      croak("No such twigil variable %"SVf, SVfARG(name));
 
     PL_parser->bufptr = parse_start;
     return old_checker(aTHX_ o);
