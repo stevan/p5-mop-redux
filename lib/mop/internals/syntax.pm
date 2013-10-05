@@ -383,8 +383,12 @@ sub has_parser {
     lex_read;
 
     my $twigil = lex_peek;
-    die "Invalid attribute name " . read_tokenish() unless $twigil eq '!' || $twigil eq '.';
-    lex_read;
+    if ( $twigil eq '!' || $twigil eq '.' ) {
+        #die "Invalid attribute name " . read_tokenish() unless $twigil eq '!' || $twigil eq '.';
+        lex_read;
+    } else {
+        $twigil = '';
+    }
 
 
     my $name = '$' . $twigil . parse_name('attribute');

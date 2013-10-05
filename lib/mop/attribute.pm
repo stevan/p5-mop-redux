@@ -53,7 +53,9 @@ sub name { ${ $name{ $_[0] } } }
 
 sub key_name {
     my $self = shift;
-    substr( $self->name, 2, length $self->name )
+    return substr( $self->name, 2, length $self->name )
+        if $self->name =~ /^\$(\!|\.)\w*$/;
+    return substr( $self->name, 1, length $self->name )
 }
 
 # NOTE:
