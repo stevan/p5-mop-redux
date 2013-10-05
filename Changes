@@ -1,3 +1,7 @@
+0.04  2013-10-05  TRIAL
+  * Fix the wording of an error message.
+  * Allow pre-registering allowed twigil characters.
+
 0.03  2013-09-03  TRIAL
   * Add an option to provide better error messages.
 
