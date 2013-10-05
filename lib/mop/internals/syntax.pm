@@ -11,7 +11,7 @@ use Carp            ();
 use Scalar::Util    ();
 use Sub::Name       ();
 use version         ();
-use twigils;
+use twigils 0.03    ();
 
 use Parse::Keyword {
     class     => \&namespace_parser,
@@ -299,6 +299,7 @@ sub generic_method_parser {
     my $preamble = '{'
         . 'my ' . $invocant . ' = shift;'
         . 'local ${^CALLER} = [ ' . $invocant . ', q[' . $name . '], $' . $CURRENT_CLASS_NAME . '::METACLASS ];'
+        . 'use twigils "fatal_lookup_errors";'
         . '();';
 
     # this is our method preamble, it
@@ -309,7 +310,7 @@ sub generic_method_parser {
     # is stored in the fieldhash storage
     foreach my $attr (@{ $CURRENT_ATTRIBUTE_LIST }) {
         $preamble .=
-            'twigils::intro_twigil_my_var(q[' . $attr . ']);'
+            'intro_twigil_my_var ' . $attr . ';'
           . 'Variable::Magic::cast('
               . $attr . ', '
               . '(Scalar::Util::blessed(' . $invocant . ') '
