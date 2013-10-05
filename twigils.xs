@@ -6,8 +6,10 @@
 #include "callparser.h"
 
 Perl_check_t old_rv2sv_checker, old_rv2av_checker, old_rv2hv_checker;
-SV *twigils_hint_key_sv, *not_in_pad_fatal_hint_key_sv;
-U32 twigils_hint_key_hash, not_in_pad_fatal_hint_key_hash;
+SV *twigils_hint_key_sv, *not_in_pad_fatal_hint_key_sv,
+   *no_autovivification_hint_key_sv;
+U32 twigils_hint_key_hash, not_in_pad_fatal_hint_key_hash,
+    no_autovivification_hint_key_hash;
 
 enum twigil_var_type {
   TWIGIL_VAR_MY,
@@ -169,12 +171,26 @@ parse_ident_maybe_subscripted (pTHX_ const char *prefix, STRLEN prefixlen, enum 
   return sv;
 }
 
+static bool
+twigil_allowed (pTHX_ char twigil)
+{
+  HE *he = hv_fetch_ent(GvHV(PL_hintgv), twigils_hint_key_sv, 0, twigils_hint_key_hash);
+  return he && memchr(SvPVX(HeVAL(he)), twigil, SvCUR(HeVAL(he))) != NULL;
+}
+
+static bool
+not_in_pad_is_fatal (pTHX)
+{
+  HE *he = hv_fetch_ent(GvHV(PL_hintgv), not_in_pad_fatal_hint_key_sv, 0,
+                        not_in_pad_fatal_hint_key_hash);
+  return he && SvTRUE(HeVAL(he));
+}
+
 static OP *
 myck_rv2any (pTHX_ OP *o, char sigil, Perl_check_t old_checker)
 {
   OP *kid, *ret, *subscript = NULL;
   SV *sv, *name;
-  HE *he;
   PADOFFSET offset;
   char *parse_start, prefix[2];
   enum subscript_type subscript_type;
@@ -190,8 +206,7 @@ myck_rv2any (pTHX_ OP *o, char sigil, Perl_check_t old_checker)
   if (!SvPOK(sv))
     return old_checker(aTHX_ o);
 
-  he = hv_fetch_ent(GvHV(PL_hintgv), twigils_hint_key_sv, 0, twigils_hint_key_hash);
-  if (!he || memchr(SvPVX(HeVAL(he)), *SvPVX(sv), SvCUR(HeVAL(he))) == NULL)
+  if (!twigil_allowed(aTHX_ *SvPVX(sv)))
     return old_checker(aTHX_ o);
 
   parse_start = PL_parser->bufptr;
@@ -203,12 +218,8 @@ myck_rv2any (pTHX_ OP *o, char sigil, Perl_check_t old_checker)
 
   offset = pad_findmy_sv(name, 0);
   if (offset == NOT_IN_PAD) {
-    he = hv_fetch_ent(GvHV(PL_hintgv), not_in_pad_fatal_hint_key_sv, 0,
-                      not_in_pad_fatal_hint_key_hash);
-
-    if (he && SvTRUE(HeVAL(he)))
+    if (not_in_pad_is_fatal(aTHX))
       croak("No such twigil variable %"SVf, SVfARG(name));
-
     PL_parser->bufptr = parse_start;
     return old_checker(aTHX_ o);
   }
@@ -269,12 +280,33 @@ myck_rv2hv (pTHX_ OP *o)
   return myck_rv2any(aTHX_ o, '%', old_rv2hv_checker);
 }
 
+static void
+add_allowed_twigil (pTHX_ char twigil)
+{
+  dSP;
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(SP);
+  XPUSHs(sv_2mortal(newSVpv(&twigil, 1)));
+  PUTBACK;
+  call_pv("twigils::_add_allowed_twigil", 0);
+  FREETMPS;
+  LEAVE;
+}
+
+static bool
+twigils_should_autovivify (pTHX)
+{
+  HE *he = hv_fetch_ent(GvHV(PL_hintgv), no_autovivification_hint_key_sv, 0,
+                        no_autovivification_hint_key_hash);
+  return !he || !SvTRUE(HeVAL(he));
+}
+
 static OP *
 myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
-  dSP;
   SV *namesv;
   OP *pushop, *sigop, *ret;
-  char sigil;
+  char sigil, twigil;
   int flags = 0;
 
   PERL_UNUSED_ARG(namegv);
@@ -287,17 +319,14 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj) {
     croak("Unable to extract compile time constant twigil variable name");
 
   namesv = cSVOPx_sv(sigop);
-
-  ENTER;
-  SAVETMPS;
-  PUSHMARK(SP);
-  XPUSHs(sv_2mortal(newSVpv(SvPVX(namesv) + 1, 1)));
-  PUTBACK;
-  call_pv("twigils::_add_allowed_twigil", 0);
-  FREETMPS;
-  LEAVE;
-
   sigil = *SvPVX(namesv);
+  twigil = *(SvPVX(namesv) + 1);
+
+  if (twigils_should_autovivify(aTHX))
+    add_allowed_twigil(aTHX_ twigil);
+  else if (!twigil_allowed(aTHX_ twigil))
+    croak("Unregistered sigil character %c", twigil);
+
   switch ((enum twigil_var_type)SvIV(ckobj)) {
   case TWIGIL_VAR_STATE:
     flags = (OPpPAD_STATE << 8);
@@ -360,6 +389,8 @@ BOOT:
   twigils_hint_key_hash = SvSHARED_HASH(twigils_hint_key_sv);
   not_in_pad_fatal_hint_key_sv = newSVpvs_share("twigils/not_in_pad_fatal");
   not_in_pad_fatal_hint_key_hash = SvSHARED_HASH(not_in_pad_fatal_hint_key_sv);
+  no_autovivification_hint_key_sv = newSVpvs_share("twigils/no_autovivification");
+  no_autovivification_hint_key_hash = SvSHARED_HASH(no_autovivification_hint_key_sv);
 
   old_rv2sv_checker = PL_check[OP_RV2SV];
   old_rv2av_checker = PL_check[OP_RV2AV];
