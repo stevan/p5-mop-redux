@@ -5,7 +5,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fatal;
 
 use mop;
 
@@ -36,12 +35,14 @@ class Foo {
 
     my $bar = $foo->bar;
 
-    is(exception{ $foo->set_bar( Bar->new ) }, undef, '... set bar without error');
+    eval { $foo->set_bar( Bar->new ) };
+    is($@, "", '... set bar without error');
     ok($foo->has_bar, '... bar is set');
     ok($foo->bar->isa( 'Bar' ), '... value is set by the set_bar method');
     isnt($foo->bar, $bar, '... the new value has been set');
 
-    is(exception{ $foo->clear_bar }, undef, '... set bar without error');
+    eval { $foo->clear_bar };
+    is($@, "", '... set bar without error');
     ok(!$foo->has_bar, '... no bar is set');
     is($foo->bar, undef, '... values has been cleared');
 }

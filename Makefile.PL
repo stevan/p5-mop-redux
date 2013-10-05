@@ -50,7 +50,6 @@ my %WriteMakefileArgs = (
     'B::Deparse'  => 0,
     'FindBin'     => 0,
     'IO::Handle'  => 0,
-    'Test::Fatal' => 0,
     'Test::More'  => 0.88,
     'if'          => 0,
     'lib'         => 0,

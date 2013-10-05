@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fatal;
 
 use lib 't/ext/Option';
 
@@ -22,7 +21,8 @@ sub number_under_ten {
 }
 
 is(number_under_ten(7)->get, 7, '... got the right value back');
-like(exception { number_under_ten(12)->get }, qr/None\-\>get/, '... got the exception');
+eval { number_under_ten(12)->get };
+like($@, qr/None\-\>get/, '... got the exception');
 
 number_under_ten(12)->get_or_else(sub {
     pass("... did not get a number under 10");

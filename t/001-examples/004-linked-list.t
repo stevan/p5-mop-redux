@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fatal;
 
 use mop;
 
@@ -114,10 +113,10 @@ class LinkedListNode {
     is($node->get_value, 6, '... detached node has the right value');
     ok($node->isa('LinkedListNode'), '... node is a LinkedListNode');
 
-    ok(exception { $ll->remove(99) }, '... removing out of range produced error');
-    ok(exception { $ll->insert(-1, LinkedListNode->new(value => 2)) },
-        '... inserting out of range produced error'
-    );
+    eval { $ll->remove(99) };
+    ok($@, '... removing out of range produced error');
+    eval { $ll->insert(-1, LinkedListNode->new(value => 2)) };
+    ok($@, '... inserting out of range produced error');
 
     is($ll->sum, 49, '... things sum correctly');
 }

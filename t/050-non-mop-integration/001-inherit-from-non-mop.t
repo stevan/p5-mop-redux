@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fatal;
 
 use mop;
 
@@ -41,11 +40,13 @@ is(Foo->gorch, 'Foo::gorch', '... got the value we expected from Foo->gorch');
 my $bar = Bar->new;
 is($bar->baz, 'Bar::baz', '... got the value we expected from $bar->baz');
 is($bar->bar, 'Foo::bar', '... got the value we expected from $bar->bar');
-like(exception { $bar->gorch }, qr/^Could not find gorch in/, '... cannot call gorch with $bar');
+eval { $bar->gorch };
+like($@, qr/^Could not find gorch in/, '... cannot call gorch with $bar');
 
 is(Bar->baz, 'Bar::baz', '... got the value we expected from Bar->baz');
 is(Bar->bar, 'Foo::bar', '... got the value we expected from Bar->bar');
-like(exception { Bar->gorch }, qr/^Could not find gorch in/, '... cannot call gorch with Bar');
+eval { Bar->gorch };
+like($@, qr/^Could not find gorch in/, '... cannot call gorch with Bar');
 
 is(Bar->hello, 'Object::hello', '... got the value we expected from Bar->hello');
 is(Foo->hello, 'Object::hello', '... got the value we expected from Foo->hello');

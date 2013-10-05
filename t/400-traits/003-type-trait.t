@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fatal;
 
 BEGIN {
     eval { require Moose::Util::TypeConstraints; 1 }
@@ -51,34 +50,39 @@ can_ok($foo, 'bar');
 
 is($foo->bar, undef, '... the value is undef');
 
-is(exception{ $foo->bar(10) }, undef, '... this succeeded');
+eval { $foo->bar(10) };
+is($@, "", '... this succeeded');
 is($foo->bar, 10, '... the value was set to 10');
 
+eval { $foo->bar([]) };
 like(
-    exception{ $foo->bar([]) },
+    $@,
     qr/^Validation failed for \'Int\' with value /,
     '... this failed correctly'
 );
 is($foo->bar, 10, '... the value is still 10');
 
-is(exception{ $foo->set_bar(100) }, undef, '... this succeeded');
+eval { $foo->set_bar(100) };
+is($@, "", '... this succeeded');
 is($foo->bar, 100, '... the value was set to 100');
 
+eval { $foo->set_bar([]) };
 like(
-    exception{ $foo->set_bar([]) },
+    $@,
     qr/^Validation failed for \'Int\' with value /,
     '... this failed correctly'
 );
 is($foo->bar, 100, '... the value is still 100');
 
 {
-    my $result;
-    is(exception{ $result = $foo->add_numbers(100, 100) }, undef, '... this succeeded');
+    my $result = eval { $foo->add_numbers(100, 100) };
+    is($@, "", '... this succeeded');
     is($result, 200, '... got the result we expected too');
 }
 
+eval { $foo->add_numbers([], 20) };
 like(
-    exception{ $foo->add_numbers([], 20) },
+    $@,
     qr/^Validation failed for \'Int\' with value /,
     '... this failed correctly'
 );

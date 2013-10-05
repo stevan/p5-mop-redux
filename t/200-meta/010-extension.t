@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fatal;
 
 use mop;
 
@@ -44,8 +43,10 @@ ok(mop::meta('Foo')->has_method('baz'), '... the baz method was generated for us
     is($foo->bar, undef, '... there is no value for bar');
     is($foo->baz, undef, '... there is no value for baz');
 
-    is(exception { $foo->bar( 100 ) }, undef, '... set the bar value without dying');
-    is(exception { $foo->baz( 'BAZ' ) }, undef, '... set the baz value without dying');
+    eval { $foo->bar( 100 ) };
+    is($@, "", '... set the bar value without dying');
+    eval { $foo->baz( 'BAZ' ) };
+    is($@, "", '... set the baz value without dying');
 
     is($foo->bar, 100, '... and got the expected value for bar');
     is($foo->baz, 'BAZ', '... and got the expected value for bar');
@@ -59,8 +60,10 @@ ok(mop::meta('Foo')->has_method('baz'), '... the baz method was generated for us
     is($foo->bar, 100, '... and got the expected value for bar');
     is($foo->baz, 'BAZ', '... and got the expected value for bar');
 
-    is(exception { $foo->bar( 300 ) }, undef, '... set the bar value without dying');
-    is(exception { $foo->baz( 'baz' ) }, undef, '... set the baz value without dying');
+    eval { $foo->bar( 300 ) };
+    is($@, "", '... set the bar value without dying');
+    eval { $foo->baz( 'baz' ) };
+    is($@, "", '... set the baz value without dying');
 
     is($foo->bar, 300, '... and got the expected value for bar');
     is($foo->baz, 'baz', '... and got the expected value for bar');

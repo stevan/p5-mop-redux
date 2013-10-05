@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fatal;
 
 use mop;
 
@@ -49,21 +48,25 @@ class Foo {
     #diag $bar;
     #diag $baz;
 
-    is(exception{ $foo->set_bar( Bar->new ) }, undef, '... set bar without error');
+    eval { $foo->set_bar( Bar->new ) };
+    is($@, "", '... set bar without error');
     ok($foo->has_bar, '... bar is set');
     ok($foo->bar->isa( 'Bar' ), '... value is set by the set_bar method');
     isnt($foo->bar, $bar, '... the new value has been set');
 
-    is(exception{ $foo->set_baz( Baz->new ) }, undef, '... set baz without error');
+    eval { $foo->set_baz( Baz->new ) };
+    is($@, "", '... set baz without error');
     ok($foo->has_baz, '... baz is set');
     ok($foo->baz->isa( 'Baz' ), '... value is set by the set_baz method');
     isnt($foo->baz, $baz, '... the new value has been set');
 
-    is(exception{ $foo->clear_bar }, undef, '... set bar without error');
+    eval { $foo->clear_bar };
+    is($@, "", '... set bar without error');
     ok(!$foo->has_bar, '... no bar is set');
     is($foo->bar, undef, '... values has been cleared');
 
-    is(exception{ $foo->clear_baz }, undef, '... set baz without error');
+    eval { $foo->clear_baz };
+    is($@, "", '... set baz without error');
     ok(!$foo->has_baz, '... no baz is set');
     is($foo->baz, undef, '... values has been cleared');
 }

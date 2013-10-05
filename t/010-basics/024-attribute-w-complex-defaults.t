@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fatal;
 
 use mop;
 
@@ -31,13 +30,16 @@ class Foo {
     ok($foo->has_bar, '... a bar is set');
     is_deeply($foo->bar, [], '... values are defined');
 
-    is(exception{ $foo->init_bar }, undef, '... initialized bar without error');
+    eval { $foo->init_bar };
+    is($@, "", '... initialized bar without error');
     is_deeply($foo->bar, [ 1, 2, 3 ], '... value is initialized by the init_bar method');
 
-    is(exception{ $foo->set_bar([1000]) }, undef, '... set bar without error');
+    eval { $foo->set_bar([1000]) };
+    is($@, "", '... set bar without error');
     is_deeply($foo->bar, [1000], '... value is set by the set_bar method');
 
-    is(exception{ $foo->clear_bar }, undef, '... set bar without error');
+    eval { $foo->clear_bar };
+    is($@, "", '... set bar without error');
     ok(!$foo->has_bar, '... no bar is set');
     is($foo->bar, undef, '... values has been cleared');
 
@@ -54,15 +56,18 @@ class Foo {
     ok($foo->has_bar, '... a bar is set');
     is_deeply($foo->bar, [10], '... values are initialized via the constructor');
 
-    is(exception{ $foo->init_bar }, undef, '... initialized bar without error');
+    eval { $foo->init_bar };
+    is($@, "", '... initialized bar without error');
     ok($foo->has_bar, '... a bar is set');
     is_deeply($foo->bar, [1, 2, 3], '... value is initialized by the init_bar method');
 
-    is(exception{ $foo->set_bar([1000]) }, undef, '... set bar without error');
+    eval { $foo->set_bar([1000]) };
+    is($@, "", '... set bar without error');
     ok($foo->has_bar, '... a bar is set');
     is_deeply($foo->bar, [1000], '... value is set by the set_bar method');
 
-    is(exception{ $foo->clear_bar }, undef, '... set bar without error');
+    eval { $foo->clear_bar };
+    is($@, "", '... set bar without error');
     ok(!$foo->has_bar, '... no bar is set');
     is($foo->bar, undef, '... values has been cleared');
 }

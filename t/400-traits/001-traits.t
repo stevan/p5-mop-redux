@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fatal;
 
 use mop;
 
@@ -18,7 +17,8 @@ can_ok($foo, 'bar');
 
 is($foo->bar, undef, '... got the value we expected');
 
-is(exception{ $foo->bar(10) }, undef, '... setting the value worked');
+eval { $foo->bar(10) };
+is($@, "", '... setting the value worked');
 
 is($foo->bar, 10, '... got the value we expected');
 
@@ -40,8 +40,9 @@ can_ok($bar, 'baz');
 
 is($bar->baz, 10, '... got the value we expected');
 
+eval { $bar->baz(10) };
 like(
-	exception{ $bar->baz(10) },
+        $@,
 	qr/Cannot assign to a read-only accessor/,
 	'... setting the value worked'
 );

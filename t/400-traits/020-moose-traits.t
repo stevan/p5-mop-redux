@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fatal;
 
 use mop;
 
@@ -93,10 +92,8 @@ class Foo {
     }
 }
 
-my $foo;
-is(exception {
-    $foo = Foo->new( bar_object => Bar->new );
-}, undef, '... created Foo successfully');
+my $foo = eval { Foo->new( bar_object => Bar->new ) };
+is($@, "", '... created Foo successfully');
 
 isa_ok($foo, 'Foo');
 
@@ -123,9 +120,8 @@ ok(!$foo->bling_was_triggered, '... bling has not been triggered yet');
 $foo->bling(20);
 is($foo->bling_was_triggered, 20, '... bling has now been triggered yet');
 
-like(exception {
-    Foo->new;
-}, qr/\$bar_object is required/, '... failed to create Foo (successfully)');
+eval { Foo->new };
+like($@, qr/\$bar_object is required/, '... failed to create Foo (successfully)');
 
 
 

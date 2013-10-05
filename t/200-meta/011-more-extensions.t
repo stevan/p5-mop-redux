@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fatal;
 
 use mop;
 
@@ -68,15 +67,19 @@ ok(mop::meta('Foo')->has_method('baz'), '... the baz method was generated for us
     is($foo->baz, undef, '... there is no value for baz');
     is($foo->age, undef, '... there is no value for age');
 
-    is(exception { $foo->bar( 100 ) }, undef, '... set the bar value without dying');
-    is(exception { $foo->baz( 'BAZ' ) }, undef, '... set the baz value without dying');
-    is(exception { $foo->age( 34 ) }, undef, '... set the age value without dying');
+    eval { $foo->bar( 100 ) };
+    is($@, "", '... set the bar value without dying');
+    eval { $foo->baz( 'BAZ' ) };
+    is($@, "", '... set the baz value without dying');
+    eval { $foo->age( 34 ) };
+    is($@, "", '... set the age value without dying');
 
     is($foo->bar, 100, '... and got the expected value for bar');
     is($foo->baz, 'BAZ', '... and got the expected value for bar');
     is($foo->age, 34, '... and got the expected value for age');
 
-    like(exception { $foo->age( 'not an int' ) }, qr/invalid value 'not an int' for attribute '\$\!age'/, '... could not set to a non-int value');
+    eval { $foo->age( 'not an int' ) };
+    like($@, qr/invalid value 'not an int' for attribute '\$\!age'/, '... could not set to a non-int value');
 
     is($foo->age, 34, '... kept the old value of age');
 }

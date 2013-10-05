@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fatal;
 
 use mop;
 
@@ -28,7 +27,8 @@ class Foo {
     is($foo->bar, 'BAR', 'required attribute with arg');
 }
 
-like( exception { Foo->new(); },
+eval { Foo->new };
+like( $@,
       qr/^'\$!bar' is required/,
       'missing required attribute throws an exception'
 );

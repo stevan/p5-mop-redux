@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fatal;
 
 use mop;
 
@@ -43,7 +42,8 @@ ok($foo->isa( 'mop::object' ), '... foo is an Object');
 ok(!$foo->isa( 'mop::class' ), '... foo is not a Class');
 ok(!$foo->isa( 'FooMeta' ), '... foo is not a FooMeta');
 
-like exception { $foo->static_method }, qr/^Could not find static_method in Foo/, '... got an expection here';
+eval { $foo->static_method };
+like $@, qr/^Could not find static_method in Foo/, '... got an expection here';
 
 is($foo->hello_from_class, 'STATIC', '... got the class method via the instance however');
 is($foo->hello, 'FOO', '... got the instance method however');

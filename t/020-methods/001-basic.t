@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fatal;
 
 use mop;
 
@@ -54,8 +53,9 @@ is($foo->bar_w_explicit_params(1, 2), 'BAR, 1, 2', '... got the expected return 
     # nailed down.
     # - SL
     local $TODO = '<rjbs> stevan: My recollection was "too few is an error, too many is not," but there is a thread... (but not a spec)...';
+    eval { $foo->bar_w_explicit_param; die 'Stupid uninitialized variable warnings, *sigh*' };
     like(
-        exception { $foo->bar_w_explicit_param; die 'Stupid uninitialized variable warnings, *sigh*'; },
+        $@,
         qr/Not enough parameters/,
         '... got the expected error'
     );

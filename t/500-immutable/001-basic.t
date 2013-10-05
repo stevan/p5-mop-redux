@@ -2,7 +2,6 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Fatal;
 
 use mop;
 
@@ -31,15 +30,16 @@ class Bar is closed {
     is(Bar->new->bar, 1);
 
     my $Bar = mop::meta('Bar');
-    like(
-        exception {
-            $Bar->add_method(
-                $Bar->method_class->new(
-                    name => 'baz',
-                    body => sub { 2 },
-                )
+    eval {
+        $Bar->add_method(
+            $Bar->method_class->new(
+                name => 'baz',
+                body => sub { 2 },
             )
-        },
+        )
+    },
+    like(
+        $@,
         qr/^Can't call add_method on a closed class/
     );
     ok(!Bar->new->can('baz'));

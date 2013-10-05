@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Fatal;
 
 use mop;
 
@@ -23,10 +22,13 @@ ok(
 class Bar 6 { }
 
 is(Bar->VERSION, 6, "UNIVERSAL VERSION method works");
-is(exception { Bar->VERSION(5) }, undef);
-is(exception { Bar->VERSION(6) }, undef);
+eval { Bar->VERSION(5) };
+is($@, "");
+eval { Bar->VERSION(6) };
+is($@, "");
+eval { Bar->VERSION(7) };
 like(
-    exception { Bar->VERSION(7) },
+    $@,
     qr/^Bar version 7 required--this is only version 6/
 );
 

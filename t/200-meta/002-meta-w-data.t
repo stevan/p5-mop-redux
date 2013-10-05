@@ -5,7 +5,6 @@ use warnings;
 use 5.016;
 
 use Test::More;
-use Test::Fatal;
 
 use mop;
 

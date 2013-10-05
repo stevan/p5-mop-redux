@@ -6,7 +6,6 @@ use warnings;
 use v5.14;
 
 use Test::More;
-use Test::Fatal;
 
 use mop;
 

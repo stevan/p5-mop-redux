@@ -13,7 +13,6 @@ requires 'warnings'              => 0;
 build_requires 'B::Deparse'  => 0;
 build_requires 'FindBin'     => 0;
 build_requires 'IO::Handle'  => 0;
-build_requires 'Test::Fatal' => 0;
 build_requires 'Test::More'  => 0.88;
 build_requires 'if'          => 0;
 build_requires 'lib'         => 0;
