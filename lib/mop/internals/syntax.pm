@@ -11,7 +11,7 @@ use Carp            ();
 use Scalar::Util    ();
 use Sub::Name       ();
 use version         ();
-use twigils 0.03    ();
+use twigils 0.04    ();
 
 use Parse::Keyword {
     class     => \&namespace_parser,
@@ -299,7 +299,7 @@ sub generic_method_parser {
     my $preamble = '{'
         . 'my ' . $invocant . ' = shift;'
         . 'local ${^CALLER} = [ ' . $invocant . ', q[' . $name . '], $' . $CURRENT_CLASS_NAME . '::METACLASS ];'
-        . 'use twigils "fatal_lookup_errors";'
+        . 'use twigils "fatal_lookup_errors", allowed_twigils => "!.";'
         . '();';
 
     # this is our method preamble, it
