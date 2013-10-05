@@ -7,6 +7,6 @@ perl:
 install:
   - cpanm -qn Dist::Zilla
   - dzil authordeps |grep -v '^inc' |cpanm -qn
-  - dzil listdeps |cpanm -qn
+  - dzil listdeps --author |cpanm -qn
 script:
   - dzil test --all
