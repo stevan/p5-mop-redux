@@ -52,7 +52,14 @@ sub unimport {
 }
 
 sub meta {
-    ${ mop::internals::util::get_stash_for( shift )->get_symbol('$METACLASS') || \undef }
+    # FIXME
+    # Getting some global destruction errors in
+    # t/200-meta/105-metaclass-compat-multiple.t
+    # so I added this, these GD errors suck.
+    # - SL
+    my $stash = mop::internals::util::get_stash_for( shift );
+    return unless Scalar::Util::blessed( $stash );
+    ${ $stash->get_symbol('$METACLASS') || \undef }
 }
 
 sub remove_meta {
