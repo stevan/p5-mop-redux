@@ -79,9 +79,11 @@ sub _find_method {
             return $meta->get_method( $method_name )
                 if $meta->has_method( $method_name );
         } else {
-            my $stash = mop::internals::util::get_stash_for( $class );
-            return $stash->get_symbol( '&' . $method_name )
-                if $stash->has_symbol( '&' . $method_name );
+            my $name = ref($class) ? $class->name : $class;
+            my $fqname = "${name}::${method_name}";
+            no strict 'refs';
+            return \&{ $fqname }
+                if defined &{ $fqname };
         }
     }
 

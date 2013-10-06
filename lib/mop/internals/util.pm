@@ -3,16 +3,9 @@ use v5.16;
 use warnings;
 
 use Hash::Util::FieldHash;
-use Package::Stash;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
-
-sub get_stash_for {
-    state %STASHES;
-    my $class = ref($_[0]) || $_[0];
-    $STASHES{ $class } //= Package::Stash->new( $class )
-}
 
 sub init_attribute_storage (\%) {
     &Hash::Util::FieldHash::fieldhash( $_[0] )
@@ -48,8 +41,10 @@ sub install_meta {
       . "Does your code have a circular dependency?"
         if is_nonmop_class($name);
 
-    my $stash = get_stash_for($name);
-    $stash->add_symbol('$METACLASS', \$meta);
+    {
+        no strict 'refs';
+        *{ $name . '::METACLASS' } = \$meta;
+    }
     mro::set_mro($name, 'mop');
 }
 
@@ -68,8 +63,10 @@ sub finalize_meta {
             if $meta->required_methods && not $meta->is_abstract;
     }
 
-    my $stash = mop::internals::util::get_stash_for($meta->name);
-    $stash->add_symbol('$VERSION', \$meta->version);
+    {
+        no strict 'refs';
+        *{ $meta->name . '::VERSION' } = \$meta->version;
+    }
 
     $meta->fire('after:FINALIZE');
 }
@@ -175,11 +172,12 @@ sub get_class_for_closing {
 
     $new_meta->FINALIZE;
 
-    my $stash = get_stash_for($class->name);
     for my $isa (@{ mop::mro::get_linear_isa($class->name) }) {
         if (mop::meta($isa)) {
             for my $method (mop::meta($isa)->methods) {
-                $stash->add_symbol('&' . $method->name => $method->body);
+                no strict 'refs';
+                no warnings 'redefine';
+                *{ $class->name . '::' . $method->name } = $method->body;
             }
         }
     }
@@ -206,12 +204,10 @@ sub find_or_inflate_meta {
 sub inflate_meta {
     my ($class) = @_;
 
-    my $stash = get_stash_for($class);
-
-    my $name      = $stash->name;
-    my $version   = $stash->get_symbol('$VERSION');
-    my $authority = $stash->get_symbol('$AUTHORITY');
-    my $isa       = $stash->get_symbol('@ISA');
+    my $name      = $class;
+    my $version   = do { no strict 'refs'; ${ *{ $class . '::VERSION' }{SCALAR} } };
+    my $authority = do { no strict 'refs'; ${ *{ $class . '::AUTHORITY' }{SCALAR} } };
+    my $isa       = do { no strict 'refs'; *{ $class . '::ISA' }{ARRAY} };
 
     die "Multiple inheritance is not supported in mop classes"
         if @$isa > 1;
@@ -226,11 +222,12 @@ sub inflate_meta {
     );
     mro::set_mro($name, $mro);
 
-    for my $method ($stash->list_all_symbols('CODE')) {
+    for my $method (do { no strict 'refs'; keys %{ $class . '::' } }) {
+        next unless $class->can($method);
         $new_meta->add_method(
             mop::method->new(
                 name => $method,
-                body => $stash->get_symbol('&' . $method),
+                body => $class->can($method),
             )
         );
     }

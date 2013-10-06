@@ -42,8 +42,6 @@ my %WriteMakefileArgs = (
 
     # other
     'Module::Runtime'    => 0,
-    'Package::Stash'     => 0,
-    'Package::Stash::XS' => 0.27,
   },
   'TEST_REQUIRES' => {
     # core

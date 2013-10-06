@@ -33,18 +33,16 @@ sub import {
     mop::internals::syntax->setup_for( $pkg );
     bootstrap();
 
-    my $caller_stash = mop::internals::util::get_stash_for($pkg);
-    my $traits_stash = mop::internals::util::get_stash_for('mop::traits');
     foreach my $trait ( @mop::traits::AVAILABLE_TRAITS ) {
-        $caller_stash->add_symbol(
-            '&' . $trait, $traits_stash->get_symbol('&' . $trait)
-        );
+        no strict 'refs';
+        *{ $pkg . '::' . $trait } = \&{ "mop::traits::$trait" };
     }
 }
 
 sub unimport {
     my $pkg = caller;
-    mop::internals::util::get_stash_for($pkg)->remove_glob($_)
+    no strict 'refs';
+    delete ${ $pkg . '::' }{$_}
         for (
             qw(class role method submethod has),
             @mop::traits::AVAILABLE_TRAITS
@@ -52,18 +50,15 @@ sub unimport {
 }
 
 sub meta {
-    # FIXME
-    # Getting some global destruction errors in
-    # t/200-meta/105-metaclass-compat-multiple.t
-    # so I added this, these GD errors suck.
-    # - SL
-    my $stash = mop::internals::util::get_stash_for( shift );
-    return unless Scalar::Util::blessed( $stash );
-    ${ $stash->get_symbol('$METACLASS') || \undef }
+    my $pkg = ref($_[0]) || $_[0];
+    no strict 'refs';
+    ${ $pkg . '::METACLASS' }
 }
 
 sub remove_meta {
-    mop::internals::util::get_stash_for( shift )->remove_symbol('$METACLASS')
+    my $pkg = ref($_[0]) || $_[0];
+    no strict 'refs';
+    undef ${ $pkg . '::METACLASS' };
 }
 
 sub id { Hash::Util::FieldHash::id( $_[0] ) }
@@ -208,12 +203,6 @@ sub bootstrap {
     }
 
     {
-        my $Object_stash    = mop::internals::util::get_stash_for('mop::object');
-        my $Class_stash     = mop::internals::util::get_stash_for('mop::class');
-        my $Role_stash      = mop::internals::util::get_stash_for('mop::role');
-        my $Method_stash    = mop::internals::util::get_stash_for('mop::method');
-        my $Attribute_stash = mop::internals::util::get_stash_for('mop::attribute');
-
         # NOTE:
         # This is ugly, but we need to do
         # it to set the record straight
@@ -222,24 +211,26 @@ sub bootstrap {
         # are correct and code is reused.
         # - SL
         foreach my $method ($Role->methods) {
-            $Class_stash->add_symbol( '&' . $method->name, $method->body )
-                unless $Class_stash->has_symbol( '&' . $method->name );
+            no strict 'refs';
+            *{ 'mop::class::' . $method->name } = $method->body
+                unless defined &{ 'mop::class::' . $method->name };
         }
 
         # now make sure the Observable roles are
         # completely intergrated into the stashes
         foreach my $method ($Observable->methods) {
-            foreach my $stash ( $Role_stash, $Method_stash, $Attribute_stash ) {
-                $stash->add_symbol( '&' . $method->name, $method->body )
-                    unless $stash->has_symbol( '&' . $method->name );
+            foreach my $package (qw(mop::role mop::method mop::attribute)) {
+                no strict 'refs';
+                *{ $package . '::' . $method->name } = $method->body
+                    unless defined &{ $package . '::' . $method->name };
             }
         }
 
         # then clean up some of the @ISA by
         # removing mop::observable from them
-        @{ $Role_stash->get_symbol('@ISA')      } = ('mop::object');
-        @{ $Method_stash->get_symbol('@ISA')    } = ('mop::object');
-        @{ $Attribute_stash->get_symbol('@ISA') } = ('mop::object');
+        @mop::role::ISA      = ('mop::object');
+        @mop::method::ISA    = ('mop::object');
+        @mop::attribute::ISA = ('mop::object');
 
         # Here we finalize the rest of the
         # metaclass layer so that the following:
@@ -247,11 +238,11 @@ sub bootstrap {
         #   - Object is an instance of Class
         #   - Class is a subclass of Object
         # is true.
-        @{ $Class_stash->get_symbol('@ISA') } = ('mop::object');
+        @mop::class::ISA = ('mop::object');
 
         # remove the temporary clone methods used in the bootstrap
-        $Method_stash->remove_symbol('&clone');
-        $Attribute_stash->remove_symbol('&clone');
+        delete $mop::method::{clone};
+        delete $mop::attribute::{clone};
 
         # replace the temporary implementation of mop::object::new
         my $new = mop::method->new(
@@ -265,13 +256,17 @@ sub bootstrap {
             },
         );
         $Object->add_method($new);
-        $Object_stash->add_symbol('&new', $new->body);
+        {
+            no strict 'refs';
+            no warnings 'redefine';
+            *{ 'mop::object::new' } = $new->body;
+        }
 
         # remove the temporary constructors used in the bootstrap
-        $Class_stash->remove_symbol('&new');
-        $Role_stash->remove_symbol('&new');
-        $Method_stash->remove_symbol('&new');
-        $Attribute_stash->remove_symbol('&new');
+        delete $mop::class::{new};
+        delete $mop::role::{new};
+        delete $mop::method::{new};
+        delete $mop::attribute::{new};
     }
 
     {

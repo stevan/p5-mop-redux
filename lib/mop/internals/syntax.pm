@@ -200,7 +200,12 @@ sub namespace_parser {
 
     my $preamble = '{'
         . 'sub __' . uc($type) . '__ () { "' . $pkg . '" }'
-        . 'BEGIN { B::Hooks::EndOfScope::on_scope_end { mop::internals::util::get_stash_for(__PACKAGE__)->remove_glob("__' . uc($type) . '__") } }';
+        . 'BEGIN {'
+        .     'B::Hooks::EndOfScope::on_scope_end {'
+        .         'no strict "refs";'
+        .         'delete ${__PACKAGE__."::"}{"__' . uc($type) . '__"};'
+        .     '}'
+        . '}';
 
     lex_stuff($preamble);
     if (my $code = parse_block(1)) {
@@ -635,13 +640,17 @@ sub parse_name {
     sub stuff_value {
         my ($value) = @_;
         state $index = 1;
-        my $symbol = '&value' . $index;
-        my $stash = mop::internals::util::get_stash_for('mop::internals::syntax::STUFF');
-        $stash->add_symbol($symbol, sub () { $value });
-        my $code = "mop::internals::syntax::STUFF::value$index";
-        push @guards, guard { $stash->remove_symbol($symbol); };
+        my $name = "value$index";
+        my $const = "mop::internals::syntax::STUFF::$name";
+        {
+            no strict 'refs';
+            *$const = sub () { $value };
+        }
+        push @guards, guard {
+            delete $mop::internals::syntax::STUFF::{"$name"};
+        };
         $index++;
-        return $code;
+        return $const;
     }
 
     sub parse_stuff_with_values {

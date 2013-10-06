@@ -100,12 +100,19 @@ sub overload {
         ($meta->superclass)
             || die "You don't have a superclass on " . $meta->name;
 
-        my $local_stash = mop::internals::util::get_stash_for( $meta->name );
-        my $super_stash = mop::internals::util::get_stash_for( $meta->superclass );
-        my $all_symbols = $super_stash->get_all_symbols('CODE');
+        my $stash = do {
+            no strict 'refs';
+            \%{ $meta->superclass . '::' }
+        };
+        my $all_symbols = {
+            map { $_ => $meta->superclass->UNIVERSAL::can($_) }
+                grep { $meta->superclass->UNIVERSAL::can($_) }
+                    grep { !/::$/ }
+                        keys %$stash
+        };
 
         foreach my $symbol ( grep { /^\(/ && !/^\(\)/ && !/^\(\(/ } keys %$all_symbols ) {
-            unless ($local_stash->has_symbol( '&' . $symbol )) {
+            unless ($meta->name->UNIVERSAL::can($symbol)) {
                 my ($operator) = ($symbol =~ /^\((.*)/);
                 overload::OVERLOAD(
                     $meta->name,

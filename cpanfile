@@ -31,8 +31,6 @@ requires 'MRO::Define'              => 0;
 
 # other
 requires 'Module::Runtime'    => 0;
-requires 'Package::Stash'     => 0;
-requires 'Package::Stash::XS' => 0.27;
 
 author_requires 'Devel::StackTrace'            => 0;
 author_requires 'Moose'                        => 0;
