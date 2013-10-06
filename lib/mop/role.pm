@@ -182,7 +182,42 @@ sub requires_method {
 
 sub FINALIZE {
     my $self = shift;
-    mop::internals::util::finalize_meta($self);
+
+    $self->fire('before:FINALIZE');
+
+    mop::internals::util::apply_all_roles($self, @{ $self->roles })
+        if @{ $self->roles };
+
+    # XXX gross
+    if ($self->isa('mop::class')) {
+        die 'Required method(s) [' . (join ', ' => $self->required_methods)
+            . '] are not allowed in ' . $self->name
+            . ' unless class is declared abstract'
+            if $self->required_methods && not $self->is_abstract;
+    }
+
+    for my $method ($self->methods) {
+        # XXX this should actually test to see if there are any events on the
+        # method, or if the method is using a custom method metaclass which
+        # overrides execute. checking BOOTSTRAPPED is wrong here, but it works
+        # for now.
+        my $body = $mop::BOOTSTRAPPED
+            ? sub { $method->execute(shift, \@_) }
+            : $method->body;
+        no strict 'refs';
+        no warnings 'redefine';
+        *{ $self->name . '::' . $method->name } = $body;
+    }
+
+    {
+        no strict 'refs';
+        *{ $self->name . '::VERSION' } = \$self->version;
+        # XXX gross
+        @{ $self->name . '::ISA' } = ($self->superclass)
+            if $self->isa('mop::class') && defined $self->superclass;
+    }
+
+    $self->fire('after:FINALIZE');
 }
 
 our $METACLASS;

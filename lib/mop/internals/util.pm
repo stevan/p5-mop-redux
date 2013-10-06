@@ -47,44 +47,6 @@ sub install_meta {
     }
 }
 
-sub finalize_meta {
-    my ($meta) = @_;
-
-    $meta->fire('before:FINALIZE');
-
-    apply_all_roles($meta, @{ $meta->roles })
-        if @{ $meta->roles };
-
-    if ($meta->isa('mop::class')) {
-        die 'Required method(s) [' . (join ', ' => $meta->required_methods)
-            . '] are not allowed in ' . $meta->name
-            . ' unless class is declared abstract'
-            if $meta->required_methods && not $meta->is_abstract;
-    }
-
-    for my $method ($meta->methods) {
-        # XXX this should actually test to see if there are any events on the
-        # method, or if the method is using a custom method metaclass which
-        # overrides execute. checking BOOTSTRAPPED is wrong here, but it works
-        # for now.
-        my $body = $mop::BOOTSTRAPPED
-            ? sub { $method->execute(shift, \@_) }
-            : $method->body;
-        no strict 'refs';
-        no warnings 'redefine';
-        *{ $meta->name . '::' . $method->name } = $body;
-    }
-
-    {
-        no strict 'refs';
-        *{ $meta->name . '::VERSION' } = \$meta->version;
-        @{ $meta->name . '::ISA' } = ($meta->superclass)
-            if $meta->isa('mop::class') && defined $meta->superclass;
-    }
-
-    $meta->fire('after:FINALIZE');
-}
-
 sub apply_all_roles {
     my ($to, @roles) = @_;
 

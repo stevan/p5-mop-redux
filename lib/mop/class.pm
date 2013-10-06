@@ -152,11 +152,6 @@ sub add_method {
 
 # events
 
-sub FINALIZE {
-    my $self = shift;
-    mop::internals::util::finalize_meta($self);
-}
-
 our $METACLASS;
 
 sub __INIT_METACLASS__ {
@@ -203,8 +198,6 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'create_fresh_instance_structure', body => \&create_fresh_instance_structure ) );
 
     $METACLASS->add_method( mop::method->new( name => 'add_method', body => \&add_method ) );
-
-    $METACLASS->add_method( mop::method->new( name => 'FINALIZE', body => \&FINALIZE ) );
 
     $METACLASS;
 }
