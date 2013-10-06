@@ -71,7 +71,18 @@ sub __INIT_METACLASS__ {
         version   => $VERSION,
         authority => $AUTHORITY,
     );
-    $METACLASS->add_method( mop::method->new( name => 'new',       body => \&new ) );
+    $METACLASS->add_method(
+        mop::method->new(
+            name => 'new',
+            body => sub {
+                my $class = shift;
+                my %args  = scalar(@_) == 1 && ref $_[0] eq 'HASH'
+                    ? %{$_[0]}
+                    : @_;
+                mop::internals::util::find_or_inflate_meta($class)->new_instance(%args);
+            }
+        )
+    );
     $METACLASS->add_method( mop::method->new( name => 'clone',     body => \&clone ) );
     $METACLASS->add_method( mop::method->new( name => 'BUILDALL',  body => \&BUILDALL ) );
     $METACLASS->add_method( mop::method->new( name => 'does',      body => \&does ) );

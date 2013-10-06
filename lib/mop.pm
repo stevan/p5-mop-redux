@@ -241,21 +241,10 @@ sub bootstrap {
         delete $mop::attribute::{clone};
 
         # replace the temporary implementation of mop::object::new
-        my $new = mop::method->new(
-            name => 'new',
-            body => sub {
-                my $class = shift;
-                my %args  = scalar(@_) == 1 && ref $_[0] eq 'HASH'
-                    ? %{$_[0]}
-                    : @_;
-                mop::internals::util::find_or_inflate_meta($class)->new_instance(%args);
-            },
-        );
-        $Object->add_method($new);
         {
             no strict 'refs';
             no warnings 'redefine';
-            *{ 'mop::object::new' } = $new->body;
+            *{ 'mop::object::new' } = $Object->get_method('new')->body;
         }
 
         # remove the temporary constructors used in the bootstrap
