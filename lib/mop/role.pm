@@ -196,7 +196,35 @@ sub FINALIZE {
             if $self->required_methods && not $self->is_abstract;
     }
 
-    for my $method ($self->methods) {
+    my @methods    = $self->methods;
+    my $name       = $self->name;
+    my $version    = $self->version;
+    # XXX gross
+    my $superclass = $self->isa('mop::class') ? $self->superclass : undef;
+
+    {
+        no strict 'refs';
+        *{ $name . '::VERSION' } = \$version;
+        @{ $name . '::ISA' } = ($superclass)
+            if defined $superclass;
+    }
+
+    for my $method (@methods) {
+        # XXX
+        if ($mop::BOOTSTRAPPED && $self->isa('mop::class')) {
+            my @super_methods = (
+                map { $_ ? $_->get_method($method->name) : undef }
+                map { mop::meta($_) }
+                @{ mop::mro::get_linear_isa($name) }
+            );
+            shift @super_methods;
+            @super_methods = grep { defined } @super_methods;
+
+            if (my $super = $super_methods[0]) {
+                mop::apply_metaclass($method, $super);
+            }
+        }
+
         # XXX this should actually test to see if there are any events on the
         # method, or if the method is using a custom method metaclass which
         # overrides execute. checking BOOTSTRAPPED is wrong here, but it works
@@ -206,15 +234,7 @@ sub FINALIZE {
             : $method->body;
         no strict 'refs';
         no warnings 'redefine';
-        *{ $self->name . '::' . $method->name } = $body;
-    }
-
-    {
-        no strict 'refs';
-        *{ $self->name . '::VERSION' } = \$self->version;
-        # XXX gross
-        @{ $self->name . '::ISA' } = ($self->superclass)
-            if $self->isa('mop::class') && defined $self->superclass;
+        *{ $name . '::' . $method->name } = $body;
     }
 
     $self->fire('after:FINALIZE');

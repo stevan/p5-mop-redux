@@ -127,27 +127,6 @@ sub set_instance_generator { $instance_generator{ $_[0] } = \$_[1] }
 
 sub create_fresh_instance_structure { (shift)->instance_generator->() }
 
-# methods
-
-sub add_method {
-    my $self = shift;
-    my ($method) = @_;
-
-    my @super_methods = (
-        map { $_ ? $_->get_method($method->name) : undef }
-        map { mop::meta($_) }
-        @{ mop::mro::get_linear_isa($self->name) }
-    );
-    shift @super_methods;
-    @super_methods = grep { defined } @super_methods;
-
-    if (my $super = $super_methods[0]) {
-        mop::apply_metaclass($method, $super);
-    }
-
-    $self->mop::role::add_method($method);
-}
-
 # events
 
 our $METACLASS;
@@ -192,8 +171,6 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'instance_generator', body => \&instance_generator ) );
     $METACLASS->add_method( mop::method->new( name => 'set_instance_generator', body => \&set_instance_generator ) );
     $METACLASS->add_method( mop::method->new( name => 'create_fresh_instance_structure', body => \&create_fresh_instance_structure ) );
-
-    $METACLASS->add_method( mop::method->new( name => 'add_method', body => \&add_method ) );
 
     $METACLASS;
 }
