@@ -233,6 +233,8 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'set_instance_generator', body => \&set_instance_generator ) );
     $METACLASS->add_method( mop::method->new( name => 'create_fresh_instance_structure', body => \&create_fresh_instance_structure ) );
 
+    $METACLASS->add_method( mop::method->new( name => 'add_method', body => \&add_method ) );
+
     $METACLASS->add_method( mop::method->new( name => 'submethod_class', body => \&submethod_class ) );
     $METACLASS->add_method( mop::method->new( name => 'submethod_map',   body => \&submethod_map   ) );
     $METACLASS->add_method( mop::method->new( name => 'submethods',      body => \&submethods      ) );
