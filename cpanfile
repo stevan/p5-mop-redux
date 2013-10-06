@@ -35,6 +35,7 @@ requires 'Module::Runtime'    => 0;
 author_requires 'Devel::StackTrace'            => 0;
 author_requires 'Moose'                        => 0;
 author_requires 'Moose::Util::TypeConstraints' => 0;
+author_requires 'Package::Stash::XS'           => 0.27;
 author_requires 'Path::Class'                  => 0;
 author_requires 'Test::EOL'                    => 0;
 author_requires 'Test::NoTabs'                 => 0;

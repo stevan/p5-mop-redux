@@ -94,6 +94,7 @@ if ($ENV{RELEASE_TESTING}) {
         'Moose'                        => 0,
         'Moose::Util::TypeConstraints' => 0,
         'Path::Class'                  => 0,
+        'Package::Stash::XS'           => 0.27,
         'Test::EOL'                    => 0,
         'Test::NoTabs'                 => 0,
         'Test::Pod'                    => 1.41,

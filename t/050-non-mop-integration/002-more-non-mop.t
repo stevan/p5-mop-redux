@@ -6,7 +6,7 @@ use warnings;
 use Test::More;
 
 BEGIN {
-    eval { require Moose; 1 }
+    eval { require Moose; require Package::Stash::XS; Package::Stash::XS->VERSION(0.27); 1 }
         or ($ENV{RELEASE_TESTING}
             ? die
             : plan skip_all => "This test requires Moose");
