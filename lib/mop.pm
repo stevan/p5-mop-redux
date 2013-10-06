@@ -4,6 +4,7 @@ use v5.16;
 use mro;
 use warnings;
 
+use overload ();
 use Scalar::Util;
 
 our $VERSION   = '0.01';
