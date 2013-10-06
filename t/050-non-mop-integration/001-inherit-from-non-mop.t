@@ -9,6 +9,7 @@ use mop;
 
 {
     package BaseObject;
+    BEGIN { $INC{'BaseObject.pm'} = __FILE__ }
     use strict;
     use warnings;
 

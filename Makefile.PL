@@ -35,9 +35,6 @@ my %WriteMakefileArgs = (
     'Sub::Name'            => 0,
     'twigils'              => 0,
     'Variable::Magic'      => 0,
-
-    # other
-    'Module::Runtime'    => 0,
   },
   'TEST_REQUIRES' => {
     # core

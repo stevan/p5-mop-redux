@@ -10,6 +10,7 @@ use mop;
 
 {
     package My::Component;
+    BEGIN { $INC{'My/Component.pm'} = __FILE__ }
     use strict;
     use warnings;
 

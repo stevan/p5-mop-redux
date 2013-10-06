@@ -10,7 +10,6 @@ use B::Hooks::EndOfScope ();
 use Carp            ();
 use Scalar::Util    ();
 use Sub::Name       ();
-use Module::Runtime ();
 use version         ();
 use twigils;
 
@@ -169,7 +168,7 @@ sub namespace_parser {
 
     for my $class (@classes_to_load) {
         next if mop::meta($class);
-        Module::Runtime::use_package_optimistically($class);
+        require(($class =~ s{::}{/}gr) . '.pm');
     }
 
     syntax_error("$type must be followed by a block")
@@ -379,7 +378,7 @@ sub has_parser {
 
     my $metaclass;
     if ($metaclass = parse_modifier_with_single_value('meta')) {
-        Module::Runtime::use_package_optimistically($metaclass);
+        require(($metaclass =~ s{::}{/}gr) . '.pm');
     }
 
     lex_read_space;

@@ -26,8 +26,6 @@ requires 'twigils'              => 0;
 requires 'Variable::Magic'      => 0;
 
 # other
-requires 'Module::Runtime'    => 0;
-
 author_requires 'Devel::StackTrace'            => 0;
 author_requires 'Moose'                        => 0;
 author_requires 'Moose::Util::TypeConstraints' => 0;

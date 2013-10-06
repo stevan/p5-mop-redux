@@ -16,6 +16,7 @@ use mop;
 
 {
     package Person;
+    BEGIN { $INC{'Person.pm'} = __FILE__ }
     use Moose;
 
     # NOTE:
