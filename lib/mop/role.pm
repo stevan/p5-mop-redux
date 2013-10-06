@@ -5,8 +5,6 @@ use warnings;
 
 use mop::internals::util;
 
-use Module::Runtime qw[ is_module_name module_notional_filename ];
-
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
@@ -47,10 +45,6 @@ sub BUILD {
 
     if (my @nometa = grep { !mop::meta($_) } @{ $self->roles }) {
         die "No metaclass found for these roles: @nometa";
-    }
-
-    if ( defined($self->name) && is_module_name($self->name) ) {
-        $INC{ module_notional_filename($self->name) } //= '(mop)';
     }
 }
 

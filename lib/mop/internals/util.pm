@@ -45,6 +45,8 @@ sub install_meta {
         no strict 'refs';
         *{ $name . '::METACLASS' } = \$meta;
     }
+
+    $INC{ ($name =~ s{::}{/}gr) . '.pm' } //= '(mop)';
 }
 
 sub apply_all_roles {
