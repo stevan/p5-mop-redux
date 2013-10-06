@@ -215,7 +215,7 @@ sub FINALIZE {
             my @super_methods = (
                 map { $_ ? $_->get_method($method->name) : undef }
                 map { mop::meta($_) }
-                @{ mop::mro::get_linear_isa($name) }
+                @{ mro::get_linear_isa($name) }
             );
             shift @super_methods;
             @super_methods = grep { defined } @super_methods;

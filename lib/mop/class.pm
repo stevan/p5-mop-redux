@@ -78,7 +78,7 @@ sub new_instance {
         if (my $m = mop::meta($_)) {
             %{ $m->attribute_map }
         }
-    } reverse @{ mop::mro::get_linear_isa($self->name) };
+    } reverse @{ mro::get_linear_isa($self->name) };
 
     foreach my $attr (values %attributes) {
         if ( exists $args{ $attr->key_name }) {
@@ -102,7 +102,7 @@ sub clone_instance {
             if (my $m = mop::meta($_)) {
                 %{ $m->attribute_map }
             }
-        } reverse @{ mop::mro::get_linear_isa($self->name) }
+        } reverse @{ mro::get_linear_isa($self->name) }
     };
 
     %args = (

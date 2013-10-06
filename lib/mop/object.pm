@@ -33,7 +33,7 @@ sub clone {
 
 sub BUILDALL {
     my ($self, @args) = @_;
-    foreach my $class (reverse @{ mop::mro::get_linear_isa($self) }) {
+    foreach my $class (reverse @{ mro::get_linear_isa(ref $self) }) {
         if (my $m = mop::meta($class)) {
             $m->get_method('BUILD')->execute($self, [ @args ])
                 if $m->has_method('BUILD');
@@ -43,7 +43,7 @@ sub BUILDALL {
 
 sub does {
     my ($self, $role) = @_;
-    scalar grep { mop::meta($_)->does_role($role) } @{ mop::mro::get_linear_isa($self) }
+    scalar grep { mop::meta($_)->does_role($role) } @{ mro::get_linear_isa(ref($self) || $self) }
 }
 
 sub DOES {
@@ -53,7 +53,7 @@ sub DOES {
 
 sub DESTROY {
     my $self = shift;
-    foreach my $class (@{ mop::mro::get_linear_isa($self) }) {
+    foreach my $class (@{ mro::get_linear_isa(ref $self) }) {
         if (my $m = mop::meta($class)) {
             $m->get_method('DEMOLISH')->execute($self, [])
                 if $m->has_method('DEMOLISH');

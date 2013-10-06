@@ -167,12 +167,12 @@ sub rebase_metaclasses {
     my $common_base = find_common_base($meta_name, $super_name);
     return unless $common_base;
 
-    my @meta_isa = @{ mop::mro::get_linear_isa($meta_name) };
+    my @meta_isa = @{ mro::get_linear_isa($meta_name) };
     pop @meta_isa until $meta_isa[-1] eq $common_base;
     pop @meta_isa;
     @meta_isa = reverse map { mop::meta($_) } @meta_isa;
 
-    my @super_isa = @{ mop::mro::get_linear_isa($super_name) };
+    my @super_isa = @{ mro::get_linear_isa($super_name) };
     pop @super_isa until $super_isa[-1] eq $common_base;
     pop @super_isa;
     @super_isa = reverse map { mop::meta($_) } @super_isa;
@@ -213,9 +213,9 @@ sub find_common_base {
     my ($meta_name, $super_name) = @_;
 
     my %meta_ancestors =
-        map { $_ => 1 } @{ mop::mro::get_linear_isa($meta_name) };
+        map { $_ => 1 } @{ mro::get_linear_isa($meta_name) };
 
-    for my $super_ancestor (@{ mop::mro::get_linear_isa($super_name) }) {
+    for my $super_ancestor (@{ mro::get_linear_isa($super_name) }) {
         return $super_ancestor if $meta_ancestors{$super_ancestor};
     }
 

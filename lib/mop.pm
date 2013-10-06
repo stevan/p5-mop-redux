@@ -22,8 +22,6 @@ use mop::internals::observable;
 use mop::internals::syntax;
 use mop::internals::util;
 
-use mop::mro;
-
 use mop::traits;
 use mop::traits::util;
 
@@ -85,14 +83,14 @@ sub rebless {
     my $from = Scalar::Util::blessed($object);
     my $common_base = mop::internals::util::find_common_base($from, $into);
 
-    my @from_isa = @{ mop::mro::get_linear_isa($from) };
+    my @from_isa = @{ mro::get_linear_isa($from) };
     if ($common_base) {
         pop @from_isa until $from_isa[-1] eq $common_base;
         pop @from_isa;
     }
     @from_isa = grep { defined } map { meta($_) } @from_isa;
 
-    my @into_isa = @{ mop::mro::get_linear_isa($into) };
+    my @into_isa = @{ mro::get_linear_isa($into) };
     if ($common_base) {
         pop @into_isa until $into_isa[-1] eq $common_base;
         pop @into_isa;
@@ -119,7 +117,7 @@ sub dump_object {
         if (my $m = meta($_)) {
             %{ $m->attribute_map }
         }
-    } reverse @{ mop::mro::get_linear_isa($obj) };
+    } reverse @{ mro::get_linear_isa(ref $obj) };
 
     my $temp = {
         __ID__    => id($obj),

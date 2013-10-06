@@ -50,7 +50,7 @@ class Point3D extends Point {
     isa_ok($p, 'Point');
 
     is_deeply(
-        mop::mro::get_linear_isa('Point'),
+        mro::get_linear_isa('Point'),
         [ 'Point', 'mop::object' ],
         '... got the expected linear isa'
     );
@@ -74,7 +74,7 @@ class Point3D extends Point {
     isa_ok($p3d, 'Point');
 
     is_deeply(
-        mop::mro::get_linear_isa('Point3D'),
+        mro::get_linear_isa('Point3D'),
         [ 'Point3D', 'Point', 'mop::object' ],
         '... got the expected linear isa'
     );

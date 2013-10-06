@@ -56,7 +56,7 @@ is_deeply($e->manager, $m, '... got the expected manager');
 #warn Dumper mop::meta('Employee');
 
 is_deeply(
-    mop::mro::get_linear_isa('Employee'),
+    mro::get_linear_isa('Employee'),
     [ 'Employee', 'Person', 'Moose::Object' ],
     '... got the expected linear isa'
 );

@@ -44,13 +44,13 @@ is(Bar->hello, 'Object::hello', '... got the value we expected from Bar->hello')
 is(Foo->hello, 'Object::hello', '... got the value we expected from Foo->hello');
 
 is_deeply(
-    mop::mro::get_linear_isa('Foo'),
+    mro::get_linear_isa('Foo'),
     [ 'Foo', 'BaseObject' ],
     '... got the expected linear isa'
 );
 
 is_deeply(
-    mop::mro::get_linear_isa('Bar'),
+    mro::get_linear_isa('Bar'),
     [ 'Bar', 'Foo', 'BaseObject' ],
     '... got the expected linear isa'
 );

@@ -30,31 +30,31 @@ isa_ok('mop::method', 'mop::object');
 isa_ok('mop::attribute', 'mop::object');
 
 is_deeply(
-    mop::mro::get_linear_isa('mop::class'),
+    mro::get_linear_isa('mop::class'),
     [ 'mop::class', 'mop::object' ],
     '... got the expected mro'
 );
 
 is_deeply(
-    mop::mro::get_linear_isa('mop::role'),
+    mro::get_linear_isa('mop::role'),
     [ 'mop::role', 'mop::object' ],
     '... got the expected mro'
 );
 
 is_deeply(
-    mop::mro::get_linear_isa('mop::method'),
+    mro::get_linear_isa('mop::method'),
     [ 'mop::method', 'mop::object' ],
     '... got the expected mro'
 );
 
 is_deeply(
-    mop::mro::get_linear_isa('mop::attribute'),
+    mro::get_linear_isa('mop::attribute'),
     [ 'mop::attribute', 'mop::object' ],
     '... got the expected mro'
 );
 
 is_deeply(
-    mop::mro::get_linear_isa('mop::object'),
+    mro::get_linear_isa('mop::object'),
     [ 'mop::object' ],
     '... got the expected mro'
 );

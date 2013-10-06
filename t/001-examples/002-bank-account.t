@@ -67,13 +67,13 @@ is $checking->balance, 0, '... got the checking balance we expected';
 is $savings->balance, 200, '... got the savings balance we expected';
 
 is_deeply(
-    mop::mro::get_linear_isa('BankAccount'),
+    mro::get_linear_isa('BankAccount'),
     [ 'BankAccount', 'mop::object' ],
     '... got the expected linear isa'
 );
 
 is_deeply(
-    mop::mro::get_linear_isa('CheckingAccount'),
+    mro::get_linear_isa('CheckingAccount'),
     [ 'CheckingAccount', 'BankAccount', 'mop::object' ],
     '... got the expected linear isa'
 );

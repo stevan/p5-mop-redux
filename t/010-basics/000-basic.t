@@ -27,7 +27,7 @@ class Foo {
 }
 
 is_deeply(
-    mop::mro::get_linear_isa('Foo'),
+    mro::get_linear_isa('Foo'),
     [ 'Foo', 'mop::object' ],
     '... got the expected linear isa'
 );
