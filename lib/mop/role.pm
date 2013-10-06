@@ -190,26 +190,20 @@ sub FINALIZE {
             if $self->required_methods && not $self->is_abstract;
     }
 
-    my @methods    = $self->methods;
-    my $name       = $self->name;
-    my $version    = $self->version;
-    # XXX gross
-    my $superclass = $self->isa('mop::class') ? $self->superclass : undef;
-
     {
         no strict 'refs';
-        *{ $name . '::VERSION' } = \$version;
-        @{ $name . '::ISA' } = ($superclass)
-            if defined $superclass;
+        *{ $self->name . '::VERSION' } = \$self->version;
+        @{ $self->name . '::ISA' } = ($self->superclass)
+            if $self->isa('mop::class') && defined $self->superclass;
     }
 
-    for my $method (@methods) {
+    for my $method ($self->methods) {
         # XXX
         if ($self->isa('mop::class')) {
             my @super_methods = (
                 map { $_ ? $_->get_method($method->name) : undef }
                 map { mop::meta($_) }
-                @{ mro::get_linear_isa($name) }
+                @{ mro::get_linear_isa($self->name) }
             );
             shift @super_methods;
             @super_methods = grep { defined } @super_methods;
@@ -225,7 +219,7 @@ sub FINALIZE {
         my $body = sub { $method->execute(shift, \@_) };
         no strict 'refs';
         no warnings 'redefine';
-        *{ $name . '::' . $method->name } = $body;
+        *{ $self->name . '::' . $method->name } = $body;
     }
 
     $self->fire('after:FINALIZE');
