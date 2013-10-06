@@ -181,6 +181,7 @@ sub bootstrap {
     #   - Role does Role
     # is true.
     $Class->add_role( $Role );
+    mop::internals::util::apply_all_roles($Class, $Role);
 
     # flatten mop::observable into wherever it's needed (it's just an
     # implementation detail (#95), so it shouldn't end up being directly
@@ -196,10 +197,6 @@ sub bootstrap {
 
     # and now this is no longer needed
     remove_meta('mop::internals::observable');
-
-    foreach my $meta ( $Object, $Method, $Attribute, $Class, $Role ) {
-        $meta->FINALIZE;
-    }
 
     {
         # NOTE:

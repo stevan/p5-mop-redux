@@ -205,7 +205,7 @@ sub FINALIZE {
 
     for my $method (@methods) {
         # XXX
-        if ($mop::BOOTSTRAPPED && $self->isa('mop::class')) {
+        if ($self->isa('mop::class')) {
             my @super_methods = (
                 map { $_ ? $_->get_method($method->name) : undef }
                 map { mop::meta($_) }
@@ -221,11 +221,8 @@ sub FINALIZE {
 
         # XXX this should actually test to see if there are any events on the
         # method, or if the method is using a custom method metaclass which
-        # overrides execute. checking BOOTSTRAPPED is wrong here, but it works
-        # for now.
-        my $body = $mop::BOOTSTRAPPED
-            ? sub { $method->execute(shift, \@_) }
-            : $method->body;
+        # overrides execute.
+        my $body = sub { $method->execute(shift, \@_) };
         no strict 'refs';
         no warnings 'redefine';
         *{ $name . '::' . $method->name } = $body;
