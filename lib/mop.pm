@@ -52,6 +52,7 @@ sub unimport {
 sub meta {
     my $pkg = ref($_[0]) || $_[0];
     no strict 'refs';
+    no warnings 'once';
     ${ $pkg . '::METACLASS' }
 }
 
