@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/stevan/p5-mop-redux.png?branch=master)](https://travis-ci.org/stevan/p5-mop-redux)
+
 A(nother) MOP for Perl 5
 ============
 
