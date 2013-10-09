@@ -47,9 +47,17 @@ sub unimport {
             @mop::traits::AVAILABLE_TRAITS;
 }
 
+# XXX all of this OVERRIDDEN stuff really needs to go, ideally replaced by
+# lexical exports
+my %OVERRIDDEN;
+
 sub _install_sub {
     my ($to, $from, $sub) = @_;
     no strict 'refs';
+    if (defined &{ "${to}::${sub}" }) {
+        push @{ $OVERRIDDEN{$sub} //= [] }, \&{ "${to}::${sub}" };
+    }
+    no warnings 'redefine';
     *{ $to . '::' . $sub } = \&{ "${from}::${sub}" };
 }
 
@@ -57,6 +65,9 @@ sub _uninstall_sub {
     my ($pkg, $sub) = @_;
     no strict 'refs';
     delete ${ $pkg . '::' }{$sub};
+    if (my $prev = pop @{ $OVERRIDDEN{$sub} // [] }) {
+        *{ $pkg . '::' . $sub } = $prev;
+    }
 }
 
 sub meta {
