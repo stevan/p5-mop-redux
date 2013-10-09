@@ -353,6 +353,8 @@ This is a prototype for a new object system for Perl 5.
 
         has $!callbacks;
 
+        method BUILD { ... }
+
         method key_name { ... }
 
         method has_default   { ... }
@@ -379,6 +381,8 @@ This is a prototype for a new object system for Perl 5.
 
         has $!callbacks;
 
+        method BUILD { ... }
+
         method execute ($invocant, $args) { ... }
 
         method set_associated_meta ($meta) { ... }
@@ -401,6 +405,8 @@ This is a prototype for a new object system for Perl 5.
         has $!required_methods       = {};
 
         has $!callbacks;
+
+        method BUILD { ... }
 
         method add_role ($role) { ... }
         method does_role ($name) { ... }
@@ -443,6 +449,8 @@ This is a prototype for a new object system for Perl 5.
         has $!superclass is ro;
         has $!is_abstract is ro;
         has $!instance_generator is ro = sub { \(my $anon) };
+
+        method BUILD { ... }
 
         method make_class_abstract { ... }
 
