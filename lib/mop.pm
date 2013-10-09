@@ -32,24 +32,31 @@ sub import {
     bootstrap();
 
     foreach my $keyword ( @mop::internals::syntax::AVAILABLE_KEYWORDS ) {
-        no strict 'refs';
-        *{ $pkg . '::' . $keyword } = \&{ "mop::internals::syntax::$keyword" };
+        _install_sub($pkg, 'mop::internals::syntax', $keyword);
     }
 
     foreach my $trait ( @mop::traits::AVAILABLE_TRAITS ) {
-        no strict 'refs';
-        *{ $pkg . '::' . $trait } = \&{ "mop::traits::$trait" };
+        _install_sub($pkg, 'mop::traits', $trait);
     }
 }
 
 sub unimport {
     my $pkg = caller;
+    _uninstall_sub($pkg, $_)
+        for @mop::internals::syntax::AVAILABLE_KEYWORDS,
+            @mop::traits::AVAILABLE_TRAITS;
+}
+
+sub _install_sub {
+    my ($to, $from, $sub) = @_;
     no strict 'refs';
-    delete ${ $pkg . '::' }{$_}
-        for (
-            @mop::internals::syntax::AVAILABLE_KEYWORDS,
-            @mop::traits::AVAILABLE_TRAITS,
-        );
+    *{ $to . '::' . $sub } = \&{ "${from}::${sub}" };
+}
+
+sub _uninstall_sub {
+    my ($pkg, $sub) = @_;
+    no strict 'refs';
+    delete ${ $pkg . '::' }{$sub};
 }
 
 sub meta {
