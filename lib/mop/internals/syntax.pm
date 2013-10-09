@@ -20,6 +20,8 @@ use Parse::Keyword {
     has       => \&has_parser,
 };
 
+our @AVAILABLE_KEYWORDS = qw(class role method has);
+
 # keep the local package name around
 our $CURRENT_CLASS_NAME;
 
@@ -82,18 +84,6 @@ our $ERR_WIZARD = wizard(
         ();
     },
 );
-
-sub setup_for {
-    shift;
-    my ($pkg) = @_;
-    {
-        no strict 'refs';
-        *{ $pkg . '::class'     } = \&class;
-        *{ $pkg . '::role'      } = \&role;
-        *{ $pkg . '::method'    } = \&method;
-        *{ $pkg . '::has'       } = \&has;
-    }
-}
 
 sub class {
     my ($pkg) = @_;

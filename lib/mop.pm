@@ -28,8 +28,13 @@ use mop::traits::util;
 sub import {
     shift;
     my $pkg = caller;
-    mop::internals::syntax->setup_for( $pkg );
+
     bootstrap();
+
+    foreach my $keyword ( @mop::internals::syntax::AVAILABLE_KEYWORDS ) {
+        no strict 'refs';
+        *{ $pkg . '::' . $keyword } = \&{ "mop::internals::syntax::$keyword" };
+    }
 
     foreach my $trait ( @mop::traits::AVAILABLE_TRAITS ) {
         no strict 'refs';
@@ -42,8 +47,8 @@ sub unimport {
     no strict 'refs';
     delete ${ $pkg . '::' }{$_}
         for (
-            qw(class role method has),
-            @mop::traits::AVAILABLE_TRAITS
+            @mop::internals::syntax::AVAILABLE_KEYWORDS,
+            @mop::traits::AVAILABLE_TRAITS,
         );
 }
 
