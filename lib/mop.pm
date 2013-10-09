@@ -304,21 +304,23 @@ version 0.01
 
 =head1 SYNOPSIS
 
+    use mop;
+
     class Point {
-        has $x is ro = 0;
-        has $y is ro = 0;
+        has $!x is ro = 0;
+        has $!y is ro = 0;
 
         method clear {
-            ($x, $y) = (0, 0);
+            ($!x, $!y) = (0, 0);
         }
     }
 
     class Point3D extends Point {
-        has $z is ro = 0;
+        has $!z is ro = 0;
 
         method clear {
             $self->next::method;
-            $z = 0;
+            $!z = 0;
         }
     }
 
