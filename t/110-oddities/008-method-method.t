@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use lib 't/lib';
 
 use Test::More;
 
@@ -53,5 +54,13 @@ my $foo = My::Test::Foo->new;
 isa_ok($foo, 'My::Test::Foo');
 
 is($foo->method, 'calling the method method', '... methods named method work if you unexport');
+
+require BB::ConstructorInjection;
+require BB::ConstructorInjection::Singleton;
+
+my $bar = BB::ConstructorInjection->new;
+isa_ok($bar, 'BB::ConstructorInjection');
+
+is($bar->method, 'calling the method method', '... methods named method work if you unexport');
 
 done_testing;
