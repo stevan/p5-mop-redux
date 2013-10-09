@@ -471,6 +471,24 @@ This is a prototype for a new object system for Perl 5.
   Role is an instance of Class
   Role does Role
 
+=head1 FUNCTIONS
+
+=head2 meta($obj_or_class_name)
+
+=head2 remove_meta($class_name)
+
+=head2 id($obj)
+
+=head2 is_mop_object($obj)
+
+=head2 apply_metaclass($obj, $metaclass_name_or_instance)
+
+=head2 rebless($obj, $class_name)
+
+=head2 dump_object($obj)
+
+=head2 bootstrap()
+
 =head1 BUGS
 
 All complex software has bugs lurking in it, and this module is no
