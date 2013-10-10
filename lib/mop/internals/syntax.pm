@@ -213,8 +213,8 @@ sub method_parser {
 
     lex_read_space;
 
-    if (lex_peek eq ';') {
-        lex_read;
+    if (lex_peek eq ';' || lex_peek eq '}') {
+        lex_read if lex_peek eq ';';
 
         $CURRENT_META->add_required_method($name);
 
