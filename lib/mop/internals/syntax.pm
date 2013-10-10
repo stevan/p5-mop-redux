@@ -9,7 +9,6 @@ use Variable::Magic qw[ wizard ];
 use B::Hooks::EndOfScope ();
 use Carp            ();
 use Scalar::Util    ();
-use Sub::Name       ();
 use version         ();
 use twigils 0.04    ();
 
@@ -319,7 +318,7 @@ sub generic_method_parser {
     ${^META}->add_method(
         ${^META}->method_class->new(
             name => $name,
-            body => Sub::Name::subname((join '::' => $CURRENT_CLASS_NAME, $name), $code),
+            body => mop::internals::util::subname((join '::' => $CURRENT_CLASS_NAME, $name), $code),
         )
     );
 

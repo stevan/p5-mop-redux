@@ -21,7 +21,6 @@ build_requires 'lib'         => 0;
 requires 'B::Hooks::EndOfScope' => 0;
 requires 'Parse::Keyword'       => 0.04;
 requires 'Scope::Guard'         => 0;
-requires 'Sub::Name'            => 0;
 requires 'twigils'              => 0;
 requires 'Variable::Magic'      => 0;
 

@@ -32,7 +32,6 @@ my %WriteMakefileArgs = (
     'B::Hooks::EndOfScope' => 0,
     'Parse::Keyword'       => 0.04,
     'Scope::Guard'         => 0,
-    'Sub::Name'            => 0,
     'twigils'              => 0,
     'Variable::Magic'      => 0,
   },
