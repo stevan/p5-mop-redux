@@ -42,13 +42,13 @@ our $ATTR_WIZARD = wizard(
     get  => sub {
         my ($var, $config) = @_;
         my $attr = $config->{'meta'}->get_attribute( $config->{'name'} );
-        ${ $var } = $attr->fetch_data_in_slot_for( $config->{'oid'} );
+        ${ $var } = $attr->fetch_data_in_slot_for( $config->{'self'} );
         ();
     },
     set  => sub {
         my ($value, $config) = @_;
         my $attr = $config->{'meta'}->get_attribute( $config->{'name'} );
-        $attr->store_data_in_slot_for( $config->{'oid'}, ${ $value } );
+        $attr->store_data_in_slot_for( $config->{'self'}, ${ $value } );
         ();
     },
     # NOTE:
@@ -283,7 +283,7 @@ sub method_parser {
               . '(Scalar::Util::blessed(' . $invocant . ') '
                   . '? {'
                       . 'meta => $' . $CURRENT_META->name . '::METACLASS,'
-                      . 'oid  => ' . $invocant . ','
+                      . 'self => ' . $invocant . ','
                       . 'name => q[' . $attr . ']'
                   . '}'
                   . ': q[' . $attr . ']'
