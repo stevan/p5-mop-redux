@@ -13,9 +13,11 @@ use Cwd 'cwd';
 my $mop_dir = cwd;
 # XXX we should probably not be setting this while testing p5-mop-redux itself,
 # but i don't think it will hurt anything at the moment
-$ENV{PERL5LIB} = $ENV{PERL5LIB}
-    ? join(":", "$mop_dir/lib", $ENV{PERL5LIB})
-    : "$mop_dir/lib";
+$ENV{PERL5LIB} = join(":",
+    "$mop_dir/blib/lib",
+    "$mop_dir/blib/arch",
+    ($ENV{PERL5LIB} ? ($ENV{PERL5LIB}) : ()),
+);
 
 $ENV{RELEASE_TESTING} = 1;
 # for the HTTP::Thin::UserAgent test suite
