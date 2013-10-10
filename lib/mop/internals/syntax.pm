@@ -16,7 +16,7 @@ use twigils 0.04    ();
 use Parse::Keyword {
     class     => \&namespace_parser,
     role      => \&namespace_parser,
-    method    => \&generic_method_parser,
+    method    => \&method_parser,
     has       => \&has_parser,
 };
 
@@ -243,7 +243,7 @@ sub namespace_parser {
 
 sub method { }
 
-sub generic_method_parser {
+sub method_parser {
     my ($type) = @_;
     lex_read_space;
 
