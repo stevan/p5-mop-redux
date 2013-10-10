@@ -191,41 +191,6 @@ sub namespace_parser {
 
     $meta->FINALIZE;
 
-    # NOTE:
-    # We are removing this whole clean up code
-    # because it is fragile and causes some really
-    # hard to diagnose errors. Intead it will be
-    # the responsibility of the user to add a
-    # C<no mop> at the end of the file when needed.
-    # I am also preserving this comment as well as
-    # the test case it refers to mostly for historical
-    # puporses.
-    # - SL
-    #
-    # # NOTE:
-    # # Now clean up the package we imported
-    # # into and do it at the right time in
-    # # the compilaton cycle.
-    # #
-    # # For a more detailed explination about
-    # # why we are doing it this way, see the
-    # # comment in the following test:
-    # #
-    # #     t/120-bugs/001-plack-parser-bug.t
-    # #
-    # # it will give you detailed explination
-    # # as to why we are doing this.
-    # #
-    # # In short, don't muck with this unless
-    # # you really understand the comments in
-    # # that test.
-    # # - SL
-    #{
-    #    lex_stuff('{UNITCHECK{B::Hooks::EndOfScope::on_scope_end { mop->unimport }}}');
-    #    my $ret = parse_block();
-    #    $ret->();
-    #}
-
     return (sub { }, 1);
 }
 
