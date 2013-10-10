@@ -22,17 +22,8 @@ use Parse::Keyword {
 
 our @AVAILABLE_KEYWORDS = qw(class role method has);
 
-# keep the local package name around
-our $CURRENT_CLASS_NAME;
-
-# and the local metaclass
+# keep the local metaclass around
 our $CURRENT_META;
-
-# Keep a list of attributes currently
-# being compiled in the class because
-# we need to alias them in the method
-# preamble.
-our $CURRENT_ATTRIBUTE_LIST;
 
 # So this will apply magic to the aliased
 # attributes that we put in the method
@@ -166,9 +157,6 @@ sub namespace_parser {
     die "The metaclass for $pkg does not inherit from mop::$type"
         unless $metaclass->isa("mop::$type");
 
-    local $CURRENT_CLASS_NAME     = $pkg;
-    local $CURRENT_ATTRIBUTE_LIST = [];
-
     my $meta = $metaclass->new(
         name       => $pkg,
         version    => $version,
@@ -283,7 +271,7 @@ sub method_parser {
     # it will cast the magic on it to
     # make sure that any change in value
     # is stored in the fieldhash storage
-    foreach my $attr (@{ $CURRENT_ATTRIBUTE_LIST }) {
+    foreach my $attr (map { $_->name } $CURRENT_META->attributes) {
         $preamble .=
             'intro_twigil_my_var ' . $attr . ';'
           . 'Variable::Magic::cast('
@@ -294,7 +282,7 @@ sub method_parser {
               . '), '
               . '(Scalar::Util::blessed(' . $invocant . ') '
                   . '? {'
-                      . 'meta => $' . $CURRENT_CLASS_NAME . '::METACLASS,'
+                      . 'meta => $' . $CURRENT_META->name . '::METACLASS,'
                       . 'oid  => ' . $invocant . ','
                       . 'name => q[' . $attr . ']'
                   . '}'
@@ -321,7 +309,7 @@ sub method_parser {
     $CURRENT_META->add_method(
         $CURRENT_META->method_class->new(
             name => $name,
-            body => Sub::Name::subname((join '::' => $CURRENT_CLASS_NAME, $name), $code),
+            body => Sub::Name::subname((join '::' => $CURRENT_META->name, $name), $code),
         )
     );
 
@@ -367,8 +355,6 @@ sub has_parser {
     elsif (lex_peek ne '}') {
         syntax_error("Couldn't parse attribute $name");
     }
-
-    push @{ $CURRENT_ATTRIBUTE_LIST } => $name;
 
     $CURRENT_META->add_attribute(
         $CURRENT_META->attribute_class->new(
