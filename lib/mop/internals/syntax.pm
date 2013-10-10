@@ -292,12 +292,12 @@ sub has_parser {
         unless lex_peek eq '$';
     lex_read;
 
-    my $twigil = lex_peek;
-    die "Invalid attribute name " . read_tokenish() unless $twigil eq '!';
+    die "Invalid attribute name \$" . read_tokenish()
+        unless lex_peek eq '!';
     lex_read;
 
 
-    my $name = '$' . $twigil . parse_name('attribute');
+    my $name = '$!' . parse_name('attribute');
 
     lex_read_space;
 
@@ -569,7 +569,7 @@ sub parse_name {
 
 sub read_tokenish {
     my $token = '';
-    if ((my $next = lex_peek) =~ /[\$\@\%]/) {
+    if ((my $next = lex_peek) =~ /[\$\@\%\!]/) {
         $token .= $next;
         lex_read;
     }
