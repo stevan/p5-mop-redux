@@ -12,6 +12,9 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 our $BOOTSTRAPPED = 0;
 
+use XSLoader;
+XSLoader::load(__PACKAGE__, $VERSION);
+
 use mop::object;
 use mop::class;
 use mop::method;
@@ -29,7 +32,7 @@ sub import {
     shift;
     my $pkg = caller;
 
-    bootstrap();
+    initialize();
 
     foreach my $keyword ( @mop::internals::syntax::AVAILABLE_KEYWORDS ) {
         _install_sub($pkg, 'mop::internals::syntax', $keyword);
@@ -176,7 +179,8 @@ sub dump_object {
     $temp;
 }
 
-sub bootstrap {
+# can't call this 'bootstrap' because XSLoader has a special meaning for that
+sub initialize {
     return if $BOOTSTRAPPED;
     $_->__INIT_METACLASS__ for qw[
         mop::object
