@@ -25,6 +25,9 @@ our @AVAILABLE_KEYWORDS = qw(class role method has);
 # keep the local package name around
 our $CURRENT_CLASS_NAME;
 
+# and the local metaclass
+our $CURRENT_META;
+
 # Keep a list of attributes currently
 # being compiled in the class because
 # we need to alias them in the method
@@ -189,7 +192,7 @@ sub namespace_parser {
 
     lex_stuff($preamble);
     {
-        local ${^META} = $meta;
+        local $CURRENT_META = $meta;
         if (my $code = parse_block(1)) {
             $code->();
             $g->dismiss;
@@ -260,7 +263,7 @@ sub generic_method_parser {
     if (lex_peek eq ';') {
         lex_read;
 
-        ${^META}->add_required_method($name);
+        $CURRENT_META->add_required_method($name);
 
         return (sub { }, 1);
     }
@@ -271,7 +274,6 @@ sub generic_method_parser {
 
     my $preamble = '{'
         . 'my ' . $invocant . ' = shift;'
-        . 'local ${^CALLER} = [ ' . $invocant . ', q[' . $name . '], $' . $CURRENT_CLASS_NAME . '::METACLASS ];'
         . 'use twigils "fatal_lookup_errors", allowed_twigils => "!.";'
         . '();';
 
@@ -316,14 +318,14 @@ sub generic_method_parser {
     my $code = parse_stuff_with_values($preamble, \&parse_block);
     syntax_error() unless $code;
 
-    ${^META}->add_method(
-        ${^META}->method_class->new(
+    $CURRENT_META->add_method(
+        $CURRENT_META->method_class->new(
             name => $name,
             body => Sub::Name::subname((join '::' => $CURRENT_CLASS_NAME, $name), $code),
         )
     );
 
-    run_traits(${^META}->get_method($name), @traits);
+    run_traits($CURRENT_META->get_method($name), @traits);
 
     return (sub { }, 1);
 }
@@ -375,16 +377,16 @@ sub has_parser {
 
     push @{ $CURRENT_ATTRIBUTE_LIST } => $name;
 
-    my $attribute_Class = $metaclass || ${^META}->attribute_class;
+    my $attribute_Class = $metaclass || $CURRENT_META->attribute_class;
 
-    ${^META}->add_attribute(
+    $CURRENT_META->add_attribute(
         $attribute_Class->new(
             name    => $name,
             default => \$default,
         )
     );
 
-    run_traits(${^META}->get_attribute($name), @traits);
+    run_traits($CURRENT_META->get_attribute($name), @traits);
 
     return (sub { }, 1);
 }
