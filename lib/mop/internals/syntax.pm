@@ -85,15 +85,9 @@ our $ERR_WIZARD = wizard(
     },
 );
 
-sub class {
-    my ($pkg) = @_;
-    1;
-}
+sub class { 1 }
 
-sub role {
-    my ($pkg) = @_;
-    1;
-}
+sub role { 1 }
 
 sub namespace_parser {
     my ($type) = @_;
@@ -194,10 +188,12 @@ sub namespace_parser {
         . '}';
 
     lex_stuff($preamble);
-    if (my $code = parse_block(1)) {
+    {
         local ${^META} = $meta;
-        $code->();
-        $g->dismiss;
+        if (my $code = parse_block(1)) {
+            $code->();
+            $g->dismiss;
+        }
     }
 
     run_traits($meta, @traits);
@@ -239,26 +235,10 @@ sub namespace_parser {
     #    $ret->();
     #}
 
-    return (sub { $pkg }, 1);
+    return (sub { }, 1);
 }
 
-sub method {
-    my ($name, $body, @traits) = @_;
-
-    if ($body) {
-        ${^META}->add_method(
-            ${^META}->method_class->new(
-                name => $name,
-                body => Sub::Name::subname((join '::' => $CURRENT_CLASS_NAME, $name), $body),
-            )
-        );
-    }
-    else {
-        ${^META}->add_required_method($name);
-    }
-
-    run_traits(${^META}->get_method($name), @traits);
-}
+sub method { }
 
 sub generic_method_parser {
     my ($type) = @_;
@@ -279,7 +259,10 @@ sub generic_method_parser {
 
     if (lex_peek eq ';') {
         lex_read;
-        return (sub { $name }, 1);
+
+        ${^META}->add_required_method($name);
+
+        return (sub { }, 1);
     }
 
     syntax_error("Non-required ${type}s require a body")
@@ -333,23 +316,19 @@ sub generic_method_parser {
     my $code = parse_stuff_with_values($preamble, \&parse_block);
     syntax_error() unless $code;
 
-    return (sub { ($name, $code, @traits) }, 1);
-}
-
-sub has {
-    my ($name, $metaclass, $default, @traits) = @_;
-
-    my $attribute_Class = $metaclass || ${^META}->attribute_class;
-
-    ${^META}->add_attribute(
-        $attribute_Class->new(
-            name    => $name,
-            default => \$default,
+    ${^META}->add_method(
+        ${^META}->method_class->new(
+            name => $name,
+            body => Sub::Name::subname((join '::' => $CURRENT_CLASS_NAME, $name), $code),
         )
     );
 
-    run_traits(${^META}->get_attribute($name), @traits);
+    run_traits(${^META}->get_method($name), @traits);
+
+    return (sub { }, 1);
 }
+
+sub has { }
 
 sub has_parser {
     lex_read_space;
@@ -396,7 +375,18 @@ sub has_parser {
 
     push @{ $CURRENT_ATTRIBUTE_LIST } => $name;
 
-    return (sub { ($name, $metaclass, $default, @traits) }, 1);
+    my $attribute_Class = $metaclass || ${^META}->attribute_class;
+
+    ${^META}->add_attribute(
+        $attribute_Class->new(
+            name    => $name,
+            default => \$default,
+        )
+    );
+
+    run_traits(${^META}->get_attribute($name), @traits);
+
+    return (sub { }, 1);
 }
 
 sub parse_modifier_with_single_value {
