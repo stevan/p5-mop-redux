@@ -33,6 +33,6 @@ my $blorg = Blorg->new;
 isa_ok($blorg, 'Blorg');
 
 eval { My::Foo::Blorg->new };
-ok($@);
+like($@, qr/^Can't locate object method "new" via package "My::Foo::Blorg"/);
 
 done_testing;

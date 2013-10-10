@@ -15,20 +15,14 @@ use twigils 0.04    ();
 use Parse::Keyword {
     class     => \&namespace_parser,
     role      => \&namespace_parser,
-    method    => \&generic_method_parser,
+    method    => \&method_parser,
     has       => \&has_parser,
 };
 
 our @AVAILABLE_KEYWORDS = qw(class role method has);
 
-# keep the local package name around
-our $CURRENT_CLASS_NAME;
-
-# Keep a list of attributes currently
-# being compiled in the class because
-# we need to alias them in the method
-# preamble.
-our $CURRENT_ATTRIBUTE_LIST;
+# keep the local metaclass around
+our $CURRENT_META;
 
 # So this will apply magic to the aliased
 # attributes that we put in the method
@@ -47,13 +41,13 @@ our $ATTR_WIZARD = wizard(
     get  => sub {
         my ($var, $config) = @_;
         my $attr = $config->{'meta'}->get_attribute( $config->{'name'} );
-        ${ $var } = $attr->fetch_data_in_slot_for( $config->{'oid'} );
+        ${ $var } = $attr->fetch_data_in_slot_for( $config->{'self'} );
         ();
     },
     set  => sub {
         my ($value, $config) = @_;
         my $attr = $config->{'meta'}->get_attribute( $config->{'name'} );
-        $attr->store_data_in_slot_for( $config->{'oid'}, ${ $value } );
+        $attr->store_data_in_slot_for( $config->{'self'}, ${ $value } );
         ();
     },
     # NOTE:
@@ -162,9 +156,6 @@ sub namespace_parser {
     die "The metaclass for $pkg does not inherit from mop::$type"
         unless $metaclass->isa("mop::$type");
 
-    local $CURRENT_CLASS_NAME     = $pkg;
-    local $CURRENT_ATTRIBUTE_LIST = [];
-
     my $meta = $metaclass->new(
         name       => $pkg,
         version    => $version,
@@ -188,7 +179,7 @@ sub namespace_parser {
 
     lex_stuff($preamble);
     {
-        local ${^META} = $meta;
+        local $CURRENT_META = $meta;
         if (my $code = parse_block(1)) {
             $code->();
             $g->dismiss;
@@ -199,47 +190,12 @@ sub namespace_parser {
 
     $meta->FINALIZE;
 
-    # NOTE:
-    # We are removing this whole clean up code
-    # because it is fragile and causes some really
-    # hard to diagnose errors. Intead it will be
-    # the responsibility of the user to add a
-    # C<no mop> at the end of the file when needed.
-    # I am also preserving this comment as well as
-    # the test case it refers to mostly for historical
-    # puporses.
-    # - SL
-    #
-    # # NOTE:
-    # # Now clean up the package we imported
-    # # into and do it at the right time in
-    # # the compilaton cycle.
-    # #
-    # # For a more detailed explination about
-    # # why we are doing it this way, see the
-    # # comment in the following test:
-    # #
-    # #     t/120-bugs/001-plack-parser-bug.t
-    # #
-    # # it will give you detailed explination
-    # # as to why we are doing this.
-    # #
-    # # In short, don't muck with this unless
-    # # you really understand the comments in
-    # # that test.
-    # # - SL
-    #{
-    #    lex_stuff('{UNITCHECK{B::Hooks::EndOfScope::on_scope_end { mop->unimport }}}');
-    #    my $ret = parse_block();
-    #    $ret->();
-    #}
-
     return (sub { }, 1);
 }
 
 sub method { }
 
-sub generic_method_parser {
+sub method_parser {
     my ($type) = @_;
     lex_read_space;
 
@@ -256,10 +212,10 @@ sub generic_method_parser {
 
     lex_read_space;
 
-    if (lex_peek eq ';') {
-        lex_read;
+    if (lex_peek eq ';' || lex_peek eq '}') {
+        lex_read if lex_peek eq ';';
 
-        ${^META}->add_required_method($name);
+        $CURRENT_META->add_required_method($name);
 
         return (sub { }, 1);
     }
@@ -270,8 +226,7 @@ sub generic_method_parser {
 
     my $preamble = '{'
         . 'my ' . $invocant . ' = shift;'
-        . 'local ${^CALLER} = [ ' . $invocant . ', q[' . $name . '], $' . $CURRENT_CLASS_NAME . '::METACLASS ];'
-        . 'use twigils "fatal_lookup_errors", allowed_twigils => "!.";'
+        . 'use twigils "fatal_lookup_errors", allowed_twigils => "!";'
         . '();';
 
     # this is our method preamble, it
@@ -280,7 +235,7 @@ sub generic_method_parser {
     # it will cast the magic on it to
     # make sure that any change in value
     # is stored in the fieldhash storage
-    foreach my $attr (@{ $CURRENT_ATTRIBUTE_LIST }) {
+    foreach my $attr (map { $_->name } $CURRENT_META->attributes) {
         $preamble .=
             'intro_twigil_my_var ' . $attr . ';'
           . 'Variable::Magic::cast('
@@ -291,8 +246,8 @@ sub generic_method_parser {
               . '), '
               . '(Scalar::Util::blessed(' . $invocant . ') '
                   . '? {'
-                      . 'meta => $' . $CURRENT_CLASS_NAME . '::METACLASS,'
-                      . 'oid  => ' . $invocant . ','
+                      . 'meta => $' . $CURRENT_META->name . '::METACLASS,'
+                      . 'self => ' . $invocant . ','
                       . 'name => q[' . $attr . ']'
                   . '}'
                   . ': q[' . $attr . ']'
@@ -315,14 +270,14 @@ sub generic_method_parser {
     my $code = parse_stuff_with_values($preamble, \&parse_block);
     syntax_error() unless $code;
 
-    ${^META}->add_method(
-        ${^META}->method_class->new(
+    $CURRENT_META->add_method(
+        $CURRENT_META->method_class->new(
             name => $name,
-            body => mop::internals::util::subname((join '::' => $CURRENT_CLASS_NAME, $name), $code),
+            body => mop::internals::util::subname((join '::' => $CURRENT_META->name, $name), $code),
         )
     );
 
-    run_traits(${^META}->get_method($name), @traits);
+    run_traits($CURRENT_META->get_method($name), @traits);
 
     return (sub { }, 1);
 }
@@ -336,19 +291,12 @@ sub has_parser {
         unless lex_peek eq '$';
     lex_read;
 
-    my $twigil = lex_peek;
-    die "Invalid attribute name " . read_tokenish() unless $twigil eq '!' || $twigil eq '.';
+    die "Invalid attribute name \$" . read_tokenish()
+        unless lex_peek eq '!';
     lex_read;
 
 
-    my $name = '$' . $twigil . parse_name('attribute');
-
-    lex_read_space;
-
-    my $metaclass;
-    if ($metaclass = parse_modifier_with_single_value('meta')) {
-        require(($metaclass =~ s{::}{/}gr) . '.pm');
-    }
+    my $name = '$!' . parse_name('attribute');
 
     lex_read_space;
 
@@ -372,18 +320,14 @@ sub has_parser {
         syntax_error("Couldn't parse attribute $name");
     }
 
-    push @{ $CURRENT_ATTRIBUTE_LIST } => $name;
-
-    my $attribute_Class = $metaclass || ${^META}->attribute_class;
-
-    ${^META}->add_attribute(
-        $attribute_Class->new(
+    $CURRENT_META->add_attribute(
+        $CURRENT_META->attribute_class->new(
             name    => $name,
             default => \$default,
         )
     );
 
-    run_traits(${^META}->get_attribute($name), @traits);
+    run_traits($CURRENT_META->get_attribute($name), @traits);
 
     return (sub { }, 1);
 }
@@ -624,7 +568,7 @@ sub parse_name {
 
 sub read_tokenish {
     my $token = '';
-    if ((my $next = lex_peek) =~ /[\$\@\%]/) {
+    if ((my $next = lex_peek) =~ /[\$\@\%\!]/) {
         $token .= $next;
         lex_read;
     }

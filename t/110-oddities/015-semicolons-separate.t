@@ -7,7 +7,7 @@ use mop;
 {
     local $@;
     eval q[class Foo { has $!bar }];
-    ok(!$@, '... no exception was thrown');
+    is($@, '', '... no exception was thrown');
 }
 
 my $obj  = Foo->new(bar => 42);
