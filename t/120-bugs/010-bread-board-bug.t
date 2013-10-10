@@ -26,7 +26,7 @@ role Traversable {
 {
     local $@;
     eval q[role Service with Traversable {}];
-    ok(!$@, '... this worked');
+    is($@, '', '... this worked');
 }
 
 done_testing;

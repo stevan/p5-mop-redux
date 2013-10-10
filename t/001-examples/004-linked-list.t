@@ -114,9 +114,9 @@ class LinkedListNode {
     ok($node->isa('LinkedListNode'), '... node is a LinkedListNode');
 
     eval { $ll->remove(99) };
-    ok($@, '... removing out of range produced error');
+    like($@, qr/^Index \(99\) out of bounds/, '... removing out of range produced error');
     eval { $ll->insert(-1, LinkedListNode->new(value => 2)) };
-    ok($@, '... inserting out of range produced error');
+    like($@, qr/^Index \(-1\) out of bounds/, '... inserting out of range produced error');
 
     is($ll->sum, 49, '... things sum correctly');
 }
