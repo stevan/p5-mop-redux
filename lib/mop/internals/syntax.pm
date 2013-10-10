@@ -274,7 +274,7 @@ sub method_parser {
 
     my $preamble = '{'
         . 'my ' . $invocant . ' = shift;'
-        . 'use twigils "fatal_lookup_errors", allowed_twigils => "!.";'
+        . 'use twigils "fatal_lookup_errors", allowed_twigils => "!";'
         . '();';
 
     # this is our method preamble, it
@@ -340,7 +340,7 @@ sub has_parser {
     lex_read;
 
     my $twigil = lex_peek;
-    die "Invalid attribute name " . read_tokenish() unless $twigil eq '!' || $twigil eq '.';
+    die "Invalid attribute name " . read_tokenish() unless $twigil eq '!';
     lex_read;
 
 
