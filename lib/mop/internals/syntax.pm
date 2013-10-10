@@ -348,13 +348,6 @@ sub has_parser {
 
     lex_read_space;
 
-    my $metaclass;
-    if ($metaclass = parse_modifier_with_single_value('meta')) {
-        require(($metaclass =~ s{::}{/}gr) . '.pm');
-    }
-
-    lex_read_space;
-
     my @traits = parse_traits();
 
     lex_read_space;
@@ -377,10 +370,8 @@ sub has_parser {
 
     push @{ $CURRENT_ATTRIBUTE_LIST } => $name;
 
-    my $attribute_Class = $metaclass || $CURRENT_META->attribute_class;
-
     $CURRENT_META->add_attribute(
-        $attribute_Class->new(
+        $CURRENT_META->attribute_class->new(
             name    => $name,
             default => \$default,
         )
