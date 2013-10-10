@@ -283,10 +283,12 @@ sub initialize {
 
     {
         no warnings 'redefine';
-        *apply_metaclass = sub {
-            my ($instance, $new_meta) = @_;
-            rebless $instance, mop::internals::util::fix_metaclass_compatibility($new_meta, $instance);
-        };
+        *apply_metaclass = mop::internals::util::subname(
+            apply_metaclass => sub {
+                my ($instance, $new_meta) = @_;
+                rebless $instance, mop::internals::util::fix_metaclass_compatibility($new_meta, $instance);
+            }
+        );
     }
 
     $BOOTSTRAPPED = 1;

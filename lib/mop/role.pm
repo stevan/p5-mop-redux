@@ -213,13 +213,14 @@ sub FINALIZE {
             }
         }
 
+        my $name = $self->name . '::' . $method->name;
         # XXX this should actually test to see if there are any events on the
         # method, or if the method is using a custom method metaclass which
         # overrides execute.
         my $body = sub { $method->execute(shift, \@_) };
         no strict 'refs';
         no warnings 'redefine';
-        *{ $self->name . '::' . $method->name } = $body;
+        *$name = mop::internals::util::subname($name, $body);
     }
 
     $self->fire('after:FINALIZE');
