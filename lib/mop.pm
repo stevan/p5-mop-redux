@@ -88,7 +88,6 @@ sub remove_meta {
 
 sub id { Hash::Util::FieldHash::id( $_[0] ) }
 
-# XXX do we actually want this?
 sub is_mop_object {
     defined Hash::Util::FieldHash::id_2obj( id( $_[0] ) );
 }
@@ -139,6 +138,14 @@ sub rebless {
 sub dump_object {
     my ($obj) = @_;
 
+    return $obj unless is_mop_object($obj);
+
+    our %SEEN;
+    if ($SEEN{id($obj)}) {
+        return '<cycle_fix>';
+    }
+    local $SEEN{id($obj)} = ($SEEN{id($obj)} // 0) + 1;
+
     my %attributes = map {
         if (my $m = meta($_)) {
             %{ $m->attribute_map }
@@ -152,7 +159,7 @@ sub dump_object {
     };
 
     foreach my $attr (values %attributes) {
-        if ($attr->name eq '$storage') {
+        if ($obj->isa('mop::attribute') && $attr->name eq '$!storage') {
             $temp->{ $attr->name } = '__INTERNAL_DETAILS__';
         } else {
             $temp->{ $attr->name } = sub {
@@ -200,16 +207,6 @@ sub initialize {
     my $Attribute  = meta('mop::attribute');
     my $Observable = meta('mop::internals::observable');
 
-    # At this point the metaclass
-    # layer class to role relationship
-    # is correct. And the following
-    #   - Class does Role
-    #   - Role is instance of Class
-    #   - Role does Role
-    # is true.
-    $Class->add_role( $Role );
-    mop::internals::util::apply_all_roles($Class, $Role);
-
     # flatten mop::observable into wherever it's needed (it's just an
     # implementation detail (#95), so it shouldn't end up being directly
     # visible)
@@ -221,6 +218,16 @@ sub initialize {
             $meta->add_method($method->clone(associated_meta => $meta));
         }
     }
+
+    # At this point the metaclass
+    # layer class to role relationship
+    # is correct. And the following
+    #   - Class does Role
+    #   - Role is instance of Class
+    #   - Role does Role
+    # is true.
+    $Class->add_role( $Role );
+    mop::internals::util::apply_all_roles($Class, $Role);
 
     # and now this is no longer needed
     remove_meta('mop::internals::observable');

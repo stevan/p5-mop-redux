@@ -33,6 +33,10 @@ sub BUILD {
 
     mop::internals::util::install_meta($self);
 
+    if (my @nometa = grep { !mop::meta($_) } @{ $self->roles }) {
+        die "No metaclass found for these roles: @nometa";
+    }
+
     if ($self->superclass && (my $meta = mop::meta($self->superclass))) {
         $self->set_instance_generator($meta->instance_generator);
 

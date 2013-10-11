@@ -56,6 +56,12 @@ class Bar {
     is($bar->foo, 10, '... keyword args to new work');
 }
 
+{
+    my $bar = Bar->new({ foo => 10 });
+    isa_ok($bar, 'Bar');
+    is($bar->foo, 10, '... keyword args to new work');
+}
+
 class Baz {
     has $!bar;
 
