@@ -85,11 +85,6 @@ sub remove_meta {
 
 sub id { Hash::Util::FieldHash::id( $_[0] ) }
 
-# XXX do we actually want this?
-sub is_mop_object {
-    defined Hash::Util::FieldHash::id_2obj( id( $_[0] ) );
-}
-
 sub apply_metaclass {
     # TODO: we should really not be calling apply_metaclass at all during
     # bootstrapping, but it's done in a couple places for simplicity, to avoid
@@ -478,8 +473,6 @@ This is a prototype for a new object system for Perl 5.
 =head2 remove_meta($class_name)
 
 =head2 id($obj)
-
-=head2 is_mop_object($obj)
 
 =head2 apply_metaclass($obj, $metaclass_name_or_instance)
 
