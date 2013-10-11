@@ -67,17 +67,20 @@ sub key_name {
 sub has_default { defined( ${ ${ $default{ $_[0] } } } ) }
 # we also have to do the double en-ref
 # here too, this should get fixed
-sub set_default   { $default{ $_[0] } = \(\$_[1]) }
+sub set_default   {
+    my $self = shift;
+    my ($value) = @_;
+    if ( ref $value && ref $value ne 'CODE' ) {
+        die "References of type (" . ref($value) . ") are not supported as attribute defaults (in attribute " . $self->name . ($self->associated_meta ? " in class " . $self->associated_meta->name : "") . ")";
+    }
+    $default{ $self } = \(\$value)
+}
 sub clear_default { ${ ${ delete $default{ $_[0] } } } }
 sub get_default {
     my $self  = shift;
     my $value = ${ ${ $default{ $self } } };
-    if ( ref $value  ) {
-        if ( ref $value  eq 'CODE' ) {
-            $value  = $value->();
-        } else {
-            die "References of type (" . ref($value) . ") are not supported as attribute defaults (in attribute " . $self->name . ($self->associated_meta ? " in class " . $self->associated_meta->name : "") . ")";
-        }
+    if ( ref $value && ref $value eq 'CODE' ) {
+        $value = $value->();
     }
     $value
 }
