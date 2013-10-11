@@ -32,6 +32,28 @@ class Baz extends Bar {
     );
 }
 
+{
+    my $bar = Bar->new;
+    my $baz = Baz->new(foo => $bar);
+    is_deeply(
+        mop::dump_object($baz),
+        {
+            __ID__    => mop::id($baz),
+            __CLASS__ => 'Baz',
+            __SELF__  => $baz,
+            '$!foo'   => {
+                __ID__    => mop::id($bar),
+                __CLASS__ => 'Bar',
+                __SELF__  => $bar,
+                '$!foo'   => 10,
+                '$!bar'   => 20,
+            },
+            '$!bar'   => 20,
+            '$!baz'   => 30,
+        }
+    );
+}
+
 # see https://github.com/pjcj/Devel--Cover/issues/72
 SKIP: { skip "__SUB__ is broken with Devel::Cover", 1 if $INC{'Devel/Cover.pm'};
 {
@@ -60,6 +82,23 @@ SKIP: { skip "__SUB__ is broken with Devel::Cover", 1 if $INC{'Devel/Cover.pm'};
         }
     );
 }
+}
+
+class Quux {
+    has $!storage = 10;
+}
+
+{
+    my $quux = Quux->new;
+    is_deeply(
+        mop::dump_object($quux),
+        {
+            __ID__      => mop::id($quux),
+            __CLASS__   => 'Quux',
+            __SELF__    => $quux,
+            '$!storage' => 10,
+        }
+    );
 }
 
 done_testing;

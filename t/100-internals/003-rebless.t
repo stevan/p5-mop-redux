@@ -72,4 +72,23 @@ class Quux extends Bar {
     is($foo->baz, 'BAZ');
 }
 
+package NonMop {
+    BEGIN { $INC{'NonMop.pm'} = __FILE__ }
+    sub new { bless {}, shift }
+}
+
+class NonMop::Sub extends NonMop is extending_non_mop {
+    has $!attr is rw = 'ATTR';
+}
+
+{
+    my $nonmop = NonMop::Sub->new;
+    is($nonmop->attr, 'ATTR');
+
+    mop::rebless $nonmop, 'Baz';
+    ok(!$nonmop->can('attr'));
+    is($nonmop->foo, 'FOO');
+    is($nonmop->baz, 'BAZ');
+}
+
 done_testing;
