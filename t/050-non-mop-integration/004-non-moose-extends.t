@@ -192,4 +192,14 @@ package MyCustom::Sub {
     is($custom->attr, 'MOP');
 }
 
+eval '
+class Error is repr("FOO") { }
+';
+like($@, qr/^unknown instance generator type FOO/);
+
+eval '
+class Error2 is repr([]) { }
+';
+like($@, qr/^unknown instance generator ARRAY\(/);
+
 done_testing;
