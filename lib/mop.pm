@@ -500,7 +500,7 @@ This is a prototype for a new object system for Perl 5.
 
 =head2 dump_object($obj)
 
-=head2 bootstrap()
+=head2 initialize()
 
 =head1 BUGS
 
