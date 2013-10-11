@@ -197,16 +197,6 @@ sub bootstrap {
     my $Attribute  = meta('mop::attribute');
     my $Observable = meta('mop::internals::observable');
 
-    # At this point the metaclass
-    # layer class to role relationship
-    # is correct. And the following
-    #   - Class does Role
-    #   - Role is instance of Class
-    #   - Role does Role
-    # is true.
-    $Class->add_role( $Role );
-    mop::internals::util::apply_all_roles($Class, $Role);
-
     # flatten mop::observable into wherever it's needed (it's just an
     # implementation detail (#95), so it shouldn't end up being directly
     # visible)
@@ -218,6 +208,16 @@ sub bootstrap {
             $meta->add_method($method->clone(associated_meta => $meta));
         }
     }
+
+    # At this point the metaclass
+    # layer class to role relationship
+    # is correct. And the following
+    #   - Class does Role
+    #   - Role is instance of Class
+    #   - Role does Role
+    # is true.
+    $Class->add_role( $Role );
+    mop::internals::util::apply_all_roles($Class, $Role);
 
     # and now this is no longer needed
     remove_meta('mop::internals::observable');
