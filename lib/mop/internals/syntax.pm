@@ -569,7 +569,7 @@ sub parse_name {
 
 sub read_tokenish {
     my $token = '';
-    if ((my $next = lex_peek) =~ /[\$\@\%\!]/) {
+    if ((my $next = lex_peek) =~ /[\$\@\%\!:]/) {
         $token .= $next;
         lex_read;
     }
