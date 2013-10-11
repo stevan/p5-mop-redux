@@ -32,6 +32,8 @@ class Baz extends Bar {
     );
 }
 
+# see https://github.com/pjcj/Devel--Cover/issues/72
+SKIP: { skip "__SUB__ is broken with Devel::Cover", 1 if $INC{'Devel/Cover.pm'};
 {
     my $bar = Bar->new(foo => [1, "foo"], bar => { quux => 10 });
     my $baz = Baz->new(baz => { a => [ 2, $bar ] });
@@ -57,6 +59,7 @@ class Baz extends Bar {
             },
         }
     );
+}
 }
 
 done_testing;
