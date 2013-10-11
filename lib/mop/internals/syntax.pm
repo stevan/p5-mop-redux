@@ -491,23 +491,24 @@ sub parse_name {
     my ($what, $allow_package) = @_;
     my $name = '';
 
-    my $start_rx = qr/^[A-Za-z_]/;
-    my $cont_rx  = qr/^[A-Za-z0-9_]/;
+    my $ascii_start_rx = my $start_rx = qr/^[A-Za-z_]/;
+    my $ascii_cont_rx  = my $cont_rx  = qr/^[A-Za-z0-9_]/;
 
     my $char_rx = $start_rx;
 
     while (1) {
         my $char = lex_peek;
         # delay loading utf8 stuff until necessary
-        if (ord($char) > 127) {
-            # XXX this isn't quite right, i think, but probably close enough
-            # for now?
-            my $new_start_rx = eval 'qr/^[\p{ID_Start}_]$/';
-            my $new_cont_rx  = eval 'qr/^\p{ID_Continue}$/';
-            $char_rx = $char_rx == $start_rx ? $new_start_rx : $new_cont_rx;
-            $start_rx = $new_start_rx;
-            $cont_rx = $new_cont_rx;
-        }
+        # if ($start_rx == $ascii_start_rx && ord($char) > 127) {
+        #     warn ord($char);
+        #     # XXX this isn't quite right, i think, but probably close enough
+        #     # for now?
+        #     my $new_start_rx = eval 'qr/^[\p{ID_Start}_]$/';
+        #     my $new_cont_rx  = eval 'qr/^\p{ID_Continue}$/';
+        #     $char_rx = $char_rx == $start_rx ? $new_start_rx : $new_cont_rx;
+        #     $start_rx = $new_start_rx;
+        #     $cont_rx = $new_cont_rx;
+        # }
         last unless length $char;
         if ($char =~ $char_rx) {
             $name .= $char;
