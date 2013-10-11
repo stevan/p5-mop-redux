@@ -3,6 +3,8 @@ package mop::internals::observable;
 use v5.16;
 use warnings;
 
+use Scalar::Util qw[ refaddr ];
+
 use mop::internals::util;
 
 our $VERSION   = '0.01';
@@ -25,7 +27,7 @@ sub unbind {
     return $self unless $callbacks{ $self };
     return $self unless ${$callbacks{ $self }}->{ $event_name };
     @{ ${$callbacks{ $self }}->{ $event_name } } = grep {
-        "$_" ne "$callback"
+        refaddr($_) != refaddr($callback)
     } @{ ${$callbacks{ $self }}->{ $event_name } };
     $self;
 }
