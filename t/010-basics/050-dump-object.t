@@ -101,6 +101,8 @@ class Quux {
     );
 }
 
+# see https://github.com/pjcj/Devel--Cover/issues/72
+SKIP: { skip "__SUB__ is broken with Devel::Cover", 4 if $INC{'Devel/Cover.pm'};
 {
     my $Foo = mop::meta('Foo');
     my $dump = mop::dump_object($Foo);
@@ -232,6 +234,7 @@ class Quux {
             '$!callbacks'   => undef,
         }
     );
+}
 }
 
 done_testing;
