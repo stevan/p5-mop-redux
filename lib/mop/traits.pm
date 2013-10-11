@@ -164,6 +164,20 @@ sub extending_non_mop {
                     my $class = shift;
                     my $self  = $class->$super_constructor( @_ );
                     mop::internals::util::register_object( $self );
+
+                    my %attributes = map {
+                        if (my $m = mop::meta($_)) {
+                            %{ $m->attribute_map }
+                        }
+                        else {
+                            ()
+                        }
+                    } reverse @{ mro::get_linear_isa($class) };
+
+                    foreach my $attr (values %attributes) {
+                        $attr->store_default_in_slot_for( $self );
+                    }
+
                     $BUILDALL->execute( $self, [ @_ ] );
                     $self;
                 }

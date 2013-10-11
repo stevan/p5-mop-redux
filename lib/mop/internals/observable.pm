@@ -3,6 +3,8 @@ package mop::internals::observable;
 use v5.16;
 use warnings;
 
+use Scalar::Util qw[ refaddr ];
+
 use mop::internals::util;
 
 our $VERSION   = '0.01';
@@ -13,7 +15,7 @@ mop::internals::util::init_attribute_storage(my %callbacks);
 sub bind {
     my ($self, $event_name, $callback) = @_;
     $callbacks{ $self } = \{}
-        unless exists $callbacks{ $self } && defined ${ $callbacks{ $self } };
+        unless $callbacks{ $self };
     ${$callbacks{ $self }}->{ $event_name } = []
         unless exists ${$callbacks{ $self }}->{ $event_name };
     push @{ ${$callbacks{ $self }}->{ $event_name } } => $callback;
@@ -22,18 +24,18 @@ sub bind {
 
 sub unbind {
     my ($self, $event_name, $callback) = @_;
-    return $self unless exists $callbacks{ $self } && defined ${ $callbacks{ $self } };
-    return $self unless exists ${$callbacks{ $self }}->{ $event_name };
+    return $self unless $callbacks{ $self };
+    return $self unless ${$callbacks{ $self }}->{ $event_name };
     @{ ${$callbacks{ $self }}->{ $event_name } } = grep {
-        "$_" ne "$callback"
+        refaddr($_) != refaddr($callback)
     } @{ ${$callbacks{ $self }}->{ $event_name } };
     $self;
 }
 
 sub fire {
     my ($self, $event_name, @args) = @_;
-    return $self unless exists $callbacks{ $self } && defined ${ $callbacks{ $self } };
-    return $self unless exists ${$callbacks{ $self }}->{ $event_name };
+    return $self unless $callbacks{ $self };
+    return $self unless ${$callbacks{ $self }}->{ $event_name };
     $self->$_( @args ) foreach @{ ${$callbacks{ $self }}->{ $event_name } };
     return $self;
 }

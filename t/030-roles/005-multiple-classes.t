@@ -12,11 +12,8 @@ sub trace {
     $class->bind('after:FINALIZE' => sub {
         my $meta = shift;
         for my $method ($meta->methods) {
-            my $body = $method->body;
-            my $attr = mop::meta($method)->get_attribute('$!body');
-            $attr->store_data_in_slot_for($method, sub {
+            $method->bind('before:EXECUTE' => sub {
                 $called = 1;
-                $body->();
             });
         }
     });
