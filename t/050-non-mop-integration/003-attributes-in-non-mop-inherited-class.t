@@ -22,6 +22,7 @@ use mop;
 
 class App extends My::Component is extending_non_mop {
     has $!foo;
+    has $!bar is ro = "BAR";
 
     method BUILD (%args) {
         $!foo = $args{'foo'};
@@ -34,5 +35,7 @@ my $app = App->new( foo => 'WORLD' );
 isa_ok($app, 'App');
 
 is($app->call, 'HELLO WORLD', '... got the value we expected');
+
+is($app->bar, 'BAR');
 
 done_testing;
