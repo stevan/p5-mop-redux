@@ -131,6 +131,12 @@ sub rebless {
 sub dump_object {
     my ($obj) = @_;
 
+    our %SEEN;
+    if ($SEEN{id($obj)}) {
+        return '<cycle_fix>';
+    }
+    local $SEEN{id($obj)} = ($SEEN{id($obj)} // 0) + 1;
+
     my %attributes = map {
         if (my $m = meta($_)) {
             %{ $m->attribute_map }
