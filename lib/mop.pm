@@ -144,7 +144,7 @@ sub dump_object {
     };
 
     foreach my $attr (values %attributes) {
-        if ($attr->name eq '$storage') {
+        if (meta($obj)->isa('mop::attribute') && $attr->name eq '$!storage') {
             $temp->{ $attr->name } = '__INTERNAL_DETAILS__';
         } else {
             $temp->{ $attr->name } = sub {
