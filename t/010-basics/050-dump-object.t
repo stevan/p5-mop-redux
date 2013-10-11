@@ -237,4 +237,19 @@ SKIP: { skip "__SUB__ is broken with Devel::Cover", 4 if $INC{'Devel/Cover.pm'};
 }
 }
 
+{
+    my $nonmop = bless {}, 'NonMop';
+    my $bar = Bar->new(bar => $nonmop);
+    is_deeply(
+        mop::dump_object($bar),
+        {
+            __ID__          => mop::id($bar),
+            __CLASS__       => 'Bar',
+            __SELF__        => $bar,
+            '$!foo'         => 10,
+            '$!bar'         => $nonmop,
+        }
+    );
+}
+
 done_testing;
