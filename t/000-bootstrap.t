@@ -11,7 +11,7 @@ use mop ();
 # this is only needed because we
 # do `use mop ()` with the parens
 # afterwards.
-mop::bootstrap;
+mop::initialize;
 
 ok(mop::meta('mop::object')->isa('mop::class'), '... object->class is instance of class');
 ok(mop::class->isa('mop::object'), '... class isa object');

@@ -29,7 +29,7 @@ sub import {
     shift;
     my $pkg = caller;
 
-    bootstrap();
+    initialize();
 
     foreach my $keyword ( @mop::internals::syntax::AVAILABLE_KEYWORDS ) {
         _install_sub($pkg, 'mop::internals::syntax', $keyword);
@@ -183,7 +183,7 @@ sub dump_object {
     $temp;
 }
 
-sub bootstrap {
+sub initialize {
     return if $BOOTSTRAPPED;
     $_->__INIT_METACLASS__ for qw[
         mop::object
@@ -494,7 +494,7 @@ This is a prototype for a new object system for Perl 5.
 
 =head2 dump_object($obj)
 
-=head2 bootstrap()
+=head2 initialize()
 
 =head1 BUGS
 
