@@ -95,7 +95,7 @@ sub locally_defined { ${ $original_id{ $_[0] } } eq mop::id( $_[0] ) }
 
 sub has_data_in_slot_for {
     my ($self, $instance) = @_;
-    exists $self->storage->{ $instance };
+    defined ${ $self->storage->{ $instance } };
 }
 
 sub fetch_data_in_slot_for {
