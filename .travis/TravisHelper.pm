@@ -72,7 +72,7 @@ sub clone_repos {
 
 sub installdeps {
     each_dir {
-        if (-e 'dist.ini') {
+        if (-e 'dist.ini' && !/Plack/) {
             _cpanm(qw(cpanm -q --notest Dist::Zilla)) ||
             _cpanm("dzil authordeps --missing | cpanm -q --notest") ||
             _cpanm("dzil listdeps --author --missing | grep -v 'find abstract in' | grep -v '^mop\$' | cpanm -q --notest");
@@ -97,7 +97,7 @@ sub test {
 
         my $failed = 0;
 
-        if (-e 'dist.ini') {
+        if (-e 'dist.ini' && !/Plack/) {
             my $cmd = "dzil test";
             $cmd .= ' --all'
                 unless /Plack|http-headers-actionpack|BreadBoard/;
