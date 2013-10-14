@@ -45,14 +45,20 @@ of the MOP written using the MOP itself.
 
         method has_default   { ... }
         method get_default   { ... }
+        method clear_default { ... }
+        method set_default ($default) { ... }
 
         method set_associated_meta ($meta) { ... }
 
-        method conflicts_with ($attr) { ... }
+        method conflicts_with  ($attr) { ... }
+        method locally_defined ($attr) { ... }
 
-        method fetch_data_in_slot_for ($instance) { ... }
-        method store_data_in_slot_for ($instance, $data) { ... }
+        method fetch_data_in_slot_for    ($instance) { ... }
+        method store_data_in_slot_for    ($instance, $data) { ... }
         method store_default_in_slot_for ($instance) { ... }
+        method remove_data_in_slot_for   ($instance) { ... }
+        method weaken_data_in_slot_for   ($instance) { ... }
+        method is_data_in_slot_weak_for  ($instance) { ... }
 
         method bind   ($event_name, $cb) { ... }
         method unbind ($event_name, $cb) { ... }
@@ -73,7 +79,8 @@ of the MOP written using the MOP itself.
 
         method set_associated_meta ($meta) { ... }
 
-        method conflicts_with ($method) { ... }
+        method conflicts_with  ($attr) { ... }
+        method locally_defined ($attr) { ... }
 
         method bind   ($event_name, $cb) { ... }
         method unbind ($event_name, $cb) { ... }
