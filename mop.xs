@@ -165,6 +165,13 @@ parse_name (what, flags=0)
     SvREFCNT_inc(RETVAL); /* parse_name mortalises, which is what we want when
                              we start using it from C code */
 
+SV *
+read_tokenish ()
+  C_ARGS:
+    aTHX
+  POSTCALL:
+    SvREFCNT_inc(RETVAL); /* As above. */
+
 BOOT:
 {
     CV *class, *role, *has, *method;

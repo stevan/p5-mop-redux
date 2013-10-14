@@ -520,20 +520,6 @@ sub parse_prototype {
     }
 }
 
-sub read_tokenish {
-    my $token = '';
-    if ((my $next = lex_peek) =~ /[\$\@\%\!:]/) {
-        $token .= $next;
-        lex_read;
-    }
-    while ((my $next = lex_peek) =~ /\S/) {
-        $token .= $next;
-        lex_read;
-        last if ($next . lex_peek) =~ /^\S\b/;
-    }
-    return $token;
-}
-
 sub syntax_error {
     my ($err) = @_;
     $err //= $@;
