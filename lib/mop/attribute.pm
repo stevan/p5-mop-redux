@@ -3,7 +3,7 @@ package mop::attribute;
 use v5.16;
 use warnings;
 
-use Scalar::Util qw[ weaken ];
+use Scalar::Util qw[ weaken isweak ];
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -122,6 +122,16 @@ sub store_default_in_slot_for {
     }) if $self->has_default;
 }
 
+sub weaken_data_in_slot_for {
+    my ($self, $instance) = @_;
+    weaken(${ $self->storage->{ $instance } });
+}
+
+sub is_data_in_slot_weak_for {
+    my ($self, $instance) = @_;
+    isweak(${ $self->storage->{ $instance } });
+}
+
 our $METACLASS;
 
 sub __INIT_METACLASS__ {
@@ -174,6 +184,8 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'fetch_data_in_slot_for',    body => \&fetch_data_in_slot_for    ) );
     $METACLASS->add_method( mop::method->new( name => 'store_data_in_slot_for',    body => \&store_data_in_slot_for    ) );
     $METACLASS->add_method( mop::method->new( name => 'store_default_in_slot_for', body => \&store_default_in_slot_for ) );
+    $METACLASS->add_method( mop::method->new( name => 'weaken_data_in_slot_for',   body => \&weaken_default_in_slot_for ) );
+    $METACLASS->add_method( mop::method->new( name => 'is_data_in_slot_weak_for',  body => \&is_data_in_slot_weak_for  ) );
     $METACLASS;
 }
 
