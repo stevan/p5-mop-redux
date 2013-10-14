@@ -400,7 +400,7 @@ L<hug you|http://pugs.blogs.com/audrey/2009/08/my-hobby-troll-hugging.html>!
 
 There are still many things to be done, if you want to help we
 would love to have it. Please stop by and see us in the #p5-mop
-channel on irc.perl.org to discuss. Specically we are looking for
+channel on irc.perl.org to discuss. Specifically we are looking for
 XS hacker and perlguts specialists.
 
 =head3 Spread the word
@@ -433,15 +433,15 @@ We are absolutely 100% B<NOT> going to remove B<any> of the existing OO
 support in Perl I<FULL STOP>.
 
 We are developing this feature fully in keeping with the long standing
-commitment to backward compatability that Perl is famous for. We are
-also commited to making this new object system work as seemlessly as
+commitment to backward compatibility that Perl is famous for. We are
+also committed to making this new object system work as seamlessly as
 possible with all of the existing Perl OO features.
 
 =head2 Why is it so slow?
 
 It is a prototype, first we had to get it right, next we will make
 it fast. We have a number of planned optimizations in the works and
-are confident that ulitmately speed will not be an issue.
+are confident that ultimately speed will not be an issue.
 
 =head2 Can I use this in production?
 
@@ -497,7 +497,7 @@ to any but the most daring of users. Use with great caution!
 =head2 apply_metaclass($obj, $metaclass_name_or_instance)
 
 Given an instance and a class name, this will perform all
-the necessary metaclass compatability checks and then
+the necessary metaclass compatibility checks and then
 rebless the instance accordingly.
 
 =head2 rebless($obj, $class_name)
@@ -508,7 +508,7 @@ all the correct initializations are done.
 
 =head2 remove_meta($class_name)
 
-This will remove the metaclass assocaited with a given
+This will remove the metaclass associated with a given
 C<$class_name>, after this C<meta> will return undef.
 
 =head2 initialize()

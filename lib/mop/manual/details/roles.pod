@@ -26,7 +26,7 @@ Roles in the p5-mop are defined in the following way:
 The C<role> keyword is followed by a name.
 
 Which is optionally followed by the C<with> keyword that is
-followed by a comma seperated list of the names of the roles
+followed by a comma separated list of the names of the roles
 you wish to be composed into your role.
 
 Which is optionally followed by the C<meta> keyword
@@ -34,7 +34,7 @@ that is followed by the name of the metarole you wish to
 be used in constructing this role.
 
 Which is optionally followed by the C<is> keyword that is
-followed by a comma seperated list of traits you wish to
+followed by a comma separated list of traits you wish to
 be applied to your role.
 
 After this comes a block, within which you can define

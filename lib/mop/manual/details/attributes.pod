@@ -29,7 +29,7 @@ that is followed by the name of the attribute metaclass
 you wish to be used in constructing this attribute.
 
 Which is optionally followed by the C<is> keyword that is
-followed by a comma seperated list of traits you wish to
+followed by a comma separated list of traits you wish to
 be applied to your attribute.
 
 Which is optionally followed by the assignment operator

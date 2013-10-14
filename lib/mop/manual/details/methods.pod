@@ -30,7 +30,7 @@ optionally followed by the assignment operator (C<=>) which
 is then followed by a perl expression.
 
 Which is optionally followed by the C<is> keyword that is
-followed by a comma seperated list of traits you wish to
+followed by a comma separated list of traits you wish to
 be applied to your method.
 
 After this comes a block, within which you can define

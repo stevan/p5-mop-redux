@@ -31,7 +31,7 @@ that is followed by the name of the class you wish to
 subclass.
 
 Which is optionally followed by the C<with> keyword that is
-followed by a comma seperated list of the names of the roles
+followed by a comma separated list of the names of the roles
 you wish to be composed into your class.
 
 Which is optionally followed by the C<meta> keyword
@@ -39,7 +39,7 @@ that is followed by the name of the metaclass you wish to
 be used in constructing this class.
 
 Which is optionally followed by the C<is> keyword that is
-followed by a comma seperated list of traits you wish to
+followed by a comma separated list of traits you wish to
 be applied to your class.
 
 After this comes a block, within which you can define

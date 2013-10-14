@@ -277,12 +277,7 @@ overloading to associate this method with the specified
 C<$operator>. For more information about what kind of overload
 behaviors are supported see the L<overload module documentation|overload>.
 
-When applied to a class, and passed the word 'inherited' this
-will ensure that all overloads are propertly inherited from the
-superclass. This is a temporary measure until we can make this
-Just Work automatically.
-
-This will throw an exception if it is applied to attributes.
+This will throw an exception if it is applied to classes or attributes.
 
 =head2 C<extending_non_mop>
 
