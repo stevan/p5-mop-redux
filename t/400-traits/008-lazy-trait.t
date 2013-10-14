@@ -26,7 +26,7 @@ class Foo {
     }
 
     method has_bar {
-        defined ${ mop::meta($self)->get_attribute('$!bar')->storage->{ $self } || \undef }
+        mop::meta($self)->get_attribute('$!bar')->has_data_in_slot_for($self)
     }
 
     method clear_bar {

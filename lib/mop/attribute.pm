@@ -3,7 +3,7 @@ package mop::attribute;
 use v5.16;
 use warnings;
 
-use Scalar::Util qw[ weaken ];
+use Scalar::Util qw[ weaken isweak ];
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -41,7 +41,7 @@ sub clone {
     return ref($self)->new(
         name => $self->name,
         default => ${ $default{ $self } },
-        storage => $self->storage,
+        storage => ${ $storage{ $self } },
     );
 }
 
@@ -81,8 +81,6 @@ sub get_default {
     $value
 }
 
-sub storage { ${ $storage{ $_[0] } } }
-
 sub associated_meta { ${ $associated_meta{ $_[0] } } }
 sub set_associated_meta {
     my ($self, $meta) = @_;
@@ -95,13 +93,13 @@ sub locally_defined { ${ $original_id{ $_[0] } } eq mop::id( $_[0] ) }
 
 sub has_data_in_slot_for {
     my ($self, $instance) = @_;
-    exists $self->storage->{ $instance };
+    defined ${ ${ $storage{ $self } }->{ $instance } };
 }
 
 sub fetch_data_in_slot_for {
     my ($self, $instance) = @_;
     $self->fire('before:FETCH_DATA', $instance);
-    my $val = ${ $self->storage->{ $instance } || \undef };
+    my $val = ${ ${ $storage{ $self } }->{ $instance } || \undef };
     $self->fire('after:FETCH_DATA', $instance);
     return $val;
 }
@@ -109,7 +107,7 @@ sub fetch_data_in_slot_for {
 sub store_data_in_slot_for {
     my ($self, $instance, $data) = @_;
     $self->fire('before:STORE_DATA', $instance, \$data);
-    $self->storage->{ $instance } = \$data;
+    ${ $storage{ $self } }->{ $instance } = \$data;
     $self->fire('after:STORE_DATA', $instance, \$data);
     return;
 }
@@ -120,6 +118,21 @@ sub store_default_in_slot_for {
         local $_ = $instance;
         $self->get_default;
     }) if $self->has_default;
+}
+
+sub remove_data_in_slot_for {
+    my ($self, $instance) = @_;
+    delete ${ $storage{ $self } }->{ $instance };
+}
+
+sub weaken_data_in_slot_for {
+    my ($self, $instance) = @_;
+    weaken(${ ${ $storage{ $self } }->{ $instance } });
+}
+
+sub is_data_in_slot_weak_for {
+    my ($self, $instance) = @_;
+    isweak(${ ${ $storage{ $self } }->{ $instance } });
 }
 
 our $METACLASS;
@@ -180,6 +193,9 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'fetch_data_in_slot_for',    body => \&fetch_data_in_slot_for    ) );
     $METACLASS->add_method( mop::method->new( name => 'store_data_in_slot_for',    body => \&store_data_in_slot_for    ) );
     $METACLASS->add_method( mop::method->new( name => 'store_default_in_slot_for', body => \&store_default_in_slot_for ) );
+    $METACLASS->add_method( mop::method->new( name => 'remove_data_in_slot_for',   body => \&remove_data_in_slot_for   ) );
+    $METACLASS->add_method( mop::method->new( name => 'weaken_data_in_slot_for',   body => \&weaken_default_in_slot_for ) );
+    $METACLASS->add_method( mop::method->new( name => 'is_data_in_slot_weak_for',  body => \&is_data_in_slot_weak_for  ) );
     $METACLASS;
 }
 
@@ -225,6 +241,8 @@ TODO
 
 =item C<conflicts_with($obj)>
 
+=item C<locally_defined($obj)>
+
 =item C<has_data_in_slot_for($instance)>
 
 =item C<fetch_data_in_slot_for($instance)>
@@ -232,6 +250,12 @@ TODO
 =item C<store_data_in_slot_for($instance, $data)>
 
 =item C<store_default_in_slot_for($instance)>
+
+=item C<remove_data_in_slot_for($instance)>
+
+=item C<weaken_data_in_slot_for($instance)>
+
+=item C<is_data_in_slot_weak_for($instance)>
 
 =back
 

@@ -28,28 +28,28 @@ class Quux extends Bar {
     my $quux_attr = mop::meta('Quux')->get_attribute('$!quux');
 
     my $foo = Foo->new;
-    is(${ $foo_attr->storage->{$foo} }, 'FOO');
-    ok(!$bar_attr->storage->{$foo});
-    ok(!$baz_attr->storage->{$foo});
-    ok(!$quux_attr->storage->{$foo});
+    is($foo_attr->fetch_data_in_slot_for($foo), 'FOO');
+    ok(!$bar_attr->has_data_in_slot_for($foo));
+    ok(!$baz_attr->has_data_in_slot_for($foo));
+    ok(!$quux_attr->has_data_in_slot_for($foo));
 
     mop::rebless $foo, 'Bar';
-    ok(!$foo_attr->storage->{$foo});
-    is(${ $bar_attr->storage->{$foo} }, 'BAR');
-    ok(!$baz_attr->storage->{$foo});
-    ok(!$quux_attr->storage->{$foo});
+    ok(!$foo_attr->has_data_in_slot_for($foo));
+    is($bar_attr->fetch_data_in_slot_for($foo), 'BAR');
+    ok(!$baz_attr->has_data_in_slot_for($foo));
+    ok(!$quux_attr->has_data_in_slot_for($foo));
 
     mop::rebless $foo, 'Baz';
-    is(${ $foo_attr->storage->{$foo} }, 'FOO');
-    ok(!$bar_attr->storage->{$foo});
-    is(${ $baz_attr->storage->{$foo} }, 'BAZ');
-    ok(!$quux_attr->storage->{$foo});
+    is($foo_attr->fetch_data_in_slot_for($foo), 'FOO');
+    ok(!$bar_attr->has_data_in_slot_for($foo));
+    is($baz_attr->fetch_data_in_slot_for($foo), 'BAZ');
+    ok(!$quux_attr->has_data_in_slot_for($foo));
 
     mop::rebless $foo, 'Quux';
-    ok(!$foo_attr->storage->{$foo});
-    is(${ $bar_attr->storage->{$foo} }, 'BAR');
-    ok(!$baz_attr->storage->{$foo});
-    is(${ $quux_attr->storage->{$foo} }, 'QUUX');
+    ok(!$foo_attr->has_data_in_slot_for($foo));
+    is($bar_attr->fetch_data_in_slot_for($foo), 'BAR');
+    ok(!$baz_attr->has_data_in_slot_for($foo));
+    is($quux_attr->fetch_data_in_slot_for($foo), 'QUUX');
 }
 
 {

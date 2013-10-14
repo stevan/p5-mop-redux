@@ -6,6 +6,7 @@ use warnings;
 
 use overload ();
 use Scalar::Util;
+use Sub::Name ();
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -120,7 +121,7 @@ sub rebless {
     @into_isa = grep { defined } map { meta($_) } @into_isa;
 
     for my $attr (map { $_->attributes } @from_isa) {
-        delete $attr->storage->{$object};
+        $attr->remove_data_in_slot_for($object);
     }
 
     bless($object, $into);
@@ -286,7 +287,7 @@ sub initialize {
 
     {
         no warnings 'redefine';
-        *apply_metaclass = sub {
+        *apply_metaclass = Sub::Name::subname apply_metaclass => sub {
             my ($instance, $new_meta) = @_;
             rebless $instance, mop::internals::util::fix_metaclass_compatibility($new_meta, $instance);
         };

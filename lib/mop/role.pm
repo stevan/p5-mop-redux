@@ -3,6 +3,8 @@ package mop::role;
 use v5.16;
 use warnings;
 
+use Sub::Name ();
+
 use mop::internals::util;
 
 our $VERSION   = '0.01';
@@ -223,12 +225,13 @@ sub FINALIZE {
             }
         }
 
+        my $name = $self->name . '::' . $method->name;
         my $body = ref($method) eq 'mop::method' && !$method->has_events
             ? $method->body
             : sub { $method->execute(shift, \@_) };
         no strict 'refs';
         no warnings 'redefine';
-        *{ $self->name . '::' . $method->name } = $body;
+        *$name = Sub::Name::subname $name => $body;
     }
 
     $self->fire('after:FINALIZE');
