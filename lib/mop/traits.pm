@@ -19,54 +19,63 @@ our @AVAILABLE_TRAITS = qw[
 ];
 
 sub rw {
-    if ($_[0]->isa('mop::attribute')) {
-        my ($attr) = @_;
-        my $meta = $attr->associated_meta;
-        $meta->add_method(
-            $meta->method_class->new(
-                name => $attr->key_name,
-                body => sub {
-                    my $self = shift;
-                    $attr->store_data_in_slot_for($self, shift) if @_;
-                    $attr->fetch_data_in_slot_for($self);
-                }
-            )
-        );
-    }
+    my ($attr) = @_;
+
+    die "rw trait is only valid on attributes"
+        unless $attr->isa('mop::attribute');
+
+    my $meta = $attr->associated_meta;
+    $meta->add_method(
+        $meta->method_class->new(
+            name => $attr->key_name,
+            body => sub {
+                my $self = shift;
+                $attr->store_data_in_slot_for($self, shift) if @_;
+                $attr->fetch_data_in_slot_for($self);
+            }
+        )
+    );
 }
 
 sub ro {
-    if ($_[0]->isa('mop::attribute')) {
-        my ($attr) = @_;
-        my $meta = $attr->associated_meta;
-        $meta->add_method(
-            $meta->method_class->new(
-                name => $attr->key_name,
-                body => sub {
-                    my $self = shift;
-                    die "Cannot assign to a read-only accessor" if @_;
-                    $attr->fetch_data_in_slot_for($self);
-                }
-            )
-        );
-    }
+    my ($attr) = @_;
+
+    die "ro trait is only valid on attributes"
+        unless $attr->isa('mop::attribute');
+
+    my $meta = $attr->associated_meta;
+    $meta->add_method(
+        $meta->method_class->new(
+            name => $attr->key_name,
+            body => sub {
+                my $self = shift;
+                die "Cannot assign to a read-only accessor" if @_;
+                $attr->fetch_data_in_slot_for($self);
+            }
+        )
+    );
 }
 
 sub required {
-    if ($_[0]->isa('mop::attribute')) {
-        my ($attr) = @_;
-        $attr->has_default()
-          and die "in '" . $attr->name
-            . "' attribute definition: 'required' trait is incompatible with default value";
-        $attr->set_default(sub { die "'" . $attr->name . "' is required" });
-    }
+    my ($attr) = @_;
+
+    die "required trait is only valid on attributes"
+        unless $attr->isa('mop::attribute');
+
+    die "in '" . $attr->name . "' attribute definition: "
+      . "'required' trait is incompatible with default value"
+        if $attr->has_default;
+
+    $attr->set_default(sub { die "'" . $attr->name . "' is required" });
 }
 
 sub abstract {
-    if ($_[0]->isa('mop::class')) {
-        my $meta = shift;
-        $meta->make_class_abstract;
-    }
+    my ($class) = @_;
+
+    die "abstract trait is only valid on classes"
+        unless $class->isa('mop::class');
+
+    $class->make_class_abstract;
 }
 
 sub overload {
@@ -92,29 +101,29 @@ sub overload {
             fallback => 1
         );
     } elsif ($_[0]->isa('mop::class')) {
-        my $meta = shift;
-        ($_[0] eq 'inherited')
-            || die "I don't know what to do with $_[0]";
+        my ($class, $option) = @_;
+        ($option eq 'inherited')
+            || die "I don't know what to do with $option";
 
-        ($meta->superclass)
-            || die "You don't have a superclass on " . $meta->name;
+        ($class->superclass)
+            || die "You don't have a superclass on " . $class->name;
 
         my $stash = do {
             no strict 'refs';
-            \%{ $meta->superclass . '::' }
+            \%{ $class->superclass . '::' }
         };
         my $all_symbols = {
-            map { $_ => $meta->superclass->UNIVERSAL::can($_) }
-                grep { $meta->superclass->UNIVERSAL::can($_) }
+            map { $_ => $class->superclass->UNIVERSAL::can($_) }
+                grep { $class->superclass->UNIVERSAL::can($_) }
                     grep { !/::$/ }
                         keys %$stash
         };
 
         foreach my $symbol ( grep { /^\(/ && !/^\(\)/ && !/^\(\(/ } keys %$all_symbols ) {
-            unless ($meta->name->UNIVERSAL::can($symbol)) {
+            unless ($class->name->UNIVERSAL::can($symbol)) {
                 my ($operator) = ($symbol =~ /^\((.*)/);
                 overload::OVERLOAD(
-                    $meta->name,
+                    $class->name,
                     $operator,
                     $all_symbols->{ $symbol },
                     fallback => 1
@@ -122,73 +131,83 @@ sub overload {
             }
         }
     }
+    else {
+        die "overload trait is only valid on methods and classes";
+    }
 }
 
 sub weak_ref {
-    if ($_[0]->isa('mop::attribute')) {
-        my ($attr) = @_;
-        $attr->bind('after:STORE_DATA' => sub {
-            Scalar::Util::weaken( ${ $_[0]->storage->{ $_[1] } } );
-        });
-    }
+    my ($attr) = @_;
+
+    die "weak_ref trait is only valid on attributes"
+        unless $attr->isa('mop::attribute');
+
+    $attr->bind('after:STORE_DATA' => sub {
+        Scalar::Util::weaken( ${ $_[0]->storage->{ $_[1] } } );
+    });
 }
 
 sub lazy {
-    if ($_[0]->isa('mop::attribute')) {
-        my $meta    = shift;
-        my $default = $meta->clear_default;
-        $meta->bind('before:FETCH_DATA' => sub {
-            my (undef, $instance) = @_;
-            if ( !defined ${ $meta->storage->{$instance} || \undef } ) {
-                $meta->store_data_in_slot_for($instance, do {
-                    local $_ = $instance;
-                    $default->()
-                });
-            }
-        });
-    }
+    my ($attr) = @_;
+
+    die "lazy trait is only valid on attributes"
+        unless $attr->isa('mop::attribute');
+
+    my $default = $attr->clear_default;
+    $attr->bind('before:FETCH_DATA' => sub {
+        my (undef, $instance) = @_;
+        if ( !defined ${ $attr->storage->{$instance} || \undef } ) {
+            $attr->store_data_in_slot_for($instance, do {
+                local $_ = $instance;
+                $default->()
+            });
+        }
+    });
 }
 
 sub extending_non_mop {
-    if ($_[0]->isa('mop::class')) {
-        state $BUILDALL = mop::meta('mop::object')->get_method('BUILDALL');
+    my ($class, $constructor_name) = @_;
 
-        my $meta              = shift;
-        my $constructor_name  = shift // 'new';
-        my $super_constructor = join '::' => $meta->superclass, $constructor_name;
+    die "extending_non_mop trait is only valid on classes"
+        unless $class->isa('mop::class');
 
-        $meta->add_method(
-            $meta->method_class->new(
-                name => $constructor_name,
-                body => sub {
-                    my $class = shift;
-                    my $self  = $class->$super_constructor( @_ );
-                    mop::internals::util::register_object( $self );
+    state $BUILDALL = mop::meta('mop::object')->get_method('BUILDALL');
 
-                    my %attributes = map {
-                        if (my $m = mop::meta($_)) {
-                            %{ $m->attribute_map }
-                        }
-                        else {
-                            ()
-                        }
-                    } reverse @{ mro::get_linear_isa($class) };
+    $constructor_name //= 'new';
+    my $super_constructor = join '::' => $class->superclass, $constructor_name;
 
-                    foreach my $attr (values %attributes) {
-                        $attr->store_default_in_slot_for( $self );
+    $class->add_method(
+        $class->method_class->new(
+            name => $constructor_name,
+            body => sub {
+                my $class = shift;
+                my $self  = $class->$super_constructor( @_ );
+                mop::internals::util::register_object( $self );
+
+                my %attributes = map {
+                    if (my $m = mop::meta($_)) {
+                        %{ $m->attribute_map }
                     }
+                    else {
+                        ()
+                    }
+                } reverse @{ mro::get_linear_isa($class) };
 
-                    $BUILDALL->execute( $self, [ @_ ] );
-                    $self;
+                foreach my $attr (values %attributes) {
+                    $attr->store_default_in_slot_for( $self );
                 }
-            )
-        );
-    }
+
+                $BUILDALL->execute( $self, [ @_ ] );
+                $self;
+            }
+        )
+    );
 }
 
 sub repr {
     my ($class, $instance) = @_;
-    die "repr can only be used on classes"
+
+    die "repr trait is only valid on classes"
         unless $class->isa('mop::class');
 
     my $generator;

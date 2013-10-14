@@ -126,6 +126,11 @@ sub has_attribute {
     exists $self->attribute_map->{ $name };
 }
 
+sub remove_attribute {
+    my ($self, $name) = @_;
+    delete $self->attribute_map->{ $name };
+}
+
 # methods
 
 sub method_class { 'mop::method' }
@@ -149,6 +154,11 @@ sub get_method {
 sub has_method {
     my ($self, $name) = @_;
     exists $self->method_map->{ $name };
+}
+
+sub remove_method {
+    my ($self, $name) = @_;
+    delete $self->method_map->{ $name };
 }
 
 # required methods
@@ -294,6 +304,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'get_attribute',   body => \&get_attribute   ) );
     $METACLASS->add_method( mop::method->new( name => 'add_attribute',   body => \&add_attribute   ) );
     $METACLASS->add_method( mop::method->new( name => 'has_attribute',   body => \&has_attribute   ) );
+    $METACLASS->add_method( mop::method->new( name => 'remove_attribute', body => \&remove_attribute ) );
 
     $METACLASS->add_method( mop::method->new( name => 'method_class',  body => \&method_class  ) );
     $METACLASS->add_method( mop::method->new( name => 'method_map',    body => \&method_map    ) );
@@ -301,6 +312,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'get_method',    body => \&get_method    ) );
     $METACLASS->add_method( mop::method->new( name => 'add_method',    body => \&add_method    ) );
     $METACLASS->add_method( mop::method->new( name => 'has_method',    body => \&has_method    ) );
+    $METACLASS->add_method( mop::method->new( name => 'remove_method', body => \&remove_method ) );
 
     $METACLASS->add_method( mop::method->new( name => 'required_methods',    body => \&required_methods    ) );
     $METACLASS->add_method( mop::method->new( name => 'required_method_map', body => \&required_method_map ) );

@@ -8,6 +8,7 @@ use Test::More;
 use mop;
 
 sub cached   {}
+sub named    {}
 
 class Bar {}
 class Foo extends Bar is abstract {
@@ -17,7 +18,7 @@ class Foo extends Bar is abstract {
 
     method foo ($x) is cached({}) {}
 
-    method bar is required {}
+    method bar is named {}
 }
 
 pass("... this actually parsed!");
