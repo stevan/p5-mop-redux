@@ -370,6 +370,7 @@ This is a prototype for a new object system for Perl 5.
         method set_associated_meta ($meta) { ... }
 
         method conflicts_with ($attr) { ... }
+        method locally_defined { ... }
 
         method fetch_data_in_slot_for ($instance) { ... }
         method store_data_in_slot_for ($instance, $data) { ... }
@@ -395,6 +396,7 @@ This is a prototype for a new object system for Perl 5.
         method set_associated_meta ($meta) { ... }
 
         method conflicts_with ($method) { ... }
+        method locally_defined { ... }
 
         method bind   ($event_name, $cb) { ... }
         method unbind ($event_name, $cb) { ... }

@@ -24,19 +24,15 @@ sub new {
     $name{ $self }    = \($args{'name'});
     $default{ $self } = \($args{'default'}) if exists $args{'default'};
     $storage{ $self } = \($args{'storage'}) if exists $args{'storage'};
-
-    $self
-}
-
-sub BUILD {
-    my $self = shift;
     # NOTE:
     # keep track of the original ID here
     # so that we can still detect attribute
     # conflicts in roles even after something
     # has been cloned
     # - SL
-    $original_id{ $self } //= \(mop::id($self));
+    $original_id{ $self } = \(mop::id($self));
+
+    $self
 }
 
 # temporary, for bootstrapping
@@ -95,6 +91,7 @@ sub set_associated_meta {
 }
 
 sub conflicts_with { ${ $original_id{ $_[0] } } ne ${ $original_id{ $_[1] } } }
+sub locally_defined { ${ $original_id{ $_[0] } } eq mop::id( $_[0] ) }
 
 sub has_data_in_slot_for {
     my ($self, $instance) = @_;
@@ -144,7 +141,8 @@ sub __INIT_METACLASS__ {
 
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!original_id',
-        storage => \%original_id
+        storage => \%original_id,
+        default => \sub { mop::id($_) },
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
@@ -163,8 +161,6 @@ sub __INIT_METACLASS__ {
         storage => \%associated_meta
     ));
 
-    $METACLASS->add_method( mop::method->new( name => 'BUILD', body => \&BUILD ) );
-
     $METACLASS->add_method( mop::method->new( name => 'name',                body => \&name                ) );
     $METACLASS->add_method( mop::method->new( name => 'key_name',            body => \&key_name            ) );
     $METACLASS->add_method( mop::method->new( name => 'has_default',         body => \&has_default         ) );
@@ -173,6 +169,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'associated_meta',     body => \&associated_meta     ) );
     $METACLASS->add_method( mop::method->new( name => 'set_associated_meta', body => \&set_associated_meta ) );
     $METACLASS->add_method( mop::method->new( name => 'conflicts_with',      body => \&conflicts_with      ) );
+    $METACLASS->add_method( mop::method->new( name => 'locally_defined',     body => \&locally_defined     ) );
 
     $METACLASS->add_method( mop::method->new( name => 'fetch_data_in_slot_for',    body => \&fetch_data_in_slot_for    ) );
     $METACLASS->add_method( mop::method->new( name => 'store_data_in_slot_for',    body => \&store_data_in_slot_for    ) );
