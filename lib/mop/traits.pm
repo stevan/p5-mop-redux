@@ -266,7 +266,7 @@ It has no effect if it is applied to classes or methods.
 When applied to an attribute this will generate a read-only
 accessor for that attribute.
 
-It has no effect if it is applied to classes or methods.
+This will throw an exception if it is applied to classes or methods.
 
 =head2 C<required>
 
@@ -274,21 +274,24 @@ When applied to an attribute this will result in a requirement
 that a value for this attribute be supplied via the constructor
 at instance creation time.
 
-It has no effect if it is applied to classes or methods.
+This will throw an exception if the attribute already has a
+default value associated with it.
+
+This will throw an exception if it is applied to classes or methods.
 
 =head2 C<weak_ref>
 
 When applied to an attribute this will result in the weakening
 of any value stored there.
 
-It has no effect if it is applied to classes or methods.
+This will throw an exception if it is applied to classes or methods.
 
 =head2 C<lazy>
 
 When applied to an attribute this will result in the deferred
 initialization of the default value of this attribute.
 
-It has no effect if it is applied to classes or methods.
+This will throw an exception if it is applied to classes or methods.
 
 =head2 C<abstract>
 
@@ -296,7 +299,7 @@ When applied to a class this will mark the class as being
 abstract. It is required to use this trait if your class has
 any required methods in it.
 
-It has no effect if it is applied to attributes or methods.
+This will throw an exception if it is applied to attributes or methods.
 
 =head2 C<overload($operator)>
 
@@ -310,7 +313,7 @@ will ensure that all overloads are propertly inherited from the
 superclass. This is a temporary measure until we can make this
 Just Work automatically.
 
-It has no effect if it is applied to attributes.
+This will throw an exception if it is applied to attributes.
 
 =head2 C<extending_non_mop>
 
@@ -320,7 +323,7 @@ called as well as the necessary initialization of the MOP class.
 Note that this is a temporary measure until we can make this Just
 Work automatically.
 
-It has no effect if it is applied to attributes or methods.
+This will throw an exception if it is applied to attributes or methods.
 
 =head2 C<repr($ref_type)>
 
