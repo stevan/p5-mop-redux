@@ -1,36 +1,44 @@
-# core
-requires 'Carp'                  => 0;
-requires 'Hash::Util::FieldHash' => 0;
-requires 'Scalar::Util'          => 0;
-requires 'mro'                   => 0;
-requires 'overload'              => 0;
-requires 'parent'                => 0;
-requires 'perl'                  => 5.016;
-requires 'strict'                => 0;
-requires 'version'               => 0;
-requires 'warnings'              => 0;
+requires "B::Hooks::EndOfScope" => "0";
+requires "Carp" => "0";
+requires "Hash::Util::FieldHash" => "0";
+requires "Parse::Keyword" => "0";
+requires "Scalar::Util" => "0";
+requires "Scope::Guard" => "0";
+requires "Sub::Name" => "0";
+requires "Variable::Magic" => "0";
+requires "mro" => "0";
+requires "overload" => "0";
+requires "parent" => "0";
+requires "perl" => "v5.16.0";
+requires "strict" => "0";
+requires "twigils" => "0.04";
+requires "version" => "0";
+requires "warnings" => "0";
 
-build_requires 'B::Deparse'  => 0;
-build_requires 'FindBin'     => 0;
-build_requires 'IO::Handle'  => 0;
-build_requires 'Test::More'  => 0.88;
-build_requires 'if'          => 0;
-build_requires 'lib'         => 0;
+on 'test' => sub {
+  requires "B::Deparse" => "0";
+  requires "File::Find" => "0";
+  requires "File::Temp" => "0";
+  requires "FindBin" => "0";
+  requires "IO::Handle" => "0";
+  requires "Test::More" => "0.88";
+  requires "if" => "0";
+  requires "lib" => "0";
+};
 
-# parser
-requires 'B::Hooks::EndOfScope' => 0;
-requires 'Parse::Keyword'       => 0.04;
-requires 'Scope::Guard'         => 0;
-requires 'Sub::Name'            => 0;
-requires 'twigils'              => 0;
-requires 'Variable::Magic'      => 0;
+on 'configure' => sub {
+  requires "ExtUtils::MakeMaker" => "6.30";
+};
 
-# other
-author_requires 'Devel::StackTrace'            => 0;
-author_requires 'Moose'                        => 0;
-author_requires 'Moose::Util::TypeConstraints' => 0;
-author_requires 'Package::Stash::XS'           => 0.27;
-author_requires 'Path::Class'                  => 0;
-author_requires 'Test::EOL'                    => 0;
-author_requires 'Test::NoTabs'                 => 0;
-author_requires 'Test::Pod'                    => 1.41;
+on 'develop' => sub {
+  requires "Devel::StackTrace" => "0";
+  requires "Moose" => "0";
+  requires "Moose::Util::TypeConstraints" => "0";
+  requires "Package::Stash::XS" => "0.27";
+  requires "Path::Class" => "0";
+  requires "Pod::Coverage::TrustPod" => "0";
+  requires "Test::EOL" => "0";
+  requires "Test::NoTabs" => "0";
+  requires "Test::Pod" => "1.41";
+  requires "Test::Pod::Coverage" => "1.08";
+};

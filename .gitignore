@@ -4,7 +4,6 @@ META.*
 MYMETA.*
 Makefile
 blib
-inc
 pm_to_blib
 MANIFEST
 Makefile.old
@@ -13,6 +12,7 @@ MANIFEST.bak
 *.sw[po]
 .DS_Store
 .build
+mop-*
 *.bs
 *.o
 mop.c

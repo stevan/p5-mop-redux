@@ -109,6 +109,8 @@ TODO
 
 =over 4
 
+=item C<new(@args)>
+
 =item C<clone(%overrides)>
 
 =item C<BUILDALL>

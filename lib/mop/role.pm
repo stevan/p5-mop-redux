@@ -375,6 +375,8 @@ TODO
 
 =item C<has_attribute($name)>
 
+=item C<remove_attribute($name)>
+
 =item C<method_class>
 
 =item C<method_map>
@@ -386,6 +388,8 @@ TODO
 =item C<add_method($method)>
 
 =item C<has_method($name)>
+
+=item C<remove_method($name)>
 
 =item C<required_methods>
 

@@ -1,4 +1,4 @@
-# PODNAME: mop::manual::tutorials::moose_to_mop
+package mop::manual::tutorials::moose_to_mop;
 # ABSTRACT: A manual for p5-mop
 
 __END__

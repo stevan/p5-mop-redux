@@ -1,4 +1,4 @@
-# PODNAME: mop::manual::details::classes
+package mop::manual::details::classes;
 # ABSTRACT: A manual for p5-mop
 
 __END__

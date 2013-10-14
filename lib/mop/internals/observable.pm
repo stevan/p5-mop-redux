@@ -78,7 +78,7 @@ __END__
 
 =head1 NAME
 
-mop::internals::observable - nternal use only
+mop::internals::observable - internal use only
 
 =head1 DESCRIPTION
 
@@ -106,6 +106,15 @@ This software is copyright (c) 2013 by Infinity Interactive.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
+
+=begin Pod::Coverage
+
+  bind
+  unbind
+  fire
+  has_events
+
+=end Pod::Coverage
 
 =cut
 

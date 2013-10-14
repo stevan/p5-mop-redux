@@ -241,7 +241,7 @@ TODO
 
 =item C<conflicts_with($obj)>
 
-=item C<locally_defined($obj)>
+=item C<locally_defined>
 
 =item C<has_data_in_slot_for($instance)>
 
@@ -285,6 +285,9 @@ This software is copyright (c) 2013 by Infinity Interactive.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
+
+=for Pod::Coverage
+  new
 
 =cut
 
