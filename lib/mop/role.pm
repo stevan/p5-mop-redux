@@ -346,7 +346,7 @@ TODO
 
 =item C<BUILD>
 
-=item C<clone>
+=item C<clone(%overrides)>
 
 =item C<name>
 

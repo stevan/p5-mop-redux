@@ -162,7 +162,6 @@ sub __INIT_METACLASS__ {
     ));
 
     $METACLASS->add_method( mop::method->new( name => 'BUILD', body => \&BUILD ) );
-    $METACLASS->add_method( mop::method->new( name => 'clone', body => \&clone ) );
 
     $METACLASS->add_method( mop::method->new( name => 'name',                body => \&name                ) );
     $METACLASS->add_method( mop::method->new( name => 'key_name',            body => \&key_name            ) );

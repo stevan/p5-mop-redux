@@ -351,9 +351,7 @@ to go out to CPAN and withstand the cold harsh light of day.
 Thanks for asking, there are a couple of things that you can do
 to help!
 
-=over 4
-
-=item Contributing/reviewing documentation
+=head3 Contributing/reviewing documentation
 
 Documentation is not one of our strong suits, any help on this
 would be very much appreciated. Especially documetation written
@@ -363,7 +361,7 @@ and/or Moose.
 Please send any and all patches as pull requests to our
 L<repository on github|https://github.com/stevan/p5-mop-redux>.
 
-=item Porting a module
+=head3 Porting a module
 
 Early on in the development of this we started porting existing
 Perl OO modules to use the mop. This proved to be a really
@@ -375,7 +373,7 @@ If you do port something, please let us know via the
 L<github issue tracker|https://github.com/stevan/p5-mop-redux/issues>
 so that we can add it to our smoke tests.
 
-=item Writing a module
+=head3 Writing a module
 
 Porting existing modules to the mop is interesting, but we are
 also interested in having people try it out from scratch. We
@@ -386,7 +384,7 @@ If you do write something using the mop, please let us know via the
 L<github issue tracker|https://github.com/stevan/p5-mop-redux/issues>
 so that we can add it to our smoke tests.
 
-=item Speak to us
+=head3 Speak to us
 
 We are always open for a reasonable, civil discourse on what it
 is we are trying to do here. If you have ideas or issues with
@@ -394,7 +392,15 @@ anything you see here please submit your thoughts via the
 L<github issue tracker|https://github.com/stevan/p5-mop-redux/issues>
 so that it can be discussed.
 
-=back
+=head2 Why aren't you supporting @features from $my_favorite_oo_module?
+
+It is our intention to keep the core mop as simple as possible
+and to allow for users to easily extend it to support their
+favorite features. If you have any questions about writing said
+extensions or feel that we are really should support a given
+feature in core, please submit an issue to the
+L<github issue tracker|https://github.com/stevan/p5-mop-redux/issues>
+so that it can be discussed.
 
 =head2 Can I use this in production?
 
