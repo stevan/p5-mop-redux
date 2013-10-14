@@ -37,7 +37,7 @@ read_tokenish (pTHX)
 
 #define PARSE_NAME_ALLOW_PACKAGE 1
 static SV *
-parse_name (pTHX_ const char *what, U32 flags)
+parse_name (pTHX_ const char *what, STRLEN whatlen, U32 flags)
 {
     char *start, *s;
     STRLEN len;
@@ -71,7 +71,8 @@ parse_name (pTHX_ const char *what, U32 flags)
 
     len = s - start;
     if (!len)
-        croak("%"SVf" is not a valid %s name", SVfARG(read_tokenish(aTHX)), what);
+        croak("%"SVf" is not a valid %.*s name",
+              SVfARG(read_tokenish(aTHX)), whatlen, what);
     sv = sv_2mortal(newSV(len));
     Copy(start, SvPVX(sv), len, char);
     SvPVX(sv)[len] = '\0';
@@ -159,7 +160,7 @@ parse_name (what, flags=0)
     const char *what
     U32 flags
   C_ARGS:
-    aTHX_ what, flags
+    aTHX_ what, SvCUR(ST(0)), flags
   POSTCALL:
     SvREFCNT_inc(RETVAL); /* parse_name mortalises, which is what we want when
                              we start using it from C code */
