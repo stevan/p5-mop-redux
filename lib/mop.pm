@@ -425,18 +425,20 @@ This is a prototype for a new object system for Perl 5.
         method attributes { ... }
         method attribute_map { ... }
 
-        method add_attribute ($attr) { ... }
-        method get_attribute ($name) { ... }
-        method has_attribute ($name) { ... }
+        method add_attribute    ($attr) { ... }
+        method get_attribute    ($name) { ... }
+        method has_attribute    ($name) { ... }
+        method remove_attribute ($name) { ... }
 
         method method_class { 'mop::method' }
 
         method methods { ... }
         method method_map { ... }
 
-        method add_method ($attr) { ... }
-        method get_method ($name) { ... }
-        method has_method ($name) { ... }
+        method add_method    ($attr) { ... }
+        method get_method    ($name) { ... }
+        method has_method    ($name) { ... }
+        method remove_method ($name) { ... }
 
         method required_methods { ... }
         method required_method_map { ... }

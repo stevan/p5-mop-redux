@@ -52,6 +52,8 @@ sub install_meta {
 sub apply_all_roles {
     my ($to, @roles) = @_;
 
+    unapply_all_roles($to);
+
     my $composite = create_composite_role(@roles);
 
     $to->fire('before:CONSUME' => $composite);
@@ -91,6 +93,25 @@ sub apply_all_roles {
 
     $composite->fire('after:COMPOSE' => $to);
     $to->fire('after:CONSUME' => $composite);
+}
+
+sub unapply_all_roles {
+    my ($meta) = @_;
+
+    for my $attr ($meta->attributes) {
+        $meta->remove_attribute($attr->name)
+            unless $attr->locally_defined;
+    }
+
+    for my $method ($meta->methods) {
+        $meta->remove_method($method->name)
+            unless $method->locally_defined;
+    }
+
+    # XXX this is wrong, it will also remove required methods that were
+    # defined in the class directly
+    $meta->remove_required_method($_)
+        for $meta->required_methods;
 }
 
 # this shouldn't be used, generally. the only case where this is necessary is
