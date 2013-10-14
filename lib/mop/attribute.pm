@@ -41,7 +41,7 @@ sub clone {
     return ref($self)->new(
         name => $self->name,
         default => ${ $default{ $self } },
-        storage => $self->storage,
+        storage => ${ $storage{ $self } },
     );
 }
 
@@ -81,8 +81,6 @@ sub get_default {
     $value
 }
 
-sub storage { ${ $storage{ $_[0] } } }
-
 sub associated_meta { ${ $associated_meta{ $_[0] } } }
 sub set_associated_meta {
     my ($self, $meta) = @_;
@@ -95,13 +93,13 @@ sub locally_defined { ${ $original_id{ $_[0] } } eq mop::id( $_[0] ) }
 
 sub has_data_in_slot_for {
     my ($self, $instance) = @_;
-    defined ${ $self->storage->{ $instance } };
+    defined ${ ${ $storage{ $self } }->{ $instance } };
 }
 
 sub fetch_data_in_slot_for {
     my ($self, $instance) = @_;
     $self->fire('before:FETCH_DATA', $instance);
-    my $val = ${ $self->storage->{ $instance } || \undef };
+    my $val = ${ ${ $storage{ $self } }->{ $instance } || \undef };
     $self->fire('after:FETCH_DATA', $instance);
     return $val;
 }
@@ -109,7 +107,7 @@ sub fetch_data_in_slot_for {
 sub store_data_in_slot_for {
     my ($self, $instance, $data) = @_;
     $self->fire('before:STORE_DATA', $instance, \$data);
-    $self->storage->{ $instance } = \$data;
+    ${ $storage{ $self } }->{ $instance } = \$data;
     $self->fire('after:STORE_DATA', $instance, \$data);
     return;
 }
@@ -124,17 +122,17 @@ sub store_default_in_slot_for {
 
 sub remove_data_in_slot_for {
     my ($self, $instance) = @_;
-    delete $self->storage->{ $instance };
+    delete ${ $storage{ $self } }->{ $instance };
 }
 
 sub weaken_data_in_slot_for {
     my ($self, $instance) = @_;
-    weaken(${ $self->storage->{ $instance } });
+    weaken(${ ${ $storage{ $self } }->{ $instance } });
 }
 
 sub is_data_in_slot_weak_for {
     my ($self, $instance) = @_;
-    isweak(${ $self->storage->{ $instance } });
+    isweak(${ ${ $storage{ $self } }->{ $instance } });
 }
 
 our $METACLASS;
@@ -180,7 +178,6 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'key_name',            body => \&key_name            ) );
     $METACLASS->add_method( mop::method->new( name => 'has_default',         body => \&has_default         ) );
     $METACLASS->add_method( mop::method->new( name => 'get_default',         body => \&get_default         ) );
-    $METACLASS->add_method( mop::method->new( name => 'storage',             body => \&storage             ) );
     $METACLASS->add_method( mop::method->new( name => 'associated_meta',     body => \&associated_meta     ) );
     $METACLASS->add_method( mop::method->new( name => 'set_associated_meta', body => \&set_associated_meta ) );
     $METACLASS->add_method( mop::method->new( name => 'conflicts_with',      body => \&conflicts_with      ) );
