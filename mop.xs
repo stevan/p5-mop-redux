@@ -2,6 +2,8 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#include "callparser1.h"
+
 static MGVTBL subname_vtbl;
 
 static OP *ck_mop_keyword(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)

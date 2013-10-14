@@ -7,10 +7,11 @@ use Scope::Guard    qw[ guard ];
 use Variable::Magic qw[ wizard ];
 
 use B::Hooks::EndOfScope ();
-use Carp            ();
-use Scalar::Util    ();
-use version         ();
-use twigils 0.04    ();
+use Carp              ();
+use Scalar::Util      ();
+use version           ();
+use twigils 0.04      ();
+use Devel::CallParser ();
 
 use Parse::Keyword {
     class     => \&namespace_parser,

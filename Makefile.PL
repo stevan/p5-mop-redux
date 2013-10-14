@@ -6,6 +6,14 @@ use warnings;
 
 use ExtUtils::MakeMaker 6.30;
 
+use Devel::CallParser;
+
+{
+    open my $fh, '>', 'callparser1.h' or die $!;
+    print { $fh } Devel::CallParser::callparser1_h() or die $!;
+    close $fh or die $!;
+}
+
 my %WriteMakefileArgs = (
   'ABSTRACT'           => 'A meta-object protocol for Perl 5',
   'DISTNAME'           => 'p5-mop-redux',
@@ -34,6 +42,7 @@ my %WriteMakefileArgs = (
     'Scope::Guard'         => 0,
     'twigils'              => 0,
     'Variable::Magic'      => 0,
+    'Devel::CallParser'    => 0,
   },
   'TEST_REQUIRES' => {
     # core

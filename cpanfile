@@ -10,12 +10,13 @@ requires 'strict'                => 0;
 requires 'version'               => 0;
 requires 'warnings'              => 0;
 
-build_requires 'B::Deparse'  => 0;
-build_requires 'FindBin'     => 0;
-build_requires 'IO::Handle'  => 0;
-build_requires 'Test::More'  => 0.88;
-build_requires 'if'          => 0;
-build_requires 'lib'         => 0;
+build_requires 'B::Deparse'        => 0;
+build_requires 'FindBin'           => 0;
+build_requires 'IO::Handle'        => 0;
+build_requires 'Test::More'        => 0.88;
+build_requires 'if'                => 0;
+build_requires 'lib'               => 0;
+build_requires 'Devel::CallParser' => 0;
 
 # parser
 requires 'B::Hooks::EndOfScope' => 0;
@@ -23,6 +24,7 @@ requires 'Parse::Keyword'       => 0.04;
 requires 'Scope::Guard'         => 0;
 requires 'twigils'              => 0;
 requires 'Variable::Magic'      => 0;
+requires 'Devel::CallParser'    => 0;
 
 # other
 author_requires 'Devel::StackTrace'            => 0;
