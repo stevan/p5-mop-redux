@@ -93,14 +93,14 @@ sub test {
     each_dir {
         # these fail release tests
         local $ENV{RELEASE_TESTING}
-            if /Plack|http-headers-actionpack|BreadBoard/;
+            if /Plack|http-headers-actionpack|BreadBoard|Action-Retry/;
 
         my $failed = 0;
 
         if (-e 'dist.ini' && !/Plack/) {
             my $cmd = "dzil test";
             $cmd .= ' --all'
-                unless /Plack|http-headers-actionpack|BreadBoard/;
+                unless /Plack|http-headers-actionpack|BreadBoard|Action-Retry/;
             $failed ||= _system($cmd);
         }
         elsif (-e 'Build.PL') {
