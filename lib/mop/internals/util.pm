@@ -227,6 +227,8 @@ sub find_common_base {
 sub create_composite_role {
     my (@roles) = @_;
 
+    @roles = map { ref($_) ? $_ : mop::meta($_) } @roles;
+
     return $roles[0] if @roles == 1;
 
     my $name = 'mop::role::COMPOSITE::OF::'
