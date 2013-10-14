@@ -99,19 +99,43 @@ __END__
 
 =head1 NAME
 
-mop::object
+mop::object - A base object for mop classes
 
 =head1 DESCRIPTION
 
+TODO
+
+=head1 METHODS
+
+=over 4
+
+=item C<clone(%overrides)>
+
+=item C<BUILDALL>
+
+=item C<does($role_name)>
+
+=item C<DOES($class_or_role_name)>
+
+=item C<DESTROY>
+
+=back
+
 =head1 BUGS
 
-All complex software has bugs lurking in it, and this module is no
-exception. If you find a bug please either email me, or add the bug
-to cpan-RT.
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
 
 =head1 AUTHOR
 
-Stevan Little <stevan@iinteractive.com>
+Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 

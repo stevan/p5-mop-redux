@@ -304,3 +304,40 @@ sub create_composite_role {
 }
 
 1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+mop::internals::util - internal use only
+
+=head1 DESCRIPTION
+
+This is for internal use only, there is no public API here.
+
+=head1 BUGS
+
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
+
+=head1 AUTHOR
+
+Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by Infinity Interactive.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

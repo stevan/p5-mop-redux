@@ -302,9 +302,21 @@ ever actually used in Moose.
 
 =back
 
+=head1 BUGS
+
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
+
 =head1 AUTHOR
 
 Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 

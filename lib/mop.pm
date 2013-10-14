@@ -303,7 +303,7 @@ __END__
 
 =head1 NAME
 
-mop - A meta-object protocol for Perl 5
+mop - A new object system for Perl 5
 
 =head1 VERSION
 
@@ -331,180 +331,152 @@ version 0.01
         }
     }
 
-=head1 DESCRIPTION
+=head1 STATEMENT OF INTENT
 
-This is a prototype for a new object system for Perl 5.
+This is a prototype for a new object system for Perl 5, it is our
+intent to try and get this into the core of Perl 5. This is being
+released to CPAN so that the community at large can test it out
+and provide feedback.
 
-=head1 The MOP
+It can B<not> be overstated that this is a 0.01 prototype, which
+means that nothing here is final and everything could change.
+That said we are quite happy with the current state and after
+several months of working with it, feel that it is solid enough
+to go out to CPAN and withstand the cold harsh light of day.
 
-    class mop::object {
-        method new   (%args) { ... }
-        method clone (%args) { ... }
+=head1 FAQs
 
-        method BUILDALL ($args) { ... }
+=head2 How can I help?
 
-        method can  ($name)  { ... }
-        method isa  ($class) { ... }
-        method does ($role)  { ... }
-        method DOES ($name)  { ... }
+Thanks for asking, there are a couple of things that you can do
+to help!
 
-        method DESTROY { ... }
-    }
+=over 4
 
-    class mop::attribute extends mop::object {
-        has $!name is ro;
-        has $!default;
-        has $!storage is ro = {};
-        has $!associated_meta is ro;
-        has $!original_id;
+=item Contributing/reviewing documentation
 
-        has $!callbacks;
+Documentation is not one of our strong suits, any help on this
+would be very much appreciated. Especially documetation written
+from the perspective of users without prior knowledge of MOPs
+and/or Moose.
 
-        method BUILD { ... }
+Please send any and all patches as pull requests to our
+L<repository on github|https://github.com/stevan/p5-mop-redux>.
 
-        method key_name { ... }
+=item Porting a module
 
-        method has_default   { ... }
-        method get_default   { ... }
+Early on in the development of this we started porting existing
+Perl OO modules to use the mop. This proved to be a really
+excellent way of uncovering edge cases and issues. We currently
+have 9 ported modules in our L<Travis|https://travis-ci.org>
+smoke test and are always looking for more.
 
-        method set_associated_meta ($meta) { ... }
+If you do port something, please let us know via the
+L<github issue tracker|https://github.com/stevan/p5-mop-redux/issues>
+so that we can add it to our smoke tests.
 
-        method conflicts_with ($attr) { ... }
+=item Writing a module
 
-        method fetch_data_in_slot_for ($instance) { ... }
-        method store_data_in_slot_for ($instance, $data) { ... }
-        method store_default_in_slot_for ($instance) { ... }
+Porting existing modules to the mop is interesting, but we are
+also interested in having people try it out from scratch. We
+currently only have 1 original module in our L<Travis|https://travis-ci.org>
+smoke test and are always looking for more.
 
-        method bind   ($event_name, $cb) { ... }
-        method unbind ($event_name, $cb) { ... }
-        method fire   ($event_name) { ... }
-    }
+If you do write something using the mop, please let us know via the
+L<github issue tracker|https://github.com/stevan/p5-mop-redux/issues>
+so that we can add it to our smoke tests.
 
-    class mop::method extends mop::object {
-        has $!name is ro;
-        has $!body is ro;
-        has $!associated_meta is ro;
-        has $!original_id;
+=item Speak to us
 
-        has $!callbacks;
+We are always open for a reasonable, civil discourse on what it
+is we are trying to do here. If you have ideas or issues with
+anything you see here please submit your thoughts via the
+L<github issue tracker|https://github.com/stevan/p5-mop-redux/issues>
+so that it can be discussed.
 
-        method BUILD { ... }
+=back
 
-        method execute ($invocant, $args) { ... }
+=head2 Can I use this in production?
 
-        method set_associated_meta ($meta) { ... }
+Probably not a good idea, but hey, it's your codebase.
 
-        method conflicts_with ($method) { ... }
+=head1 PUBLIC UTILITY FUNCTIONS
 
-        method bind   ($event_name, $cb) { ... }
-        method unbind ($event_name, $cb) { ... }
-        method fire   ($event_name) { ... }
-    }
-
-    class mop::role extends mop::object {
-        has $!name      is ro;
-        has $!version   is ro;
-        has $!authority is ro;
-
-        has $!roles            is ro = [];
-        has $!attributes             = {};
-        has $!methods                = {};
-        has $!required_methods       = {};
-
-        has $!callbacks;
-
-        method BUILD { ... }
-
-        method add_role ($role) { ... }
-        method does_role ($name) { ... }
-
-        method attribute_class { 'mop::attribute' }
-
-        method attributes { ... }
-        method attribute_map { ... }
-
-        method add_attribute ($attr) { ... }
-        method get_attribute ($name) { ... }
-        method has_attribute ($name) { ... }
-
-        method method_class { 'mop::method' }
-
-        method methods { ... }
-        method method_map { ... }
-
-        method add_method ($attr) { ... }
-        method get_method ($name) { ... }
-        method has_method ($name) { ... }
-
-        method required_methods { ... }
-        method required_method_map { ... }
-
-        method add_required_method ($required_method) { ... }
-        method remove_required_method ($required_method) { ... }
-        method requires_method ($name) { ... }
-
-        method bind   ($event_name, $cb) { ... }
-        method unbind ($event_name, $cb) { ... }
-        method fire   ($event_name) { ... }
-
-        sub FINALIZE { ... }
-    }
-
-    # 'with mop::role' is odd because mop::role is a class, but it works as
-    # you would expect
-    class mop::class extends mop::object with mop::role {
-        has $!superclass is ro;
-        has $!is_abstract is ro;
-        has $!instance_generator is ro = sub { \(my $anon) };
-
-        method BUILD { ... }
-
-        method make_class_abstract { ... }
-
-        method new_instance { ... }
-        method clone_instance { ... }
-
-        method set_instance_generator ($generator) { ... }
-        method create_fresh_instance_structure { ... }
-    }
-
-=head1 BOOTSTRAPPING GOALS
-
-  Class is an instance of Class
-  Object is an instance of Class
-  Class is a subclass of Object
-
-  Class does Role
-  Role is an instance of Class
-  Role does Role
-
-=head1 FUNCTIONS
+The following is a list of public utility functions to
+be used along with the MOP.
 
 =head2 meta($obj_or_class_name)
 
-=head2 remove_meta($class_name)
+Given an object instance or a class name, this will return
+the meta-object associated with it. If there is no meta-object
+associated with it, meaning it is not a MOP class or role,
+then undef will be returned.
 
 =head2 id($obj)
 
+Given an instance this will return the unique ID given
+to that instance. This ID is the key used throughout many
+of the MOP internals to identify this instance.
+
 =head2 is_mop_object($obj)
 
-=head2 apply_metaclass($obj, $metaclass_name_or_instance)
-
-=head2 rebless($obj, $class_name)
+This predicate will return true of the instance if a MOP
+object, and false otherwise.
 
 =head2 dump_object($obj)
 
+This is a simple utility function that takes an instance
+and returns a HASH ref dump of the data contained within
+the instance. This is necessary because MOP instances are
+opaque and cannot be dumped using the existing tools
+(ex: Data::Dumper, etc.).
+
+NOTE: This is a temporary situation, once this system is
+accepted into core, we expect that the tools will add
+support accordingly.
+
+=head1 OTHER FUNCTIONS
+
+The following are functions that are unlikely to be useful
+to any but the most daring of users. Use with great caution!
+
+=head2 apply_metaclass($obj, $metaclass_name_or_instance)
+
+Given an instance and a class name, this will perform all
+the necessary metaclass compatability checks and then
+rebless the instance accordingly.
+
+=head2 rebless($obj, $class_name)
+
+Given an instance and a class name, this will handle
+reblessing the instance into the class and assure that
+all the correct initializations are done.
+
+=head2 remove_meta($class_name)
+
+This will remove the metaclass assocaited with a given
+C<$class_name>, after this C<meta> will return undef.
+
 =head2 initialize()
+
+This will bootstrap the MOP, you really should never call this
+we will do it for you.
 
 =head1 BUGS
 
-All complex software has bugs lurking in it, and this module is no
-exception. If you find a bug please either email me, or add the bug
-to cpan-RT.
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
 
 =head1 AUTHOR
 
-Stevan Little <stevan@iinteractive.com>
+Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 

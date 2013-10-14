@@ -164,16 +164,23 @@ sub __INIT_METACLASS__ {
     ));
 
     $METACLASS->add_method( mop::method->new( name => 'BUILD', body => \&BUILD ) );
+    $METACLASS->add_method( mop::method->new( name => 'clone', body => \&clone ) );
 
     $METACLASS->add_method( mop::method->new( name => 'name',                body => \&name                ) );
     $METACLASS->add_method( mop::method->new( name => 'key_name',            body => \&key_name            ) );
+
     $METACLASS->add_method( mop::method->new( name => 'has_default',         body => \&has_default         ) );
     $METACLASS->add_method( mop::method->new( name => 'get_default',         body => \&get_default         ) );
+    $METACLASS->add_method( mop::method->new( name => 'set_default',         body => \&set_default         ) );
+    $METACLASS->add_method( mop::method->new( name => 'clear_default',       body => \&clear_default       ) );
+
     $METACLASS->add_method( mop::method->new( name => 'storage',             body => \&storage             ) );
+
     $METACLASS->add_method( mop::method->new( name => 'associated_meta',     body => \&associated_meta     ) );
     $METACLASS->add_method( mop::method->new( name => 'set_associated_meta', body => \&set_associated_meta ) );
     $METACLASS->add_method( mop::method->new( name => 'conflicts_with',      body => \&conflicts_with      ) );
 
+    $METACLASS->add_method( mop::method->new( name => 'has_data_in_slot_for',      body => \&has_data_in_slot_for    ) );
     $METACLASS->add_method( mop::method->new( name => 'fetch_data_in_slot_for',    body => \&fetch_data_in_slot_for    ) );
     $METACLASS->add_method( mop::method->new( name => 'store_data_in_slot_for',    body => \&store_data_in_slot_for    ) );
     $METACLASS->add_method( mop::method->new( name => 'store_default_in_slot_for', body => \&store_default_in_slot_for ) );
@@ -188,19 +195,69 @@ __END__
 
 =head1 NAME
 
-mop::attribute
+mop::attribute - A meta-object to represent attributes
 
 =head1 DESCRIPTION
 
+TODO
+
+=head1 METHODS
+
+=over 4
+
+=item C<BUILD>
+
+=item C<clone(%overrides)>
+
+=item C<name>
+
+=item C<key_name>
+
+=item C<has_default>
+
+=item C<get_default>
+
+=item C<set_default($default)>
+
+=item C<clear_default>
+
+=item C<storage>
+
+=item C<associated_meta>
+
+=item C<set_associated_meta($meta)>
+
+=item C<conflicts_with($obj)>
+
+=item C<has_data_in_slot_for($instance)>
+
+=item C<fetch_data_in_slot_for($instance)>
+
+=item C<store_data_in_slot_for($instance, $data)>
+
+=item C<store_default_in_slot_for($instance)>
+
+=back
+
+=head1 SEE ALSO
+
+=head2 L<Attribute Details|mop::manual::details::attributes>
+
 =head1 BUGS
 
-All complex software has bugs lurking in it, and this module is no
-exception. If you find a bug please either email me, or add the bug
-to cpan-RT.
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
 
 =head1 AUTHOR
 
-Stevan Little <stevan@iinteractive.com>
+Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 

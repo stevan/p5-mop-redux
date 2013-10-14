@@ -128,19 +128,51 @@ __END__
 
 =head1 NAME
 
-mop::method
+mop::method - A meta-object to represent methods
 
 =head1 DESCRIPTION
 
+TODO
+
+=head1 METHODS
+
+=over 4
+
+=item C<BUILD>
+
+=item C<name>
+
+=item C<body>
+
+=item C<associated_meta>
+
+=item C<set_associated_meta($meta)>
+
+=item C<conflicts_with($obj)>
+
+=item C<execute($invocant, $args)>
+
+=back
+
+=head1 SEE ALSO
+
+=head2 L<Method Details|mop::manual::details::methods>
+
 =head1 BUGS
 
-All complex software has bugs lurking in it, and this module is no
-exception. If you find a bug please either email me, or add the bug
-to cpan-RT.
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
 
 =head1 AUTHOR
 
-Stevan Little <stevan@iinteractive.com>
+Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 

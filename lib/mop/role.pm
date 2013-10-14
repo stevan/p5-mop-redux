@@ -322,19 +322,89 @@ __END__
 
 =head1 NAME
 
-mop::role
+mop::role - A meta-object to represent roles
 
 =head1 DESCRIPTION
 
+TODO
+
+=head1 METHODS
+
+=over 4
+
+=item C<BUILD>
+
+=item C<clone>
+
+=item C<name>
+
+=item C<version>
+
+=item C<authority>
+
+=item C<roles>
+
+=item C<add_role($role)>
+
+=item C<does_role($role_name)>
+
+=item C<attribute_class>
+
+=item C<attribute_map>
+
+=item C<attributes>
+
+=item C<get_attribute($name)>
+
+=item C<add_attribute($attribute)>
+
+=item C<has_attribute($name)>
+
+=item C<method_class>
+
+=item C<method_map>
+
+=item C<methods>
+
+=item C<get_method($name)>
+
+=item C<add_method($method)>
+
+=item C<has_method($name)>
+
+=item C<required_methods>
+
+=item C<required_method_map>
+
+=item C<add_required_method($name)>
+
+=item C<remove_required_method($name)>
+
+=item C<requires_method($name)>
+
+=item C<FINALIZE>
+
+=back
+
+=head1 SEE ALSO
+
+=head2 L<Role Details|mop::manual::details::roles>
+
 =head1 BUGS
 
-All complex software has bugs lurking in it, and this module is no
-exception. If you find a bug please either email me, or add the bug
-to cpan-RT.
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
 
 =head1 AUTHOR
 
-Stevan Little <stevan@iinteractive.com>
+Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 

@@ -231,15 +231,109 @@ mop::traits - collection of traits for the mop
 
 =head1 DESCRIPTION
 
+This package contains the core traits provided by the mop.
+
+=head1 TRAITS
+
+=head2 C<rw>
+
+When applied to an attribute this will generate a read/write
+accessor for that attribute.
+
+It has no effect if it is applied to classes or methods.
+
+=head2 C<ro>
+
+When applied to an attribute this will generate a read-only
+accessor for that attribute.
+
+It has no effect if it is applied to classes or methods.
+
+=head2 C<required>
+
+When applied to an attribute this will result in a requirement
+that a value for this attribute be supplied via the constructor
+at instance creation time.
+
+It has no effect if it is applied to classes or methods.
+
+=head2 C<weak_ref>
+
+When applied to an attribute this will result in the weakening
+of any value stored there.
+
+It has no effect if it is applied to classes or methods.
+
+=head2 C<lazy>
+
+When applied to an attribute this will result in the deferred
+initialization of the default value of this attribute.
+
+It has no effect if it is applied to classes or methods.
+
+=head2 C<abstract>
+
+When applied to a class this will mark the class as being
+abstract. It is required to use this trait if your class has
+any required methods in it.
+
+It has no effect if it is applied to attributes or methods.
+
+=head2 C<overload($operator)>
+
+When applied to a method this will use Perl's built in operator
+overloading to associate this method with the specified
+C<$operator>. For more information about what kind of overload
+behaviors are supported see the L<overload module documentation|overload>.
+
+When applied to a class, and passed the word 'inherited' this
+will ensure that all overloads are propertly inherited from the
+superclass. This is a temporary measure until we can make this
+Just Work automatically.
+
+It has no effect if it is applied to attributes.
+
+=head2 C<extending_non_mop>
+
+When applied to a class, whose superclass is a non-MOP class, this
+will attempt to ensure that both the superclass's constructor is
+called as well as the necessary initialization of the MOP class.
+Note that this is a temporary measure until we can make this Just
+Work automatically.
+
+It has no effect if it is applied to attributes or methods.
+
+=head2 C<repr($ref_type)>
+
+When applied to a class this will use the specified C<$ref_type>
+as the underlying instance type for all instances of the class.
+Currently supported reference types as SCALAR, ARRAY, HASH and
+GLOB, and must be passed as those literal string. If a CODE
+reference is passed, it will be directly used by the mop to
+generate new instances.
+
+This will throw an exception if it is applied to attributes
+or methods.
+
+=head1 SEE ALSO
+
+=head2 L<Traits Manual|mop::manual::details::traits>
+
 =head1 BUGS
 
-All complex software has bugs lurking in it, and this module is no
-exception. If you find a bug please either email me, or add the bug
-to cpan-RT.
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
 
 =head1 AUTHOR
 
-Stevan Little <stevan@iinteractive.com>
+Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
