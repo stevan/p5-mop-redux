@@ -6,10 +6,6 @@ our @EXPORT = qw(clone_repos installdeps test);
 
 use Cwd 'cwd';
 
-# note: there are a couple shortcuts in here that assume that p5-mop-redux
-# itself has no author tests and doesn't use dzil. if either of those stop
-# being true, a few things will probably need to be adjusted.
-
 my $mop_dir = cwd;
 # XXX we should probably not be setting this while testing p5-mop-redux itself,
 # but i don't think it will hurt anything at the moment
@@ -76,13 +72,13 @@ sub clone_repos {
 
 sub installdeps {
     each_dir {
-        if (-e 'Makefile.PL' || -e 'Build.PL') {
-            _cpanm(qw(cpanm --installdeps -q --notest --with-develop .));
-        }
-        elsif (-e 'dist.ini') {
+        if (-e 'dist.ini') {
             _cpanm(qw(cpanm -q --notest Dist::Zilla)) ||
             _cpanm("dzil authordeps --missing | cpanm -q --notest") ||
             _cpanm("dzil listdeps --author --missing | grep -v 'find abstract in' | grep -v '^mop\$' | cpanm -q --notest");
+        }
+        elsif (-e 'Makefile.PL' || -e 'Build.PL') {
+            _cpanm(qw(cpanm --installdeps -q --notest --with-develop .));
         }
         else {
             warn "Don't know how to install deps";
@@ -101,20 +97,23 @@ sub test {
 
         my $failed = 0;
 
-        if (-e 'Build.PL') {
+        if (-e 'dist.ini') {
+            my $cmd = "dzil test";
+            $cmd .= ' --all'
+                unless /Plack|http-headers-actionpack|BreadBoard/;
+            $failed ||= _system($cmd);
+        }
+        elsif (-e 'Build.PL') {
             $failed ||= _system("perl Build.PL && ./Build test");
         }
         elsif (-e 'Makefile.PL') {
             $failed ||= _system("perl Makefile.PL && make test");
         }
-        elsif (-e 'dist.ini') {
-            $failed ||= _system("dzil test");
-        }
         else {
             $failed ||= _system("prove -lr t");
         }
 
-        if (-e 'xt') {
+        if (-e 'xt' && !-e 'dist.ini') {
             $failed ||= _system("prove -lr xt");
         }
 
