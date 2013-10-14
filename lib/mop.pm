@@ -348,8 +348,8 @@ to go out to CPAN and withstand the cold harsh light of day.
 
 =head2 How can I help?
 
-Thanks for asking, there are a couple of things that you can do
-to help!
+Thanks for asking, there are several things that you can do to
+help!
 
 =head3 Contributing/reviewing documentation
 
@@ -392,6 +392,30 @@ anything you see here please submit your thoughts via the
 L<github issue tracker|https://github.com/stevan/p5-mop-redux/issues>
 so that it can be discussed.
 
+Trolls are welcome, but beware, we may try to
+L<hug you|http://pugs.blogs.com/audrey/2009/08/my-hobby-troll-hugging.html>!
+
+=head3 Hack with us
+
+There are still many things to be done, if you want to help we
+would love to have it. Please stop by and see us in the #p5-mop
+channel on irc.perl.org to discuss. Specically we are looking for
+XS hacker and perlguts specialists.
+
+=head3 Spread the word
+
+The Perl community is a notorious echo chamber, itself filled with
+smaller, more specific, echo chambers (OMG - it's echo chambers all
+the way down!). If you are reading this, clearly you are inside, or
+in the vicinity of, this particular echo chamber and so please if
+you like what we are doing, spread the word. Write a blog post,
+send a tweet into the ether, give a talk at your local tech meetup,
+anything that helps get the word out is a good thing.
+
+Side note: We have been using the #p5mop hashtag on twitter and in
+blog posts, please continue that trend so things can be easily
+aggregated.
+
 =head2 Why aren't you supporting @features from $my_favorite_oo_module?
 
 It is our intention to keep the core mop as simple as possible
@@ -402,9 +426,32 @@ feature in core, please submit an issue to the
 L<github issue tracker|https://github.com/stevan/p5-mop-redux/issues>
 so that it can be discussed.
 
+=head2 Why are you messing up Perl, I like it how it is!?!?!
+
+We are absolutely 100% B<NOT> going to remove B<any> of the existing OO
+support in Perl I<FULL STOP>.
+
+We are developing this feature fully in keeping with the long standing
+commitment to backward compatability that Perl is famous for. We are
+also commited to making this new object system work as seemlessly as
+possible with all of the existing Perl OO features.
+
+=head2 Why is it so slow?
+
+It is a prototype, first we had to get it right, next we will make
+it fast. We have a number of planned optimizations in the works and
+are confident that ulitmately speed will not be an issue.
+
 =head2 Can I use this in production?
 
-Probably not a good idea, but hey, it's your codebase.
+Probably not a good idea, but hey, it's your codebase. If you are crazy
+enough to do this, please let us know how it goes!
+
+=head2 What version of Perl do you expect this to ship with?
+
+Well, we would like it to be included as experimental in 5.22, but
+that might be a little tight, time will tell. In the meantime we will
+try and keep supporting a CPAN version as long as it is possible.
 
 =head1 PUBLIC UTILITY FUNCTIONS
 
