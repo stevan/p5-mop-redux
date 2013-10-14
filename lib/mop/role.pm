@@ -177,8 +177,6 @@ sub requires_method {
 sub FINALIZE {
     my $self = shift;
 
-    $self->fire('before:FINALIZE');
-
     mop::internals::util::apply_all_roles($self, @{ $self->roles })
         if @{ $self->roles };
 
@@ -189,6 +187,8 @@ sub FINALIZE {
             . ' unless class is declared abstract'
             if $self->required_methods && not $self->is_abstract;
     }
+
+    $self->fire('before:FINALIZE');
 
     {
         no strict 'refs';
