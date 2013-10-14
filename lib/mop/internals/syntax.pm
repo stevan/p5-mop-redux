@@ -486,54 +486,6 @@ sub parse_prototype {
     return $invocant, @vars;
 }
 
-# XXX push back into Parse::Keyword?
-sub parse_name {
-    my ($what, $allow_package) = @_;
-    my $name = '';
-
-    my $ascii_start_rx = my $start_rx = qr/^[A-Za-z_]/;
-    my $ascii_cont_rx  = my $cont_rx  = qr/^[A-Za-z0-9_]/;
-
-    my $char_rx = $start_rx;
-
-    while (1) {
-        my $char = lex_peek;
-        # delay loading utf8 stuff until necessary
-        # if ($start_rx == $ascii_start_rx && ord($char) > 127) {
-        #     warn ord($char);
-        #     # XXX this isn't quite right, i think, but probably close enough
-        #     # for now?
-        #     my $new_start_rx = eval 'qr/^[\p{ID_Start}_]$/';
-        #     my $new_cont_rx  = eval 'qr/^\p{ID_Continue}$/';
-        #     $char_rx = $char_rx == $start_rx ? $new_start_rx : $new_cont_rx;
-        #     $start_rx = $new_start_rx;
-        #     $cont_rx = $new_cont_rx;
-        # }
-        last unless length $char;
-        if ($char =~ $char_rx) {
-            $name .= $char;
-            lex_read;
-            $char_rx = $cont_rx;
-        }
-        elsif ($allow_package && $char eq ':') {
-            if (lex_peek(3) !~ /^::(?:[^:]|$)/) {
-                my $invalid = $name . read_tokenish();
-                syntax_error("Invalid identifier: $invalid");
-            }
-            $name .= '::';
-            lex_read(2);
-        }
-        else {
-            last;
-        }
-    }
-
-    syntax_error(read_tokenish() . " is not a valid $what name")
-        unless length $name;
-
-    return $name;
-}
-
 # this is a little hack to be able to inject actual values into the thing we
 # want to parse (what we would normally do by inserting OP_CONST nodes into the
 # optree if we were building it manually). we insert a constant sub into a
