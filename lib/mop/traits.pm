@@ -79,61 +79,29 @@ sub abstract {
 }
 
 sub overload {
-    if ($_[0]->isa('mop::method')) {
-        my ($method, $operator) = @_;
-        my $method_name = $method->name;
+    my ($method, $operator) = @_;
 
-        # NOTE:
-        # We are actually installing the overloads
-        # into the package directly, this works
-        # because the MRO stuff doesn't actually
-        # get used if the the methods are local
-        # to the package. This should avoid some
-        # complexity (perhaps).
+    die "overload trait is only valid on methods"
+        unless $method->isa('mop::method');
 
-        overload::OVERLOAD(
-            $method->associated_meta->name,
-            $operator,
-            sub {
-                my $self = shift;
-                $self->$method_name(@_)
-            },
-            fallback => 1
-        );
-    } elsif ($_[0]->isa('mop::class')) {
-        my ($class, $option) = @_;
-        ($option eq 'inherited')
-            || die "I don't know what to do with $option";
+    my $method_name = $method->name;
 
-        ($class->superclass)
-            || die "You don't have a superclass on " . $class->name;
+    # NOTE:
+    # This installs the methods into the package
+    # directly, rather than going through the
+    # mop. This is because overload methods
+    # (with their weird names) should probably
+    # not show up in the list of methods and such.
 
-        my $stash = do {
-            no strict 'refs';
-            \%{ $class->superclass . '::' }
-        };
-        my $all_symbols = {
-            map { $_ => $class->superclass->UNIVERSAL::can($_) }
-                grep { $class->superclass->UNIVERSAL::can($_) }
-                    grep { !/::$/ }
-                        keys %$stash
-        };
-
-        foreach my $symbol ( grep { /^\(/ && !/^\(\)/ && !/^\(\(/ } keys %$all_symbols ) {
-            unless ($class->name->UNIVERSAL::can($symbol)) {
-                my ($operator) = ($symbol =~ /^\((.*)/);
-                overload::OVERLOAD(
-                    $class->name,
-                    $operator,
-                    $all_symbols->{ $symbol },
-                    fallback => 1
-                );
-            }
-        }
-    }
-    else {
-        die "overload trait is only valid on methods and classes";
-    }
+    overload::OVERLOAD(
+        $method->associated_meta->name,
+        $operator,
+        sub {
+            my $self = shift;
+            $self->$method_name(@_)
+        },
+        fallback => 1
+    );
 }
 
 sub weak_ref {

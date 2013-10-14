@@ -44,7 +44,7 @@ class Foo {
     is_deeply({ %$foo }, { val => 10 }, '... got the right value from hash dereference');
 }
 
-class Bar extends Foo is overload('inherited') {
+class Bar extends Foo {
     method to_string is overload('""') {
         "<bar value=" . $self->val . " />";
     }
