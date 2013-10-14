@@ -530,7 +530,7 @@ L<Github|http://www.github.com>.
 
 Stevan Little <stevan.little@iinteractive.com>
 
-Jesse Luehrs <doy@cpan.org>
+Jesse Luehrs <doy@tozt.net>
 
 =head1 COPYRIGHT AND LICENSE
 
