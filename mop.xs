@@ -6,6 +6,7 @@ static MGVTBL subname_vtbl;
 
 static OP *ck_mop_keyword(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
 {
+    PERL_UNUSED_ARG(namegv);
     op_free(entersubop);
     return SvTRUE(ckobj)
         ? newSVOP(OP_CONST, 0, &PL_sv_yes)
