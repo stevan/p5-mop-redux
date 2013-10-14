@@ -143,7 +143,8 @@ sub weak_ref {
         unless $attr->isa('mop::attribute');
 
     $attr->bind('after:STORE_DATA' => sub {
-        Scalar::Util::weaken( ${ $_[0]->storage->{ $_[1] } } );
+        my (undef, $instance) = @_;
+        $attr->weaken_data_in_slot_for($instance);
     });
 }
 
@@ -156,7 +157,7 @@ sub lazy {
     my $default = $attr->clear_default;
     $attr->bind('before:FETCH_DATA' => sub {
         my (undef, $instance) = @_;
-        if ( !defined ${ $attr->storage->{$instance} || \undef } ) {
+        if ( !$attr->has_data_in_slot_for($instance) ) {
             $attr->store_data_in_slot_for($instance, do {
                 local $_ = $instance;
                 $default->()
