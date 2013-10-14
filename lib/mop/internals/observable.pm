@@ -40,6 +40,11 @@ sub fire {
     return $self;
 }
 
+sub has_events {
+    my $self = shift;
+    return $callbacks{ $self } && !!%{ ${ $callbacks{ $self } } };
+}
+
 our $METACLASS;
 
 sub __INIT_METACLASS__ {
@@ -59,6 +64,9 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'bind',   body => \&bind   ) );
     $METACLASS->add_method( mop::method->new( name => 'unbind', body => \&unbind ) );
     $METACLASS->add_method( mop::method->new( name => 'fire',   body => \&fire   ) );
+
+    $METACLASS->add_method( mop::method->new( name => 'has_events', body => \&has_events ) );
+
     $METACLASS;
 }
 

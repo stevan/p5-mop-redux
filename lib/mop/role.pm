@@ -213,10 +213,9 @@ sub FINALIZE {
             }
         }
 
-        # XXX this should actually test to see if there are any events on the
-        # method, or if the method is using a custom method metaclass which
-        # overrides execute.
-        my $body = sub { $method->execute(shift, \@_) };
+        my $body = ref($method) eq 'mop::method' && !$method->has_events
+            ? $method->body
+            : sub { $method->execute(shift, \@_) };
         no strict 'refs';
         no warnings 'redefine';
         *{ $self->name . '::' . $method->name } = $body;

@@ -9,7 +9,7 @@ my $called;
 
 sub trace {
     my ($class) = @_;
-    $class->bind('after:FINALIZE' => sub {
+    $class->bind('before:FINALIZE' => sub {
         my $meta = shift;
         for my $method ($meta->methods) {
             $method->bind('before:EXECUTE' => sub {
