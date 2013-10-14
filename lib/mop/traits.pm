@@ -341,6 +341,8 @@ or methods.
 
 =head2 L<Traits Manual|mop::manual::details::traits>
 
+=head2 L<mop::traits::util>
+
 =head1 BUGS
 
 Since this module is still under development we would prefer to not
