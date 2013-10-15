@@ -227,7 +227,7 @@ sub method_parser {
 
     my $preamble = '{'
         . 'my ' . $invocant . ' = shift;'
-        . 'use mop::internals::twigils "fatal_lookup_errors", allowed_twigils => "!";'
+        . 'use mop::internals::twigils;'
         . '();';
 
     # this is our method preamble, it

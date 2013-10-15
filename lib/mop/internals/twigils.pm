@@ -16,31 +16,9 @@ sub intro_twigil_my_var {
 sub import {
     my ($class, @opts) = @_;
 
-    @_ = ($class);
-    while (my $opt = shift @opts) {
-        if ($opt eq 'fatal_lookup_errors') {
-            $^H{__PACKAGE__ . '/not_in_pad_fatal'} = 1;
-        }
-        elsif ($opt eq 'allowed_twigils') {
-            $^H{__PACKAGE__ . '/no_autovivification'} = 1;
-            $^H{__PACKAGE__ . '/twigils'} = shift @opts;
-        }
-        else {
-            push @_, $opt;
-        }
-    }
+    $^H{__PACKAGE__ . '/twigils'} = 1;
 
     goto &Exporter::import;
-}
-
-sub _add_allowed_twigil {
-    my ($twigil) = @_;
-
-    my %h = map {
-        ($_ => 1)
-    } (split '', $^H{ __PACKAGE__ . '/twigils' } || '');
-
-    $^H{__PACKAGE__ . '/twigils'} = join '' => $twigil, keys %h;
 }
 
 1;

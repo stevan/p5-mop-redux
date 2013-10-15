@@ -83,10 +83,8 @@ parse_name (pTHX_ const char *what, STRLEN whatlen, U32 flags)
 }
 
 Perl_check_t old_rv2sv_checker;
-SV *twigils_hint_key_sv, *not_in_pad_fatal_hint_key_sv,
-   *no_autovivification_hint_key_sv;
-U32 twigils_hint_key_hash, not_in_pad_fatal_hint_key_hash,
-    no_autovivification_hint_key_hash;
+SV *twigils_hint_key_sv;
+U32 twigils_hint_key_hash;
 
 #define SVt_PADNAME SVt_PVMG
 
@@ -171,17 +169,9 @@ parse_ident (pTHX_ const char *prefix, STRLEN prefixlen)
 }
 
 static bool
-twigil_allowed (pTHX_ char twigil)
+twigil_enabled (pTHX)
 {
     HE *he = hv_fetch_ent(GvHV(PL_hintgv), twigils_hint_key_sv, 0, twigils_hint_key_hash);
-    return he && memchr(SvPVX(HeVAL(he)), twigil, SvCUR(HeVAL(he))) != NULL;
-}
-
-static bool
-not_in_pad_is_fatal (pTHX)
-{
-    HE *he = hv_fetch_ent(GvHV(PL_hintgv), not_in_pad_fatal_hint_key_sv, 0,
-                          not_in_pad_fatal_hint_key_hash);
     return he && SvTRUE(HeVAL(he));
 }
 
@@ -191,7 +181,7 @@ myck_rv2sv (pTHX_ OP *o)
     OP *kid, *ret;
     SV *sv, *name;
     PADOFFSET offset;
-    char *parse_start, prefix[2];
+    char prefix[2];
 
     if (!(o->op_flags & OPf_KIDS))
         return old_rv2sv_checker(aTHX_ o);
@@ -204,10 +194,12 @@ myck_rv2sv (pTHX_ OP *o)
     if (!SvPOK(sv))
         return old_rv2sv_checker(aTHX_ o);
 
-    if (!twigil_allowed(aTHX_ *SvPVX(sv)))
+    if (!twigil_enabled(aTHX))
         return old_rv2sv_checker(aTHX_ o);
 
-    parse_start = PL_parser->bufptr;
+    if (*SvPVX(sv) != '!')
+        return old_rv2sv_checker(aTHX_ o);
+
     prefix[0] = '$';
     prefix[1] = *SvPVX(sv);
     name = parse_ident(aTHX_ prefix, 2);
@@ -215,40 +207,14 @@ myck_rv2sv (pTHX_ OP *o)
         return old_rv2sv_checker(aTHX_ o);
 
     offset = pad_findmy_sv(name, 0);
-    if (offset == NOT_IN_PAD) {
-        if (not_in_pad_is_fatal(aTHX))
-            croak("No such twigil variable %"SVf, SVfARG(name));
-        PL_parser->bufptr = parse_start;
-        return old_rv2sv_checker(aTHX_ o);
-    }
+    if (offset == NOT_IN_PAD)
+        croak("No such twigil variable %"SVf, SVfARG(name));
 
     ret = newOP(OP_PADSV, 0);
     ret->op_targ = offset;
 
     op_free(o);
     return ret;
-}
-
-static void
-add_allowed_twigil (pTHX_ char twigil)
-{
-    dSP;
-    ENTER;
-    SAVETMPS;
-    PUSHMARK(SP);
-    XPUSHs(sv_2mortal(newSVpv(&twigil, 1)));
-    PUTBACK;
-    call_pv("twigils::_add_allowed_twigil", 0);
-    FREETMPS;
-    LEAVE;
-}
-
-static bool
-twigils_should_autovivify (pTHX)
-{
-    HE *he = hv_fetch_ent(GvHV(PL_hintgv), no_autovivification_hint_key_sv, 0,
-                          no_autovivification_hint_key_hash);
-    return !he || !SvTRUE(HeVAL(he));
 }
 
 static OP *
@@ -271,9 +237,7 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj)
     namesv = cSVOPx_sv(sigop);
     twigil = *(SvPVX(namesv) + 1);
 
-    if (twigils_should_autovivify(aTHX))
-        add_allowed_twigil(aTHX_ twigil);
-    else if (!twigil_allowed(aTHX_ twigil))
+    if (twigil != '!')
         croak("Unregistered sigil character %c", twigil);
 
     ret = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
@@ -426,10 +390,6 @@ BOOT:
 
     twigils_hint_key_sv = newSVpvs_share("mop::internals::twigils/twigils");
     twigils_hint_key_hash = SvSHARED_HASH(twigils_hint_key_sv);
-    not_in_pad_fatal_hint_key_sv = newSVpvs_share("mop::internals::twigils/not_in_pad_fatal");
-    not_in_pad_fatal_hint_key_hash = SvSHARED_HASH(not_in_pad_fatal_hint_key_sv);
-    no_autovivification_hint_key_sv = newSVpvs_share("mop::internals::twigils/no_autovivification");
-    no_autovivification_hint_key_hash = SvSHARED_HASH(no_autovivification_hint_key_sv);
 
     old_rv2sv_checker = PL_check[OP_RV2SV];
     PL_check[OP_RV2SV] = myck_rv2sv;
