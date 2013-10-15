@@ -22,3 +22,11 @@ sub import {
 }
 
 1;
+
+__END__
+
+=pod
+
+=for Pod::Coverage .+
+
+=cut
