@@ -1,0 +1,190 @@
+package mop::manual::details::mop;
+# ABSTRACT: A manual for p5-mop
+
+__END__
+
+=pod
+
+=head1 NAME
+
+mop::manual::details::mop - A manual for p5-mop
+
+=head1 DESCRIPTION
+
+The following is an example of the core classes
+of the MOP written using the MOP itself.
+
+=head2 The MOP
+
+    class mop::object {
+        method new   (%args) { ... }
+        method clone (%args) { ... }
+
+        method BUILDALL ($args) { ... }
+
+        method can  ($name)  { ... }
+        method isa  ($class) { ... }
+        method does ($role)  { ... }
+        method DOES ($name)  { ... }
+
+        method DESTROY { ... }
+    }
+
+    class mop::attribute extends mop::object {
+        has $!name is ro;
+        has $!default;
+        has $!storage is ro = {};
+        has $!associated_meta is ro;
+        has $!original_id;
+
+        has $!callbacks;
+
+        method BUILD { ... }
+
+        method key_name { ... }
+
+        method has_default   { ... }
+        method get_default   { ... }
+        method clear_default { ... }
+        method set_default ($default) { ... }
+
+        method set_associated_meta ($meta) { ... }
+
+        method conflicts_with  ($attr) { ... }
+        method locally_defined ($attr) { ... }
+
+        method fetch_data_in_slot_for    ($instance) { ... }
+        method store_data_in_slot_for    ($instance, $data) { ... }
+        method store_default_in_slot_for ($instance) { ... }
+        method remove_data_in_slot_for   ($instance) { ... }
+        method weaken_data_in_slot_for   ($instance) { ... }
+        method is_data_in_slot_weak_for  ($instance) { ... }
+
+        method bind   ($event_name, $cb) { ... }
+        method unbind ($event_name, $cb) { ... }
+        method fire   ($event_name) { ... }
+    }
+
+    class mop::method extends mop::object {
+        has $!name is ro;
+        has $!body is ro;
+        has $!associated_meta is ro;
+        has $!original_id;
+
+        has $!callbacks;
+
+        method BUILD { ... }
+
+        method execute ($invocant, $args) { ... }
+
+        method set_associated_meta ($meta) { ... }
+
+        method conflicts_with  ($attr) { ... }
+        method locally_defined ($attr) { ... }
+
+        method bind   ($event_name, $cb) { ... }
+        method unbind ($event_name, $cb) { ... }
+        method fire   ($event_name) { ... }
+    }
+
+    class mop::role extends mop::object {
+        has $!name      is ro;
+        has $!version   is ro;
+        has $!authority is ro;
+
+        has $!roles            is ro = [];
+        has $!attributes             = {};
+        has $!methods                = {};
+        has $!required_methods       = {};
+
+        has $!callbacks;
+
+        method BUILD { ... }
+
+        method add_role ($role) { ... }
+        method does_role ($name) { ... }
+
+        method attribute_class { 'mop::attribute' }
+
+        method attributes { ... }
+        method attribute_map { ... }
+
+        method add_attribute ($attr) { ... }
+        method get_attribute ($name) { ... }
+        method has_attribute ($name) { ... }
+
+        method method_class { 'mop::method' }
+
+        method methods { ... }
+        method method_map { ... }
+
+        method add_method ($attr) { ... }
+        method get_method ($name) { ... }
+        method has_method ($name) { ... }
+
+        method required_methods { ... }
+        method required_method_map { ... }
+
+        method add_required_method ($required_method) { ... }
+        method remove_required_method ($required_method) { ... }
+        method requires_method ($name) { ... }
+
+        method bind   ($event_name, $cb) { ... }
+        method unbind ($event_name, $cb) { ... }
+        method fire   ($event_name) { ... }
+
+        sub FINALIZE { ... }
+    }
+
+    # 'with mop::role' is odd because mop::role is a class, but it works as
+    # you would expect
+    class mop::class extends mop::object with mop::role {
+        has $!superclass is ro;
+        has $!is_abstract is ro;
+        has $!instance_generator is ro = sub { \(my $anon) };
+
+        method BUILD { ... }
+
+        method make_class_abstract { ... }
+
+        method new_instance { ... }
+        method clone_instance { ... }
+
+        method set_instance_generator ($generator) { ... }
+        method create_fresh_instance_structure { ... }
+    }
+
+=head2 BOOTSTRAPPING GOALS
+
+  Class is an instance of Class
+  Object is an instance of Class
+  Class is a subclass of Object
+
+  Class does Role
+  Role is an instance of Class
+  Role does Role
+
+=head1 BUGS
+
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
+
+=head1 AUTHOR
+
+Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@tozt.net>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by Infinity Interactive.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

@@ -25,14 +25,9 @@ my $bar = Bar->new;
 $bar->foo($foo);
 $foo->bar($bar);
 
-my $store = mop::meta('Bar')->get_attribute('$!foo')->storage;
+my $attr = mop::meta('Bar')->get_attribute('$!foo');
 
-#warn "STORAGE:  " . $store;
-#warn "INSTANCE: " . $bar;
-#warn "VALUE:    " . $store->{ $bar };
-
-my $x = $store->{ $bar };
-ok(isweak($$x), '... this is weak');
+ok($attr->is_data_in_slot_weak_for($bar), '... this is weak');
 
 #warn $foo->bar;
 

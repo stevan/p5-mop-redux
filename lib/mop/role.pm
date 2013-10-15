@@ -3,6 +3,8 @@ package mop::role;
 use v5.16;
 use warnings;
 
+use Sub::Name ();
+
 use mop::internals::util;
 
 our $VERSION   = '0.01';
@@ -126,6 +128,11 @@ sub has_attribute {
     exists $self->attribute_map->{ $name };
 }
 
+sub remove_attribute {
+    my ($self, $name) = @_;
+    delete $self->attribute_map->{ $name };
+}
+
 # methods
 
 sub method_class { 'mop::method' }
@@ -149,6 +156,11 @@ sub get_method {
 sub has_method {
     my ($self, $name) = @_;
     exists $self->method_map->{ $name };
+}
+
+sub remove_method {
+    my ($self, $name) = @_;
+    delete $self->method_map->{ $name };
 }
 
 # required methods
@@ -177,8 +189,6 @@ sub requires_method {
 sub FINALIZE {
     my $self = shift;
 
-    $self->fire('before:FINALIZE');
-
     mop::internals::util::apply_all_roles($self, @{ $self->roles })
         if @{ $self->roles };
 
@@ -189,6 +199,8 @@ sub FINALIZE {
             . ' unless class is declared abstract'
             if $self->required_methods && not $self->is_abstract;
     }
+
+    $self->fire('before:FINALIZE');
 
     {
         no strict 'refs';
@@ -214,10 +226,9 @@ sub FINALIZE {
         }
 
         my $name = $self->name . '::' . $method->name;
-        # XXX this should actually test to see if there are any events on the
-        # method, or if the method is using a custom method metaclass which
-        # overrides execute.
-        my $body = sub { $method->execute(shift, \@_) };
+        my $body = ref($method) eq 'mop::method' && !$method->has_events
+            ? $method->body
+            : sub { $method->execute(shift, \@_) };
         no strict 'refs';
         no warnings 'redefine';
         *$name = mop::internals::util::subname($name, $body);
@@ -296,6 +307,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'get_attribute',   body => \&get_attribute   ) );
     $METACLASS->add_method( mop::method->new( name => 'add_attribute',   body => \&add_attribute   ) );
     $METACLASS->add_method( mop::method->new( name => 'has_attribute',   body => \&has_attribute   ) );
+    $METACLASS->add_method( mop::method->new( name => 'remove_attribute', body => \&remove_attribute ) );
 
     $METACLASS->add_method( mop::method->new( name => 'method_class',  body => \&method_class  ) );
     $METACLASS->add_method( mop::method->new( name => 'method_map',    body => \&method_map    ) );
@@ -303,6 +315,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'get_method',    body => \&get_method    ) );
     $METACLASS->add_method( mop::method->new( name => 'add_method',    body => \&add_method    ) );
     $METACLASS->add_method( mop::method->new( name => 'has_method',    body => \&has_method    ) );
+    $METACLASS->add_method( mop::method->new( name => 'remove_method', body => \&remove_method ) );
 
     $METACLASS->add_method( mop::method->new( name => 'required_methods',    body => \&required_methods    ) );
     $METACLASS->add_method( mop::method->new( name => 'required_method_map', body => \&required_method_map ) );
@@ -324,19 +337,93 @@ __END__
 
 =head1 NAME
 
-mop::role
+mop::role - A meta-object to represent roles
 
 =head1 DESCRIPTION
 
+TODO
+
+=head1 METHODS
+
+=over 4
+
+=item C<BUILD>
+
+=item C<clone(%overrides)>
+
+=item C<name>
+
+=item C<version>
+
+=item C<authority>
+
+=item C<roles>
+
+=item C<add_role($role)>
+
+=item C<does_role($role_name)>
+
+=item C<attribute_class>
+
+=item C<attribute_map>
+
+=item C<attributes>
+
+=item C<get_attribute($name)>
+
+=item C<add_attribute($attribute)>
+
+=item C<has_attribute($name)>
+
+=item C<remove_attribute($name)>
+
+=item C<method_class>
+
+=item C<method_map>
+
+=item C<methods>
+
+=item C<get_method($name)>
+
+=item C<add_method($method)>
+
+=item C<has_method($name)>
+
+=item C<remove_method($name)>
+
+=item C<required_methods>
+
+=item C<required_method_map>
+
+=item C<add_required_method($name)>
+
+=item C<remove_required_method($name)>
+
+=item C<requires_method($name)>
+
+=item C<FINALIZE>
+
+=back
+
+=head1 SEE ALSO
+
+=head2 L<Role Details|mop::manual::details::roles>
+
 =head1 BUGS
 
-All complex software has bugs lurking in it, and this module is no
-exception. If you find a bug please either email me, or add the bug
-to cpan-RT.
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
 
 =head1 AUTHOR
 
-Stevan Little <stevan@iinteractive.com>
+Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@tozt.net>
 
 =head1 COPYRIGHT AND LICENSE
 

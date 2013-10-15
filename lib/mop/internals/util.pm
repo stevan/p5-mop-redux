@@ -52,6 +52,8 @@ sub install_meta {
 sub apply_all_roles {
     my ($to, @roles) = @_;
 
+    unapply_all_roles($to);
+
     my $composite = create_composite_role(@roles);
 
     $to->fire('before:CONSUME' => $composite);
@@ -91,6 +93,25 @@ sub apply_all_roles {
 
     $composite->fire('after:COMPOSE' => $to);
     $to->fire('after:CONSUME' => $composite);
+}
+
+sub unapply_all_roles {
+    my ($meta) = @_;
+
+    for my $attr ($meta->attributes) {
+        $meta->remove_attribute($attr->name)
+            unless $attr->locally_defined;
+    }
+
+    for my $method ($meta->methods) {
+        $meta->remove_method($method->name)
+            unless $method->locally_defined;
+    }
+
+    # XXX this is wrong, it will also remove required methods that were
+    # defined in the class directly
+    $meta->remove_required_method($_)
+        for $meta->required_methods;
 }
 
 # this shouldn't be used, generally. the only case where this is necessary is
@@ -227,6 +248,8 @@ sub find_common_base {
 sub create_composite_role {
     my (@roles) = @_;
 
+    @roles = map { ref($_) ? $_ : mop::meta($_) } @roles;
+
     return $roles[0] if @roles == 1;
 
     my $name = 'mop::role::COMPOSITE::OF::'
@@ -304,3 +327,59 @@ sub create_composite_role {
 }
 
 1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+mop::internals::util - internal use only
+
+=head1 DESCRIPTION
+
+This is for internal use only, there is no public API here.
+
+=head1 BUGS
+
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
+
+=head1 AUTHOR
+
+Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@tozt.net>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by Infinity Interactive.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=begin Pod::Coverage
+
+  init_attribute_storage
+  register_object
+  is_nonmop_class
+  mark_nonmop_class
+  install_meta
+  apply_all_roles
+  unapply_all_roles
+  find_or_inflate_meta
+  inflate_meta
+  fix_metaclass_compatibility
+  rebase_metaclasses
+  find_common_base
+  create_composite_role
+  subname
+
+=end Pod::Coverage
+
+=cut

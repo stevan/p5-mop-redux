@@ -1,4 +1,4 @@
-# PODNAME: mop::manual::classes
+package mop::manual::details::classes;
 # ABSTRACT: A manual for p5-mop
 
 __END__
@@ -7,7 +7,11 @@ __END__
 
 =head1 NAME
 
-mop::manual::classes - A manual for p5-mop
+mop::manual::details::classes - A manual for p5-mop
+
+=head1 DESCRIPTION
+
+TODO
 
 =head1 GRAMMAR
 
@@ -27,7 +31,7 @@ that is followed by the name of the class you wish to
 subclass.
 
 Which is optionally followed by the C<with> keyword that is
-followed by a comma seperated list of the names of the roles
+followed by a comma separated list of the names of the roles
 you wish to be composed into your class.
 
 Which is optionally followed by the C<meta> keyword
@@ -35,15 +39,27 @@ that is followed by the name of the metaclass you wish to
 be used in constructing this class.
 
 Which is optionally followed by the C<is> keyword that is
-followed by a comma seperated list of traits you wish to
+followed by a comma separated list of traits you wish to
 be applied to your class.
 
 After this comes a block, within which you can define
 methods and attributes (refer to those docs for more info).
 
+=head1 BUGS
+
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
+
 =head1 AUTHOR
 
 Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@tozt.net>
 
 =head1 COPYRIGHT AND LICENSE
 

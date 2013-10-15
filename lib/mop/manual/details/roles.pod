@@ -1,4 +1,4 @@
-# PODNAME: mop::manual::roles
+package mop::manual::details::roles;
 # ABSTRACT: A manual for p5-mop
 
 __END__
@@ -7,7 +7,11 @@ __END__
 
 =head1 NAME
 
-mop::manual::roles - A manual for p5-mop
+mop::manual::details::roles - A manual for p5-mop
+
+=head1 DESCRIPTION
+
+TODO
 
 =head1 GRAMMAR
 
@@ -22,7 +26,7 @@ Roles in the p5-mop are defined in the following way:
 The C<role> keyword is followed by a name.
 
 Which is optionally followed by the C<with> keyword that is
-followed by a comma seperated list of the names of the roles
+followed by a comma separated list of the names of the roles
 you wish to be composed into your role.
 
 Which is optionally followed by the C<meta> keyword
@@ -30,15 +34,27 @@ that is followed by the name of the metarole you wish to
 be used in constructing this role.
 
 Which is optionally followed by the C<is> keyword that is
-followed by a comma seperated list of traits you wish to
+followed by a comma separated list of traits you wish to
 be applied to your role.
 
 After this comes a block, within which you can define
 methods and attributes (refer to those docs for more info).
 
+=head1 BUGS
+
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
+
 =head1 AUTHOR
 
 Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@tozt.net>
 
 =head1 COPYRIGHT AND LICENSE
 

@@ -1,4 +1,4 @@
-# PODNAME: mop::manual::tutorials::moose_to_mop
+package mop::manual::tutorials::moose_to_mop;
 # ABSTRACT: A manual for p5-mop
 
 __END__
@@ -18,7 +18,7 @@ concepts to their MOP equivalent.
 
 In Moose a class is just a package which contains a
 C<use Moose> declaration. After that you use the Moose keywords;
-C<extends> introduces inheritence, C<with> adds roles and C<has>
+C<extends> introduces inheritance, C<with> adds roles and C<has>
 creates attributes in the class. After this any subroutines
 created in the package are automatically added as methods of
 the class.
@@ -45,7 +45,7 @@ of the base syntax.
 
 =head2 Constructing instances
 
-Classes which do not explitly extend a superclass will
+Classes which do not explicitly extend a superclass will
 automatically extend the C<mop::object> class. This class
 will provide a C<new> method which can be used to construct
 instances.
@@ -89,7 +89,7 @@ As with Moose, if you need to perform initialization on an
 instance, you can use the C<BUILD> method for that.
 
 Here is a simple example where the C<bar> argument to the
-constructor is not actualy stored, but instead is processed
+constructor is not actually stored, but instead is processed
 first then stored in the C<$double_bar> attribute.
 
     class Foo {
@@ -132,7 +132,7 @@ See F<t/400-traits/003-type-trait.t> for an example.
 As was said with the C<isa> option, there is no support for
 types in the MOP. However it would be possible to extend the
 C<type> trait in F<t/400-traits/003-type-trait.t> to also
-do coerceion. It might look like this:
+do coercion. It might look like this:
 
     class Foo {
         has $bar is type( isa => 'SomeType', coerce => 1 );
@@ -148,7 +148,7 @@ so the suggestions in the above two options apply here as well.
 
 =item I<required =E<gt> (1|0)>
 
-Required attributes are easily mimiced through the MOP without
+Required attributes are easily mimicked through the MOP without
 even needed a trait. Here is how they are accomplished:
 
     class Foo {
@@ -182,13 +182,13 @@ the slot has not been populated, in MOP they will be populated
 both if the slot has not been populated and if the value in
 the slot is undef. This is more in line with how regular scalars
 work, meaning that if you define a scalar with C<my $foo;> then
-it  is implictly undef and not some special "not assigned too"
+it  is implicitly undef and not some special "not assigned too"
 value.
 
 =item I<trigger =E<gt> $code>
 
 There is no specific way to do C<trigger> yet, take a look at
-F<t/400-traits/020-moose-traits.t> for a niave (and mostly wrong)
+F<t/400-traits/020-moose-traits.t> for a naive (and mostly wrong)
 version.
 
 =item I<handles =E<gt> ARRAY | HASH | REGEXP | ROLE | ROLETYPE | DUCKTYPE | CODE>
@@ -283,16 +283,9 @@ MOP to get that. Here is what that code would look like.
 
     mop::meta($self)->get_attribute('$bar')->has_data_in_slot_for($self)
 
-This would only tell if you if the slot had B<never> been
-initialized, if you also wanted to know if the slot was
-defined or not, the simplest way to do that would be:
-
-    defined ${ mop::meta($self)->get_attribute('$bar')->storage->{ $self } || \undef }
-
-but that is really overkill. The real lesson here is that
-if you want lazy and predicates, you should implement the
-accessors yourself, see F<t/001-examples/003-binary-tree.t>
-for an example of that.
+The real lesson here is that if you want lazy and
+predicates, you should implement the accessors yourself, see
+F<t/001-examples/003-binary-tree.t> for an example of that.
 
 =item I<documentation> => $string
 
@@ -302,9 +295,21 @@ ever actually used in Moose.
 
 =back
 
+=head1 BUGS
+
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
+
 =head1 AUTHOR
 
 Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@tozt.net>
 
 =head1 COPYRIGHT AND LICENSE
 

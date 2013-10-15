@@ -1,4 +1,4 @@
-# PODNAME: mop::manual::attributes
+package mop::manual::details::attributes;
 # ABSTRACT: A manual for p5-mop
 
 __END__
@@ -7,7 +7,11 @@ __END__
 
 =head1 NAME
 
-mop::manual::attributes - A manual for p5-mop
+mop::manual::details::attributes - A manual for p5-mop
+
+=head1 DESCRIPTION
+
+TODO
 
 =head1 GRAMMAR
 
@@ -25,7 +29,7 @@ that is followed by the name of the attribute metaclass
 you wish to be used in constructing this attribute.
 
 Which is optionally followed by the C<is> keyword that is
-followed by a comma seperated list of traits you wish to
+followed by a comma separated list of traits you wish to
 be applied to your attribute.
 
 Which is optionally followed by the assignment operator
@@ -33,9 +37,21 @@ Which is optionally followed by the assignment operator
 
 An attribute definition must be terminated by a semicolon.
 
+=head1 BUGS
+
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
+
 =head1 AUTHOR
 
 Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@tozt.net>
 
 =head1 COPYRIGHT AND LICENSE
 

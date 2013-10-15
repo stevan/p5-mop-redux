@@ -1,4 +1,4 @@
-# PODNAME: mop::manual::methods
+package mop::manual::details::methods;
 # ABSTRACT: A manual for p5-mop
 
 __END__
@@ -7,7 +7,11 @@ __END__
 
 =head1 NAME
 
-mop::manual::methods - A manual for p5-mop
+mop::manual::details::methods - A manual for p5-mop
+
+=head1 DESCRIPTION
+
+TODO
 
 =head1 GRAMMAR
 
@@ -26,15 +30,27 @@ optionally followed by the assignment operator (C<=>) which
 is then followed by a perl expression.
 
 Which is optionally followed by the C<is> keyword that is
-followed by a comma seperated list of traits you wish to
+followed by a comma separated list of traits you wish to
 be applied to your method.
 
 After this comes a block, within which you can define
 the body of the method.
 
+=head1 BUGS
+
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
+
 =head1 AUTHOR
 
 Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@tozt.net>
 
 =head1 COPYRIGHT AND LICENSE
 

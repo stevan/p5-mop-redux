@@ -14,7 +14,7 @@ class Thing1 {
 	}
 }
 
-class Thing2 extends Thing1 is overload('inherited') {
+class Thing2 extends Thing1 {
 	method name {
 		return uc($self->next::method);
 	}

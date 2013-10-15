@@ -17,8 +17,8 @@ class Bar {
     method foo_closure { sub { ++$!foo } }
 }
 
-my $foo_storage = mop::meta('Bar')->get_attribute('$!foo')->storage;
-my $bar_storage = mop::meta('Foo')->get_attribute('$!bar')->storage;
+my $foo_attr = mop::meta('Bar')->get_attribute('$!foo');
+my $bar_attr = mop::meta('Foo')->get_attribute('$!bar');
 
 {
     my $bar_id;
@@ -27,18 +27,18 @@ my $bar_storage = mop::meta('Foo')->get_attribute('$!bar')->storage;
         {
             my $bar = Bar->new;
             $bar_id = mop::id($bar);
-            ok(exists $foo_storage->{$bar_id});
+            ok($foo_attr->has_data_in_slot_for($bar_id));
             {
                 is($bar->foo, 10);
                 $closure = $bar->foo_closure;
             }
-            ok(exists $foo_storage->{$bar_id});
+            ok($foo_attr->has_data_in_slot_for($bar_id));
             is($closure->(), 11);
         }
-        ok(exists $foo_storage->{$bar_id});
+        ok($foo_attr->has_data_in_slot_for($bar_id));
         is($closure->(), 12);
     }
-    ok(!exists $foo_storage->{$bar_id});
+    ok(!$foo_attr->has_data_in_slot_for($bar_id));
 }
 
 {
@@ -50,25 +50,25 @@ my $bar_storage = mop::meta('Foo')->get_attribute('$!bar')->storage;
             $foo_id = mop::id($foo);
             my $bar = $foo->bar;
             $bar_id = mop::id($bar);
-            ok(exists $foo_storage->{$bar_id});
-            ok(exists $bar_storage->{$foo_id});
+            ok($foo_attr->has_data_in_slot_for($bar_id));
+            ok($bar_attr->has_data_in_slot_for($foo_id));
             {
                 is($bar->foo, 10);
                 $foo_closure = $bar->foo_closure;
                 $bar_closure = $foo->bar_closure;
             }
-            ok(exists $foo_storage->{$bar_id});
-            ok(exists $bar_storage->{$foo_id});
+            ok($foo_attr->has_data_in_slot_for($bar_id));
+            ok($bar_attr->has_data_in_slot_for($foo_id));
             is($foo_closure->(), 11);
             is($bar_closure->(), 12);
         }
-        ok(exists $foo_storage->{$bar_id});
-        ok(exists $bar_storage->{$foo_id});
+        ok($foo_attr->has_data_in_slot_for($bar_id));
+        ok($bar_attr->has_data_in_slot_for($foo_id));
         is($foo_closure->(), 13);
         is($bar_closure->(), 14);
     }
-    ok(!exists $foo_storage->{$bar_id});
-    ok(!exists $bar_storage->{$foo_id});
+    ok(!$foo_attr->has_data_in_slot_for($bar_id));
+    ok(!$bar_attr->has_data_in_slot_for($foo_id));
 }
 
 done_testing;

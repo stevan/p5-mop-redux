@@ -40,7 +40,7 @@ is_deeply(
     [
         ['trait',           []     ],
         ['enter FINALIZE',  []     ],
-        ['before:FINALIZE', []     ],
+        ['before:FINALIZE', ['foo']],
         ['after:FINALIZE',  ['foo']],
         ['leave FINALIZE',  ['foo']],
     ]

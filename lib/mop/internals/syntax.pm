@@ -540,19 +540,27 @@ __END__
 
 =head1 NAME
 
-mop::internal::syntax
+mop::internals::syntax - internal use only
 
 =head1 DESCRIPTION
 
+This is for internal use only, there is no public API here.
+
 =head1 BUGS
 
-All complex software has bugs lurking in it, and this module is no
-exception. If you find a bug please either email me, or add the bug
-to cpan-RT.
+Since this module is still under development we would prefer to not
+use the RT bug queue and instead use the built in issue tracker on
+L<Github|http://www.github.com>.
+
+=head2 L<Git Repository|https://github.com/stevan/p5-mop-redux>
+
+=head2 L<Issue Tracker|https://github.com/stevan/p5-mop-redux/issues>
 
 =head1 AUTHOR
 
-Stevan Little <stevan@iinteractive.com>
+Stevan Little <stevan.little@iinteractive.com>
+
+Jesse Luehrs <doy@tozt.net>
 
 =head1 COPYRIGHT AND LICENSE
 
@@ -560,6 +568,28 @@ This software is copyright (c) 2013 by Infinity Interactive.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
+
+=begin Pod::Coverage
+
+  class
+  role
+  namespace_parser
+  method
+  method_parser
+  has
+  has_parser
+  parse_modifier_with_single_value
+  parse_modifier_with_multiple_values
+  parse_traits
+  run_traits
+  parse_prototype
+  parse_name
+  stuff_value
+  parse_stuff_with_values
+  read_tokenish
+  syntax_error
+
+=end Pod::Coverage
 
 =cut
 
