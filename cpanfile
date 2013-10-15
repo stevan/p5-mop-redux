@@ -5,7 +5,6 @@ requires "Hash::Util::FieldHash" => "0";
 requires "Parse::Keyword" => "0";
 requires "Scalar::Util" => "0";
 requires "Scope::Guard" => "0";
-requires "Sub::Name" => "0";
 requires "Variable::Magic" => "0";
 requires "XSLoader" => "0";
 requires "mro" => "0";

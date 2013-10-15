@@ -3,8 +3,6 @@ package mop::role;
 use v5.16;
 use warnings;
 
-use Sub::Name ();
-
 use mop::internals::util;
 
 our $VERSION   = '0.01';

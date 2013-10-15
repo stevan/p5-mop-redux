@@ -6,7 +6,6 @@ use warnings;
 
 use overload ();
 use Scalar::Util;
-use Sub::Name ();
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
