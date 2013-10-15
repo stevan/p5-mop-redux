@@ -5,7 +5,7 @@
       "Jesse Luehrs <doy@tozt.net>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.300039, CPAN::Meta::Converter version 2.132140",
+   "generated_by" : "Dist::Zilla version 4.300039, CPAN::Meta::Converter version 2.132830",
    "license" : [
       "perl_5"
    ],
@@ -64,10 +64,10 @@
       "test" : {
          "requires" : {
             "B::Deparse" : "0",
-            "File::Find" : "0",
-            "File::Temp" : "0",
+            "File::Spec" : "0",
             "FindBin" : "0",
             "IO::Handle" : "0",
+            "IPC::Open3" : "0",
             "Test::More" : "0.88",
             "if" : "0",
             "lib" : "0"
@@ -77,67 +77,35 @@
    "provides" : {
       "mop" : {
          "file" : "lib/mop.pm",
-         "version" : "0.01"
+         "version" : "0.02"
       },
       "mop::attribute" : {
          "file" : "lib/mop/attribute.pm",
-         "version" : "0.01"
+         "version" : "0.02"
       },
       "mop::class" : {
          "file" : "lib/mop/class.pm",
-         "version" : "0.01"
-      },
-      "mop::manual::details::attributes" : {
-         "file" : "lib/mop/manual/details/attributes.pod",
-         "version" : "0.01"
-      },
-      "mop::manual::details::classes" : {
-         "file" : "lib/mop/manual/details/classes.pod",
-         "version" : "0.01"
-      },
-      "mop::manual::details::methods" : {
-         "file" : "lib/mop/manual/details/methods.pod",
-         "version" : "0.01"
-      },
-      "mop::manual::details::mop" : {
-         "file" : "lib/mop/manual/details/mop.pod",
-         "version" : "0.01"
-      },
-      "mop::manual::details::roles" : {
-         "file" : "lib/mop/manual/details/roles.pod",
-         "version" : "0.01"
-      },
-      "mop::manual::details::traits" : {
-         "file" : "lib/mop/manual/details/traits.pod",
-         "version" : "0.01"
-      },
-      "mop::manual::intro" : {
-         "file" : "lib/mop/manual/intro.pod",
-         "version" : "0.01"
-      },
-      "mop::manual::tutorials::moose_to_mop" : {
-         "file" : "lib/mop/manual/tutorials/moose_to_mop.pod",
-         "version" : "0.01"
+         "version" : "0.02"
       },
       "mop::method" : {
          "file" : "lib/mop/method.pm",
-         "version" : "0.01"
+         "version" : "0.02"
       },
       "mop::object" : {
          "file" : "lib/mop/object.pm",
-         "version" : "0.01"
+         "version" : "0.02"
       },
       "mop::role" : {
          "file" : "lib/mop/role.pm",
-         "version" : "0.01"
+         "version" : "0.02"
       },
       "mop::traits" : {
          "file" : "lib/mop/traits.pm",
-         "version" : "0.01"
+         "version" : "0.02"
       },
       "mop::traits::util" : {
          "file" : "lib/mop/traits/util.pm",
-         "version" : "0.01"
+         "version" : "0.02"
       }
    },
    "release_status" : "stable",
@@ -152,7 +120,7 @@
          "web" : "https://github.com/stevan/p5-mop-redux"
       }
    },
-   "version" : "0.01",
+   "version" : "0.02",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.018001"
@@ -276,8 +244,19 @@
          },
          {
             "class" : "Dist::Zilla::Plugin::Test::Compile",
+            "config" : {
+               "Dist::Zilla::Plugin::Test::Compile" : {
+                  "filename" : "t/00-compile.t",
+                  "module_finder" : [
+                     ":InstallModules"
+                  ],
+                  "script_finder" : [
+                     ":ExecFiles"
+                  ]
+               }
+            },
             "name" : "@Filter/Test::Compile",
-            "version" : "2.002"
+            "version" : "2.036"
          },
          {
             "class" : "Dist::Zilla::Plugin::Metadata",
@@ -292,22 +271,22 @@
          {
             "class" : "Dist::Zilla::Plugin::Git::Check",
             "name" : "@Filter/Git::Check",
-            "version" : "2.013"
+            "version" : "2.014"
          },
          {
             "class" : "Dist::Zilla::Plugin::Git::Commit",
             "name" : "@Filter/Git::Commit",
-            "version" : "2.013"
+            "version" : "2.014"
          },
          {
             "class" : "Dist::Zilla::Plugin::Git::Tag",
             "name" : "@Filter/Git::Tag",
-            "version" : "2.013"
+            "version" : "2.014"
          },
          {
             "class" : "Dist::Zilla::Plugin::Git::NextVersion",
             "name" : "@Filter/Git::NextVersion",
-            "version" : "2.013"
+            "version" : "2.014"
          },
          {
             "class" : "Dist::Zilla::Plugin::ContributorsFromGit",
@@ -315,9 +294,22 @@
             "version" : "0.006"
          },
          {
+            "class" : "Dist::Zilla::Plugin::FinderCode",
+            "name" : "@Filter/MetaProvides::Package/AUTOVIV/:InstallModulesPM",
+            "version" : "4.300039"
+         },
+         {
             "class" : "Dist::Zilla::Plugin::MetaProvides::Package",
+            "config" : {
+               "Dist::Zilla::Plugin::MetaProvides::Package" : {},
+               "Dist::Zilla::Role::MetaProvider::Provider" : {
+                  "inherit_missing" : "1",
+                  "inherit_version" : "1",
+                  "meta_noindex" : "1"
+               }
+            },
             "name" : "@Filter/MetaProvides::Package",
-            "version" : "1.14000002"
+            "version" : "1.15000000"
          },
          {
             "class" : "Dist::Zilla::Plugin::UploadToCPAN",
@@ -370,6 +362,11 @@
             "class" : "Dist::Zilla::Plugin::CopyFilesFromBuild",
             "name" : "CopyFilesFromBuild",
             "version" : "0.103510"
+         },
+         {
+            "class" : "inc::BumpVersion",
+            "name" : "=inc::BumpVersion",
+            "version" : null
          },
          {
             "class" : "Dist::Zilla::Plugin::FinderCode",

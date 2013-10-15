@@ -4,7 +4,7 @@ use warnings;
 
 use Hash::Util::FieldHash;
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.02';
 our $AUTHORITY = 'cpan:STEVAN';
 
 sub init_attribute_storage (\%) {
@@ -363,23 +363,6 @@ This software is copyright (c) 2013 by Infinity Interactive.
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
-=begin Pod::Coverage
-
-  init_attribute_storage
-  register_object
-  is_nonmop_class
-  mark_nonmop_class
-  install_meta
-  apply_all_roles
-  unapply_all_roles
-  find_or_inflate_meta
-  inflate_meta
-  fix_metaclass_compatibility
-  rebase_metaclasses
-  find_common_base
-  create_composite_role
-  subname
-
-=end Pod::Coverage
+=for Pod::Coverage .+
 
 =cut

@@ -18,10 +18,10 @@ requires "warnings" => "0";
 
 on 'test' => sub {
   requires "B::Deparse" => "0";
-  requires "File::Find" => "0";
-  requires "File::Temp" => "0";
+  requires "File::Spec" => "0";
   requires "FindBin" => "0";
   requires "IO::Handle" => "0";
+  requires "IPC::Open3" => "0";
   requires "Test::More" => "0.88";
   requires "if" => "0";
   requires "lib" => "0";

@@ -7,7 +7,7 @@ use Scalar::Util qw[ refaddr ];
 
 use mop::internals::util;
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.02';
 our $AUTHORITY = 'cpan:STEVAN';
 
 mop::internals::util::init_attribute_storage(my %callbacks);
@@ -107,14 +107,7 @@ This software is copyright (c) 2013 by Infinity Interactive.
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
-=begin Pod::Coverage
-
-  bind
-  unbind
-  fire
-  has_events
-
-=end Pod::Coverage
+=for Pod::Coverage .+
 
 =cut
 
