@@ -8,7 +8,7 @@ use overload ();
 use Scalar::Util;
 use Sub::Name ();
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.02';
 our $AUTHORITY = 'cpan:STEVAN';
 
 our $BOOTSTRAPPED = 0;
@@ -308,7 +308,7 @@ mop - A new object system for Perl 5
 
 =head1 VERSION
 
-version 0.01
+version 0.02
 
 =head1 SYNOPSIS
 

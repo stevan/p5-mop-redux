@@ -3,7 +3,7 @@ package mop::traits;
 use v5.16;
 use warnings;
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.02';
 our $AUTHORITY = 'cpan:STEVAN';
 
 our @AVAILABLE_TRAITS = qw[

@@ -7,7 +7,7 @@ use Scalar::Util qw[ refaddr ];
 
 use mop::internals::util;
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.02';
 our $AUTHORITY = 'cpan:STEVAN';
 
 mop::internals::util::init_attribute_storage(my %callbacks);

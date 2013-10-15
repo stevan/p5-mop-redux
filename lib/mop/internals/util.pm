@@ -4,7 +4,7 @@ use warnings;
 
 use Hash::Util::FieldHash;
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.02';
 our $AUTHORITY = 'cpan:STEVAN';
 
 sub init_attribute_storage (\%) {

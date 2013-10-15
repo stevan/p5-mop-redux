@@ -5,7 +5,7 @@ use warnings;
 
 use Scalar::Util qw[ weaken isweak ];
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.02';
 our $AUTHORITY = 'cpan:STEVAN';
 
 use parent 'mop::object', 'mop::internals::observable';
