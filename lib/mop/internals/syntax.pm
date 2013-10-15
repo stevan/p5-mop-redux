@@ -4,7 +4,6 @@ use v5.16;
 use warnings;
 
 use Scope::Guard    qw[ guard ];
-use Variable::Magic qw[ wizard ];
 
 use B::Hooks::EndOfScope ();
 use Carp              ();
@@ -24,60 +23,6 @@ our @AVAILABLE_KEYWORDS = qw(class role method has);
 
 # keep the local metaclass around
 our $CURRENT_META;
-
-# So this will apply magic to the aliased
-# attributes that we put in the method
-# preamble. For `data`, it takes an HASH-ref
-# containing the invocant id, the current
-# meta object and the name of the attribute
-# we are trying to get/set. Then when our
-# attribute variable is read from or written
-# to it will get/set that data to the
-# underlying fieldhash storage.
-our $ATTR_WIZARD = wizard(
-    data => sub {
-        my (undef, $config) = @_;
-        return $config;
-    },
-    get  => sub {
-        my ($var, $config) = @_;
-        my $attr = $config->{'meta'}->get_attribute( $config->{'name'} );
-        ${ $var } = $attr->fetch_data_in_slot_for( $config->{'self'} );
-        ();
-    },
-    set  => sub {
-        my ($value, $config) = @_;
-        my $attr = $config->{'meta'}->get_attribute( $config->{'name'} );
-        $attr->store_data_in_slot_for( $config->{'self'}, ${ $value } );
-        ();
-    },
-    # NOTE:
-    # this can be usedful at times,
-    # but no need to take the perf
-    # hit if we don't need it.
-    # - SL
-    #op_info => Variable::Magic::VMG_OP_INFO_NAME
-);
-
-# this wizard if for class methods only
-# that throws an error if the user tries
-# to access or assign to an attribute
-our $ERR_WIZARD = wizard(
-    data => sub {
-        my (undef, $name) = @_;
-        return $name;
-    },
-    get  => sub {
-        my (undef, $name) = @_;
-        die "Cannot access the attribute:($name) in a method without a blessed invocant";
-        ();
-    },
-    set  => sub {
-        my (undef, $name) = @_;
-        die "Cannot assign to the attribute:($name) in a method without a blessed invocant";
-        ();
-    },
-);
 
 sub class { 1 }
 
@@ -239,21 +184,17 @@ sub method_parser {
     foreach my $attr (map { $_->name } $CURRENT_META->attributes) {
         $preamble .=
             'intro_twigil_my_var ' . $attr . ';'
-          . 'Variable::Magic::cast('
-              . $attr . ', '
-              . '(Scalar::Util::blessed(' . $invocant . ') '
-                  . '? $' . __PACKAGE__ . '::ATTR_WIZARD'
-                  . ': $' . __PACKAGE__ . '::ERR_WIZARD'
-              . '), '
-              . '(Scalar::Util::blessed(' . $invocant . ') '
-                  . '? {'
-                      . 'meta => $' . $CURRENT_META->name . '::METACLASS,'
-                      . 'self => ' . $invocant . ','
-                      . 'name => q[' . $attr . ']'
-                  . '}'
-                  . ': q[' . $attr . ']'
-              . '), '
-          . ');';
+          . 'Scalar::Util::blessed(' . $invocant . ')'
+              . '?' . __PACKAGE__ . '::set_attr_magic('
+                  . $attr . ','
+                  . 'q[' . $attr . '],'
+                  . '$' . $CURRENT_META->name . '::METACLASS,'
+                  . $invocant . ','
+              . ')'
+              . ':' . __PACKAGE__ . '::set_err_magic('
+                  . $attr . ','
+                  . 'q[' . $attr . '],'
+              . ');'
     }
 
     # now we unpack the prototype

@@ -4,7 +4,123 @@
 
 #include "callparser1.h"
 
+int mg_attr_get(pTHX_ SV *sv, MAGIC *mg);
+int mg_attr_set(pTHX_ SV *sv, MAGIC *mg);
+int mg_err_get(pTHX_ SV *sv, MAGIC *mg);
+int mg_err_set(pTHX_ SV *sv, MAGIC *mg);
+
 static MGVTBL subname_vtbl;
+static MGVTBL attr_vtbl = {
+    mg_attr_get,                /* get */
+    mg_attr_set,                /* set */
+    0,                          /* len */
+    0,                          /* clear */
+    0,                          /* free */
+    0,                          /* copy */
+    0,                          /* dup */
+    0,                          /* local */
+};
+static MGVTBL err_vtbl = {
+    mg_err_get,                 /* get */
+    mg_err_set,                 /* set */
+    0,                          /* len */
+    0,                          /* clear */
+    0,                          /* free */
+    0,                          /* copy */
+    0,                          /* dup */
+    0,                          /* local */
+};
+
+int mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
+{
+    SV *name, *meta, *self, *attr, *val;
+
+    name = *av_fetch((AV *)mg->mg_obj, 0, 0);
+    meta = *av_fetch((AV *)mg->mg_obj, 1, 0);
+    self = *av_fetch((AV *)mg->mg_obj, 2, 0);
+
+    ENTER;
+    {
+        dSP;
+
+        PUSHMARK(SP);
+        XPUSHs(meta);
+        XPUSHs(name);
+        PUTBACK;
+
+        call_method("get_attribute", G_SCALAR);
+
+        SPAGAIN;
+        attr = POPs;
+        PUTBACK;
+    }
+
+    {
+        dSP;
+
+        PUSHMARK(SP);
+        XPUSHs(attr);
+        XPUSHs(self);
+        PUTBACK;
+
+        call_method("fetch_data_in_slot_for", G_SCALAR);
+
+        SPAGAIN;
+        val = POPs;
+        PUTBACK;
+    }
+    LEAVE;
+
+    sv_setsv(sv, val);
+}
+
+int mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
+{
+    SV *name, *meta, *self, *attr;
+
+    name = *av_fetch((AV *)mg->mg_obj, 0, 0);
+    meta = *av_fetch((AV *)mg->mg_obj, 1, 0);
+    self = *av_fetch((AV *)mg->mg_obj, 2, 0);
+
+    ENTER;
+    {
+        dSP;
+
+        PUSHMARK(SP);
+        XPUSHs(meta);
+        XPUSHs(name);
+        PUTBACK;
+
+        call_method("get_attribute", G_SCALAR);
+
+        SPAGAIN;
+        attr = POPs;
+        PUTBACK;
+    }
+
+    {
+        dSP;
+
+        PUSHMARK(SP);
+        XPUSHs(attr);
+        XPUSHs(self);
+        XPUSHs(sv);
+        PUTBACK;
+
+        call_method("store_data_in_slot_for", G_VOID);
+    }
+    LEAVE;
+}
+
+int mg_err_get(pTHX_ SV *sv, MAGIC *mg)
+{
+    croak("Cannot access the attribute:(%"SVf") in a method without a blessed invocant", mg->mg_obj);
+}
+
+int mg_err_set(pTHX_ SV *sv, MAGIC *mg)
+{
+    croak("Cannot assign to the attribute:(%"SVf") in a method without a blessed invocant", mg->mg_obj);
+}
 
 static OP *ck_mop_keyword(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
 {
@@ -364,6 +480,23 @@ read_tokenish ()
     aTHX
   POSTCALL:
     SvREFCNT_inc(RETVAL); /* As above. */
+
+void
+set_attr_magic (SV *var, SV *name, SV *meta, SV *self)
+  CODE:
+    {
+        SV *svs[3] = { name, meta, self };
+        AV *data;
+        data = (AV *)sv_2mortal((SV *)av_make(3, svs));
+        sv_magicext(var, (SV *)data, PERL_MAGIC_ext, &attr_vtbl, "attr", 0);
+    }
+
+void
+set_err_magic (SV *var, SV *name)
+  CODE:
+    {
+        sv_magicext(var, name, PERL_MAGIC_ext, &err_vtbl, "err", 0);
+    }
 
 BOOT:
 {

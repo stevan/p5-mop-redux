@@ -32,7 +32,6 @@ my %WriteMakefileArgs = (
     "Parse::Keyword" => 0,
     "Scalar::Util" => 0,
     "Scope::Guard" => 0,
-    "Variable::Magic" => 0,
     "XSLoader" => 0,
     "mro" => 0,
     "overload" => 0,
