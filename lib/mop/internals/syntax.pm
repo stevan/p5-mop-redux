@@ -631,27 +631,7 @@ This software is copyright (c) 2013 by Infinity Interactive.
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
-=begin Pod::Coverage
-
-  class
-  role
-  namespace_parser
-  method
-  method_parser
-  has
-  has_parser
-  parse_modifier_with_single_value
-  parse_modifier_with_multiple_values
-  parse_traits
-  run_traits
-  parse_prototype
-  parse_name
-  stuff_value
-  parse_stuff_with_values
-  read_tokenish
-  syntax_error
-
-=end Pod::Coverage
+=for Pod::Coverage .+
 
 =cut
 
