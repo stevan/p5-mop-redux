@@ -7,18 +7,10 @@ use Carp 'croak';
 use Devel::CallParser;
 use Exporter ();
 
-our @EXPORT = map { "intro_twigil_${_}_var" } qw(my state our);
+our @EXPORT = ('intro_twigil_my_var');
 
 sub intro_twigil_my_var {
     croak "intro_twigil_my_var called as a function";
-}
-
-sub intro_twigil_state_var {
-    croak "intro_twigil_state_var called as a function";
-}
-
-sub intro_twigil_our_var {
-    croak "intro_twigil_our_var called as a function";
 }
 
 sub import {
