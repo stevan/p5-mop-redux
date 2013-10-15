@@ -29,9 +29,9 @@ op - syntactic sugar to make mop one-liners easier
 
 =head1 DESCRIPTION
 
-op.pm is a simple wrapper around L<mop.pm> that aliases its own C<import()> to 
-C<< mop->import >>, allowing you to do C<< perl -Mop >> rather than C<< perl 
--Mmop >>.
+op.pm is a simple wrapper around L<mop.pm> that aliases its own C<import()> to
+C<< mop->import >>, allowing you to do C<< perl -Mop >> rather than
+C<< perl -Mmop >>.
 
 It is recommended that you do not C<use> this in an actual file.
 
