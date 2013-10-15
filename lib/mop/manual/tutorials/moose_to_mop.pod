@@ -12,23 +12,23 @@ mop::manual::tutorials::moose_to_mop - A manual for p5-mop
 =head1 DESCRIPTION
 
 This tutorial is an attempt to map some of the common Moose
-concepts to their MOP equivalent.
+concepts to their MOP equivalents.
 
 =head2 Creating Classes
 
-In Moose a class is just a package which contains a
-C<use Moose> declaration. After that you use the Moose keywords;
-C<extends> introduces inheritance, C<with> adds roles and C<has>
-creates attributes in the class. After this any subroutines
+In Moose, a class is just a package which contains a
+C<use Moose> declaration. After that, you use the Moose keywords:
+C<extends> introduces inheritance, C<with> adds roles, and C<has>
+creates attributes in the class. After this, any subroutines
 created in the package are automatically added as methods of
 the class.
 
-In the MOP there are explicit class, method and attribute
+In the MOP there are explicit class, method, and attribute
 declarations. Here is a simple example:
 
     class Foo extends Bar with Baz, Gorch {
-        has $foo;
-        has $bar;
+        has $!foo;
+        has $!bar;
 
         method foo { ... }
         method set_bar ($b) { ... }
@@ -36,8 +36,8 @@ declarations. Here is a simple example:
 
 This creates a class named C<Foo> which is a subclass of
 the C<Bar> class and consumes the C<Baz> and C<Gorch> roles.
-It contains two attributes, C<$foo> and C<$bar> and two methods
-C<foo> and C<set_bar> and C<set_bar> takes one arguments C<$b>.
+It contains two attributes, C<$!foo> and C<$!bar>, and two methods,
+C<foo> and C<set_bar>. C<set_bar> takes one argument, C<$b>.
 
 The specific details of attributes and methods will be discussed
 later, but the above example should provide a basic overview
@@ -53,7 +53,7 @@ instances.
 The C<new> method inherited from C<mop::object> accepts
 a set of key/value pairs where the key is the name of an
 attribute (minus the sigil). The instances created by the MOP
-are opaque, meaning they are not HASH refs and access to
+are opaque, meaning they are not HASH refs, and access to
 the individual slots is only possible either inside a method
 (where they are accessible as normal variables) or via the
 MOP (the details of which are left as an exercise to the
@@ -61,17 +61,17 @@ reader).
 
 =head3 BUILDARGS
 
-If you wish to override the default constructors behavior
+If you wish to override the default constructor's behavior
 with regard to arguments, then you simply create a C<new>
-method yourself to accept different parameters, then simply
-munge those parameters into the key/value pair before
+method yourself to accept different parameters, then
+munge those parameters into key/value pairs before
 calling the C<mop::object> constructor with C<next::method>.
 
 This is very similar to overriding the C<BUILDARGS> method
 in a Moose class. Here is a short example:
 
     class Foo {
-        has $bar;
+        has $!bar;
 
         method new ($class: $b) {
             $class->next::method( bar => $b );
@@ -90,21 +90,21 @@ instance, you can use the C<BUILD> method for that.
 
 Here is a simple example where the C<bar> argument to the
 constructor is not actually stored, but instead is processed
-first then stored in the C<$double_bar> attribute.
+first, then stored in the C<$!double_bar> attribute.
 
     class Foo {
-        has $double_bar;
+        has $!double_bar;
 
         method BUILD ($args) {
-            $double_bar = $args->{'bar'} * 2
+            $!double_bar = $args->{'bar'} * 2
                 if exists $args->{'bar'};
         }
     }
 
 =head2 Creating Attributes
 
-Below is the list of options for the Moose C<has> keyword,
-with each of them we will show an example of how to
+Below is the list of options for the Moose C<has> keyword.
+With each of them we will show an example of how to
 accomplish the same with the MOP.
 
 =over 4
@@ -116,15 +116,15 @@ which are applied with the C<is> modifier. Here is a
 simple example:
 
     class Foo {
-        has $bar is ro;
-        has $baz is rw;
+        has $!bar is ro;
+        has $!baz is rw;
     }
 
 =item I<isa =E<gt> $type_name>
 
-There is currently no support for types in the MOP, however
-it is possible to create a C<type> trait that can perform
-the same validation and even use Moose types constraints.
+There is currently no support for types in the MOP. It is
+possible, however, to create a C<type> trait that can perform
+the same validation, and even use Moose type constraints.
 See F<t/400-traits/003-type-trait.t> for an example.
 
 =item I<coerce =E<gt> (1|0)>
@@ -135,7 +135,7 @@ C<type> trait in F<t/400-traits/003-type-trait.t> to also
 do coercion. It might look like this:
 
     class Foo {
-        has $bar is type( isa => 'SomeType', coerce => 1 );
+        has $!bar is type( isa => 'SomeType', coerce => 1 );
     }
 
 Actual implementation of this is left as an exercise for
@@ -149,15 +149,15 @@ so the suggestions in the above two options apply here as well.
 =item I<required =E<gt> (1|0)>
 
 Required attributes are easily mimicked through the MOP without
-even needed a trait. Here is how they are accomplished:
+even needing a trait. Here is how they are accomplished:
 
     class Foo {
-        has $bar = die '$bar is required';
+        has $!bar = die '$!bar is required';
     }
 
 When an instance of C<Foo> is created and no value is supplied
-for either C<$bar> or C<$baz> then the default will be executed,
-which in this case will simply die with the error message.
+for C<$!bar>, then the default will be executed, which in this
+case will simply die with the error message.
 
 =item I<weak_ref =E<gt> (1|0)>
 
@@ -165,16 +165,16 @@ Weak references are accomplished using the C<weak_ref> trait
 that is core in the MOP. Here is a simple example:
 
     class Tree {
-        has $parent is weak_ref;
+        has $!parent is weak_ref;
     }
 
 =item I<lazy =E<gt> (1|0)>
 
-Lazy attributes are supported via the core C<lazy> trait, here
-is a simple example of that.
+Lazy attributes are supported via the core C<lazy> trait. Here
+is a simple example of that:
 
     class Foo {
-        has $bar is lazy;
+        has $!bar is lazy;
     }
 
 Unlike Moose, where lazy attributes are only re-created if
@@ -182,18 +182,18 @@ the slot has not been populated, in MOP they will be populated
 both if the slot has not been populated and if the value in
 the slot is undef. This is more in line with how regular scalars
 work, meaning that if you define a scalar with C<my $foo;> then
-it  is implicitly undef and not some special "not assigned too"
+it is implicitly undef and not some special "not assigned to"
 value.
 
 =item I<trigger =E<gt> $code>
 
-There is no specific way to do C<trigger> yet, take a look at
+There is no specific way to do C<trigger> yet, but take a look at
 F<t/400-traits/020-moose-traits.t> for a naive (and mostly wrong)
 version.
 
 =item I<handles =E<gt> ARRAY | HASH | REGEXP | ROLE | ROLETYPE | DUCKTYPE | CODE>
 
-There is no specific way to do C<handles> yet, take a look at
+There is no specific way to do C<handles> yet, but take a look at
 F<t/400-traits/020-moose-traits.t> for a simple version that
 supports the basic HASH syntax.
 
@@ -203,44 +203,44 @@ for now it is not.
 =item I<traits =E<gt> [ @role_names ]>
 
 This is not currently supported, and honestly, probably never
-will be, it is highly Moose specific.
+will be, since it is highly Moose specific.
 
 =item I<builder> => Str
 
-There is no special trait for C<builder> instead you simply
+There is no special trait for C<builder>. Instead, you simply
 use the existing syntax for assigning default values to attributes
 and just call a method. Here is an example:
 
     class Foo {
-        has $bar = $_->build_bar;
+        has $!bar = $_->build_bar;
 
         method build_bar { ... }
     }
 
-The standard perl topic variable C<$_>, is localized to be the
+The standard perl topic variable (C<$_>) is localized to be the
 current instance when running the builders, so you can use it
 to access the current invocant.
 
 =item I<default> => SCALAR | CODE
 
-There is also no special trait for C<default> instead you
+There is also no special trait for C<default>. Instead you
 use the existing syntax. Here is how you would provide a simple
 default value:
 
     class Foo {
-        has $bar = 10;
-        has $baz = {};
+        has $!bar = 10;
+        has $!baz = {};
     }
 
 Pretty much anything you can stick in a scalar variable can go
 on the right hand side of a C<has> expression.
 
 If you need to initialize a more complex value, but for some
-reason do not want to use the C<builder> style approach. Then
+reason do not want to use the C<builder> style approach,
 you can wrap your default value in a C<do> block, like so:
 
     class Foo {
-        has $bar = do {
+        has $!bar = do {
             $_->bar_has_been_touched;
             100;
         };
@@ -251,40 +251,40 @@ approach.
 
 =item I<clearer> => Str
 
-There is no special trait for C<clearer> instead it is
+There is no special trait for C<clearer>. Instead it is
 recommended that you write a simple method that follows this
 pattern instead.
 
     class Foo {
-        has $bar;
+        has $!bar;
 
-        method clear_bar { undef $bar }
+        method clear_bar { undef $!bar }
     }
 
-If C<$bar> was lazy, this would force a recalculation of
-C<$bar> the next time that C<$bar> was accessed.
+If C<$!bar> was lazy, this would force a recalculation of
+C<$!bar> the next time that C<$!bar> was accessed.
 
 =item I<predicate> => Str
 
-There is no special trait for C<predicate> instead it is
+There is no special trait for C<predicate>. Instead it is
 recommended that you write a simple method that follows this
 pattern instead.
 
     class Foo {
-        has $bar;
+        has $!bar;
 
-        method has_bar { defined $bar }
+        method has_bar { defined $!bar }
     }
 
-It should be noted that if C<$bar> was lazy, this would
-force evaluation of C<$bar>. If you want to test if a lazy
+It should be noted that if C<$!bar> was lazy, this would
+force evaluation of C<$!bar>. If you want to test if a lazy
 value is yet to be initialized, you need to go through the
 MOP to get that. Here is what that code would look like.
 
-    mop::meta($self)->get_attribute('$bar')->has_data_in_slot_for($self)
+    mop::meta($self)->get_attribute('$!bar')->has_data_in_slot_for($self)
 
 The real lesson here is that if you want lazy and
-predicates, you should implement the accessors yourself, see
+predicates, you should implement the accessors yourself. See
 F<t/001-examples/003-binary-tree.t> for an example of that.
 
 =item I<documentation> => $string
