@@ -119,6 +119,11 @@ sub test {
             $failed ||= _system("prove -lr xt");
         }
 
+        # make sure blib is set up for subsequent tests
+        if ($_ eq $mop_dir) {
+            $failed ||= _system("perl Makefile.PL && make");
+        }
+
         return $failed;
     }
 }
