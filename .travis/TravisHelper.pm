@@ -120,7 +120,7 @@ sub test {
         }
 
         # make sure blib is set up for subsequent tests
-        if (/\Q$mop_dir\E$/) {
+        if ($_ eq $mop_repo) {
             $failed ||= _system("perl Makefile.PL && make");
         }
 
