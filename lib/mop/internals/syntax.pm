@@ -274,21 +274,6 @@ sub has_parser {
     return (sub { }, 1);
 }
 
-sub parse_modifier_with_single_value {
-    my ($modifier) = @_;
-
-    my $modifier_length = length $modifier;
-
-    return unless lex_peek($modifier_length + 1) =~ /^$modifier\b/;
-
-    lex_read($modifier_length);
-    lex_read_space;
-
-    my $name = parse_name(($modifier eq 'extends' ? 'class' : $modifier), 1);
-
-    return $name;
-}
-
 sub parse_modifier_with_multiple_values {
     my ($modifier) = @_;
 

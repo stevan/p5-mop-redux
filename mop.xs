@@ -250,6 +250,33 @@ parse_name(pTHX_ const char *what, STRLEN whatlen, U32 flags)
     return sv;
 }
 
+static SV *
+parse_modifier_with_single_value(pTHX_ const char *modifier, STRLEN len)
+{
+    STRLEN got;
+    char *s = lex_peek_pv(aTHX_ len + 1, &got);
+
+    if (got < len)
+        return NULL;
+
+    if (strnNE(s, modifier, len))
+        return NULL;
+
+    if (got >= len + 1) {
+        char last = s[len];
+        if (isALNUM(last) || last == '_')
+            return NULL;
+    }
+
+    lex_read_to(s + len);
+    lex_read_space(0);
+
+    if (strnEQ(modifier, "extends", len))
+        return parse_name(aTHX_ "class", sizeof("class") - 1, PARSE_NAME_ALLOW_PACKAGE);
+
+    return parse_name(aTHX_ modifier, len, PARSE_NAME_ALLOW_PACKAGE);
+}
+
 static Perl_check_t old_rv2sv_checker;
 static SV *twigils_hint_key_sv;
 static U32 twigils_hint_key_hash;
@@ -481,6 +508,13 @@ SV *
 read_tokenish ()
   C_ARGS:
     aTHX
+  POSTCALL:
+    SvREFCNT_inc(RETVAL); /* As above. */
+
+SV *
+parse_modifier_with_single_value (char *modifier)
+  C_ARGS:
+    aTHX_ modifier, SvCUR(ST(0))
   POSTCALL:
     SvREFCNT_inc(RETVAL); /* As above. */
 
