@@ -42,7 +42,7 @@ sub clone {
 sub name { ${ $name{ $_[0] } } }
 sub body { ${ $body{ $_[0] } } }
 
-sub associated_meta { ${ $associated_meta{ $_[0] } } }
+sub associated_meta { ${ $associated_meta{ $_[0] } // \undef } }
 sub set_associated_meta {
     my ($self, $meta) = @_;
     $associated_meta{ $self } = \$meta;

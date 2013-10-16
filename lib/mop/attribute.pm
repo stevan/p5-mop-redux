@@ -35,6 +35,15 @@ sub new {
     $self
 }
 
+sub BUILD {
+    my $self = shift;
+    return unless $default{ $self };
+    my $value = ${ ${ $default{ $self } } };
+    if ( ref $value && ref $value ne 'CODE' ) {
+        die "References of type (" . ref($value) . ") are not supported as attribute defaults (in attribute " . $self->name . ($self->associated_meta ? " in class " . $self->associated_meta->name : "") . ")";
+    }
+}
+
 # temporary, for bootstrapping
 sub clone {
     my $self = shift;
@@ -81,7 +90,7 @@ sub get_default {
     $value
 }
 
-sub associated_meta { ${ $associated_meta{ $_[0] } } }
+sub associated_meta { ${ $associated_meta{ $_[0] } // \undef } }
 sub set_associated_meta {
     my ($self, $meta) = @_;
     $associated_meta{ $self } = \$meta;
@@ -172,6 +181,8 @@ sub __INIT_METACLASS__ {
         name    => '$!associated_meta',
         storage => \%associated_meta
     ));
+
+    $METACLASS->add_method( mop::method->new( name => 'BUILD', body => \&BUILD ) );
 
     $METACLASS->add_method( mop::method->new( name => 'name',                body => \&name                ) );
     $METACLASS->add_method( mop::method->new( name => 'key_name',            body => \&key_name            ) );
