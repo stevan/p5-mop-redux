@@ -323,6 +323,17 @@ sub create_composite_role {
     return $composite;
 }
 
+sub buildall {
+    my ($instance, @args) = @_;
+
+    foreach my $class (reverse @{ mro::get_linear_isa(ref $instance) }) {
+        if (my $m = mop::meta($class)) {
+            $m->get_method('BUILD')->execute($instance, [ @args ])
+                if $m->has_method('BUILD');
+        }
+    }
+}
+
 1;
 
 __END__

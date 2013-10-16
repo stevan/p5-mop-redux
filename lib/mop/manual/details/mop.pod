@@ -20,8 +20,6 @@ of the MOP written using the MOP itself.
         method new   (%args) { ... }
         method clone (%args) { ... }
 
-        method BUILDALL ($args) { ... }
-
         method can  ($name)  { ... }
         method isa  ($class) { ... }
         method does ($role)  { ... }

@@ -86,7 +86,7 @@ sub new_instance {
         }
     }
 
-    $instance->BUILDALL( \%args );
+    mop::internals::util::buildall($instance, \%args);
 
     return $instance;
 }

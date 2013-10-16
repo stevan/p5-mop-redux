@@ -31,16 +31,6 @@ sub clone {
     return mop::meta($self)->clone_instance($self, %args);
 }
 
-sub BUILDALL {
-    my ($self, @args) = @_;
-    foreach my $class (reverse @{ mro::get_linear_isa(ref $self) }) {
-        if (my $m = mop::meta($class)) {
-            $m->get_method('BUILD')->execute($self, [ @args ])
-                if $m->has_method('BUILD');
-        }
-    }
-}
-
 sub does {
     my ($self, $role) = @_;
     scalar grep { mop::meta($_)->does_role($role) } @{ mro::get_linear_isa(ref($self) || $self) }
@@ -83,7 +73,6 @@ sub __INIT_METACLASS__ {
         )
     );
     $METACLASS->add_method( mop::method->new( name => 'clone',     body => \&clone ) );
-    $METACLASS->add_method( mop::method->new( name => 'BUILDALL',  body => \&BUILDALL ) );
     $METACLASS->add_method( mop::method->new( name => 'does',      body => \&does ) );
     $METACLASS->add_method( mop::method->new( name => 'DOES',      body => \&DOES ) );
     $METACLASS->add_method( mop::method->new( name => 'DESTROY', body => \&DESTROY ) );
@@ -111,8 +100,6 @@ TODO
 =item C<new(@args)>
 
 =item C<clone(%overrides)>
-
-=item C<BUILDALL>
 
 =item C<does($role_name)>
 
