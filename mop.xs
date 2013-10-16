@@ -250,25 +250,34 @@ parse_name(pTHX_ const char *what, STRLEN whatlen, U32 flags)
     return sv;
 }
 
-static SV *
-parse_modifier_with_single_value(pTHX_ const char *modifier, STRLEN len)
+static bool
+parse_modifier(pTHX_ const char *modifier, STRLEN len)
 {
     STRLEN got;
     char *s = lex_peek_pv(aTHX_ len + 1, &got);
 
     if (got < len)
-        return NULL;
+        return FALSE;
 
     if (strnNE(s, modifier, len))
-        return NULL;
+        return FALSE;
 
     if (got >= len + 1) {
         char last = s[len];
         if (isALNUM(last) || last == '_')
-            return NULL;
+            return FALSE;
     }
 
     lex_read_to(s + len);
+    return TRUE;
+}
+
+static SV *
+parse_modifier_with_single_value(pTHX_ const char *modifier, STRLEN len)
+{
+    if (!parse_modifier(aTHX_ modifier, len))
+        return NULL;
+
     lex_read_space(0);
 
     if (strnEQ(modifier, "extends", len))
