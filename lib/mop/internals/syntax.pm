@@ -9,7 +9,7 @@ use B::Hooks::EndOfScope ();
 use Carp              ();
 use Scalar::Util      ();
 use version           ();
-use twigils 0.04      ();
+use mop::internals::twigils ();
 use Devel::CallParser ();
 
 use Parse::Keyword {
@@ -172,7 +172,7 @@ sub method_parser {
 
     my $preamble = '{'
         . 'my ' . $invocant . ' = shift;'
-        . 'use twigils "fatal_lookup_errors", allowed_twigils => "!";'
+        . 'use mop::internals::twigils;'
         . '();';
 
     # this is our method preamble, it

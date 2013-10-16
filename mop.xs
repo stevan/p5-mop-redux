@@ -4,10 +4,10 @@
 
 #include "callparser1.h"
 
-int mg_attr_get(pTHX_ SV *sv, MAGIC *mg);
-int mg_attr_set(pTHX_ SV *sv, MAGIC *mg);
-int mg_err_get(pTHX_ SV *sv, MAGIC *mg);
-int mg_err_set(pTHX_ SV *sv, MAGIC *mg);
+static int mg_attr_get(pTHX_ SV *sv, MAGIC *mg);
+static int mg_attr_set(pTHX_ SV *sv, MAGIC *mg);
+static int mg_err_get(pTHX_ SV *sv, MAGIC *mg);
+static int mg_err_set(pTHX_ SV *sv, MAGIC *mg);
 
 static MGVTBL subname_vtbl;
 static MGVTBL attr_vtbl = {
@@ -31,7 +31,8 @@ static MGVTBL err_vtbl = {
     0,                          /* local */
 };
 
-int mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
+static int
+mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
 {
     SV *name, *meta, *self, *attr, *val;
 
@@ -72,9 +73,12 @@ int mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
     LEAVE;
 
     sv_setsv(sv, val);
+
+    return 0;
 }
 
-int mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
+static int
+mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
 {
     SV *name, *meta, *self, *attr;
 
@@ -110,19 +114,28 @@ int mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
         call_method("store_data_in_slot_for", G_VOID);
     }
     LEAVE;
+
+    return 0;
 }
 
-int mg_err_get(pTHX_ SV *sv, MAGIC *mg)
+static int
+mg_err_get(pTHX_ SV *sv, MAGIC *mg)
 {
-    croak("Cannot access the attribute:(%"SVf") in a method without a blessed invocant", mg->mg_obj);
+    PERL_UNUSED_ARG(sv);
+    croak("Cannot access the attribute:(%"SVf") in a method "
+          "without a blessed invocant", SVfARG(mg->mg_obj));
 }
 
-int mg_err_set(pTHX_ SV *sv, MAGIC *mg)
+static int
+mg_err_set(pTHX_ SV *sv, MAGIC *mg)
 {
-    croak("Cannot assign to the attribute:(%"SVf") in a method without a blessed invocant", mg->mg_obj);
+    PERL_UNUSED_ARG(sv);
+    croak("Cannot assign to the attribute:(%"SVf") in a method "
+          "without a blessed invocant", SVfARG(mg->mg_obj));
 }
 
-static OP *ck_mop_keyword(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
+static OP *
+ck_mop_keyword(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
 {
     PERL_UNUSED_ARG(namegv);
     op_free(entersubop);
@@ -132,7 +145,7 @@ static OP *ck_mop_keyword(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
 }
 
 static SV *
-read_tokenish (pTHX)
+read_tokenish(pTHX)
 {
     char c;
     SV *ret = sv_2mortal(newSV(1));
@@ -153,7 +166,7 @@ read_tokenish (pTHX)
 
 #define PARSE_NAME_ALLOW_PACKAGE 1
 static SV *
-parse_name (pTHX_ const char *what, STRLEN whatlen, U32 flags)
+parse_name(pTHX_ const char *what, STRLEN whatlen, U32 flags)
 {
     char *start, *s;
     STRLEN len;
@@ -196,6 +209,150 @@ parse_name (pTHX_ const char *what, STRLEN whatlen, U32 flags)
     SvPOK_on(sv);
 
     return sv;
+}
+
+static Perl_check_t old_rv2sv_checker;
+static SV *twigils_hint_key_sv;
+static U32 twigils_hint_key_hash;
+
+static SV *
+parse_ident(pTHX_ const char *prefix, STRLEN prefixlen)
+{
+    STRLEN idlen;
+    char *start, *s;
+    char c;
+    SV *sv;
+
+    start = s = PL_parser->bufptr;
+    if (start > SvPVX(PL_parser->linestr) && isSPACE(*(start - 1)))
+        return NULL;
+
+    c = *s;
+    if (!isIDFIRST(c))
+        return NULL;
+
+    do {
+        c = *++s;
+    } while (isALNUM(c));
+
+    lex_read_to(s);
+
+    idlen = s - start;
+    sv = sv_2mortal(newSV(prefixlen + idlen));
+    Copy(prefix, SvPVX(sv), prefixlen, char);
+    Copy(start, SvPVX(sv) + prefixlen, idlen, char);
+    SvPVX(sv)[prefixlen + idlen] = 0;
+    SvCUR_set(sv, prefixlen + idlen);
+    SvPOK_on(sv);
+
+    return sv;
+}
+
+static bool
+twigil_enabled(pTHX)
+{
+    HE *he = hv_fetch_ent(GvHV(PL_hintgv), twigils_hint_key_sv, 0, twigils_hint_key_hash);
+    return he && SvTRUE(HeVAL(he));
+}
+
+static OP *
+myck_rv2sv(pTHX_ OP *o)
+{
+    OP *kid, *ret;
+    SV *sv, *name;
+    PADOFFSET offset;
+    char prefix[2];
+
+    if (!(o->op_flags & OPf_KIDS))
+        return old_rv2sv_checker(aTHX_ o);
+
+    kid = cUNOPo->op_first;
+    if (kid->op_type != OP_CONST)
+        return old_rv2sv_checker(aTHX_ o);
+
+    sv = cSVOPx_sv(kid);
+    if (!SvPOK(sv))
+        return old_rv2sv_checker(aTHX_ o);
+
+    if (!twigil_enabled(aTHX))
+        return old_rv2sv_checker(aTHX_ o);
+
+    if (*SvPVX(sv) != '!')
+        return old_rv2sv_checker(aTHX_ o);
+
+    prefix[0] = '$';
+    prefix[1] = *SvPVX(sv);
+    name = parse_ident(aTHX_ prefix, 2);
+    if (!name)
+        return old_rv2sv_checker(aTHX_ o);
+
+    offset = pad_findmy_sv(name, 0);
+    if (offset == NOT_IN_PAD)
+        croak("No such twigil variable %"SVf, SVfARG(name));
+
+    ret = newOP(OP_PADSV, 0);
+    ret->op_targ = offset;
+
+    op_free(o);
+    return ret;
+}
+
+static OP *
+myck_entersub_intro_twigil_var(pTHX_ OP *o, GV *namegv, SV *ckobj)
+{
+    SV *namesv;
+    OP *pushop, *sigop, *ret;
+    char twigil;
+
+    PERL_UNUSED_ARG(namegv);
+    PERL_UNUSED_ARG(ckobj);
+
+    pushop = cUNOPo->op_first;
+    if (!pushop->op_sibling)
+        pushop = cUNOPx(pushop)->op_first;
+
+    if (!(sigop = pushop->op_sibling) || sigop->op_type != OP_CONST)
+        croak("Unable to extract compile time constant twigil variable name");
+
+    namesv = cSVOPx_sv(sigop);
+    twigil = *(SvPVX(namesv) + 1);
+
+    if (twigil != '!')
+        croak("Unregistered sigil character %c", twigil);
+
+    ret = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
+    ret->op_targ = pad_add_name_sv(namesv, 0, NULL, NULL);
+
+    op_free(o);
+    return ret;
+}
+
+static OP *
+myparse_args_intro_twigil_var(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
+{
+    char twigil[2];
+    SV *ident;
+
+    PERL_UNUSED_ARG(namegv);
+    PERL_UNUSED_ARG(psobj);
+    PERL_UNUSED_ARG(flagsp);
+
+    lex_read_space(0);
+    twigil[0] = lex_peek_unichar(0);
+    if (twigil[0] != '$' && twigil[0] != '@' && twigil[0] != '%')
+        croak("syntax error");
+    lex_read_unichar(0);
+
+    if (isSPACE(lex_peek_unichar(0)))
+        croak("syntax error");
+
+    twigil[1] = lex_read_unichar(0);
+
+    ident = parse_ident(aTHX_ twigil, 2);
+    if (!ident)
+        croak("syntax error");
+
+    return newSVOP(OP_CONST, 0, SvREFCNT_inc(ident));
 }
 
 MODULE = mop  PACKAGE = mop::internals::util
@@ -290,20 +447,21 @@ read_tokenish ()
 
 void
 set_attr_magic (SV *var, SV *name, SV *meta, SV *self)
+  PREINIT:
+    SV *svs[3];
+    AV *data;
+  INIT:
+    svs[0] = name;
+    svs[1] = meta;
+    svs[2] = self;
+    data = (AV *)sv_2mortal((SV *)av_make(3, svs));
   CODE:
-    {
-        SV *svs[3] = { name, meta, self };
-        AV *data;
-        data = (AV *)sv_2mortal((SV *)av_make(3, svs));
-        sv_magicext(var, (SV *)data, PERL_MAGIC_ext, &attr_vtbl, "attr", 0);
-    }
+    sv_magicext(var, (SV *)data, PERL_MAGIC_ext, &attr_vtbl, "attr", 0);
 
 void
 set_err_magic (SV *var, SV *name)
   CODE:
-    {
-        sv_magicext(var, name, PERL_MAGIC_ext, &err_vtbl, "err", 0);
-    }
+    sv_magicext(var, name, PERL_MAGIC_ext, &err_vtbl, "err", 0);
 
 BOOT:
 {
@@ -318,4 +476,26 @@ BOOT:
     cv_set_call_checker(role,   ck_mop_keyword, &PL_sv_yes);
     cv_set_call_checker(has,    ck_mop_keyword, &PL_sv_undef);
     cv_set_call_checker(method, ck_mop_keyword, &PL_sv_undef);
+}
+
+MODULE = mop  PACKAGE = mop::internals::twigils
+
+PROTOTYPES: DISABLE
+
+BOOT:
+{
+    CV *intro_twigil_my_var_cv = get_cv("mop::internals::twigils::intro_twigil_my_var", 0);
+
+    twigils_hint_key_sv = newSVpvs_share("mop::internals::twigils/twigils");
+    twigils_hint_key_hash = SvSHARED_HASH(twigils_hint_key_sv);
+
+    old_rv2sv_checker = PL_check[OP_RV2SV];
+    PL_check[OP_RV2SV] = myck_rv2sv;
+
+    cv_set_call_parser(intro_twigil_my_var_cv,
+                       myparse_args_intro_twigil_var, &PL_sv_undef);
+
+    cv_set_call_checker(intro_twigil_my_var_cv,
+                        myck_entersub_intro_twigil_var,
+                        &PL_sv_undef);
 }

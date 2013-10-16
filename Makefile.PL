@@ -13,7 +13,7 @@ use ExtUtils::MakeMaker 6.30;
 
 my %WriteMakefileArgs = (
   "ABSTRACT" => "A new object system for Perl 5",
-  "AUTHOR" => "Stevan Little <stevan.little\@iinteractive.com>, Jesse Luehrs <doy\@tozt.net>",
+  "AUTHOR" => "Stevan Little <stevan.little\@iinteractive.com>, Jesse Luehrs <doy\@tozt.net>, Florian Ragwitz <rafl\@debian.org>",
   "BUILD_REQUIRES" => {},
   "CONFIGURE_REQUIRES" => {
     "Devel::CallParser" => 0,
@@ -27,6 +27,7 @@ my %WriteMakefileArgs = (
     "B::Hooks::EndOfScope" => 0,
     "Carp" => 0,
     "Devel::CallParser" => 0,
+    "Exporter" => 0,
     "Hash::Util::FieldHash" => 0,
     "Parse::Keyword" => 0,
     "Scalar::Util" => 0,
@@ -36,7 +37,6 @@ my %WriteMakefileArgs = (
     "overload" => 0,
     "parent" => 0,
     "strict" => 0,
-    "twigils" => "0.04",
     "version" => 0,
     "warnings" => 0
   },
