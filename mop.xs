@@ -72,6 +72,8 @@ int mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
     LEAVE;
 
     sv_setsv(sv, val);
+
+    return 0;
 }
 
 int mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
@@ -110,15 +112,19 @@ int mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
         call_method("store_data_in_slot_for", G_VOID);
     }
     LEAVE;
+
+    return 0;
 }
 
 int mg_err_get(pTHX_ SV *sv, MAGIC *mg)
 {
+    PERL_UNUSED_ARG(sv);
     croak("Cannot access the attribute:(%"SVf") in a method without a blessed invocant", mg->mg_obj);
 }
 
 int mg_err_set(pTHX_ SV *sv, MAGIC *mg)
 {
+    PERL_UNUSED_ARG(sv);
     croak("Cannot assign to the attribute:(%"SVf") in a method without a blessed invocant", mg->mg_obj);
 }
 
