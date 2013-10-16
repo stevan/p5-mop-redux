@@ -101,7 +101,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!original_id',
         storage => \%original_id,
-        default => \sub { mop::id($_) },
+        default => sub { mop::id($_) },
     ));
 
     $METACLASS->add_method( mop::method->new( name => 'name',                body => \&name                ) );

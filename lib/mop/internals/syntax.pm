@@ -266,7 +266,7 @@ sub has_parser {
     $CURRENT_META->add_attribute(
         $CURRENT_META->attribute_class->new(
             name    => $name,
-            default => \$default,
+            default => $default,
         )
     );
 

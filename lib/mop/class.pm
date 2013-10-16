@@ -141,7 +141,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!is_abstract',
         storage => \%is_abstract,
-        default => \(0)
+        default => 0,
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
@@ -152,7 +152,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!instance_generator',
         storage => \%instance_generator,
-        default => \sub { sub { \(my $anon) } },
+        default => sub { sub { \(my $anon) } },
     ));
 
     $METACLASS->add_method( mop::method->new( name => 'BUILD', body => \&BUILD ) );

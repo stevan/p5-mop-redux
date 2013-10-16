@@ -193,8 +193,7 @@ SKIP: { skip "__SUB__ is broken with Devel::Cover", 4 if $INC{'Devel/Cover.pm'};
     my $bar = $Bar->get_attribute('$!bar');
     my $dump = mop::dump_object($bar);
 
-    is(ref($dump->{'$!default'}), 'REF');
-    is(ref(${ $dump->{'$!default'} }), 'CODE');
+    is(ref($dump->{'$!default'}), 'CODE');
     delete $dump->{'$!default'};
     is($dump->{'$!associated_meta'}{'__SELF__'}, $Bar);
     delete $dump->{'$!associated_meta'};

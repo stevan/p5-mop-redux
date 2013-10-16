@@ -38,7 +38,7 @@ sub new {
 sub BUILD {
     my $self = shift;
     return unless $default{ $self };
-    my $value = ${ ${ $default{ $self } } };
+    my $value = ${ $default{ $self } };
     if ( ref $value && ref $value ne 'CODE' ) {
         die "References of type (" . ref($value) . ") are not supported as attribute defaults (in attribute " . $self->name . ($self->associated_meta ? " in class " . $self->associated_meta->name : "") . ")";
     }
@@ -61,29 +61,19 @@ sub key_name {
     substr( $self->name, 2, length $self->name )
 }
 
-# NOTE:
-# need to do a double de-ref for the
-# default value. first is to access
-# the value from the attribute, the
-# second is to  actually dereference
-# the default value (which is stored
-# as a ref of whatever the default is)
-# - SL
-sub has_default { defined( ${ ${ $default{ $_[0] } } } ) }
-# we also have to do the double en-ref
-# here too, this should get fixed
+sub has_default { defined( ${ $default{ $_[0] } } ) }
 sub set_default   {
     my $self = shift;
     my ($value) = @_;
     if ( ref $value && ref $value ne 'CODE' ) {
         die "References of type (" . ref($value) . ") are not supported as attribute defaults (in attribute " . $self->name . ($self->associated_meta ? " in class " . $self->associated_meta->name : "") . ")";
     }
-    $default{ $self } = \(\$value)
+    $default{ $self } = \$value
 }
-sub clear_default { ${ ${ delete $default{ $_[0] } } } }
+sub clear_default { ${ delete $default{ $_[0] } } }
 sub get_default {
     my $self  = shift;
-    my $value = ${ ${ $default{ $self } } };
+    my $value = ${ $default{ $self } };
     if ( ref $value && ref $value eq 'CODE' ) {
         $value = $value->();
     }
@@ -163,7 +153,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!original_id',
         storage => \%original_id,
-        default => \sub { mop::id($_) },
+        default => sub { mop::id($_) },
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
@@ -174,7 +164,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!storage',
         storage => \%storage,
-        default => \(sub { mop::internals::util::init_attribute_storage(my %x) })
+        default => sub { mop::internals::util::init_attribute_storage(my %x) },
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(

@@ -249,7 +249,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!name',
         storage => \%name,
-        default => \(sub { die "name is required when creating a role or class" }),
+        default => sub { die "name is required when creating a role or class" },
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
@@ -265,25 +265,25 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!roles',
         storage => \%roles,
-        default => \sub { [] },
+        default => sub { [] },
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!attributes',
         storage => \%attributes,
-        default => \sub { {} },
+        default => sub { {} },
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!methods',
         storage => \%methods,
-        default => \sub { {} },
+        default => sub { {} },
     ));
 
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!required_methods',
         storage => \%required_methods,
-        default => \sub { {} },
+        default => sub { {} },
     ));
 
     $METACLASS->add_method( mop::method->new( name => 'BUILD', body => \&BUILD ) );
