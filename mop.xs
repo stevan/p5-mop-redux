@@ -512,7 +512,8 @@ read_tokenish ()
     SvREFCNT_inc(RETVAL); /* As above. */
 
 SV *
-parse_modifier_with_single_value (char *modifier)
+parse_modifier_with_single_value (modifier)
+    char *modifier
   C_ARGS:
     aTHX_ modifier, SvCUR(ST(0))
   POSTCALL:
