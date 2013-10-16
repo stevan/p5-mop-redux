@@ -31,6 +31,7 @@ use mop::traits::util;
 sub import {
     shift;
     my $pkg = caller;
+    my %opts = @_;
 
     initialize();
 
@@ -40,6 +41,16 @@ sub import {
 
     foreach my $trait ( @mop::traits::AVAILABLE_TRAITS ) {
         _install_sub($pkg, 'mop::traits', $trait);
+    }
+
+    # NOTE: don't allow setting attribute or method metaclasses here, because
+    # that is controlled by the class or role metaclass via method_class and
+    # attribute_class.
+    for my $type (qw(class role)) {
+        if (defined(my $meta = $opts{"${type}_metaclass"})) {
+            require(($meta =~ s{::}{/}gr) . '.pm');
+            $^H{"mop/default_${type}_metaclass"} = $meta;
+        }
     }
 }
 

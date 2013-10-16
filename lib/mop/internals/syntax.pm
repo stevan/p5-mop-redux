@@ -80,7 +80,7 @@ sub namespace_parser {
         push @classes_to_load => $metaclass;
     }
     else {
-        $metaclass = "mop::$type";
+        $metaclass = $^H{"mop/default_${type}_metaclass"} // "mop::$type";
     }
 
     lex_read_space;
@@ -99,7 +99,7 @@ sub namespace_parser {
 
     lex_read;
 
-    die "The metaclass for $pkg does not inherit from mop::$type"
+    die "The metaclass for $pkg ($metaclass) does not inherit from mop::$type"
         unless $metaclass->isa("mop::$type");
 
     my $meta = $metaclass->new(

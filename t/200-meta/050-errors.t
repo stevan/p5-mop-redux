@@ -10,7 +10,7 @@ class FooMeta {
 }
 
 eval "class Foo meta FooMeta { }";
-like($@, qr/^The metaclass for Foo does not inherit from mop::class/);
+like($@, qr/^The metaclass for Foo \(FooMeta\) does not inherit from mop::class/);
 
 eval {
     mop::class->new(
