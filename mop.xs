@@ -164,6 +164,45 @@ read_tokenish(pTHX)
     return ret;
 }
 
+static char *
+lex_peek_pv(pTHX_ STRLEN len, STRLEN *lenp)
+{
+    char *bufptr = PL_parser->bufptr;
+    char *bufend = PL_parser->bufend;
+    STRLEN got;
+
+    /* XXX before 5.19.2, lex_next_chunk when we aren't at the end of a line
+     * just breaks things entirely (the parser no longer sees the text that is
+     * read in). this is (i think inadvertently) fixed in 5.19.2 (21791330a),
+     * but it still screws up the line numbers of everything that follows. so,
+     * the workaround is just to not call lex_next_chunk unless we're at the
+     * end of a line. this is a bit limiting, but should rarely come up in
+     * practice.
+    */
+    /*
+    while (PL_parser->bufend - PL_parser->bufptr < len) {
+        if (!lex_next_chunk(0)) {
+            break;
+        }
+    }
+    */
+
+    if (bufptr == bufend) {
+        lex_next_chunk(0);
+        bufend = PL_parser->bufend;
+    }
+
+    if (lex_bufutf8())
+        croak("Not yet implemented");
+
+    got = bufend - bufptr;
+    if (got < len)
+        len = got;
+
+    *lenp = len;
+    return bufptr;
+}
+
 #define PARSE_NAME_ALLOW_PACKAGE 1
 static SV *
 parse_name(pTHX_ const char *what, STRLEN whatlen, U32 flags)
