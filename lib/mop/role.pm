@@ -235,9 +235,8 @@ sub FINALIZE {
     $self->fire('after:FINALIZE');
 }
 
-our $METACLASS;
-
 sub __INIT_METACLASS__ {
+    state $METACLASS;
     return $METACLASS if defined $METACLASS;
     require mop::class;
     $METACLASS = mop::class->new(

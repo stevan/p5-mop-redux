@@ -75,15 +75,12 @@ sub _uninstall_sub {
 
 sub meta {
     my $pkg = ref($_[0]) || $_[0];
-    no strict 'refs';
-    no warnings 'once';
-    ${ $pkg . '::METACLASS' }
+    mop::internals::util::get_meta($pkg);
 }
 
 sub remove_meta {
     my $pkg = ref($_[0]) || $_[0];
-    no strict 'refs';
-    undef ${ $pkg . '::METACLASS' };
+    mop::internals::util::unset_meta($pkg);
 }
 
 sub id { Hash::Util::FieldHash::id( $_[0] ) }
@@ -189,7 +186,7 @@ sub dump_object {
 # can't call this 'bootstrap' because XSLoader has a special meaning for that
 sub initialize {
     return if $BOOTSTRAPPED;
-    $_->__INIT_METACLASS__ for qw[
+    mop::internals::util::set_meta($_, $_->__INIT_METACLASS__) for qw[
         mop::object
         mop::role
         mop::class

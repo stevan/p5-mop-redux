@@ -72,9 +72,8 @@ sub execute {
     return $wantarray ? @result : $result[0];
 }
 
-our $METACLASS;
-
 sub __INIT_METACLASS__ {
+    state $METACLASS;
     return $METACLASS if defined $METACLASS;
     require mop::class;
     $METACLASS = mop::class->new(
