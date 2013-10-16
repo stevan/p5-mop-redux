@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-BEGIN { $ENV{PERL_MOP_MINI} = 1 }
 
 use strict;
 use warnings;
