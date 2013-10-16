@@ -119,13 +119,15 @@ int mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
 int mg_err_get(pTHX_ SV *sv, MAGIC *mg)
 {
     PERL_UNUSED_ARG(sv);
-    croak("Cannot access the attribute:(%"SVf") in a method without a blessed invocant", mg->mg_obj);
+    croak("Cannot access the attribute:(%"SVf") in a method "
+          "without a blessed invocant", SVfARG(mg->mg_obj));
 }
 
 int mg_err_set(pTHX_ SV *sv, MAGIC *mg)
 {
     PERL_UNUSED_ARG(sv);
-    croak("Cannot assign to the attribute:(%"SVf") in a method without a blessed invocant", mg->mg_obj);
+    croak("Cannot assign to the attribute:(%"SVf") in a method "
+          "without a blessed invocant", SVfARG(mg->mg_obj));
 }
 
 static OP *ck_mop_keyword(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
