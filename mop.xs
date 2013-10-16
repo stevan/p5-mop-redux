@@ -4,10 +4,10 @@
 
 #include "callparser1.h"
 
-int mg_attr_get(pTHX_ SV *sv, MAGIC *mg);
-int mg_attr_set(pTHX_ SV *sv, MAGIC *mg);
-int mg_err_get(pTHX_ SV *sv, MAGIC *mg);
-int mg_err_set(pTHX_ SV *sv, MAGIC *mg);
+static int mg_attr_get(pTHX_ SV *sv, MAGIC *mg);
+static int mg_attr_set(pTHX_ SV *sv, MAGIC *mg);
+static int mg_err_get(pTHX_ SV *sv, MAGIC *mg);
+static int mg_err_set(pTHX_ SV *sv, MAGIC *mg);
 
 static MGVTBL subname_vtbl;
 static MGVTBL attr_vtbl = {
@@ -31,7 +31,7 @@ static MGVTBL err_vtbl = {
     0,                          /* local */
 };
 
-int mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
+static int mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
 {
     SV *name, *meta, *self, *attr, *val;
 
@@ -76,7 +76,7 @@ int mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
     return 0;
 }
 
-int mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
+static int mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
 {
     SV *name, *meta, *self, *attr;
 
@@ -116,14 +116,14 @@ int mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
     return 0;
 }
 
-int mg_err_get(pTHX_ SV *sv, MAGIC *mg)
+static int mg_err_get(pTHX_ SV *sv, MAGIC *mg)
 {
     PERL_UNUSED_ARG(sv);
     croak("Cannot access the attribute:(%"SVf") in a method "
           "without a blessed invocant", SVfARG(mg->mg_obj));
 }
 
-int mg_err_set(pTHX_ SV *sv, MAGIC *mg)
+static int mg_err_set(pTHX_ SV *sv, MAGIC *mg)
 {
     PERL_UNUSED_ARG(sv);
     croak("Cannot assign to the attribute:(%"SVf") in a method "
@@ -206,9 +206,9 @@ parse_name (pTHX_ const char *what, STRLEN whatlen, U32 flags)
     return sv;
 }
 
-Perl_check_t old_rv2sv_checker;
-SV *twigils_hint_key_sv;
-U32 twigils_hint_key_hash;
+static Perl_check_t old_rv2sv_checker;
+static SV *twigils_hint_key_sv;
+static U32 twigils_hint_key_hash;
 
 static SV *
 parse_ident (pTHX_ const char *prefix, STRLEN prefixlen)
