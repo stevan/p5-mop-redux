@@ -205,7 +205,8 @@ lex_peek_pv(pTHX_ STRLEN len, STRLEN *lenp)
 
 #define PARSE_NAME_ALLOW_PACKAGE 1
 static SV *
-parse_name(pTHX_ const char *what, STRLEN whatlen, U32 flags)
+parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
+                  const char *what, STRLEN whatlen, U32 flags)
 {
     char *start, *s;
     STRLEN len;
@@ -241,13 +242,20 @@ parse_name(pTHX_ const char *what, STRLEN whatlen, U32 flags)
     if (!len)
         croak("%"SVf" is not a valid %.*s name",
               SVfARG(read_tokenish(aTHX)), whatlen, what);
-    sv = sv_2mortal(newSV(len));
-    Copy(start, SvPVX(sv), len, char);
-    SvPVX(sv)[len] = '\0';
-    SvCUR_set(sv, len);
+    sv = sv_2mortal(newSV(prefixlen + len));
+    Copy(prefix, SvPVX(sv), prefixlen, char);
+    Copy(start, SvPVX(sv) + prefixlen, len, char);
+    SvPVX(sv)[prefixlen + len] = '\0';
+    SvCUR_set(sv, prefixlen + len);
     SvPOK_on(sv);
 
     return sv;
+}
+
+static SV *
+parse_name(pTHX_ const char *what, STRLEN whatlen, U32 flags)
+{
+    return parse_name_prefix(aTHX_ NULL, 0, what, whatlen, flags);
 }
 
 static bool
