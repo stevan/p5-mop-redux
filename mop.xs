@@ -1,5 +1,6 @@
 #include "EXTERN.h"
 #include "perl.h"
+#define NO_XSLOCKS
 #include "XSUB.h"
 
 #include "callparser1.h"
@@ -313,6 +314,141 @@ parse_modifier_with_multiple_values(pTHX_ const char *modifier, STRLEN len)
     return ret;
 }
 
+struct mop_trait {
+    SV *name;
+    OP *params;
+};
+
+static void
+syntax_error(pTHX_ SV *err)
+{
+    dSP;
+    ENTER;
+    PUSHMARK(SP);
+    XPUSHs(err);
+    PUTBACK;
+    call_pv("mop::internals::syntax::syntax_error", G_VOID);
+    PUTBACK;
+    LEAVE;
+}
+
+static struct mop_trait **
+parse_traits(pTHX_ UV *ntraitsp)
+{
+    dXCPT;
+    U32 ntraits = 0;
+    struct mop_trait **ret = NULL;
+
+    if (!parse_modifier(aTHX_ "is", 2)) {
+        *ntraitsp = 0;
+        return ret;
+    }
+    lex_read_space(0);
+
+    XCPT_TRY_START {
+        do {
+            struct mop_trait *trait;
+            Renew(ret, ntraits + 1, struct mop_trait *);
+            Newx(trait, 1, struct mop_trait);
+            ret[ntraits] = trait;
+            trait->name = parse_name(aTHX_ "trait", sizeof("trait") - 1,
+                                     PARSE_NAME_ALLOW_PACKAGE);
+
+            if (lex_peek_unichar(0) == '(') {
+                lex_read_unichar(0);
+                trait->params = parse_fullexpr(0);
+                if (lex_peek_unichar(0) != ')')
+                    syntax_error(aTHX_ sv_2mortal(newSVpvf("Unterminated parameter "
+                                                           "list for trait %"SVf,
+                                                           SVfARG(trait->name))));
+                lex_read_unichar(0);
+            }
+            else
+                trait->params = NULL;
+
+            ntraits++;
+        } while (lex_peek_unichar(0) == ',' && (lex_read_unichar(0),
+                                                lex_read_space(0), TRUE));
+    } XCPT_TRY_END XCPT_CATCH {
+        UV i;
+        for (i = 0; i < ntraits; i++) {
+            /* name is already mortal */
+            if (ret[i]->params)
+                op_free(ret[i]->params);
+            Safefree(ret[i]);
+            Safefree(ret);
+        }
+        XCPT_RETHROW;
+    }
+
+    *ntraitsp = ntraits;
+    return ret;
+}
+
+static OP *
+parse_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
+{
+    SV *name;
+    UV ntraits, i;
+    OP *default_value = NULL, *ret;
+    struct mop_trait **traits;
+
+    PERL_UNUSED_ARG(namegv);
+    PERL_UNUSED_ARG(psobj);
+
+    lex_read_space(0);
+
+    if (lex_peek_unichar(0) != '$')
+        syntax_error(aTHX_ sv_2mortal(newSVpvf("Invalid attribute name %"SVf,
+                                               SVfARG(read_tokenish(aTHX)))));
+    lex_read_unichar(0);
+
+    if (lex_peek_unichar(0) != '!')
+        syntax_error(aTHX_ sv_2mortal(newSVpvf("Invalid attribute name $%"SVf,
+                                               SVfARG(read_tokenish(aTHX)))));
+    lex_read_unichar(0);
+
+    name = parse_name_prefix(aTHX_ "$!", 2, "attribute", sizeof("attribute") - 1, 0);
+    lex_read_space(0);
+
+    traits = parse_traits(aTHX_ &ntraits);
+    lex_read_space(0);
+
+    if (lex_peek_unichar(0) == '=') {
+        lex_read_unichar(0);
+        lex_read_space(0);
+        default_value = parse_fullexpr(0);
+        lex_read_space(0);
+    }
+
+    if (lex_peek_unichar(0) == ';')
+        lex_read_unichar(0);
+    else if (lex_peek_unichar(0) != '}')
+        syntax_error(aTHX_ sv_2mortal(newSVpvf("Couldn't parse attribute %"SVf,
+                                               SVfARG(name))));
+
+    ret = op_append_elem(OP_LIST, newSVOP(OP_CONST, 0, SvREFCNT_inc(name)),
+                         default_value ? default_value : newSVOP(OP_CONST, 0, &PL_sv_undef));
+    for (i = 0; i < ntraits; i++) {
+        OP *cvop;
+        cvop = newUNOP(OP_REFGEN, 0,
+                       newCVREF((OPpENTERSUB_AMPER<<8),
+                                newSVOP(OP_CONST, 0, SvREFCNT_inc(traits[i]->name))));
+
+        ret = op_append_elem(OP_LIST, ret, cvop);
+        ret = op_append_elem(OP_LIST, ret,
+                             traits[i]->params
+                             ? traits[i]->params
+                             : newSVOP(OP_CONST, 0, &PL_sv_undef));
+
+        Safefree(traits[i]);
+    }
+    Safefree(traits);
+
+    *flagsp = CALLPARSER_STATEMENT;
+    return ret;
+}
+
 static Perl_check_t old_rv2sv_checker;
 static SV *twigils_hint_key_sv;
 static U32 twigils_hint_key_hash;
@@ -595,8 +731,9 @@ BOOT:
 
     cv_set_call_checker(class,  ck_mop_keyword, &PL_sv_yes);
     cv_set_call_checker(role,   ck_mop_keyword, &PL_sv_yes);
-    cv_set_call_checker(has,    ck_mop_keyword, &PL_sv_undef);
     cv_set_call_checker(method, ck_mop_keyword, &PL_sv_undef);
+
+    cv_set_call_parser(has, parse_has, &PL_sv_undef);
 }
 
 MODULE = mop  PACKAGE = mop::internals::twigils

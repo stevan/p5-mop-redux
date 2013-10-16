@@ -13,10 +13,9 @@ use mop::internals::twigils ();
 use Devel::CallParser ();
 
 use Parse::Keyword {
-    class     => \&namespace_parser,
-    role      => \&namespace_parser,
-    method    => \&method_parser,
-    has       => \&has_parser,
+    class  => \&namespace_parser,
+    role   => \&namespace_parser,
+    method => \&method_parser,
 };
 
 our @AVAILABLE_KEYWORDS = qw(class role method has);
@@ -224,43 +223,8 @@ sub method_parser {
     return (sub { }, 1);
 }
 
-sub has { }
-
-sub has_parser {
-    lex_read_space;
-
-    syntax_error("Invalid attribute name " . read_tokenish())
-        unless lex_peek eq '$';
-    lex_read;
-
-    die "Invalid attribute name \$" . read_tokenish()
-        unless lex_peek eq '!';
-    lex_read;
-
-
-    my $name = '$!' . parse_name('attribute');
-
-    lex_read_space;
-
-    my @traits = parse_traits();
-
-    lex_read_space;
-
-    my $default;
-    if (lex_peek eq '=') {
-        lex_read;
-        lex_read_space;
-        $default = parse_fullexpr;
-    }
-
-    lex_read_space;
-
-    if (lex_peek eq ';') {
-        lex_read;
-    }
-    elsif (lex_peek ne '}') {
-        syntax_error("Couldn't parse attribute $name");
-    }
+sub has {
+    my ($name, $default, @traits) = @_;
 
     $CURRENT_META->add_attribute(
         $CURRENT_META->attribute_class->new(
@@ -269,9 +233,14 @@ sub has_parser {
         )
     );
 
-    run_traits($CURRENT_META->get_attribute($name), @traits);
+    while (@traits) {
+        my ($trait, $args) = splice @traits, 0, 2;
+        mop::traits::util::apply_trait(
+            $trait, $CURRENT_META->get_attribute($name), $args ? $args : (),
+        );
+    }
 
-    return (sub { }, 1);
+    return;
 }
 
 sub parse_traits {
