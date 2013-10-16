@@ -26,7 +26,7 @@ role Bar {
     my $meth = $meta->get_method('foo');
     is($meth->associated_meta, $meta, '... got the expected meta object');
 
-    undef $Foo::METACLASS;
+    mop::remove_meta('Foo');
     undef $meta;
 
     is($attr->associated_meta, undef, '... got the lack of an expected meta object');
@@ -42,7 +42,7 @@ role Bar {
     my $meth = $meta->get_method('baz');
     is($meth->associated_meta, $meta, '... got the expected meta object');
 
-    undef $Bar::METACLASS;
+    mop::remove_meta('Bar');
     undef $meta;
 
     is($attr->associated_meta, undef, '... got the lack of an expected meta object');
