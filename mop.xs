@@ -31,7 +31,8 @@ static MGVTBL err_vtbl = {
     0,                          /* local */
 };
 
-static int mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
+static int
+mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
 {
     SV *name, *meta, *self, *attr, *val;
 
@@ -76,7 +77,8 @@ static int mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
     return 0;
 }
 
-static int mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
+static int
+mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
 {
     SV *name, *meta, *self, *attr;
 
@@ -116,21 +118,24 @@ static int mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
     return 0;
 }
 
-static int mg_err_get(pTHX_ SV *sv, MAGIC *mg)
+static int
+mg_err_get(pTHX_ SV *sv, MAGIC *mg)
 {
     PERL_UNUSED_ARG(sv);
     croak("Cannot access the attribute:(%"SVf") in a method "
           "without a blessed invocant", SVfARG(mg->mg_obj));
 }
 
-static int mg_err_set(pTHX_ SV *sv, MAGIC *mg)
+static int
+mg_err_set(pTHX_ SV *sv, MAGIC *mg)
 {
     PERL_UNUSED_ARG(sv);
     croak("Cannot assign to the attribute:(%"SVf") in a method "
           "without a blessed invocant", SVfARG(mg->mg_obj));
 }
 
-static OP *ck_mop_keyword(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
+static OP *
+ck_mop_keyword(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
 {
     PERL_UNUSED_ARG(namegv);
     op_free(entersubop);
@@ -140,7 +145,7 @@ static OP *ck_mop_keyword(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
 }
 
 static SV *
-read_tokenish (pTHX)
+read_tokenish(pTHX)
 {
     char c;
     SV *ret = sv_2mortal(newSV(1));
@@ -161,7 +166,7 @@ read_tokenish (pTHX)
 
 #define PARSE_NAME_ALLOW_PACKAGE 1
 static SV *
-parse_name (pTHX_ const char *what, STRLEN whatlen, U32 flags)
+parse_name(pTHX_ const char *what, STRLEN whatlen, U32 flags)
 {
     char *start, *s;
     STRLEN len;
@@ -211,7 +216,7 @@ static SV *twigils_hint_key_sv;
 static U32 twigils_hint_key_hash;
 
 static SV *
-parse_ident (pTHX_ const char *prefix, STRLEN prefixlen)
+parse_ident(pTHX_ const char *prefix, STRLEN prefixlen)
 {
     STRLEN idlen;
     char *start, *s;
@@ -244,14 +249,14 @@ parse_ident (pTHX_ const char *prefix, STRLEN prefixlen)
 }
 
 static bool
-twigil_enabled (pTHX)
+twigil_enabled(pTHX)
 {
     HE *he = hv_fetch_ent(GvHV(PL_hintgv), twigils_hint_key_sv, 0, twigils_hint_key_hash);
     return he && SvTRUE(HeVAL(he));
 }
 
 static OP *
-myck_rv2sv (pTHX_ OP *o)
+myck_rv2sv(pTHX_ OP *o)
 {
     OP *kid, *ret;
     SV *sv, *name;
@@ -293,7 +298,7 @@ myck_rv2sv (pTHX_ OP *o)
 }
 
 static OP *
-myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj)
+myck_entersub_intro_twigil_var(pTHX_ OP *o, GV *namegv, SV *ckobj)
 {
     SV *namesv;
     OP *pushop, *sigop, *ret;
@@ -323,7 +328,7 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj)
 }
 
 static OP *
-myparse_args_intro_twigil_var (pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
+myparse_args_intro_twigil_var(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     char twigil[2];
     SV *ident;
@@ -442,20 +447,21 @@ read_tokenish ()
 
 void
 set_attr_magic (SV *var, SV *name, SV *meta, SV *self)
+  PREINIT:
+    SV *svs[3];
+    AV *data;
+  INIT:
+    svs[0] = name;
+    svs[1] = meta;
+    svs[2] = self;
+    data = (AV *)sv_2mortal((SV *)av_make(3, svs));
   CODE:
-    {
-        SV *svs[3] = { name, meta, self };
-        AV *data;
-        data = (AV *)sv_2mortal((SV *)av_make(3, svs));
-        sv_magicext(var, (SV *)data, PERL_MAGIC_ext, &attr_vtbl, "attr", 0);
-    }
+    sv_magicext(var, (SV *)data, PERL_MAGIC_ext, &attr_vtbl, "attr", 0);
 
 void
 set_err_magic (SV *var, SV *name)
   CODE:
-    {
-        sv_magicext(var, name, PERL_MAGIC_ext, &err_vtbl, "err", 0);
-    }
+    sv_magicext(var, name, PERL_MAGIC_ext, &err_vtbl, "err", 0);
 
 BOOT:
 {
