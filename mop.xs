@@ -202,55 +202,6 @@ Perl_check_t old_rv2sv_checker;
 SV *twigils_hint_key_sv;
 U32 twigils_hint_key_hash;
 
-#define SVt_PADNAME SVt_PVMG
-
-#ifndef COP_SEQ_RANGE_LOW_set
-# define COP_SEQ_RANGE_LOW_set(sv,val) \
-    do { ((XPVNV*)SvANY(sv))->xnv_u.xpad_cop_seq.xlow = val; } while (0)
-# define COP_SEQ_RANGE_HIGH_set(sv,val) \
-    do { ((XPVNV*)SvANY(sv))->xnv_u.xpad_cop_seq.xhigh = val; } while (0)
-#endif /* !COP_SEQ_RANGE_LOW_set */
-
-#ifndef pad_findmy_sv
-#    define pad_findmy_sv(sv, flags) pad_findmy(SvPVX(sv), SvCUR(sv), flags)
-#endif /* !pad_findmy_sv */
-
-#ifndef PERL_PADSEQ_INTRO
-#    define PERL_PADSEQ_INTRO I32_MAX
-#endif /* !PERL_PADSEQ_INTRO */
-
-#ifndef pad_add_name_pvn
-#    define pad_add_name_pvn(name,namelen,flags,typestash,ourstash) \
-            Perl_pad_add_name(aTHX_ name, namelen, flags, typestash, ourstash)
-#endif
-
-static PADOFFSET
-pad_add_my_pvn(pTHX_ char const *namepv, STRLEN namelen)
-{
-    PADOFFSET offset;
-    SV *namesv, *myvar;
-    myvar = *av_fetch(PL_comppad, AvFILLp(PL_comppad) + 1, 1);
-    offset = AvFILLp(PL_comppad);
-    SvPADMY_on(myvar);
-    PL_curpad = AvARRAY(PL_comppad);
-    namesv = newSV_type(SVt_PADNAME);
-    sv_setpvn(namesv, namepv, namelen);
-    COP_SEQ_RANGE_LOW_set(namesv, PL_cop_seqmax);
-    COP_SEQ_RANGE_HIGH_set(namesv, PERL_PADSEQ_INTRO);
-    PL_cop_seqmax++;
-    av_store(PL_comppad_name, offset, namesv);
-    return offset;
-}
-
-static PADOFFSET
-pad_add_my_sv(pTHX_ SV *namesv)
-{
-    char const *pv;
-    STRLEN len;
-    pv = SvPV(namesv, len);
-    return pad_add_my_pvn(aTHX_ pv, len);
-}
-
 static SV *
 parse_ident (pTHX_ const char *prefix, STRLEN prefixlen)
 {
@@ -357,7 +308,7 @@ myck_entersub_intro_twigil_var (pTHX_ OP *o, GV *namegv, SV *ckobj)
         croak("Unregistered sigil character %c", twigil);
 
     ret = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
-    ret->op_targ = pad_add_my_sv(aTHX_ namesv);
+    ret->op_targ = pad_add_name_sv(namesv, 0, NULL, NULL);
 
     op_free(o);
     return ret;
