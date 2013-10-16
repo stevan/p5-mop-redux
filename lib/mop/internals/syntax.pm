@@ -274,27 +274,6 @@ sub has_parser {
     return (sub { }, 1);
 }
 
-sub parse_modifier_with_multiple_values {
-    my ($modifier) = @_;
-
-    my $modifier_length = length $modifier;
-
-    return unless lex_peek($modifier_length + 1) =~ /^$modifier\b/;
-
-    lex_read($modifier_length);
-    lex_read_space;
-
-    my @names;
-
-    do {
-        my $name = parse_name('role', 1);
-        push @names, $name;
-        lex_read_space;
-    } while (lex_peek eq ',' && do { lex_read; lex_read_space; 1 });
-
-    return @names;
-}
-
 sub parse_traits {
     return unless lex_peek(3) =~ /^is\b/;
 

@@ -286,6 +286,25 @@ parse_modifier_with_single_value(pTHX_ const char *modifier, STRLEN len)
     return parse_name(aTHX_ modifier, len, PARSE_NAME_ALLOW_PACKAGE);
 }
 
+static AV *
+parse_modifier_with_multiple_values(pTHX_ const char *modifier, STRLEN len)
+{
+    AV *ret = (AV *)sv_2mortal((SV *)newAV());
+
+    if (!parse_modifier(aTHX_ modifier, len))
+        return ret;
+
+    lex_read_space(0);
+
+    do {
+        SV *name = parse_name(aTHX_ "role", sizeof("role"), PARSE_NAME_ALLOW_PACKAGE);
+        av_push(ret, SvREFCNT_inc(name));
+        lex_read_space(0);
+    } while (lex_peek_unichar(0) == ',' && (lex_read_unichar(0), lex_read_space(0), TRUE));
+
+    return ret;
+}
+
 static Perl_check_t old_rv2sv_checker;
 static SV *twigils_hint_key_sv;
 static U32 twigils_hint_key_hash;
@@ -527,6 +546,17 @@ parse_modifier_with_single_value (modifier)
     aTHX_ modifier, SvCUR(ST(0))
   POSTCALL:
     SvREFCNT_inc(RETVAL); /* As above. */
+
+void
+parse_modifier_with_multiple_values (modifier)
+    char *modifier
+  PREINIT:
+    AV *names;
+    I32 i;
+  PPCODE:
+    names = parse_modifier_with_multiple_values(aTHX_ modifier, SvCUR(ST(0)));
+    for (i = 0; i <= av_len(names); i++)
+        PUSHs(*av_fetch(names, i, 0));
 
 void
 set_attr_magic (SV *var, SV *name, SV *meta, SV *self)
