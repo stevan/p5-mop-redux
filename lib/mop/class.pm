@@ -10,9 +10,16 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use parent 'mop::role';
 
-mop::internals::util::init_attribute_storage(my %is_abstract);
 mop::internals::util::init_attribute_storage(my %superclass);
+mop::internals::util::init_attribute_storage(my %is_abstract);
 mop::internals::util::init_attribute_storage(my %instance_generator);
+
+sub superclass         { ${ $superclass{ $_[0] }         // \undef } }
+sub is_abstract        { ${ $is_abstract{ $_[0] }        // \undef } }
+sub instance_generator { ${ $instance_generator{ $_[0] } // \undef } }
+
+sub make_class_abstract    { $is_abstract{ $_[0] }        = \1     }
+sub set_instance_generator { $instance_generator{ $_[0] } = \$_[1] }
 
 # temporary, for bootstrapping
 sub new {
@@ -52,15 +59,7 @@ sub BUILD {
     }
 }
 
-# identity
-
-sub superclass { ${ $superclass{ $_[0] } // \undef } }
-
-sub is_abstract { ${ $is_abstract{ $_[0] } } }
-
-sub make_class_abstract { $is_abstract{ $_[0] } = \1 }
-
-# instance creation
+sub create_fresh_instance_structure { (shift)->instance_generator->() }
 
 sub new_instance {
     my $self = shift;
@@ -120,35 +119,23 @@ sub clone_instance {
     return $clone;
 }
 
-sub instance_generator { ${ $instance_generator{ $_[0] } } }
-sub set_instance_generator { $instance_generator{ $_[0] } = \$_[1] }
-
-sub create_fresh_instance_structure { (shift)->instance_generator->() }
-
-# events
-
 sub __INIT_METACLASS__ {
-    state $METACLASS;
-    return $METACLASS if defined $METACLASS;
-    require mop::class;
-    $METACLASS = mop::class->new(
+    my $METACLASS = mop::class->new(
         name       => 'mop::class',
         version    => $VERSION,
         authority  => $AUTHORITY,
-        superclass => 'mop::object'
+        superclass => 'mop::object',
     );
 
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$!superclass',
+        storage => \%superclass,
+    ));
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!is_abstract',
         storage => \%is_abstract,
         default => 0,
     ));
-
-    $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$!superclass',
-        storage => \%superclass
-    ));
-
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!instance_generator',
         storage => \%instance_generator,
@@ -157,17 +144,17 @@ sub __INIT_METACLASS__ {
 
     $METACLASS->add_method( mop::method->new( name => 'BUILD', body => \&BUILD ) );
 
-
     $METACLASS->add_method( mop::method->new( name => 'superclass', body => \&superclass ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'is_abstract',         body => \&is_abstract ) );
+    $METACLASS->add_method( mop::method->new( name => 'is_abstract',         body => \&is_abstract         ) );
     $METACLASS->add_method( mop::method->new( name => 'make_class_abstract', body => \&make_class_abstract ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'new_instance', body => \&new_instance ) );
-    $METACLASS->add_method( mop::method->new( name => 'clone_instance', body => \&clone_instance ) );
-    $METACLASS->add_method( mop::method->new( name => 'instance_generator', body => \&instance_generator ) );
-    $METACLASS->add_method( mop::method->new( name => 'set_instance_generator', body => \&set_instance_generator ) );
+    $METACLASS->add_method( mop::method->new( name => 'instance_generator',              body => \&instance_generator              ) );
+    $METACLASS->add_method( mop::method->new( name => 'set_instance_generator',          body => \&set_instance_generator          ) );
     $METACLASS->add_method( mop::method->new( name => 'create_fresh_instance_structure', body => \&create_fresh_instance_structure ) );
+
+    $METACLASS->add_method( mop::method->new( name => 'new_instance',   body => \&new_instance   ) );
+    $METACLASS->add_method( mop::method->new( name => 'clone_instance', body => \&clone_instance ) );
 
     $METACLASS;
 }
@@ -198,15 +185,15 @@ TODO
 
 =item C<make_class_abstract>
 
-=item C<new_instance(%args)>
-
-=item C<clone_instance($instance, %args)>
-
 =item C<instance_generator>
 
 =item C<set_instance_generator($generator)>
 
 =item C<create_fresh_instance_structure>
+
+=item C<new_instance(%args)>
+
+=item C<clone_instance($instance, %args)>
 
 =back
 
@@ -241,8 +228,3 @@ the same terms as the Perl 5 programming language system itself.
   new
 
 =cut
-
-
-
-
-

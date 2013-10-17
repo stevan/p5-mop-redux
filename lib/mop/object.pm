@@ -3,7 +3,7 @@ package mop::object;
 use v5.16;
 use warnings;
 
-use Scalar::Util qw[ blessed ];
+use mop::internals::util;
 
 our $VERSION   = '0.02';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -13,7 +13,7 @@ sub new {
 
     # NOTE:
     # prior to the bootstrapping being
-    # finished, we need to not try and
+    # finished, we need to not try to
     # build classes, it will all be done
     # manually in the mop:: classes.
     # this method will be replaced once
@@ -52,30 +52,30 @@ sub DESTROY {
 }
 
 sub __INIT_METACLASS__ {
-    state $METACLASS;
-    return $METACLASS if defined $METACLASS;
-    require mop::class;
-    $METACLASS = mop::class->new(
+    my $METACLASS = mop::class->new(
         name      => 'mop::object',
         version   => $VERSION,
         authority => $AUTHORITY,
     );
+
     $METACLASS->add_method(
         mop::method->new(
             name => 'new',
             body => sub {
                 my $class = shift;
-                my %args  = scalar(@_) == 1 && ref $_[0] eq 'HASH'
-                    ? %{$_[0]}
-                    : @_;
+                my (%args) = @_ == 1 && ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
                 mop::internals::util::find_or_inflate_meta($class)->new_instance(%args);
             }
         )
     );
-    $METACLASS->add_method( mop::method->new( name => 'clone',     body => \&clone ) );
-    $METACLASS->add_method( mop::method->new( name => 'does',      body => \&does ) );
-    $METACLASS->add_method( mop::method->new( name => 'DOES',      body => \&DOES ) );
+
+    $METACLASS->add_method( mop::method->new( name => 'clone', body => \&clone ) );
+
+    $METACLASS->add_method( mop::method->new( name => 'does', body => \&does ) );
+    $METACLASS->add_method( mop::method->new( name => 'DOES', body => \&DOES ) );
+
     $METACLASS->add_method( mop::method->new( name => 'DESTROY', body => \&DESTROY ) );
+
     $METACLASS;
 }
 
@@ -133,8 +133,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-
-
-
-
