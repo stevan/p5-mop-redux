@@ -131,7 +131,7 @@ sub rebless {
     @into_isa = grep { defined } map { meta($_) } @into_isa;
 
     for my $attr (map { $_->attributes } @from_isa) {
-        $attr->remove_data_in_slot_for($object);
+        $attr->store_data_in_slot_for($object, undef);
     }
 
     bless($object, $into);

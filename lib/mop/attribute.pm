@@ -119,11 +119,6 @@ sub store_default_in_slot_for {
     }) if $self->has_default;
 }
 
-sub remove_data_in_slot_for {
-    my ($self, $instance) = @_;
-    delete ${ $storage{ $self } }->{ $instance };
-}
-
 sub weaken_data_in_slot_for {
     my ($self, $instance) = @_;
     weaken(${ ${ $storage{ $self } }->{ $instance } });
@@ -193,7 +188,6 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'fetch_data_in_slot_for',    body => \&fetch_data_in_slot_for    ) );
     $METACLASS->add_method( mop::method->new( name => 'store_data_in_slot_for',    body => \&store_data_in_slot_for    ) );
     $METACLASS->add_method( mop::method->new( name => 'store_default_in_slot_for', body => \&store_default_in_slot_for ) );
-    $METACLASS->add_method( mop::method->new( name => 'remove_data_in_slot_for',   body => \&remove_data_in_slot_for   ) );
     $METACLASS->add_method( mop::method->new( name => 'weaken_data_in_slot_for',   body => \&weaken_data_in_slot_for ) );
     $METACLASS->add_method( mop::method->new( name => 'is_data_in_slot_weak_for',  body => \&is_data_in_slot_weak_for  ) );
     $METACLASS;
@@ -250,8 +244,6 @@ TODO
 =item C<store_data_in_slot_for($instance, $data)>
 
 =item C<store_default_in_slot_for($instance)>
-
-=item C<remove_data_in_slot_for($instance)>
 
 =item C<weaken_data_in_slot_for($instance)>
 
