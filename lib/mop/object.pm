@@ -38,7 +38,7 @@ sub does {
 
 sub DOES {
     my ($self, $role) = @_;
-    $self->does($role) or $self->isa($role) or $role eq q(UNIVERSAL);
+    $self->does($role) or $self->UNIVERSAL::DOES($role);
 }
 
 sub DESTROY {
