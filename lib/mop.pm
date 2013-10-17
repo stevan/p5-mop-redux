@@ -235,6 +235,10 @@ sub initialize {
     #   - Role does Role
     # is true.
     $Class->add_role( $Role );
+
+    # normally this would be a call to FINALIZE for all of the mop classes,
+    # but that complicates things too much during bootstrapping, and this
+    # is the only thing that would have an actual effect anyway.
     mop::internals::util::apply_all_roles($Class, $Role);
 
     # and now this is no longer needed
