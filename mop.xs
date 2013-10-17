@@ -542,44 +542,20 @@ subname(name, sub)
 
 SV *
 get_meta (SV *package)
-  PREINIT:
-    HV *stash;
   CODE:
-    if (SvROK(package)) {
-        stash = (HV *)SvRV(stash);
-    }
-    else {
-        stash = gv_stashsv(package, 0);
-    }
-    RETVAL = SvREFCNT_inc(get_meta(stash));
+    RETVAL = SvREFCNT_inc(get_meta(gv_stashsv(package, 0)));
   OUTPUT:
     RETVAL
 
 void
 set_meta (SV *package, SV *meta)
-  PREINIT:
-    HV *stash;
   CODE:
-    if (SvROK(package)) {
-        stash = (HV *)SvRV(stash);
-    }
-    else {
-        stash = gv_stashsv(package, GV_ADD);
-    }
-    set_meta(stash, meta);
+    set_meta(gv_stashsv(package, GV_ADD), meta);
 
 void
 unset_meta (SV *package)
-  PREINIT:
-    HV *stash;
   CODE:
-    if (SvROK(package)) {
-        stash = (HV *)SvRV(stash);
-    }
-    else {
-        stash = gv_stashsv(package, GV_ADD);
-    }
-    unset_meta(stash);
+    unset_meta(gv_stashsv(package, GV_ADD));
 
 MODULE = mop  PACKAGE = mop::internals::syntax
 
