@@ -36,6 +36,7 @@ use Devel::CallParser;
     print { \$fh } Devel::CallParser::callparser1_h() or die \$!;
     close \$fh or die \$!;
 }
+\$WriteMakefileArgs{clean}{FILES} .= ' callparser1.h';
 CALLPARSER_H
 
     my $template = $self->$orig(@_);

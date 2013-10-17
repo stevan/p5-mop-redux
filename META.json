@@ -106,6 +106,10 @@
       "mop::traits::util" : {
          "file" : "lib/mop/traits/util.pm",
          "version" : "0.02"
+      },
+      "op" : {
+         "file" : "lib/op.pm",
+         "version" : "0.02"
       }
    },
    "release_status" : "stable",
@@ -412,6 +416,7 @@
       "Chris Prather <chris@prather.org>",
       "Damien Krotkine <dkrotkine@weborama.com>",
       "David Golden <dagolden@cpan.org>",
+      "Matthew Horsfall (alh) <wolfsage@gmail.com>",
       "Steffen Mueller <smueller@cpan.org>",
       "Toby Inkster <mail@tobyinkster.co.uk>"
    ]
