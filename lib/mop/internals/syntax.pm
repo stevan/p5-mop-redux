@@ -127,14 +127,12 @@ sub namespace_parser {
     {
         local $CURRENT_META = $meta;
         if (my $code = parse_block(1)) {
+            run_traits($meta, @traits);
+            $meta->FINALIZE;
             $code->();
             $g->dismiss;
         }
     }
-
-    run_traits($meta, @traits);
-
-    $meta->FINALIZE;
 
     return (sub { }, 1);
 }
