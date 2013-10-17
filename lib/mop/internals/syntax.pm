@@ -9,19 +9,36 @@ use B::Hooks::EndOfScope ();
 use Carp              ();
 use Scalar::Util      ();
 use version           ();
-use mop::internals::twigils ();
 use Devel::CallParser ();
 
 use Parse::Keyword {
     class  => \&namespace_parser,
     role   => \&namespace_parser,
-    method => \&method_parser,
 };
 
-our @AVAILABLE_KEYWORDS = qw(class role method has);
+my @available_keywords = qw(class role method has);
 
 # keep the local metaclass around
 our $CURRENT_META;
+
+# The list of attribute names declared so far during the compilation of a
+# namespace block, used to declare lexicals in methods as they're compiled.
+our @CURRENT_ATTRIBUTE_NAMES;
+
+sub setup_for {
+    my ($pkg) = @_;
+
+    $^H{__PACKAGE__ . '/twigils'} = 1;
+    mop::_install_sub($pkg, 'mop::internals::syntax', $_)
+        for @available_keywords;
+}
+
+sub teardown_for {
+    my ($pkg) = @_;
+
+    mop::_uninstall_sub($pkg, $_)
+        for @available_keywords;
+}
 
 sub class { 1 }
 
@@ -125,7 +142,10 @@ sub namespace_parser {
     lex_stuff($preamble);
     {
         local $CURRENT_META = $meta;
+        local @CURRENT_ATTRIBUTE_NAMES = ();
         if (my $code = parse_block(1)) {
+            use B::Deparse;
+            warn B::Deparse->new('-p')->coderef2text($code);
             $code->();
             $g->dismiss;
         }
@@ -138,9 +158,30 @@ sub namespace_parser {
     return (sub { }, 1);
 }
 
-sub method { }
+sub method {
+    my ($name, $body, @traits) = @_;
 
-sub method_parser {
+    $CURRENT_META->add_method(
+        $CURRENT_META->method_class->new(
+            name => $name,
+            body => mop::internals::util::subname(
+                (join '::' => $CURRENT_META->name, $name),
+                $body,
+            ),
+        )
+    );
+
+    while (@traits) {
+        my ($trait, $args) = splice @traits, 0, 2;
+        mop::traits::util::apply_trait(
+            $trait, $CURRENT_META->get_attribute($name), $args ? $args : (),
+        );
+    }
+
+    return;
+}
+
+sub _method_parser {
     my ($type) = @_;
     lex_read_space;
 

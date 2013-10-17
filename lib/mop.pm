@@ -33,21 +33,14 @@ sub import {
     my $pkg = caller;
 
     initialize();
-
-    foreach my $keyword ( @mop::internals::syntax::AVAILABLE_KEYWORDS ) {
-        _install_sub($pkg, 'mop::internals::syntax', $keyword);
-    }
-
-    foreach my $trait ( @mop::traits::AVAILABLE_TRAITS ) {
-        _install_sub($pkg, 'mop::traits', $trait);
-    }
+    mop::internals::syntax::setup_for($pkg);
+    mop::traits::setup_for($pkg);
 }
 
 sub unimport {
     my $pkg = caller;
-    _uninstall_sub($pkg, $_)
-        for @mop::internals::syntax::AVAILABLE_KEYWORDS,
-            @mop::traits::AVAILABLE_TRAITS;
+    mop::internals::syntax::teardown_for($pkg);
+    mop::traits::teardown_for($pkg);
 }
 
 # XXX all of this OVERRIDDEN stuff really needs to go, ideally replaced by

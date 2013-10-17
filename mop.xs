@@ -386,10 +386,33 @@ parse_traits(pTHX_ UV *ntraitsp)
 }
 
 static OP *
+gen_traits_ops(pTHX_ OP *append_to, struct mop_trait **traits, UV ntraits)
+{
+    UV i;
+
+    for (i = 0; i < ntraits; i++) {
+        OP *cvop = newUNOP(OP_REFGEN, 0,
+                           newCVREF((OPpENTERSUB_AMPER<<8),
+                                    newSVOP(OP_CONST, 0, SvREFCNT_inc(traits[i]->name))));
+
+        append_to = op_append_elem(OP_LIST, append_to, cvop);
+        append_to = op_append_elem(OP_LIST, append_to,
+                                   traits[i]->params
+                                   ? traits[i]->params
+                                   : newSVOP(OP_CONST, 0, &PL_sv_undef));
+
+        Safefree(traits[i]);
+    }
+    Safefree(traits);
+
+    return append_to;
+}
+
+static OP *
 parse_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     SV *name;
-    UV ntraits, i;
+    UV ntraits;
     OP *default_value = NULL, *ret;
     struct mop_trait **traits;
 
@@ -429,24 +452,309 @@ parse_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 
     ret = op_append_elem(OP_LIST, newSVOP(OP_CONST, 0, SvREFCNT_inc(name)),
                          default_value ? default_value : newSVOP(OP_CONST, 0, &PL_sv_undef));
-    for (i = 0; i < ntraits; i++) {
-        OP *cvop;
-        cvop = newUNOP(OP_REFGEN, 0,
-                       newCVREF((OPpENTERSUB_AMPER<<8),
-                                newSVOP(OP_CONST, 0, SvREFCNT_inc(traits[i]->name))));
-
-        ret = op_append_elem(OP_LIST, ret, cvop);
-        ret = op_append_elem(OP_LIST, ret,
-                             traits[i]->params
-                             ? traits[i]->params
-                             : newSVOP(OP_CONST, 0, &PL_sv_undef));
-
-        Safefree(traits[i]);
-    }
-    Safefree(traits);
+    ret = gen_traits_ops(aTHX_ ret, traits, ntraits);
 
     *flagsp = CALLPARSER_STATEMENT;
     return ret;
+}
+
+static AV *
+current_attributes(pTHX)
+{
+    return GvAV(gv_fetchpvs("mop::internals::syntax::CURRENT_ATTRIBUTE_NAMES",
+                            GV_ADD, SVt_PVAV));
+}
+
+static void
+add_attribute(pTHX_ SV *namesv)
+{
+    AV *attrs = current_attributes(aTHX);
+    av_push(attrs, SvREFCNT_inc(namesv));
+}
+
+static OP *
+check_has(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
+{
+    OP *pushop, *nameop;
+
+    PERL_UNUSED_ARG(namegv);
+    PERL_UNUSED_ARG(ckobj);
+
+    pushop = cUNOPx(entersubop)->op_first;
+    if (!pushop->op_sibling)
+        pushop = cUNOPx(pushop)->op_first;
+
+    if ((nameop = pushop->op_sibling) && nameop->op_type == OP_CONST) {
+        add_attribute(aTHX_ cSVOPx_sv(nameop));
+    }
+
+    return PL_check[entersubop->op_type](aTHX_ entersubop);
+}
+
+struct mop_signature_var {
+    SV *name;
+    OP *default_value;
+};
+
+static UV
+parse_signature(pTHX_ SV *method_name,
+                struct mop_signature_var **invocantp,
+                struct mop_signature_var ***varsp)
+{
+    dXCPT;
+    UV numvars = 0;
+    struct mop_signature_var **vars = NULL, *invocant = NULL;
+
+    if (lex_peek_unichar(0) == '(') {
+        char sigil;
+        bool seen_slurpy = FALSE;
+
+        lex_read_unichar(0);
+        lex_read_space(0);
+
+        XCPT_TRY_START {
+            while ((sigil = lex_peek_unichar(0)) != ')') {
+                struct mop_signature_var *var;
+
+                if (sigil != '$' && sigil != '@' && sigil != '%')
+                    syntax_error(aTHX_ sv_2mortal(newSVpvf("Invalid sigil: %c", sigil)));
+                if (seen_slurpy)
+                    syntax_error(aTHX_ sv_2mortal(newSVpvs("Can't declare parameters "
+                                                           "after a slurpy parameter")));
+                seen_slurpy = sigil == '@' || sigil == '%';
+                lex_read_unichar(0);
+                lex_read_space(0);
+
+                Newxz(var, 1, struct mop_signature_var);
+
+                var->name = parse_name_prefix(aTHX_ &sigil, 1, "argument",
+                                              sizeof("argument") - 1, 0);
+                lex_read_space(0);
+
+                if (lex_peek_unichar(0) == '=') {
+                    lex_read_unichar(0);
+                    lex_read_space(0);
+                    var->default_value = parse_arithexpr(0);
+                    lex_read_space(0);
+                }
+
+                if (lex_peek_unichar(0) == ':') {
+                    if (*vars)
+                        syntax_error(aTHX_ sv_2mortal(newSVpvs("Cannot specify "
+                                                               "multiple invocants")));
+                    if (var->default_value)
+                        syntax_error(aTHX_ sv_2mortal(newSVpvs("Cannot specify a default "
+                                                               "value for the invocant")));
+                    invocant = var;
+                    lex_read_unichar(0);
+                    lex_read_space(0);
+                }
+                else {
+                    Renew(vars, numvars + 1, struct mop_signature_var *);
+                    vars[numvars] = var;
+
+                    if (lex_peek_unichar(0) != ')' && lex_peek_unichar(0) != ',')
+                        syntax_error(aTHX_ sv_2mortal(newSVpvf("Unterminated prototype for "
+                                                           "%"SVf, SVfARG(method_name))));
+
+                    if (lex_peek_unichar(0) == ',') {
+                        lex_read_unichar(0);
+                        lex_read_space(0);
+                    }
+
+                    numvars++;
+                }
+            }
+        } XCPT_TRY_END XCPT_CATCH {
+            UV i;
+
+            if (invocant) {
+                /* name is already mortal. default_value is never used. */
+                Safefree(invocant);
+            }
+
+            for (i = 0; i < numvars; i++) {
+                /* name is already mortal */
+                if (vars[i]->default_value)
+                    op_free(vars[i]->default_value);
+                Safefree(vars[i]);
+                Safefree(vars);
+            }
+        XCPT_RETHROW;
+            XCPT_RETHROW;
+        }
+        lex_read_unichar(0);
+    }
+
+    if (!invocant) {
+        Newxz(invocant, 1, struct mop_signature_var);
+        invocant->name = sv_2mortal(newSVpvs("$self"));
+        /* invocant->default_value = newOP(OP_SHIFT, OPf_WANT_SCALAR | OPf_SPECIAL); */
+    }
+
+    *invocantp = invocant;
+    *varsp = vars;
+    return numvars;
+}
+
+static void
+add_required_method(pTHX_ SV *method_name)
+{
+    PERL_UNUSED_ARG(method_name);
+    croak("Not yet implemented");
+}
+
+static OP *
+intro_twigil_var(pTHX_ SV *namesv)
+{
+    OP *o = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
+    o->op_targ = pad_add_name_sv(namesv, 0, NULL, NULL);
+    return o;
+}
+
+static void
+set_attr_magic(pTHX_ SV *var, SV *name, SV *meta, SV *self)
+{
+    SV *svs[3];
+    AV *data;
+    svs[0] = name;
+    svs[1] = meta;
+    svs[2] = self;
+    data = (AV *)sv_2mortal((SV *)av_make(3, svs));
+    sv_magicext(var, (SV *)data, PERL_MAGIC_ext, &attr_vtbl, "attr", 0);
+}
+
+static void
+set_err_magic(pTHX_ SV *var, SV *name)
+{
+    sv_magicext(var, name, PERL_MAGIC_ext, &err_vtbl, "err", 0);
+}
+
+static OP *
+pp_init_attr(pTHX)
+{
+    dSP; dTARGET;
+    AV *args = (AV *)SvRV(POPs);
+    SV *attr_name = *av_fetch(args, 0, 0);
+    SV *meta_class = *av_fetch(args, 1, 0);
+    SV *invocant = *av_fetch(args, 2, 0);
+    if (sv_isobject(invocant))
+        set_attr_magic(aTHX_ TARG, attr_name, meta_class, invocant);
+    else
+        set_err_magic(aTHX_ TARG, attr_name);
+    return PL_op->op_next;
+}
+
+static OP *
+parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
+{
+    SV *name;
+    AV *attrs;
+    UV numvars, numtraits, i;
+    IV j;
+    int blk_floor;
+    struct mop_signature_var **vars;
+    struct mop_signature_var *invocant;
+    struct mop_trait **traits;
+    OP *body, *unpackargsop = NULL, *attrintroop = NULL, *attrinitop = NULL;
+
+    PERL_UNUSED_ARG(namegv);
+    PERL_UNUSED_ARG(psobj);
+
+    *flagsp = CALLPARSER_STATEMENT;
+
+    lex_read_space(0);
+    name = parse_name(aTHX_ "method", sizeof("method") - 1, 0);
+    lex_read_space(0);
+
+    numvars = parse_signature(aTHX_ name, &invocant, &vars);
+    lex_read_space(0);
+
+    traits = parse_traits(aTHX_ &numtraits);
+    lex_read_space(0);
+
+    switch (lex_peek_unichar(0)) {
+    case ';':
+        lex_read_unichar(0);
+        /* fall through */
+    case '}':
+        add_required_method(aTHX_ name);
+        return newOP(OP_NULL, 0);
+        break;
+    }
+
+    if (lex_peek_unichar(0) != '{')
+        syntax_error(aTHX_ sv_2mortal(newSVpvs("Non-required methods require a body")));
+
+    blk_floor = start_subparse(0, CVf_ANON);
+
+    unpackargsop = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
+    unpackargsop->op_targ = pad_add_name_sv(invocant->name, 0, NULL, NULL);
+    unpackargsop = newSTATEOP(0, NULL,
+                              newASSIGNOP(OPf_STACKED, unpackargsop, 0,
+                                          newOP(OP_SHIFT, OPf_WANT_SCALAR | OPf_SPECIAL)));
+
+    if (numvars) {
+        OP *lhsop = NULL;
+
+        for (i = 0; i < numvars; i++) {
+            OP *o;
+            o = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
+            o->op_targ = pad_add_name_sv(vars[i]->name, 0, NULL, NULL);
+
+            if (!lhsop)
+                lhsop = o;
+            else
+                lhsop = op_append_elem(OP_LIST, lhsop, o);
+        }
+        Safefree(vars);
+
+        unpackargsop = op_append_elem(OP_LIST, unpackargsop,
+                                      newASSIGNOP(OPf_STACKED, lhsop, 0,
+                                                  newAVREF(newGVOP(OP_GV, 0, PL_defgv))));
+    }
+
+    attrs = current_attributes(aTHX);
+    for (j = 0; j <= av_len(attrs); j++) {
+        SV *attr = *av_fetch(attrs, j, 0);
+        OP *o = intro_twigil_var(aTHX_ attr);
+        OP *initop, *fetchinvocantop, *initopargs;
+        initopargs = newSVOP(OP_CONST, 0, SvREFCNT_inc(attr));
+        initopargs = op_append_elem(OP_LIST, initopargs,
+                                    newSVOP(OP_CONST, 0,
+                                            SvREFCNT_inc(get_sv("mop::internals::"
+                                                                "syntax::CURRENT_META", 0))));
+        fetchinvocantop = newOP(OP_PADSV, 0);
+        fetchinvocantop->op_targ = pad_findmy_pvs("$self", 0);
+        initopargs = op_append_elem(OP_LIST, initopargs, fetchinvocantop);
+        initop = newUNOP(OP_RAND, 0, newANONLIST(initopargs));
+        initop->op_targ = o->op_targ;
+        initop->op_ppaddr = pp_init_attr;
+
+        if (!attrintroop) {
+            attrintroop = o;
+            attrinitop = initop;
+        }
+        else {
+            attrintroop = op_append_elem(OP_LINESEQ, attrintroop, o);
+            attrinitop = op_append_elem(OP_LINESEQ, attrinitop, initop);
+        }
+    }
+    attrintroop = newSTATEOP(0, NULL, attrintroop);
+
+    body = parse_block(0);
+    if (!body)
+        syntax_error(aTHX_ &PL_sv_undef);
+
+    body = op_prepend_elem(OP_LINESEQ, attrinitop, body);
+    body = op_prepend_elem(OP_LINESEQ, attrintroop, body);
+    if (unpackargsop)
+        body = op_prepend_elem(OP_LINESEQ, newSTATEOP(0, NULL, unpackargsop), body);
+    body = gen_traits_ops(aTHX_ body, traits, numtraits);
+
+    return op_append_elem(OP_LIST,
+                          newSVOP(OP_CONST, 0, SvREFCNT_inc(name)),
+                          newANONSUB(blk_floor, NULL, body));
 }
 
 static Perl_check_t old_rv2sv_checker;
@@ -533,64 +841,6 @@ myck_rv2sv(pTHX_ OP *o)
 
     op_free(o);
     return ret;
-}
-
-static OP *
-myck_entersub_intro_twigil_var(pTHX_ OP *o, GV *namegv, SV *ckobj)
-{
-    SV *namesv;
-    OP *pushop, *sigop, *ret;
-    char twigil;
-
-    PERL_UNUSED_ARG(namegv);
-    PERL_UNUSED_ARG(ckobj);
-
-    pushop = cUNOPo->op_first;
-    if (!pushop->op_sibling)
-        pushop = cUNOPx(pushop)->op_first;
-
-    if (!(sigop = pushop->op_sibling) || sigop->op_type != OP_CONST)
-        croak("Unable to extract compile time constant twigil variable name");
-
-    namesv = cSVOPx_sv(sigop);
-    twigil = *(SvPVX(namesv) + 1);
-
-    if (twigil != '!')
-        croak("Unregistered sigil character %c", twigil);
-
-    ret = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
-    ret->op_targ = pad_add_name_sv(namesv, 0, NULL, NULL);
-
-    op_free(o);
-    return ret;
-}
-
-static OP *
-myparse_args_intro_twigil_var(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
-{
-    char twigil[2];
-    SV *ident;
-
-    PERL_UNUSED_ARG(namegv);
-    PERL_UNUSED_ARG(psobj);
-    PERL_UNUSED_ARG(flagsp);
-
-    lex_read_space(0);
-    twigil[0] = lex_peek_unichar(0);
-    if (twigil[0] != '$' && twigil[0] != '@' && twigil[0] != '%')
-        croak("syntax error");
-    lex_read_unichar(0);
-
-    if (isSPACE(lex_peek_unichar(0)))
-        croak("syntax error");
-
-    twigil[1] = lex_read_unichar(0);
-
-    ident = parse_ident(aTHX_ twigil, 2);
-    if (!ident)
-        croak("syntax error");
-
-    return newSVOP(OP_CONST, 0, SvREFCNT_inc(ident));
 }
 
 MODULE = mop  PACKAGE = mop::internals::util
@@ -702,24 +952,6 @@ parse_modifier_with_multiple_values (modifier)
     for (i = 0; i <= av_len(names); i++)
         PUSHs(*av_fetch(names, i, 0));
 
-void
-set_attr_magic (SV *var, SV *name, SV *meta, SV *self)
-  PREINIT:
-    SV *svs[3];
-    AV *data;
-  INIT:
-    svs[0] = name;
-    svs[1] = meta;
-    svs[2] = self;
-    data = (AV *)sv_2mortal((SV *)av_make(3, svs));
-  CODE:
-    sv_magicext(var, (SV *)data, PERL_MAGIC_ext, &attr_vtbl, "attr", 0);
-
-void
-set_err_magic (SV *var, SV *name)
-  CODE:
-    sv_magicext(var, name, PERL_MAGIC_ext, &err_vtbl, "err", 0);
-
 BOOT:
 {
     CV *class, *role, *has, *method;
@@ -731,29 +963,15 @@ BOOT:
 
     cv_set_call_checker(class,  ck_mop_keyword, &PL_sv_yes);
     cv_set_call_checker(role,   ck_mop_keyword, &PL_sv_yes);
-    cv_set_call_checker(method, ck_mop_keyword, &PL_sv_undef);
 
-    cv_set_call_parser(has, parse_has, &PL_sv_undef);
-}
+    cv_set_call_parser(has,    parse_has,    &PL_sv_undef);
+    cv_set_call_parser(method, parse_method, &PL_sv_undef);
 
-MODULE = mop  PACKAGE = mop::internals::twigils
+    cv_set_call_checker(has,    check_has,    &PL_sv_undef);
 
-PROTOTYPES: DISABLE
-
-BOOT:
-{
-    CV *intro_twigil_my_var_cv = get_cv("mop::internals::twigils::intro_twigil_my_var", 0);
-
-    twigils_hint_key_sv = newSVpvs_share("mop::internals::twigils/twigils");
+    twigils_hint_key_sv = newSVpvs_share("mop::internals::syntax/twigils");
     twigils_hint_key_hash = SvSHARED_HASH(twigils_hint_key_sv);
 
     old_rv2sv_checker = PL_check[OP_RV2SV];
     PL_check[OP_RV2SV] = myck_rv2sv;
-
-    cv_set_call_parser(intro_twigil_my_var_cv,
-                       myparse_args_intro_twigil_var, &PL_sv_undef);
-
-    cv_set_call_checker(intro_twigil_my_var_cv,
-                        myck_entersub_intro_twigil_var,
-                        &PL_sv_undef);
 }

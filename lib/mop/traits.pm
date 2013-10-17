@@ -6,7 +6,7 @@ use warnings;
 our $VERSION   = '0.02';
 our $AUTHORITY = 'cpan:STEVAN';
 
-our @AVAILABLE_TRAITS = qw[
+our @available_traits = qw[
     rw
     ro
     required
@@ -17,6 +17,20 @@ our @AVAILABLE_TRAITS = qw[
     extending_non_mop
     repr
 ];
+
+sub setup_for {
+    my ($pkg) = @_;
+
+    mop::_install_sub($pkg, 'mop::traits', $_)
+        for @available_traits;
+}
+
+sub teardown_for {
+    my ($pkg) = @_;
+
+    mop::_uninstall_sub($pkg, $_)
+        for @available_traits;
+}
 
 sub rw {
     my ($attr) = @_;
