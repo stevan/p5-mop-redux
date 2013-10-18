@@ -136,8 +136,9 @@ mg_err_set(pTHX_ SV *sv, MAGIC *mg)
           "without a blessed invocant", SVfARG(mg->mg_obj));
 }
 
+#define get_meta(stash) THX_get_meta(aTHX_ stash)
 static SV *
-get_meta(pTHX_ HV *stash)
+THX_get_meta(pTHX_ HV *stash)
 {
     MAGIC *mg = NULL;
 
@@ -148,14 +149,16 @@ get_meta(pTHX_ HV *stash)
     return mg ? mg->mg_obj : &PL_sv_undef;
 }
 
+#define set_meta(stash, meta) THX_set_meta(aTHX_ stash, meta)
 static void
-set_meta(pTHX_ HV *stash, SV *meta)
+THX_set_meta(pTHX_ HV *stash, SV *meta)
 {
     sv_magicext((SV *)stash, meta, PERL_MAGIC_ext, &meta_vtbl, "meta", 0);
 }
 
+#define unset_meta(stash) THX_unset_meta(aTHX_ stash)
 static void
-unset_meta(pTHX_ HV *stash)
+THX_unset_meta(pTHX_ HV *stash)
 {
     sv_unmagicext((SV *)stash, PERL_MAGIC_ext, &meta_vtbl);
 }
@@ -170,8 +173,9 @@ ck_mop_keyword(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
         : newOP(OP_NULL, 0);
 }
 
+#define read_tokenish() THX_read_tokenish(aTHX)
 static SV *
-read_tokenish(pTHX)
+THX_read_tokenish(pTHX)
 {
     char c;
     SV *ret = sv_2mortal(newSV(1));
@@ -190,8 +194,9 @@ read_tokenish(pTHX)
     return ret;
 }
 
+#define lex_peek_pv(len, lenp) THX_lex_peek_pv(aTHX_ len, lenp)
 static char *
-lex_peek_pv(pTHX_ STRLEN len, STRLEN *lenp)
+THX_lex_peek_pv(pTHX_ STRLEN len, STRLEN *lenp)
 {
     char *bufptr = PL_parser->bufptr;
     char *bufend = PL_parser->bufend;
@@ -230,8 +235,9 @@ lex_peek_pv(pTHX_ STRLEN len, STRLEN *lenp)
 }
 
 #define PARSE_NAME_ALLOW_PACKAGE 1
+#define parse_name_prefix(prefix, prefixlen, what, whatlen, flags) THX_parse_name_prefix(aTHX_ prefix, prefixlen, what, whatlen, flags)
 static SV *
-parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
+THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
                   const char *what, STRLEN whatlen, U32 flags)
 {
     char *start, *s;
@@ -258,7 +264,7 @@ parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
             else {
                 croak("Invalid identifier: %.*s%"SVf,
                       s - start, start,
-                      SVfARG(read_tokenish(aTHX)));
+                      SVfARG(read_tokenish()));
             }
         }
         else break;
@@ -267,7 +273,7 @@ parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
     len = s - start;
     if (!len)
         croak("%"SVf" is not a valid %.*s name",
-              SVfARG(read_tokenish(aTHX)), whatlen, what);
+              SVfARG(read_tokenish()), whatlen, what);
     sv = sv_2mortal(newSV(prefixlen + len));
     Copy(prefix, SvPVX(sv), prefixlen, char);
     Copy(start, SvPVX(sv) + prefixlen, len, char);
@@ -278,17 +284,19 @@ parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
     return sv;
 }
 
+#define parse_name(what, whatlen, flags) THX_parse_name(aTHX_ what, whatlen, flags)
 static SV *
-parse_name(pTHX_ const char *what, STRLEN whatlen, U32 flags)
+THX_parse_name(pTHX_ const char *what, STRLEN whatlen, U32 flags)
 {
-    return parse_name_prefix(aTHX_ NULL, 0, what, whatlen, flags);
+    return parse_name_prefix(NULL, 0, what, whatlen, flags);
 }
 
+#define parse_modifier(modifier, len) THX_parse_modifier(aTHX_ modifier, len)
 static bool
-parse_modifier(pTHX_ const char *modifier, STRLEN len)
+THX_parse_modifier(pTHX_ const char *modifier, STRLEN len)
 {
     STRLEN got;
-    char *s = lex_peek_pv(aTHX_ len + 1, &got);
+    char *s = lex_peek_pv(len + 1, &got);
 
     if (got < len)
         return FALSE;
@@ -306,32 +314,34 @@ parse_modifier(pTHX_ const char *modifier, STRLEN len)
     return TRUE;
 }
 
+#define parse_modifier_with_single_value(modifier, len) THX_parse_modifier_with_single_value(aTHX_ modifier, len)
 static SV *
-parse_modifier_with_single_value(pTHX_ const char *modifier, STRLEN len)
+THX_parse_modifier_with_single_value(pTHX_ const char *modifier, STRLEN len)
 {
-    if (!parse_modifier(aTHX_ modifier, len))
+    if (!parse_modifier(modifier, len))
         return NULL;
 
     lex_read_space(0);
 
     if (strnEQ(modifier, "extends", len))
-        return parse_name(aTHX_ "class", sizeof("class") - 1, PARSE_NAME_ALLOW_PACKAGE);
+        return parse_name("class", sizeof("class") - 1, PARSE_NAME_ALLOW_PACKAGE);
 
-    return parse_name(aTHX_ modifier, len, PARSE_NAME_ALLOW_PACKAGE);
+    return parse_name(modifier, len, PARSE_NAME_ALLOW_PACKAGE);
 }
 
+#define parse_modifier_with_multiple_values(modifier, len) THX_parse_modifier_with_multiple_values(aTHX_ modifier, len)
 static AV *
-parse_modifier_with_multiple_values(pTHX_ const char *modifier, STRLEN len)
+THX_parse_modifier_with_multiple_values(pTHX_ const char *modifier, STRLEN len)
 {
     AV *ret = (AV *)sv_2mortal((SV *)newAV());
 
-    if (!parse_modifier(aTHX_ modifier, len))
+    if (!parse_modifier(modifier, len))
         return ret;
 
     lex_read_space(0);
 
     do {
-        SV *name = parse_name(aTHX_ "role", sizeof("role"), PARSE_NAME_ALLOW_PACKAGE);
+        SV *name = parse_name("role", sizeof("role"), PARSE_NAME_ALLOW_PACKAGE);
         av_push(ret, SvREFCNT_inc(name));
         lex_read_space(0);
     } while (lex_peek_unichar(0) == ',' && (lex_read_unichar(0), lex_read_space(0), TRUE));
@@ -344,8 +354,9 @@ struct mop_trait {
     OP *params;
 };
 
+#define syntax_error(err) THX_syntax_error(aTHX_ err)
 static void
-syntax_error(pTHX_ SV *err)
+THX_syntax_error(pTHX_ SV *err)
 {
     dSP;
     ENTER;
@@ -357,14 +368,15 @@ syntax_error(pTHX_ SV *err)
     LEAVE;
 }
 
+#define parse_traits(ntraitsp) THX_parse_traits(aTHX_ ntraitsp)
 static struct mop_trait **
-parse_traits(pTHX_ UV *ntraitsp)
+THX_parse_traits(pTHX_ UV *ntraitsp)
 {
     dXCPT;
     U32 ntraits = 0;
     struct mop_trait **ret = NULL;
 
-    if (!parse_modifier(aTHX_ "is", 2)) {
+    if (!parse_modifier("is", 2)) {
         *ntraitsp = 0;
         return ret;
     }
@@ -376,16 +388,16 @@ parse_traits(pTHX_ UV *ntraitsp)
             Renew(ret, ntraits + 1, struct mop_trait *);
             Newx(trait, 1, struct mop_trait);
             ret[ntraits] = trait;
-            trait->name = parse_name(aTHX_ "trait", sizeof("trait") - 1,
+            trait->name = parse_name("trait", sizeof("trait") - 1,
                                      PARSE_NAME_ALLOW_PACKAGE);
 
             if (lex_peek_unichar(0) == '(') {
                 lex_read_unichar(0);
                 trait->params = newANONLIST(parse_fullexpr(0));
                 if (lex_peek_unichar(0) != ')')
-                    syntax_error(aTHX_ sv_2mortal(newSVpvf("Unterminated parameter "
-                                                           "list for trait %"SVf,
-                                                           SVfARG(trait->name))));
+                    syntax_error(sv_2mortal(newSVpvf("Unterminated parameter "
+                                                     "list for trait %"SVf,
+                                                     SVfARG(trait->name))));
                 lex_read_unichar(0);
             }
             else
@@ -410,8 +422,9 @@ parse_traits(pTHX_ UV *ntraitsp)
     return ret;
 }
 
+#define gen_traits_ops(append_to, traits, ntraits) THX_gen_traits_ops(aTHX_ append_to, traits, ntraits)
 static OP *
-gen_traits_ops(pTHX_ OP *append_to, struct mop_trait **traits, UV ntraits)
+THX_gen_traits_ops(pTHX_ OP *append_to, struct mop_trait **traits, UV ntraits)
 {
     UV i;
 
@@ -433,8 +446,9 @@ gen_traits_ops(pTHX_ OP *append_to, struct mop_trait **traits, UV ntraits)
     return append_to;
 }
 
+#define parse_has(namegv, psobj, flagsp) THX_parse_has(aTHX_ namegv, psobj, flagsp)
 static OP *
-parse_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
+THX_parse_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     SV *name;
     UV ntraits;
@@ -447,19 +461,19 @@ parse_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     lex_read_space(0);
 
     if (lex_peek_unichar(0) != '$')
-        syntax_error(aTHX_ sv_2mortal(newSVpvf("Invalid attribute name %"SVf,
-                                               SVfARG(read_tokenish(aTHX)))));
+        syntax_error(sv_2mortal(newSVpvf("Invalid attribute name %"SVf,
+                                         SVfARG(read_tokenish()))));
     lex_read_unichar(0);
 
     if (lex_peek_unichar(0) != '!')
-        syntax_error(aTHX_ sv_2mortal(newSVpvf("Invalid attribute name $%"SVf,
-                                               SVfARG(read_tokenish(aTHX)))));
+        syntax_error(sv_2mortal(newSVpvf("Invalid attribute name $%"SVf,
+                                         SVfARG(read_tokenish()))));
     lex_read_unichar(0);
 
-    name = parse_name_prefix(aTHX_ "$!", 2, "attribute", sizeof("attribute") - 1, 0);
+    name = parse_name_prefix("$!", 2, "attribute", sizeof("attribute") - 1, 0);
     lex_read_space(0);
 
-    traits = parse_traits(aTHX_ &ntraits);
+    traits = parse_traits(&ntraits);
     lex_read_space(0);
 
     if (lex_peek_unichar(0) == '=') {
@@ -475,28 +489,30 @@ parse_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     if (lex_peek_unichar(0) == ';')
         lex_read_unichar(0);
     else if (lex_peek_unichar(0) != '}')
-        syntax_error(aTHX_ sv_2mortal(newSVpvf("Couldn't parse attribute %"SVf,
-                                               SVfARG(name))));
+        syntax_error(sv_2mortal(newSVpvf("Couldn't parse attribute %"SVf,
+                                         SVfARG(name))));
 
     ret = op_append_elem(OP_LIST, newSVOP(OP_CONST, 0, SvREFCNT_inc(name)),
                          default_value ? default_value : newSVOP(OP_CONST, 0, &PL_sv_undef));
-    ret = gen_traits_ops(aTHX_ ret, traits, ntraits);
+    ret = gen_traits_ops(ret, traits, ntraits);
 
     *flagsp = CALLPARSER_STATEMENT;
     return ret;
 }
 
+#define current_attributes() THX_current_attributes(aTHX)
 static AV *
-current_attributes(pTHX)
+THX_current_attributes(pTHX)
 {
     return GvAV(gv_fetchpvs("mop::internals::syntax::CURRENT_ATTRIBUTE_NAMES",
                             GV_ADD, SVt_PVAV));
 }
 
+#define add_attribute(namesv) THX_add_attribute(aTHX_ namesv)
 static void
-add_attribute(pTHX_ SV *namesv)
+THX_add_attribute(pTHX_ SV *namesv)
 {
-    AV *attrs = current_attributes(aTHX);
+    AV *attrs = current_attributes();
     av_push(attrs, SvREFCNT_inc(namesv));
 }
 
@@ -505,11 +521,11 @@ run_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     dSP;
     I32 floor = start_subparse(0, CVf_ANON);
-    OP *o = parse_has(aTHX_ namegv, psobj, flagsp);
+    OP *o = parse_has(namegv, psobj, flagsp);
     GV *gv = gv_fetchpvs("mop::internals::syntax::add_attribute", 0, SVt_PVCV);
     CV *cv;
 
-    add_attribute(aTHX_ cSVOPx_sv(cUNOPo->op_first->op_sibling));
+    add_attribute(cSVOPx_sv(cUNOPo->op_first->op_sibling));
 
     o = newUNOP(OP_ENTERSUB, OPf_STACKED,
                 op_append_elem(OP_LIST, o,
@@ -533,10 +549,11 @@ struct mop_signature_var {
     OP *default_value;
 };
 
+#define parse_signature(method_name, invocantp, varsp) THX_parse_signature(aTHX_ method_name, invocantp, varsp)
 static UV
-parse_signature(pTHX_ SV *method_name,
-                struct mop_signature_var **invocantp,
-                struct mop_signature_var ***varsp)
+THX_parse_signature(pTHX_ SV *method_name,
+                    struct mop_signature_var **invocantp,
+                    struct mop_signature_var ***varsp)
 {
     dXCPT;
     UV numvars = 0;
@@ -554,17 +571,17 @@ parse_signature(pTHX_ SV *method_name,
                 struct mop_signature_var *var;
 
                 if (sigil != '$' && sigil != '@' && sigil != '%')
-                    syntax_error(aTHX_ sv_2mortal(newSVpvf("Invalid sigil: %c", sigil)));
+                    syntax_error(sv_2mortal(newSVpvf("Invalid sigil: %c", sigil)));
                 if (seen_slurpy)
-                    syntax_error(aTHX_ sv_2mortal(newSVpvs("Can't declare parameters "
-                                                           "after a slurpy parameter")));
+                    syntax_error(sv_2mortal(newSVpvs("Can't declare parameters "
+                                                     "after a slurpy parameter")));
                 seen_slurpy = sigil == '@' || sigil == '%';
                 lex_read_unichar(0);
                 lex_read_space(0);
 
                 Newxz(var, 1, struct mop_signature_var);
 
-                var->name = parse_name_prefix(aTHX_ &sigil, 1, "argument",
+                var->name = parse_name_prefix(&sigil, 1, "argument",
                                               sizeof("argument") - 1, 0);
                 lex_read_space(0);
 
@@ -577,11 +594,11 @@ parse_signature(pTHX_ SV *method_name,
 
                 if (lex_peek_unichar(0) == ':') {
                     if (invocant)
-                        syntax_error(aTHX_ sv_2mortal(newSVpvs("Cannot specify "
-                                                               "multiple invocants")));
+                        syntax_error(sv_2mortal(newSVpvs("Cannot specify "
+                                                         "multiple invocants")));
                     if (var->default_value)
-                        syntax_error(aTHX_ sv_2mortal(newSVpvs("Cannot specify a default "
-                                                               "value for the invocant")));
+                        syntax_error(sv_2mortal(newSVpvs("Cannot specify a default "
+                                                         "value for the invocant")));
                     invocant = var;
                     lex_read_unichar(0);
                     lex_read_space(0);
@@ -591,8 +608,8 @@ parse_signature(pTHX_ SV *method_name,
                     vars[numvars] = var;
 
                     if (lex_peek_unichar(0) != ')' && lex_peek_unichar(0) != ',')
-                        syntax_error(aTHX_ sv_2mortal(newSVpvf("Unterminated prototype for "
-                                                           "%"SVf, SVfARG(method_name))));
+                        syntax_error(sv_2mortal(newSVpvf("Unterminated prototype for "
+                                                         "%"SVf, SVfARG(method_name))));
 
                     if (lex_peek_unichar(0) == ',') {
                         lex_read_unichar(0);
@@ -634,8 +651,9 @@ parse_signature(pTHX_ SV *method_name,
     return numvars;
 }
 
+#define add_required_method(method_name) THX_add_required_method(aTHX_ method_name)
 static void
-add_required_method(pTHX_ SV *method_name)
+THX_add_required_method(pTHX_ SV *method_name)
 {
     dSP;
 
@@ -651,16 +669,18 @@ add_required_method(pTHX_ SV *method_name)
     LEAVE;
 }
 
+#define intro_twigil_var(namesv) THX_intro_twigil_var(aTHX_ namesv)
 static OP *
-intro_twigil_var(pTHX_ SV *namesv)
+THX_intro_twigil_var(pTHX_ SV *namesv)
 {
     OP *o = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
     o->op_targ = pad_add_name_sv(namesv, 0, NULL, NULL);
     return o;
 }
 
+#define set_attr_magic(var, name, meta, self) THX_set_attr_magic(aTHX_ var, name, meta, self)
 static void
-set_attr_magic(pTHX_ SV *var, SV *name, SV *meta, SV *self)
+THX_set_attr_magic(pTHX_ SV *var, SV *name, SV *meta, SV *self)
 {
     SV *svs[3];
     AV *data;
@@ -671,8 +691,9 @@ set_attr_magic(pTHX_ SV *var, SV *name, SV *meta, SV *self)
     sv_magicext(var, (SV *)data, PERL_MAGIC_ext, &attr_vtbl, "attr", 0);
 }
 
+#define set_err_magic(var, name) THX_set_err_magic(aTHX_ var, name)
 static void
-set_err_magic(pTHX_ SV *var, SV *name)
+THX_set_err_magic(pTHX_ SV *var, SV *name)
 {
     sv_magicext(var, name, PERL_MAGIC_ext, &err_vtbl, "err", 0);
 }
@@ -685,15 +706,16 @@ pp_init_attr(pTHX)
     SV *attr_name = *av_fetch(args, 0, 0);
     SV *meta_class_name = *av_fetch(args, 1, 0);
     SV *invocant = *av_fetch(args, 2, 0);
-    SV *meta_class = get_meta(aTHX_ gv_stashsv(meta_class_name, 0));
+    SV *meta_class = get_meta(gv_stashsv(meta_class_name, 0));
 
     if (sv_isobject(invocant))
-        set_attr_magic(aTHX_ TARG, attr_name, meta_class, invocant);
+        set_attr_magic(TARG, attr_name, meta_class, invocant);
     else
-        set_err_magic(aTHX_ TARG, attr_name);
+        set_err_magic(TARG, attr_name);
     return PL_op->op_next;
 }
 
+#define gen_default_op(padoff, argsoff, o) THX_gen_default_op(aTHX_ padoff, argsoff, o)
 static OP *
 gen_default_op(pTHX_ PADOFFSET padoff, UV argsoff, OP *o)
 {
@@ -709,8 +731,9 @@ gen_default_op(pTHX_ PADOFFSET padoff, UV argsoff, OP *o)
     return newCONDOP(0, cmpop, newASSIGNOP(0, padop, 0, o), NULL);
 }
 
+#define current_meta_name() THX_current_meta_name(aTHX)
 static SV *
-current_meta_name(pTHX)
+THX_current_meta_name(pTHX)
 {
     dSP;
     SV *ret;
@@ -728,8 +751,9 @@ current_meta_name(pTHX)
     return ret;
 }
 
+#define parse_method(namegv, psobj, flagsp) THX_parse_method(aTHX_ namegv, psobj, flagsp)
 static OP *
-parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
+THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     SV *name;
     AV *attrs;
@@ -749,13 +773,13 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     *flagsp = CALLPARSER_STATEMENT;
 
     lex_read_space(0);
-    name = parse_name(aTHX_ "method", sizeof("method") - 1, 0);
+    name = parse_name("method", sizeof("method") - 1, 0);
     lex_read_space(0);
 
-    numvars = parse_signature(aTHX_ name, &invocant, &vars);
+    numvars = parse_signature(name, &invocant, &vars);
     lex_read_space(0);
 
-    traits = parse_traits(aTHX_ &numtraits);
+    traits = parse_traits(&numtraits);
     lex_read_space(0);
 
     switch (lex_peek_unichar(0)) {
@@ -763,13 +787,13 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
         lex_read_unichar(0);
         /* fall through */
     case '}':
-        add_required_method(aTHX_ name);
+        add_required_method(name);
         return newOP(OP_NULL, 0);
         break;
     }
 
     if (lex_peek_unichar(0) != '{')
-        syntax_error(aTHX_ sv_2mortal(newSVpvs("Non-required methods require a body")));
+        syntax_error(sv_2mortal(newSVpvs("Non-required methods require a body")));
 
     errors = PL_parser->error_count;
 
@@ -793,7 +817,7 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 
             if (var->default_value)
                 defaultsops = op_append_elem(OP_LINESEQ, defaultsops,
-                                             gen_default_op(aTHX_ o->op_targ, i,
+                                             gen_default_op(o->op_targ, i,
                                                             var->default_value));
         }
         Safefree(vars);
@@ -804,14 +828,14 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
         unpackargsop = op_append_elem(OP_LINESEQ, unpackargsop, defaultsops);
     }
 
-    attrs = current_attributes(aTHX);
+    attrs = current_attributes();
     for (j = 0; j <= av_len(attrs); j++) {
         SV *attr = *av_fetch(attrs, j, 0);
-        OP *o = intro_twigil_var(aTHX_ attr);
+        OP *o = intro_twigil_var(attr);
         OP *initop, *fetchinvocantop, *initopargs;
         initopargs = newSVOP(OP_CONST, 0, SvREFCNT_inc(attr));
         initopargs = op_append_elem(OP_LIST, initopargs,
-                                    newSVOP(OP_CONST, 0, current_meta_name(aTHX)));
+                                    newSVOP(OP_CONST, 0, current_meta_name()));
         fetchinvocantop = newOP(OP_PADSV, 0);
         fetchinvocantop->op_targ = pad_findmy_sv(invocant->name, 0);
         initopargs = op_append_elem(OP_LIST, initopargs, fetchinvocantop);
@@ -839,11 +863,11 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     body_ref = newANONSUB(blk_floor, NULL, body);
 
     if (PL_parser->error_count > errors)
-        syntax_error(aTHX_ &PL_sv_undef);
+        syntax_error(&PL_sv_undef);
 
-    return gen_traits_ops(aTHX_ op_append_elem(OP_LIST,
-                                               newSVOP(OP_CONST, 0, SvREFCNT_inc(name)),
-                                               body_ref),
+    return gen_traits_ops(op_append_elem(OP_LIST,
+                                         newSVOP(OP_CONST, 0, SvREFCNT_inc(name)),
+                                         body_ref),
                           traits, numtraits);
 }
 
@@ -852,7 +876,7 @@ run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     dSP;
     I32 floor = start_subparse(0, CVf_ANON);
-    OP *o = parse_method(aTHX_ namegv, psobj, flagsp);
+    OP *o = parse_method(namegv, psobj, flagsp);
     GV *gv = gv_fetchpvs("mop::internals::syntax::add_method", 0, SVt_PVCV);
     CV *cv;
 
@@ -890,8 +914,9 @@ static Perl_check_t old_rv2sv_checker;
 static SV *twigils_hint_key_sv;
 static U32 twigils_hint_key_hash;
 
+#define parse_ident(prefix, prefixlen) THX_parse_ident(aTHX_ prefix, prefixlen)
 static SV *
-parse_ident(pTHX_ const char *prefix, STRLEN prefixlen)
+THX_parse_ident(pTHX_ const char *prefix, STRLEN prefixlen)
 {
     STRLEN idlen;
     char *start, *s;
@@ -923,8 +948,9 @@ parse_ident(pTHX_ const char *prefix, STRLEN prefixlen)
     return sv;
 }
 
+#define twigil_enabled() THX_twigil_enabled(aTHX)
 static bool
-twigil_enabled(pTHX)
+THX_twigil_enabled(pTHX)
 {
     HE *he = hv_fetch_ent(GvHV(PL_hintgv), twigils_hint_key_sv, 0, twigils_hint_key_hash);
     return he && SvTRUE(HeVAL(he));
@@ -949,7 +975,7 @@ myck_rv2sv(pTHX_ OP *o)
     if (!SvPOK(sv))
         return old_rv2sv_checker(aTHX_ o);
 
-    if (!twigil_enabled(aTHX))
+    if (!twigil_enabled())
         return old_rv2sv_checker(aTHX_ o);
 
     if (*SvPVX(sv) != '!')
@@ -957,7 +983,7 @@ myck_rv2sv(pTHX_ OP *o)
 
     prefix[0] = '$';
     prefix[1] = *SvPVX(sv);
-    name = parse_ident(aTHX_ prefix, 2);
+    name = parse_ident(prefix, 2);
     if (!name)
         return old_rv2sv_checker(aTHX_ o);
 
@@ -1044,19 +1070,19 @@ subname(name, sub)
 SV *
 get_meta (SV *package)
   CODE:
-    RETVAL = SvREFCNT_inc(get_meta(aTHX_ gv_stashsv(package, 0)));
+    RETVAL = SvREFCNT_inc(get_meta(gv_stashsv(package, 0)));
   OUTPUT:
     RETVAL
 
 void
 set_meta (SV *package, SV *meta)
   CODE:
-    set_meta(aTHX_ gv_stashsv(package, GV_ADD), meta);
+    set_meta(gv_stashsv(package, GV_ADD), meta);
 
 void
 unset_meta (SV *package)
   CODE:
-    unset_meta(aTHX_ gv_stashsv(package, GV_ADD));
+    unset_meta(gv_stashsv(package, GV_ADD));
 
 MODULE = mop  PACKAGE = mop::internals::syntax
 
@@ -1067,15 +1093,13 @@ parse_name (what, flags=0)
     const char *what
     U32 flags
   C_ARGS:
-    aTHX_ what, SvCUR(ST(0)), flags
+    what, SvCUR(ST(0)), flags
   POSTCALL:
     SvREFCNT_inc(RETVAL); /* parse_name mortalises, which is what we want when
                              we start using it from C code */
 
 SV *
 read_tokenish ()
-  C_ARGS:
-    aTHX
   POSTCALL:
     SvREFCNT_inc(RETVAL); /* As above. */
 
@@ -1083,7 +1107,7 @@ SV *
 parse_modifier_with_single_value (modifier)
     char *modifier
   C_ARGS:
-    aTHX_ modifier, SvCUR(ST(0))
+    modifier, SvCUR(ST(0))
   POSTCALL:
     SvREFCNT_inc(RETVAL); /* As above. */
 
@@ -1094,7 +1118,7 @@ parse_modifier_with_multiple_values (modifier)
     AV *names;
     I32 i;
   PPCODE:
-    names = parse_modifier_with_multiple_values(aTHX_ modifier, SvCUR(ST(0)));
+    names = parse_modifier_with_multiple_values(modifier, SvCUR(ST(0)));
     for (i = 0; i <= av_len(names); i++)
         PUSHs(*av_fetch(names, i, 0));
 
