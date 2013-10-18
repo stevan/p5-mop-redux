@@ -873,17 +873,7 @@ run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 }
 
 static OP *
-check_method(pTHX_ OP *o, GV *namegv, SV *ckobj)
-{
-    PERL_UNUSED_ARG(namegv);
-    PERL_UNUSED_ARG(ckobj);
-
-    op_free(o);
-    return newOP(OP_NULL, 0);
-}
-
-static OP *
-check_has(pTHX_ OP *o, GV *namegv, SV *ckobj)
+compile_keyword_away(pTHX_ OP *o, GV *namegv, SV *ckobj)
 {
     PERL_UNUSED_ARG(namegv);
     PERL_UNUSED_ARG(ckobj);
@@ -1119,8 +1109,8 @@ BOOT:
     cv_set_call_parser(has,    run_has,    &PL_sv_undef);
     cv_set_call_parser(method, run_method, &PL_sv_undef);
 
-    cv_set_call_checker(has,    check_has,    &PL_sv_undef);
-    cv_set_call_checker(method, check_method, &PL_sv_undef);
+    cv_set_call_checker(has,    compile_keyword_away, &PL_sv_undef);
+    cv_set_call_checker(method, compile_keyword_away, &PL_sv_undef);
 
     twigils_hint_key_sv = newSVpvs_share("mop::internals::syntax/twigils");
     twigils_hint_key_hash = SvSHARED_HASH(twigils_hint_key_sv);
