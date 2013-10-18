@@ -542,7 +542,7 @@ parse_signature(pTHX_ SV *method_name,
                 }
 
                 if (lex_peek_unichar(0) == ':') {
-                    if (*vars)
+                    if (invocant)
                         syntax_error(aTHX_ sv_2mortal(newSVpvs("Cannot specify "
                                                                "multiple invocants")));
                     if (var->default_value)
