@@ -731,6 +731,7 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     struct mop_signature_var *invocant;
     struct mop_trait **traits;
     OP *body, *unpackargsop = NULL, *attrintroop = NULL, *attrinitop = NULL;
+    U8 errors;
 
     PERL_UNUSED_ARG(namegv);
     PERL_UNUSED_ARG(psobj);
@@ -817,8 +818,9 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     }
     attrintroop = newSTATEOP(0, NULL, attrintroop);
 
+    errors = PL_parser->error_count;
     body = parse_block(0);
-    if (!body)
+    if (PL_parser->error_count > errors)
         syntax_error(aTHX_ &PL_sv_undef);
 
     body = op_prepend_elem(OP_LINESEQ, attrinitop, body);
