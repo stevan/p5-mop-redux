@@ -174,7 +174,7 @@ sub method {
     while (@traits) {
         my ($trait, $args) = splice @traits, 0, 2;
         mop::traits::util::apply_trait(
-            $trait, $CURRENT_META->get_attribute($name), $args ? $args : (),
+            $trait, $CURRENT_META->get_method($name), $args ? $args : (),
         );
     }
 
