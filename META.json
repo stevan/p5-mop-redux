@@ -46,7 +46,6 @@
             "B::Hooks::EndOfScope" : "0",
             "Carp" : "0",
             "Devel::CallParser" : "0",
-            "Exporter" : "0",
             "Hash::Util::FieldHash" : "0",
             "Parse::Keyword" : "0",
             "Scalar::Util" : "0",
@@ -105,6 +104,10 @@
       },
       "mop::traits::util" : {
          "file" : "lib/mop/traits/util.pm",
+         "version" : "0.02"
+      },
+      "op" : {
+         "file" : "lib/op.pm",
          "version" : "0.02"
       }
    },
@@ -412,6 +415,7 @@
       "Chris Prather <chris@prather.org>",
       "Damien Krotkine <dkrotkine@weborama.com>",
       "David Golden <dagolden@cpan.org>",
+      "Matthew Horsfall (alh) <wolfsage@gmail.com>",
       "Steffen Mueller <smueller@cpan.org>",
       "Toby Inkster <mail@tobyinkster.co.uk>"
    ]

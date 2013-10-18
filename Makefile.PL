@@ -27,7 +27,6 @@ my %WriteMakefileArgs = (
     "B::Hooks::EndOfScope" => 0,
     "Carp" => 0,
     "Devel::CallParser" => 0,
-    "Exporter" => 0,
     "Hash::Util::FieldHash" => 0,
     "Parse::Keyword" => 0,
     "Scalar::Util" => 0,
@@ -106,13 +105,16 @@ if ($ENV{RELEASE_TESTING}) {
   };
 }
 
-use Devel::CallParser;
-
+use Devel::CallParser 'callparser1_h', 'callparser_linkable';
+use File::Spec::Functions 'abs2rel';
 {
     open my $fh, '>', 'callparser1.h' or die $!;
-    print { $fh } Devel::CallParser::callparser1_h() or die $!;
+    print { $fh } callparser1_h or die $!;
     close $fh or die $!;
 }
+my @linkable = map { abs2rel($_) } callparser_linkable;
+unshift @linkable, '$(BASEEXT)$(OBJ_EXT)' if @linkable;
+$WriteMakefileArgs{OBJECT} = join(' ', @linkable) if @linkable;
 
 WriteMakefile(%WriteMakefileArgs);
 

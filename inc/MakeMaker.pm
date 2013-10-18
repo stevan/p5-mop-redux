@@ -28,14 +28,17 @@ if (\$ENV{RELEASE_TESTING}) {
 }
 PREREQS
 
-    my $callparser_h = <<CALLPARSER_H;
-use Devel::CallParser;
-
+    my $callparser_h = <<'CALLPARSER_H';
+use Devel::CallParser 'callparser1_h', 'callparser_linkable';
+use File::Spec::Functions 'abs2rel';
 {
-    open my \$fh, '>', 'callparser1.h' or die \$!;
-    print { \$fh } Devel::CallParser::callparser1_h() or die \$!;
-    close \$fh or die \$!;
+    open my $fh, '>', 'callparser1.h' or die $!;
+    print { $fh } callparser1_h or die $!;
+    close $fh or die $!;
 }
+my @linkable = map { abs2rel($_) } callparser_linkable;
+unshift @linkable, '$(BASEEXT)$(OBJ_EXT)' if @linkable;
+$WriteMakefileArgs{OBJECT} = join(' ', @linkable) if @linkable;
 CALLPARSER_H
 
     my $template = $self->$orig(@_);
