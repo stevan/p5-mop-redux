@@ -751,9 +751,9 @@ THX_current_meta_name(pTHX)
     return ret;
 }
 
-#define parse_method(namegv, psobj, flagsp) THX_parse_method(aTHX_ namegv, psobj, flagsp)
+#define parse_method(namegv, psobj, flagsp, floor) THX_parse_method(aTHX_ namegv, psobj, flagsp, floor)
 static OP *
-THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
+THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp, I32 *floor)
 {
     SV *name;
     AV *attrs;
@@ -776,12 +776,6 @@ THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     name = parse_name("method", sizeof("method") - 1, 0);
     lex_read_space(0);
 
-    numvars = parse_signature(name, &invocant, &vars);
-    lex_read_space(0);
-
-    traits = parse_traits(&numtraits);
-    lex_read_space(0);
-
     switch (lex_peek_unichar(0)) {
     case ';':
         lex_read_unichar(0);
@@ -791,6 +785,14 @@ THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
         return newOP(OP_NULL, 0);
         break;
     }
+
+    *floor = start_subparse(0, CVf_ANON);
+
+    numvars = parse_signature(name, &invocant, &vars);
+    lex_read_space(0);
+
+    traits = parse_traits(&numtraits);
+    lex_read_space(0);
 
     if (lex_peek_unichar(0) != '{')
         syntax_error(sv_2mortal(newSVpvs("Non-required methods require a body")));
@@ -875,12 +877,12 @@ static OP *
 run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     dSP;
-    I32 floor = start_subparse(0, CVf_ANON);
-    OP *o = parse_method(namegv, psobj, flagsp);
+    I32 floor = 0;
+    OP *o = parse_method(namegv, psobj, flagsp, &floor);
     GV *gv = gv_fetchpvs("mop::internals::syntax::add_method", 0, SVt_PVCV);
     CV *cv;
 
-    if (o->op_type == OP_NULL)
+    if (!floor)
         return newOP(OP_NULL, 0);
 
     o = newUNOP(OP_ENTERSUB, OPf_STACKED,
