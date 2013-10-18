@@ -739,7 +739,7 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
                                             SvREFCNT_inc(get_sv("mop::internals::"
                                                                 "syntax::CURRENT_META", 0))));
         fetchinvocantop = newOP(OP_PADSV, 0);
-        fetchinvocantop->op_targ = pad_findmy_pvs("$self", 0);
+        fetchinvocantop->op_targ = pad_findmy_sv(invocant->name, 0);
         initopargs = op_append_elem(OP_LIST, initopargs, fetchinvocantop);
         initop = newUNOP(OP_RAND, 0, newANONLIST(initopargs));
         initop->op_targ = o->op_targ;
