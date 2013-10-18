@@ -356,7 +356,7 @@ parse_traits(pTHX_ UV *ntraitsp)
 
             if (lex_peek_unichar(0) == '(') {
                 lex_read_unichar(0);
-                trait->params = parse_fullexpr(0);
+                trait->params = newANONLIST(parse_fullexpr(0));
                 if (lex_peek_unichar(0) != ')')
                     syntax_error(aTHX_ sv_2mortal(newSVpvf("Unterminated parameter "
                                                            "list for trait %"SVf,
