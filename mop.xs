@@ -438,9 +438,12 @@ parse_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     lex_read_space(0);
 
     if (lex_peek_unichar(0) == '=') {
+        I32 floor;
+
         lex_read_unichar(0);
         lex_read_space(0);
-        default_value = parse_fullexpr(0);
+        floor = start_subparse(0, CVf_ANON);
+        default_value = newANONSUB(floor, NULL, parse_fullexpr(0));
         lex_read_space(0);
     }
 
