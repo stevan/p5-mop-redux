@@ -221,6 +221,7 @@ sub _method_parser {
     # it will cast the magic on it to
     # make sure that any change in value
     # is stored in the fieldhash storage
+    my $class_name = $CURRENT_META->name;
     foreach my $attr (map { $_->name } $CURRENT_META->attributes) {
         $preamble .=
             'intro_twigil_my_var ' . $attr . ';'
@@ -228,7 +229,7 @@ sub _method_parser {
               . '?' . __PACKAGE__ . '::set_attr_magic('
                   . $attr . ','
                   . 'q[' . $attr . '],'
-                  . '$' . $CURRENT_META->name . '::METACLASS,'
+                  . 'mop::internals::util::get_meta(q[' . $class_name . ']),'
                   . $invocant . ','
               . ')'
               . ':' . __PACKAGE__ . '::set_err_magic('
@@ -255,7 +256,7 @@ sub _method_parser {
     $CURRENT_META->add_method(
         $CURRENT_META->method_class->new(
             name => $name,
-            body => mop::internals::util::subname((join '::' => $CURRENT_META->name, $name), $code),
+            body => mop::internals::util::subname((join '::' => $class_name, $name), $code),
         )
     );
 

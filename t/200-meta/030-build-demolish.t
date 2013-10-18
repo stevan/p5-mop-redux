@@ -21,12 +21,15 @@ class Baz meta Meta { }
 BEGIN { is($built, 3); is($demolished, 0) }
 
 mop::remove_meta('Foo');
+is(mop::meta('Foo'), undef);
 is($built, 3);
 is($demolished, 1);
 mop::remove_meta('Bar');
+is(mop::meta('Bar'), undef);
 is($built, 3);
 is($demolished, 2);
 mop::remove_meta('Baz');
+is(mop::meta('Baz'), undef);
 is($built, 3);
 is($demolished, 3);
 

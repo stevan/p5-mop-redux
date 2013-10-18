@@ -135,9 +135,8 @@ sub is_data_in_slot_weak_for {
     isweak(${ ${ $storage{ $self } }->{ $instance } });
 }
 
-our $METACLASS;
-
 sub __INIT_METACLASS__ {
+    state $METACLASS;
     return $METACLASS if defined $METACLASS;
     require mop::class;
     $METACLASS = mop::class->new(

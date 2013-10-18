@@ -45,9 +45,8 @@ sub has_events {
     return $callbacks{ $self } && !!%{ ${ $callbacks{ $self } } };
 }
 
-our $METACLASS;
-
 sub __INIT_METACLASS__ {
+    state $METACLASS;
     return $METACLASS if defined $METACLASS;
     require mop::role;
     $METACLASS = mop::role->new(

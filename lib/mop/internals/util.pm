@@ -41,10 +41,7 @@ sub install_meta {
       . "Does your code have a circular dependency?"
         if is_nonmop_class($name);
 
-    {
-        no strict 'refs';
-        *{ $name . '::METACLASS' } = \$meta;
-    }
+    set_meta($name, $meta);
 
     $INC{ ($name =~ s{::}{/}gr) . '.pm' } //= '(mop)';
 }
