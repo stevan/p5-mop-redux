@@ -535,9 +535,13 @@ parse_signature(pTHX_ SV *method_name,
                 lex_read_space(0);
 
                 if (lex_peek_unichar(0) == '=') {
+                    I32 floor;
+
                     lex_read_unichar(0);
                     lex_read_space(0);
-                    var->default_value = parse_arithexpr(0);
+                    floor = start_subparse(0, CVf_ANON);
+                    var->default_value = newANONSUB(
+                        floor, NULL, parse_arithexpr(0));
                     lex_read_space(0);
                 }
 
