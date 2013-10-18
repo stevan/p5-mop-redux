@@ -723,7 +723,7 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
         }
         Safefree(vars);
 
-        unpackargsop = op_append_elem(OP_LIST, unpackargsop,
+        unpackargsop = op_append_elem(OP_LINESEQ, unpackargsop,
                                       newASSIGNOP(OPf_STACKED, lhsop, 0,
                                                   newAVREF(newGVOP(OP_GV, 0, PL_defgv))));
     }
