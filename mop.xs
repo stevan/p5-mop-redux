@@ -764,11 +764,11 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     body = op_prepend_elem(OP_LINESEQ, attrintroop, body);
     if (unpackargsop)
         body = op_prepend_elem(OP_LINESEQ, newSTATEOP(0, NULL, unpackargsop), body);
-    body = gen_traits_ops(aTHX_ body, traits, numtraits);
 
-    return op_append_elem(OP_LIST,
-                          newSVOP(OP_CONST, 0, SvREFCNT_inc(name)),
-                          newANONSUB(blk_floor, NULL, body));
+    return gen_traits_ops(aTHX_ op_append_elem(OP_LIST,
+                                               newSVOP(OP_CONST, 0, SvREFCNT_inc(name)),
+                                               newANONSUB(blk_floor, NULL, body)),
+                          traits, numtraits);
 }
 
 static OP *
