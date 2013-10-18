@@ -739,7 +739,8 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     struct mop_signature_var **vars;
     struct mop_signature_var *invocant;
     struct mop_trait **traits;
-    OP *body, *unpackargsop = NULL, *attrintroop = NULL, *attrinitop = NULL;
+    OP *body, *body_ref;
+    OP *unpackargsop = NULL, *attrintroop = NULL, *attrinitop = NULL;
     U8 errors;
 
     PERL_UNUSED_ARG(namegv);
@@ -769,6 +770,8 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 
     if (lex_peek_unichar(0) != '{')
         syntax_error(aTHX_ sv_2mortal(newSVpvs("Non-required methods require a body")));
+
+    errors = PL_parser->error_count;
 
     blk_floor = start_subparse(0, CVf_ANON);
 
@@ -827,19 +830,20 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     }
     attrintroop = newSTATEOP(0, NULL, attrintroop);
 
-    errors = PL_parser->error_count;
     body = parse_block(0);
-    if (PL_parser->error_count > errors)
-        syntax_error(aTHX_ &PL_sv_undef);
-
     body = op_prepend_elem(OP_LINESEQ, attrinitop, body);
     body = op_prepend_elem(OP_LINESEQ, attrintroop, body);
     if (unpackargsop)
         body = op_prepend_elem(OP_LINESEQ, newSTATEOP(0, NULL, unpackargsop), body);
 
+    body_ref = newANONSUB(blk_floor, NULL, body);
+
+    if (PL_parser->error_count > errors)
+        syntax_error(aTHX_ &PL_sv_undef);
+
     return gen_traits_ops(aTHX_ op_append_elem(OP_LIST,
                                                newSVOP(OP_CONST, 0, SvREFCNT_inc(name)),
-                                               newANONSUB(blk_floor, NULL, body)),
+                                               body_ref),
                           traits, numtraits);
 }
 
