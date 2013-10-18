@@ -136,6 +136,30 @@ mg_err_set(pTHX_ SV *sv, MAGIC *mg)
           "without a blessed invocant", SVfARG(mg->mg_obj));
 }
 
+static SV *
+get_meta(pTHX_ HV *stash)
+{
+    MAGIC *mg = NULL;
+
+    if (stash) {
+        mg = mg_findext((SV *)stash, PERL_MAGIC_ext, &meta_vtbl);
+    }
+
+    return mg ? mg->mg_obj : &PL_sv_undef;
+}
+
+static void
+set_meta(pTHX_ HV *stash, SV *meta)
+{
+    sv_magicext((SV *)stash, meta, PERL_MAGIC_ext, &meta_vtbl, "meta", 0);
+}
+
+static void
+unset_meta(pTHX_ HV *stash)
+{
+    sv_unmagicext((SV *)stash, PERL_MAGIC_ext, &meta_vtbl);
+}
+
 static OP *
 ck_mop_keyword(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
 {
@@ -897,27 +921,6 @@ myck_rv2sv(pTHX_ OP *o)
     return ret;
 }
 
-SV *get_meta(HV *stash)
-{
-    MAGIC *mg = NULL;
-
-    if (stash) {
-        mg = mg_findext((SV *)stash, PERL_MAGIC_ext, &meta_vtbl);
-    }
-
-    return mg ? mg->mg_obj : &PL_sv_undef;
-}
-
-void set_meta(HV *stash, SV *meta)
-{
-    sv_magicext((SV *)stash, meta, PERL_MAGIC_ext, &meta_vtbl, "meta", 0);
-}
-
-void unset_meta(HV *stash)
-{
-    sv_unmagicext((SV *)stash, PERL_MAGIC_ext, &meta_vtbl);
-}
-
 MODULE = mop  PACKAGE = mop::internals::util
 
 PROTOTYPES: DISABLE
@@ -998,7 +1001,7 @@ get_meta (SV *package)
     else {
         stash = gv_stashsv(package, 0);
     }
-    RETVAL = SvREFCNT_inc(get_meta(stash));
+    RETVAL = SvREFCNT_inc(get_meta(aTHX_ stash));
   OUTPUT:
     RETVAL
 
@@ -1013,7 +1016,7 @@ set_meta (SV *package, SV *meta)
     else {
         stash = gv_stashsv(package, GV_ADD);
     }
-    set_meta(stash, meta);
+    set_meta(aTHX_ stash, meta);
 
 void
 unset_meta (SV *package)
@@ -1026,7 +1029,7 @@ unset_meta (SV *package)
     else {
         stash = gv_stashsv(package, GV_ADD);
     }
-    unset_meta(stash);
+    unset_meta(aTHX_ stash);
 
 MODULE = mop  PACKAGE = mop::internals::syntax
 
