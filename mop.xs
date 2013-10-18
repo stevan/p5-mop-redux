@@ -717,7 +717,7 @@ pp_init_attr(pTHX)
 
 #define gen_default_op(padoff, argsoff, o) THX_gen_default_op(aTHX_ padoff, argsoff, o)
 static OP *
-gen_default_op(pTHX_ PADOFFSET padoff, UV argsoff, OP *o)
+THX_gen_default_op(pTHX_ PADOFFSET padoff, UV argsoff, OP *o)
 {
     OP *padop, *cmpop;
 
