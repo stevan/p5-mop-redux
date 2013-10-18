@@ -696,16 +696,13 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 
     if (numvars) {
         OP *lhsop = NULL;
+        lhsop = newLISTOP(OP_LIST, 0, NULL, NULL);
 
         for (i = 0; i < numvars; i++) {
             OP *o;
             o = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
             o->op_targ = pad_add_name_sv(vars[i]->name, 0, NULL, NULL);
-
-            if (!lhsop)
-                lhsop = o;
-            else
-                lhsop = op_append_elem(OP_LIST, lhsop, o);
+            lhsop = op_append_elem(OP_LIST, lhsop, o);
         }
         Safefree(vars);
 
