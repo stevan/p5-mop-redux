@@ -607,8 +607,18 @@ parse_signature(pTHX_ SV *method_name,
 static void
 add_required_method(pTHX_ SV *method_name)
 {
+    dSP;
+
     PERL_UNUSED_ARG(method_name);
-    croak("Not yet implemented");
+
+    ENTER;
+    PUSHMARK(SP);
+    XPUSHs(get_sv("mop::internals::syntax::CURRENT_META", 0));
+    XPUSHs(method_name);
+    PUTBACK;
+    call_method("add_required_method", G_VOID);
+    PUTBACK;
+    LEAVE;
 }
 
 static OP *
@@ -759,6 +769,28 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     return op_append_elem(OP_LIST,
                           newSVOP(OP_CONST, 0, SvREFCNT_inc(name)),
                           newANONSUB(blk_floor, NULL, body));
+}
+
+static OP *
+check_method(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
+{
+    OP *pushop, *nameop;
+
+    PERL_UNUSED_ARG(namegv);
+    PERL_UNUSED_ARG(ckobj);
+
+    pushop = cUNOPx(entersubop)->op_first;
+    if (!pushop->op_sibling)
+        pushop = cUNOPx(pushop)->op_first;
+
+    /* method("method_name", ...) */
+    if ((nameop = pushop->op_sibling) && nameop->op_type == OP_CONST) {
+        return PL_check[entersubop->op_type](aTHX_ entersubop);
+    }
+
+    /* required method to be compiled away */
+    op_free(entersubop);
+    return newOP(OP_NULL, 0);
 }
 
 static Perl_check_t old_rv2sv_checker;
@@ -972,6 +1004,7 @@ BOOT:
     cv_set_call_parser(method, parse_method, &PL_sv_undef);
 
     cv_set_call_checker(has,    check_has,    &PL_sv_undef);
+    cv_set_call_checker(method, check_method, &PL_sv_undef);
 
     twigils_hint_key_sv = newSVpvs_share("mop::internals::syntax/twigils");
     twigils_hint_key_hash = SvSHARED_HASH(twigils_hint_key_sv);
