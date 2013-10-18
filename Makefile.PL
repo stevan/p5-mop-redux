@@ -112,9 +112,11 @@ use File::Spec::Functions 'abs2rel';
     print { $fh } callparser1_h or die $!;
     close $fh or die $!;
 }
+
 my @linkable = map { abs2rel($_) } callparser_linkable;
 unshift @linkable, '$(BASEEXT)$(OBJ_EXT)' if @linkable;
 $WriteMakefileArgs{OBJECT} = join(' ', @linkable) if @linkable;
+$WriteMakefileArgs{clean}{FILES} .= ' callparser1.h';
 
 WriteMakefile(%WriteMakefileArgs);
 

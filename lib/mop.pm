@@ -31,10 +31,21 @@ use mop::traits::util;
 sub import {
     shift;
     my $pkg = caller;
+    my %opts = @_;
 
     initialize();
     mop::internals::syntax::setup_for($pkg);
     mop::traits::setup_for($pkg);
+
+    # NOTE: don't allow setting attribute or method metaclasses here, because
+    # that is controlled by the class or role metaclass via method_class and
+    # attribute_class.
+    for my $type (qw(class role)) {
+        if (defined(my $meta = $opts{"${type}_metaclass"})) {
+            require(($meta =~ s{::}{/}gr) . '.pm');
+            $^H{"mop/default_${type}_metaclass"} = $meta;
+        }
+    }
 }
 
 sub unimport {
@@ -113,7 +124,7 @@ sub rebless {
     @into_isa = grep { defined } map { meta($_) } @into_isa;
 
     for my $attr (map { $_->attributes } @from_isa) {
-        $attr->remove_data_in_slot_for($object);
+        $attr->store_data_in_slot_for($object, undef);
     }
 
     bless($object, $into);
@@ -217,6 +228,10 @@ sub initialize {
     #   - Role does Role
     # is true.
     $Class->add_role( $Role );
+
+    # normally this would be a call to FINALIZE for all of the mop classes,
+    # but that complicates things too much during bootstrapping, and this
+    # is the only thing that would have an actual effect anyway.
     mop::internals::util::apply_all_roles($Class, $Role);
 
     # and now this is no longer needed

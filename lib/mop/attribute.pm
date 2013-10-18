@@ -4,6 +4,7 @@ use v5.16;
 use warnings;
 
 use Scalar::Util qw[ weaken isweak ];
+use mop::internals::util;
 
 our $VERSION   = '0.02';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -11,10 +12,19 @@ our $AUTHORITY = 'cpan:STEVAN';
 use parent 'mop::object', 'mop::internals::observable';
 
 mop::internals::util::init_attribute_storage(my %name);
-mop::internals::util::init_attribute_storage(my %original_id);
 mop::internals::util::init_attribute_storage(my %default);
-mop::internals::util::init_attribute_storage(my %storage);
 mop::internals::util::init_attribute_storage(my %associated_meta);
+mop::internals::util::init_attribute_storage(my %original_id);
+mop::internals::util::init_attribute_storage(my %storage);
+
+sub name            { ${ $name{ $_[0] }            // \undef } }
+sub associated_meta { ${ $associated_meta{ $_[0] } // \undef } }
+
+sub set_associated_meta {
+    my ($self, $meta) = @_;
+    $associated_meta{ $self } = \$meta;
+    weaken(${ $associated_meta{ $self } });
+}
 
 # temporary, for bootstrapping
 sub new {
@@ -35,6 +45,15 @@ sub new {
     $self
 }
 
+sub BUILD {
+    my $self = shift;
+    return unless $default{ $self };
+    my $value = ${ $default{ $self } };
+    if ( ref $value && ref $value ne 'CODE' ) {
+        die "References of type (" . ref($value) . ") are not supported as attribute defaults (in attribute " . $self->name . ($self->associated_meta ? " in class " . $self->associated_meta->name : "") . ")";
+    }
+}
+
 # temporary, for bootstrapping
 sub clone {
     my $self = shift;
@@ -45,50 +64,35 @@ sub clone {
     );
 }
 
-sub name { ${ $name{ $_[0] } } }
-
 sub key_name {
     my $self = shift;
     substr( $self->name, 2, length $self->name )
 }
 
-# NOTE:
-# need to do a double de-ref for the
-# default value. first is to access
-# the value from the attribute, the
-# second is to  actually dereference
-# the default value (which is stored
-# as a ref of whatever the default is)
-# - SL
-sub has_default { defined( ${ ${ $default{ $_[0] } } } ) }
-# we also have to do the double en-ref
-# here too, this should get fixed
+sub has_default { defined( ${ $default{ $_[0] } } ) }
+
 sub set_default   {
     my $self = shift;
     my ($value) = @_;
     if ( ref $value && ref $value ne 'CODE' ) {
         die "References of type (" . ref($value) . ") are not supported as attribute defaults (in attribute " . $self->name . ($self->associated_meta ? " in class " . $self->associated_meta->name : "") . ")";
     }
-    $default{ $self } = \(\$value)
+    $default{ $self } = \$value
 }
-sub clear_default { ${ ${ delete $default{ $_[0] } } } }
+
+sub clear_default { ${ delete $default{ $_[0] } } }
+
 sub get_default {
     my $self  = shift;
-    my $value = ${ ${ $default{ $self } } };
+    my $value = ${ $default{ $self } };
     if ( ref $value && ref $value eq 'CODE' ) {
         $value = $value->();
     }
     $value
 }
 
-sub associated_meta { ${ $associated_meta{ $_[0] } } }
-sub set_associated_meta {
-    my ($self, $meta) = @_;
-    $associated_meta{ $self } = \$meta;
-    weaken(${ $associated_meta{ $self } });
-}
-
 sub conflicts_with { ${ $original_id{ $_[0] } } ne ${ $original_id{ $_[1] } } }
+
 sub locally_defined { ${ $original_id{ $_[0] } } eq mop::id( $_[0] ) }
 
 sub has_data_in_slot_for {
@@ -120,11 +124,6 @@ sub store_default_in_slot_for {
     }) if $self->has_default;
 }
 
-sub remove_data_in_slot_for {
-    my ($self, $instance) = @_;
-    delete ${ $storage{ $self } }->{ $instance };
-}
-
 sub weaken_data_in_slot_for {
     my ($self, $instance) = @_;
     weaken(${ ${ $storage{ $self } }->{ $instance } });
@@ -136,65 +135,59 @@ sub is_data_in_slot_weak_for {
 }
 
 sub __INIT_METACLASS__ {
-    state $METACLASS;
-    return $METACLASS if defined $METACLASS;
-    require mop::class;
-    $METACLASS = mop::class->new(
+    my $METACLASS = mop::class->new(
         name       => 'mop::attribute',
         version    => $VERSION,
         authority  => $AUTHORITY,
-        superclass => 'mop::object'
+        superclass => 'mop::object',
     );
 
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!name',
-        storage => \%name
+        storage => \%name,
     ));
-
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$!default',
+        storage => \%default,
+    ));
+    $METACLASS->add_attribute(mop::attribute->new(
+        name    => '$!associated_meta',
+        storage => \%associated_meta,
+    ));
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!original_id',
         storage => \%original_id,
-        default => \sub { mop::id($_) },
+        default => sub { mop::id($_) },
     ));
-
-    $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$!default',
-        storage => \%default
-    ));
-
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!storage',
         storage => \%storage,
-        default => \(sub { mop::internals::util::init_attribute_storage(my %x) })
+        default => sub { mop::internals::util::init_attribute_storage(my %x) },
     ));
 
-    $METACLASS->add_attribute(mop::attribute->new(
-        name    => '$!associated_meta',
-        storage => \%associated_meta
-    ));
+    $METACLASS->add_method( mop::method->new( name => 'BUILD', body => \&BUILD ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'name',                body => \&name                ) );
-    $METACLASS->add_method( mop::method->new( name => 'key_name',            body => \&key_name            ) );
+    $METACLASS->add_method( mop::method->new( name => 'name',     body => \&name     ) );
+    $METACLASS->add_method( mop::method->new( name => 'key_name', body => \&key_name ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'has_default',         body => \&has_default         ) );
-    $METACLASS->add_method( mop::method->new( name => 'get_default',         body => \&get_default         ) );
-    $METACLASS->add_method( mop::method->new( name => 'set_default',         body => \&set_default         ) );
-    $METACLASS->add_method( mop::method->new( name => 'clear_default',       body => \&clear_default       ) );
-
-    $METACLASS->add_method( mop::method->new( name => 'storage',             body => \&storage             ) );
+    $METACLASS->add_method( mop::method->new( name => 'has_default',   body => \&has_default   ) );
+    $METACLASS->add_method( mop::method->new( name => 'get_default',   body => \&get_default   ) );
+    $METACLASS->add_method( mop::method->new( name => 'set_default',   body => \&set_default   ) );
+    $METACLASS->add_method( mop::method->new( name => 'clear_default', body => \&clear_default ) );
 
     $METACLASS->add_method( mop::method->new( name => 'associated_meta',     body => \&associated_meta     ) );
     $METACLASS->add_method( mop::method->new( name => 'set_associated_meta', body => \&set_associated_meta ) );
-    $METACLASS->add_method( mop::method->new( name => 'conflicts_with',      body => \&conflicts_with      ) );
-    $METACLASS->add_method( mop::method->new( name => 'locally_defined',     body => \&locally_defined     ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'has_data_in_slot_for',      body => \&has_data_in_slot_for    ) );
+    $METACLASS->add_method( mop::method->new( name => 'conflicts_with',  body => \&conflicts_with  ) );
+    $METACLASS->add_method( mop::method->new( name => 'locally_defined', body => \&locally_defined ) );
+
+    $METACLASS->add_method( mop::method->new( name => 'has_data_in_slot_for',      body => \&has_data_in_slot_for      ) );
     $METACLASS->add_method( mop::method->new( name => 'fetch_data_in_slot_for',    body => \&fetch_data_in_slot_for    ) );
     $METACLASS->add_method( mop::method->new( name => 'store_data_in_slot_for',    body => \&store_data_in_slot_for    ) );
     $METACLASS->add_method( mop::method->new( name => 'store_default_in_slot_for', body => \&store_default_in_slot_for ) );
-    $METACLASS->add_method( mop::method->new( name => 'remove_data_in_slot_for',   body => \&remove_data_in_slot_for   ) );
-    $METACLASS->add_method( mop::method->new( name => 'weaken_data_in_slot_for',   body => \&weaken_default_in_slot_for ) );
+    $METACLASS->add_method( mop::method->new( name => 'weaken_data_in_slot_for',   body => \&weaken_data_in_slot_for   ) );
     $METACLASS->add_method( mop::method->new( name => 'is_data_in_slot_weak_for',  body => \&is_data_in_slot_weak_for  ) );
+
     $METACLASS;
 }
 
@@ -218,8 +211,6 @@ TODO
 
 =item C<BUILD>
 
-=item C<clone(%overrides)>
-
 =item C<name>
 
 =item C<key_name>
@@ -231,8 +222,6 @@ TODO
 =item C<set_default($default)>
 
 =item C<clear_default>
-
-=item C<storage>
 
 =item C<associated_meta>
 
@@ -249,8 +238,6 @@ TODO
 =item C<store_data_in_slot_for($instance, $data)>
 
 =item C<store_default_in_slot_for($instance)>
-
-=item C<remove_data_in_slot_for($instance)>
 
 =item C<weaken_data_in_slot_for($instance)>
 
@@ -287,11 +274,6 @@ the same terms as the Perl 5 programming language system itself.
 
 =for Pod::Coverage
   new
+  clone
 
 =cut
-
-
-
-
-
-

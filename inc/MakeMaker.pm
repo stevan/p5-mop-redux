@@ -39,6 +39,7 @@ use File::Spec::Functions 'abs2rel';
 my @linkable = map { abs2rel($_) } callparser_linkable;
 unshift @linkable, '$(BASEEXT)$(OBJ_EXT)' if @linkable;
 $WriteMakefileArgs{OBJECT} = join(' ', @linkable) if @linkable;
+$WriteMakefileArgs{clean}{FILES} .= ' callparser1.h';
 CALLPARSER_H
 
     my $template = $self->$orig(@_);

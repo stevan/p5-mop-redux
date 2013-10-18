@@ -13,11 +13,18 @@ use parent 'mop::object', 'mop::internals::observable';
 mop::internals::util::init_attribute_storage(my %name);
 mop::internals::util::init_attribute_storage(my %version);
 mop::internals::util::init_attribute_storage(my %authority);
-
 mop::internals::util::init_attribute_storage(my %roles);
 mop::internals::util::init_attribute_storage(my %attributes);
 mop::internals::util::init_attribute_storage(my %methods);
 mop::internals::util::init_attribute_storage(my %required_methods);
+
+sub name                { ${ $name{ $_[0] }             // \undef } }
+sub version             { ${ $version{ $_[0] }          // \undef } }
+sub authority           { ${ $authority{ $_[0] }        // \undef } }
+sub roles               { ${ $roles{ $_[0] }            // \undef } }
+sub attribute_map       { ${ $attributes{ $_[0] }       // \undef } }
+sub method_map          { ${ $methods{ $_[0] }          // \undef } }
+sub required_method_map { ${ $required_methods{ $_[0] } // \undef } }
 
 # temporary, for bootstrapping
 sub new {
@@ -26,9 +33,9 @@ sub new {
 
     my $self = $class->SUPER::new( @_ );
 
-    $name{ $self }       = \($args{'name'});
-    $version{ $self }    = \($args{'version'});
-    $authority{ $self }  = \($args{'authority'});
+    $name{ $self }      = \($args{'name'});
+    $version{ $self }   = \($args{'version'});
+    $authority{ $self } = \($args{'authority'});
 
     $roles{ $self }            = \($args{'roles'} || []);
     $attributes{ $self }       = \({});
@@ -78,16 +85,6 @@ sub clone {
     return $clone;
 }
 
-# identity
-
-sub name       { ${ $name{ $_[0] } // \undef } }
-sub version    { ${ $version{ $_[0] } // \undef } }
-sub authority  { ${ $authority{ $_[0] } // \undef } }
-
-# roles
-
-sub roles { ${ $roles{ $_[0] } } }
-
 sub add_role {
     my ($self, $role) = @_;
     push @{ $self->roles } => $role;
@@ -102,11 +99,7 @@ sub does_role {
     return 0;
 }
 
-# attributes
-
 sub attribute_class { 'mop::attribute' }
-
-sub attribute_map { ${ $attributes{ $_[0] } } }
 
 sub attributes { values %{ $_[0]->attribute_map } }
 
@@ -131,11 +124,7 @@ sub remove_attribute {
     delete $self->attribute_map->{ $name };
 }
 
-# methods
-
 sub method_class { 'mop::method' }
-
-sub method_map { ${ $methods{ $_[0] } } }
 
 sub methods { values %{ $_[0]->method_map } }
 
@@ -161,10 +150,6 @@ sub remove_method {
     delete $self->method_map->{ $name };
 }
 
-# required methods
-
-sub required_method_map { ${ $required_methods{ $_[0] } } }
-
 sub required_methods { keys %{ $_[0]->required_method_map } }
 
 sub add_required_method {
@@ -181,8 +166,6 @@ sub requires_method {
     my ($self, $name) = @_;
     defined $self->required_method_map->{ $name };
 }
-
-# events
 
 sub FINALIZE {
     my $self = shift;
@@ -236,74 +219,66 @@ sub FINALIZE {
 }
 
 sub __INIT_METACLASS__ {
-    state $METACLASS;
-    return $METACLASS if defined $METACLASS;
-    require mop::class;
-    $METACLASS = mop::class->new(
+    my $METACLASS = mop::class->new(
         name       => 'mop::role',
         version    => $VERSION,
         authority  => $AUTHORITY,
-        superclass => 'mop::object'
+        superclass => 'mop::object',
     );
 
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!name',
         storage => \%name,
-        default => \(sub { die "name is required when creating a role or class" }),
+        default => sub { die "name is required when creating a role or class" },
     ));
-
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!version',
-        storage => \%version
+        storage => \%version,
     ));
-
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!authority',
-        storage => \%authority
+        storage => \%authority,
     ));
-
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!roles',
         storage => \%roles,
-        default => \sub { [] },
+        default => sub { [] },
     ));
-
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!attributes',
         storage => \%attributes,
-        default => \sub { {} },
+        default => sub { {} },
     ));
-
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!methods',
         storage => \%methods,
-        default => \sub { {} },
+        default => sub { {} },
     ));
-
     $METACLASS->add_attribute(mop::attribute->new(
         name    => '$!required_methods',
         storage => \%required_methods,
-        default => \sub { {} },
+        default => sub { {} },
     ));
 
     $METACLASS->add_method( mop::method->new( name => 'BUILD', body => \&BUILD ) );
-
     $METACLASS->add_method( mop::method->new( name => 'clone', body => \&clone ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'name',       body => \&name       ) );
-    $METACLASS->add_method( mop::method->new( name => 'version',    body => \&version    ) );
-    $METACLASS->add_method( mop::method->new( name => 'authority',  body => \&authority  ) );
+    $METACLASS->add_method( mop::method->new( name => 'name', body => \&name ) );
+
+    $METACLASS->add_method( mop::method->new( name => 'version', body => \&version ) );
+
+    $METACLASS->add_method( mop::method->new( name => 'authority', body => \&authority ) );
 
     $METACLASS->add_method( mop::method->new( name => 'roles',     body => \&roles     ) );
     $METACLASS->add_method( mop::method->new( name => 'add_role',  body => \&add_role  ) );
     $METACLASS->add_method( mop::method->new( name => 'does_role', body => \&does_role ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'attribute_class', body => \&attribute_class ) );
-    $METACLASS->add_method( mop::method->new( name => 'attribute_map',   body => \&attribute_map   ) );
-    $METACLASS->add_method( mop::method->new( name => 'attributes',      body => \&attributes      ) );
-    $METACLASS->add_method( mop::method->new( name => 'get_attribute',   body => \&get_attribute   ) );
-    $METACLASS->add_method( mop::method->new( name => 'add_attribute',   body => \&add_attribute   ) );
-    $METACLASS->add_method( mop::method->new( name => 'has_attribute',   body => \&has_attribute   ) );
+    $METACLASS->add_method( mop::method->new( name => 'attribute_class',  body => \&attribute_class  ) );
+    $METACLASS->add_method( mop::method->new( name => 'attribute_map',    body => \&attribute_map    ) );
+    $METACLASS->add_method( mop::method->new( name => 'attributes',       body => \&attributes       ) );
+    $METACLASS->add_method( mop::method->new( name => 'get_attribute',    body => \&get_attribute    ) );
+    $METACLASS->add_method( mop::method->new( name => 'add_attribute',    body => \&add_attribute    ) );
+    $METACLASS->add_method( mop::method->new( name => 'has_attribute',    body => \&has_attribute    ) );
     $METACLASS->add_method( mop::method->new( name => 'remove_attribute', body => \&remove_attribute ) );
 
     $METACLASS->add_method( mop::method->new( name => 'method_class',  body => \&method_class  ) );
@@ -314,12 +289,11 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'has_method',    body => \&has_method    ) );
     $METACLASS->add_method( mop::method->new( name => 'remove_method', body => \&remove_method ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'required_methods',    body => \&required_methods    ) );
-    $METACLASS->add_method( mop::method->new( name => 'required_method_map', body => \&required_method_map ) );
-    $METACLASS->add_method( mop::method->new( name => 'add_required_method', body => \&add_required_method ) );
+    $METACLASS->add_method( mop::method->new( name => 'required_methods',       body => \&required_methods       ) );
+    $METACLASS->add_method( mop::method->new( name => 'required_method_map',    body => \&required_method_map    ) );
+    $METACLASS->add_method( mop::method->new( name => 'add_required_method',    body => \&add_required_method    ) );
+    $METACLASS->add_method( mop::method->new( name => 'requires_method',        body => \&requires_method        ) );
     $METACLASS->add_method( mop::method->new( name => 'remove_required_method', body => \&remove_required_method ) );
-    $METACLASS->add_method( mop::method->new( name => 'requires_method',     body => \&requires_method     ) );
-
 
     $METACLASS->add_method( mop::method->new( name => 'FINALIZE', body => \&FINALIZE ) );
 
@@ -394,9 +368,9 @@ TODO
 
 =item C<add_required_method($name)>
 
-=item C<remove_required_method($name)>
-
 =item C<requires_method($name)>
+
+=item C<remove_required_method($name)>
 
 =item C<FINALIZE>
 
@@ -430,7 +404,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-
-
-

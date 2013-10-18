@@ -24,5 +24,12 @@ ok(Quux->does($_),  "... Quux does $_")  for qw( Foo Bar         );
 ok(Quuux->does($_), "... Quuux does $_") for qw( Foo Bar Baz     );
 ok(Xyzzy->does($_), "... Xyzzy does $_") for qw( Foo     Baz Bat );
 
+{ local $TODO = "broken in core perl" if $] < 5.019005;
+push @UNIVERSAL::ISA, 'Blorg';
+ok(Quux->DOES('Blorg'));
+ok(Quuux->DOES('Blorg'));
+ok(Xyzzy->DOES('Blorg'));
+}
+
 done_testing;
 

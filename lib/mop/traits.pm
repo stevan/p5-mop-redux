@@ -154,8 +154,6 @@ sub extending_non_mop {
     die "extending_non_mop trait is only valid on classes"
         unless $class->isa('mop::class');
 
-    state $BUILDALL = mop::meta('mop::object')->get_method('BUILDALL');
-
     $constructor_name //= 'new';
     my $super_constructor = join '::' => $class->superclass, $constructor_name;
 
@@ -180,7 +178,8 @@ sub extending_non_mop {
                     $attr->store_default_in_slot_for( $self );
                 }
 
-                $BUILDALL->execute( $self, [ @_ ] );
+                mop::internals::util::buildall($self, @_);
+
                 $self;
             }
         )

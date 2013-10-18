@@ -96,7 +96,7 @@ sub namespace_parser {
         push @classes_to_load => $metaclass;
     }
     else {
-        $metaclass = "mop::$type";
+        $metaclass = $^H{"mop/default_${type}_metaclass"} // "mop::$type";
     }
 
     lex_read_space;
@@ -115,7 +115,7 @@ sub namespace_parser {
 
     lex_read;
 
-    die "The metaclass for $pkg does not inherit from mop::$type"
+    die "The metaclass for $pkg ($metaclass) does not inherit from mop::$type"
         unless $metaclass->isa("mop::$type");
 
     my $meta = $metaclass->new(
@@ -144,14 +144,12 @@ sub namespace_parser {
         local $CURRENT_META = $meta;
         local @CURRENT_ATTRIBUTE_NAMES = ();
         if (my $code = parse_block(1)) {
+            run_traits($meta, @traits);
             $code->();
+            $meta->FINALIZE;
             $g->dismiss;
         }
     }
-
-    run_traits($meta, @traits);
-
-    $meta->FINALIZE;
 
     return (sub { }, 1);
 }
@@ -185,7 +183,7 @@ sub has {
     $CURRENT_META->add_attribute(
         $CURRENT_META->attribute_class->new(
             name    => $name,
-            default => \$default,
+            default => $default,
         )
     );
 

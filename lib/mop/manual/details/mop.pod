@@ -20,8 +20,6 @@ of the MOP written using the MOP itself.
         method new   (%args) { ... }
         method clone (%args) { ... }
 
-        method BUILDALL ($args) { ... }
-
         method can  ($name)  { ... }
         method isa  ($class) { ... }
         method does ($role)  { ... }
@@ -56,7 +54,6 @@ of the MOP written using the MOP itself.
         method fetch_data_in_slot_for    ($instance) { ... }
         method store_data_in_slot_for    ($instance, $data) { ... }
         method store_default_in_slot_for ($instance) { ... }
-        method remove_data_in_slot_for   ($instance) { ... }
         method weaken_data_in_slot_for   ($instance) { ... }
         method is_data_in_slot_weak_for  ($instance) { ... }
 
