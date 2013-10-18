@@ -144,8 +144,6 @@ sub namespace_parser {
         local $CURRENT_META = $meta;
         local @CURRENT_ATTRIBUTE_NAMES = ();
         if (my $code = parse_block(1)) {
-            use B::Deparse;
-            warn B::Deparse->new('-p')->coderef2text($code);
             $code->();
             $g->dismiss;
         }
