@@ -674,8 +674,10 @@ pp_init_attr(pTHX)
     dSP; dTARGET;
     AV *args = (AV *)SvRV(POPs);
     SV *attr_name = *av_fetch(args, 0, 0);
-    SV *meta_class = *av_fetch(args, 1, 0);
+    SV *meta_class_name = *av_fetch(args, 1, 0);
     SV *invocant = *av_fetch(args, 2, 0);
+    SV *meta_class = get_meta(aTHX_ gv_stashsv(meta_class_name, 0));
+
     if (sv_isobject(invocant))
         set_attr_magic(aTHX_ TARG, attr_name, meta_class, invocant);
     else
@@ -696,6 +698,25 @@ gen_default_op(pTHX_ PADOFFSET padoff, UV argsoff, OP *o)
                      newSVOP(OP_CONST, 0, newSVuv(argsoff + 1)));
 
     return newCONDOP(0, cmpop, newASSIGNOP(0, padop, 0, o), NULL);
+}
+
+static SV *
+current_meta_name(pTHX)
+{
+    dSP;
+    SV *ret;
+
+    ENTER;
+    PUSHMARK(SP);
+    XPUSHs(get_sv("mop::internals::syntax::CURRENT_META", 0));
+    PUTBACK;
+    call_method("name", G_VOID);
+    SPAGAIN;
+    ret = SvREFCNT_inc(POPs);
+    PUTBACK;
+    LEAVE;
+
+    return ret;
 }
 
 static OP *
@@ -777,9 +798,7 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
         OP *initop, *fetchinvocantop, *initopargs;
         initopargs = newSVOP(OP_CONST, 0, SvREFCNT_inc(attr));
         initopargs = op_append_elem(OP_LIST, initopargs,
-                                    newSVOP(OP_CONST, 0,
-                                            SvREFCNT_inc(get_sv("mop::internals::"
-                                                                "syntax::CURRENT_META", 0))));
+                                    newSVOP(OP_CONST, 0, current_meta_name(aTHX)));
         fetchinvocantop = newOP(OP_PADSV, 0);
         fetchinvocantop->op_targ = pad_findmy_sv(invocant->name, 0);
         initopargs = op_append_elem(OP_LIST, initopargs, fetchinvocantop);
