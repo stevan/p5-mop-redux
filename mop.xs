@@ -535,13 +535,9 @@ parse_signature(pTHX_ SV *method_name,
                 lex_read_space(0);
 
                 if (lex_peek_unichar(0) == '=') {
-                    I32 floor;
-
                     lex_read_unichar(0);
                     lex_read_space(0);
-                    floor = start_subparse(0, CVf_ANON);
-                    var->default_value = newANONSUB(
-                        floor, NULL, parse_arithexpr(0));
+                    var->default_value = parse_arithexpr(0);
                     lex_read_space(0);
                 }
 
@@ -663,6 +659,21 @@ pp_init_attr(pTHX)
 }
 
 static OP *
+gen_default_op(pTHX_ PADOFFSET padoff, UV argsoff, OP *o)
+{
+    OP *padop, *cmpop;
+
+    padop = newOP(OP_PADSV, OPf_MOD);
+    padop->op_targ = padoff;
+
+    cmpop = newBINOP(OP_LT, 0,
+                     newAVREF(newGVOP(OP_GV, 0, PL_defgv)),
+                     newSVOP(OP_CONST, 0, newSVuv(argsoff + 1)));
+
+    return newCONDOP(0, cmpop, newASSIGNOP(0, padop, 0, o), NULL);
+}
+
+static OP *
 parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     SV *name;
@@ -712,20 +723,26 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
                                           newOP(OP_SHIFT, OPf_WANT_SCALAR | OPf_SPECIAL)));
 
     if (numvars) {
-        OP *lhsop = NULL;
-        lhsop = newLISTOP(OP_LIST, 0, NULL, NULL);
+        OP *lhsop = newLISTOP(OP_LIST, 0, NULL, NULL);
+        OP *defaultsops = NULL;
 
         for (i = 0; i < numvars; i++) {
-            OP *o;
-            o = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
-            o->op_targ = pad_add_name_sv(vars[i]->name, 0, NULL, NULL);
+            struct mop_signature_var *var = vars[i];
+            OP *o = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
+            o->op_targ = pad_add_name_sv(var->name, 0, NULL, NULL);
             lhsop = op_append_elem(OP_LIST, lhsop, o);
+
+            if (var->default_value)
+                defaultsops = op_append_elem(OP_LINESEQ, defaultsops,
+                                             gen_default_op(aTHX_ o->op_targ, i,
+                                                            var->default_value));
         }
         Safefree(vars);
 
         unpackargsop = op_append_elem(OP_LINESEQ, unpackargsop,
                                       newASSIGNOP(OPf_STACKED, lhsop, 0,
                                                   newAVREF(newGVOP(OP_GV, 0, PL_defgv))));
+        unpackargsop = op_append_elem(OP_LINESEQ, unpackargsop, defaultsops);
     }
 
     attrs = current_attributes(aTHX);

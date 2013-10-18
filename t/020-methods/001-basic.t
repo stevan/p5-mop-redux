@@ -33,6 +33,7 @@ class Foo {
 
     method bar_w_default_params ($a = 10) { join ', ' => 'BAR', $a }
 
+    method bar_w_two_default_params ($a = 10, $b = 20) { join ', ' => 'BAR', $a, $b }
 }
 
 my $foo = Foo->new;
@@ -64,5 +65,9 @@ is($foo->bar_w_explicit_param(1), 'BAR, 1', '... got the expected return value')
 
 is($foo->bar_w_default_params, 'BAR, 10', '... got the expected return value');
 is($foo->bar_w_default_params(1), 'BAR, 1', '... got the expected return value');
+
+is($foo->bar_w_two_default_params, 'BAR, 10, 20', '... got the expected return value');
+is($foo->bar_w_two_default_params(1), 'BAR, 1, 20', '... got the expected return value');
+is($foo->bar_w_two_default_params(1, 2), 'BAR, 1, 2', '... got the expected return value');
 
 done_testing;
