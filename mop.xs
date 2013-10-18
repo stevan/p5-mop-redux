@@ -501,22 +501,31 @@ add_attribute(pTHX_ SV *namesv)
 }
 
 static OP *
-check_has(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
+run_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
-    OP *pushop, *nameop;
+    dSP;
+    I32 floor = start_subparse(0, CVf_ANON);
+    OP *o = parse_has(aTHX_ namegv, psobj, flagsp);
+    GV *gv = gv_fetchpvs("mop::internals::syntax::add_attribute", 0, SVt_PVCV);
+    CV *cv;
 
-    PERL_UNUSED_ARG(namegv);
-    PERL_UNUSED_ARG(ckobj);
+    add_attribute(aTHX_ cSVOPx_sv(cUNOPo->op_first->op_sibling));
 
-    pushop = cUNOPx(entersubop)->op_first;
-    if (!pushop->op_sibling)
-        pushop = cUNOPx(pushop)->op_first;
+    o = newUNOP(OP_ENTERSUB, OPf_STACKED,
+                op_append_elem(OP_LIST, o,
+                               newUNOP(OP_RV2CV, 0,
+                                       newGVOP(OP_GV, 0, gv))));
+    cv = newATTRSUB(floor, NULL, NULL, NULL, newSTATEOP(0, NULL, o));
+    if (CvCLONE(cv))
+        cv = cv_clone(cv);
 
-    if ((nameop = pushop->op_sibling) && nameop->op_type == OP_CONST) {
-        add_attribute(aTHX_ cSVOPx_sv(nameop));
-    }
-
-    return PL_check[entersubop->op_type](aTHX_ entersubop);
+    ENTER;
+    PUSHMARK(SP);
+    PUTBACK;
+    call_sv((SV *)cv, G_VOID);
+    PUTBACK;
+    LEAVE;
+    return newOP(OP_NULL, 0);
 }
 
 struct mop_signature_var {
@@ -835,24 +844,51 @@ parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 }
 
 static OP *
-check_method(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
+run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
-    OP *pushop, *nameop;
+    dSP;
+    I32 floor = start_subparse(0, CVf_ANON);
+    OP *o = parse_method(aTHX_ namegv, psobj, flagsp);
+    GV *gv = gv_fetchpvs("mop::internals::syntax::add_method", 0, SVt_PVCV);
+    CV *cv;
 
+    if (o->op_type == OP_NULL)
+        return newOP(OP_NULL, 0);
+
+    o = newUNOP(OP_ENTERSUB, OPf_STACKED,
+                op_append_elem(OP_LIST, o,
+                               newUNOP(OP_RV2CV, 0,
+                                       newGVOP(OP_GV, 0, gv))));
+    cv = newATTRSUB(floor, NULL, NULL, NULL, o);
+    if (CvCLONE(cv))
+        cv = cv_clone(cv);
+
+    ENTER;
+    PUSHMARK(SP);
+    PUTBACK;
+    call_sv((SV *)cv, G_VOID);
+    PUTBACK;
+    LEAVE;
+    return newOP(OP_NULL, 0);
+}
+
+static OP *
+check_method(pTHX_ OP *o, GV *namegv, SV *ckobj)
+{
     PERL_UNUSED_ARG(namegv);
     PERL_UNUSED_ARG(ckobj);
 
-    pushop = cUNOPx(entersubop)->op_first;
-    if (!pushop->op_sibling)
-        pushop = cUNOPx(pushop)->op_first;
+    op_free(o);
+    return newOP(OP_NULL, 0);
+}
 
-    /* method("method_name", ...) */
-    if ((nameop = pushop->op_sibling) && nameop->op_type == OP_CONST) {
-        return PL_check[entersubop->op_type](aTHX_ entersubop);
-    }
+static OP *
+check_has(pTHX_ OP *o, GV *namegv, SV *ckobj)
+{
+    PERL_UNUSED_ARG(namegv);
+    PERL_UNUSED_ARG(ckobj);
 
-    /* required method to be compiled away */
-    op_free(entersubop);
+    op_free(o);
     return newOP(OP_NULL, 0);
 }
 
@@ -1080,8 +1116,8 @@ BOOT:
     cv_set_call_checker(class,  ck_mop_keyword, &PL_sv_yes);
     cv_set_call_checker(role,   ck_mop_keyword, &PL_sv_yes);
 
-    cv_set_call_parser(has,    parse_has,    &PL_sv_undef);
-    cv_set_call_parser(method, parse_method, &PL_sv_undef);
+    cv_set_call_parser(has,    run_has,    &PL_sv_undef);
+    cv_set_call_parser(method, run_method, &PL_sv_undef);
 
     cv_set_call_checker(has,    check_has,    &PL_sv_undef);
     cv_set_call_checker(method, check_method, &PL_sv_undef);

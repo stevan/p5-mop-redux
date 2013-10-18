@@ -145,8 +145,8 @@ sub namespace_parser {
         local @CURRENT_ATTRIBUTE_NAMES = ();
         if (my $code = parse_block(1)) {
             run_traits($meta, @traits);
-            $code->();
             $meta->FINALIZE;
+            $code->();
             $g->dismiss;
         }
     }
@@ -154,7 +154,9 @@ sub namespace_parser {
     return (sub { }, 1);
 }
 
-sub method {
+sub method { }
+
+sub add_method {
     my ($name, $body, @traits) = @_;
 
     $CURRENT_META->add_method(
@@ -177,7 +179,9 @@ sub method {
     return;
 }
 
-sub has {
+sub has { }
+
+sub add_attribute {
     my ($name, $default, @traits) = @_;
 
     $CURRENT_META->add_attribute(
