@@ -331,7 +331,6 @@ THX_syntax_error(pTHX_ SV *err)
     XPUSHs(err);
     PUTBACK;
     call_pv("mop::internals::syntax::syntax_error", G_VOID);
-    PUTBACK;
     LEAVE;
 }
 
@@ -346,7 +345,7 @@ THX_current_meta_name(pTHX)
     PUSHMARK(SP);
     XPUSHs(get_sv("mop::internals::syntax::CURRENT_META", 0));
     PUTBACK;
-    call_method("name", G_VOID);
+    call_method("name", G_SCALAR);
     SPAGAIN;
     ret = SvREFCNT_inc(POPs);
     PUTBACK;
@@ -1001,7 +1000,6 @@ run_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     PUSHMARK(SP);
     PUTBACK;
     call_sv((SV *)cv, G_VOID);
-    PUTBACK;
     LEAVE;
     return newOP(OP_NULL, 0);
 }
@@ -1027,7 +1025,6 @@ run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     PUSHMARK(SP);
     PUTBACK;
     call_sv((SV *)cv, G_VOID);
-    PUTBACK;
     LEAVE;
     return newOP(OP_NULL, 0);
 }
