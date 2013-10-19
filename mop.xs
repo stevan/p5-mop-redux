@@ -166,11 +166,14 @@ THX_set_err_magic(pTHX_ SV *var, SV *name)
 
 static MGVTBL meta_vtbl;
 
-#define get_meta(stash) THX_get_meta(aTHX_ stash)
+#define get_meta(name) THX_get_meta(aTHX_ name)
 static SV *
-THX_get_meta(pTHX_ HV *stash)
+THX_get_meta(pTHX_ SV *name)
 {
     MAGIC *mg = NULL;
+    HV *stash;
+
+    stash = gv_stashsv(name, 0);
 
     if (stash) {
         mg = mg_findext((SV *)stash, PERL_MAGIC_ext, &meta_vtbl);
@@ -179,17 +182,23 @@ THX_get_meta(pTHX_ HV *stash)
     return mg ? mg->mg_obj : &PL_sv_undef;
 }
 
-#define set_meta(stash, meta) THX_set_meta(aTHX_ stash, meta)
+#define set_meta(name, meta) THX_set_meta(aTHX_ name, meta)
 static void
-THX_set_meta(pTHX_ HV *stash, SV *meta)
+THX_set_meta(pTHX_ SV *name, SV *meta)
 {
+    HV *stash;
+
+    stash = gv_stashsv(name, GV_ADD);
     sv_magicext((SV *)stash, meta, PERL_MAGIC_ext, &meta_vtbl, "meta", 0);
 }
 
-#define unset_meta(stash) THX_unset_meta(aTHX_ stash)
+#define unset_meta(name) THX_unset_meta(aTHX_ name)
 static void
-THX_unset_meta(pTHX_ HV *stash)
+THX_unset_meta(pTHX_ SV *name)
 {
+    HV *stash;
+
+    stash = gv_stashsv(name, GV_ADD);
     sv_unmagicext((SV *)stash, PERL_MAGIC_ext, &meta_vtbl);
 }
 
@@ -822,7 +831,7 @@ pp_init_attr(pTHX)
     SV *attr_name = *av_fetch(args, 0, 0);
     SV *meta_class_name = *av_fetch(args, 1, 0);
     SV *invocant = *av_fetch(args, 2, 0);
-    SV *meta_class = get_meta(gv_stashsv(meta_class_name, 0));
+    SV *meta_class = get_meta(meta_class_name);
 
     if (sv_isobject(invocant))
         set_attr_magic(TARG, attr_name, meta_class, invocant);
@@ -1110,20 +1119,14 @@ subname(name, sub)
 
 SV *
 get_meta (SV *package)
-  CODE:
-    RETVAL = SvREFCNT_inc(get_meta(gv_stashsv(package, 0)));
-  OUTPUT:
-    RETVAL
+  POSTCALL:
+    SvREFCNT_inc(RETVAL);
 
 void
 set_meta (SV *package, SV *meta)
-  CODE:
-    set_meta(gv_stashsv(package, GV_ADD), meta);
 
 void
 unset_meta (SV *package)
-  CODE:
-    unset_meta(gv_stashsv(package, GV_ADD));
 
 # }}}
 # xsubs: mop::internals::syntax {{{
