@@ -803,24 +803,6 @@ THX_parse_signature(pTHX_ SV *method_name,
     return numvars;
 }
 
-#define add_required_method(method_name) THX_add_required_method(aTHX_ method_name)
-static void
-THX_add_required_method(pTHX_ SV *method_name)
-{
-    dSP;
-
-    PERL_UNUSED_ARG(method_name);
-
-    ENTER;
-    PUSHMARK(SP);
-    XPUSHs(get_sv("mop::internals::syntax::CURRENT_META", 0));
-    XPUSHs(method_name);
-    PUTBACK;
-    call_method("add_required_method", G_VOID);
-    PUTBACK;
-    LEAVE;
-}
-
 #define gen_default_op(padoff, argsoff, o) THX_gen_default_op(aTHX_ padoff, argsoff, o)
 static OP *
 THX_gen_default_op(pTHX_ PADOFFSET padoff, UV argsoff, OP *o)
@@ -884,12 +866,8 @@ THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp, I32 *floor)
         lex_read_unichar(0);
         /* fall through */
     case '}':
-        add_required_method(name);
-        return newOP(OP_NULL, 0);
-        break;
+        return newSVOP(OP_CONST, 0, SvREFCNT_inc(name));
     }
-
-    *floor = start_subparse(0, CVf_ANON);
 
     numvars = parse_signature(name, &invocant, &vars);
     lex_read_space(0);
@@ -1032,13 +1010,10 @@ static OP *
 run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     dSP;
-    I32 floor = 0;
+    I32 floor = start_subparse(0, CVf_ANON);
     OP *o = parse_method(namegv, psobj, flagsp, &floor);
     GV *gv = gv_fetchpvs("mop::internals::syntax::add_method", 0, SVt_PVCV);
     CV *cv;
-
-    if (!floor)
-        return newOP(OP_NULL, 0);
 
     o = newUNOP(OP_ENTERSUB, OPf_STACKED,
                 op_append_elem(OP_LIST, o,

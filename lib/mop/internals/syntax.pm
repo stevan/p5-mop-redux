@@ -154,21 +154,26 @@ sub method { }
 sub add_method {
     my ($name, $body, @traits) = @_;
 
-    $CURRENT_META->add_method(
-        $CURRENT_META->method_class->new(
-            name => $name,
-            body => mop::internals::util::subname(
-                (join '::' => $CURRENT_META->name, $name),
-                $body,
-            ),
-        )
-    );
-
-    while (@traits) {
-        my ($trait, $args) = splice @traits, 0, 2;
-        mop::traits::util::apply_trait(
-            $trait, $CURRENT_META->get_method($name), $args ? @$args : (),
+    if ($body) {
+        $CURRENT_META->add_method(
+            $CURRENT_META->method_class->new(
+                name => $name,
+                body => mop::internals::util::subname(
+                    (join '::' => $CURRENT_META->name, $name),
+                    $body,
+                ),
+            )
         );
+
+        while (@traits) {
+            my ($trait, $args) = splice @traits, 0, 2;
+            mop::traits::util::apply_trait(
+                $trait, $CURRENT_META->get_method($name), $args ? @$args : (),
+            );
+        }
+    }
+    else {
+        $CURRENT_META->add_required_method($name);
     }
 
     return;
