@@ -355,6 +355,41 @@ THX_current_meta_name(pTHX)
     return ret;
 }
 
+#define current_attributes() THX_current_attributes(aTHX)
+static AV *
+THX_current_attributes(pTHX)
+{
+    dSP;
+    AV *ret;
+    int nret, i;
+
+    ENTER;
+    PUSHMARK(SP);
+    XPUSHs(get_sv("mop::internals::syntax::CURRENT_META", 0));
+    PUTBACK;
+    nret = call_method("attributes", G_ARRAY);
+    SPAGAIN;
+    ret = newAV();
+    av_extend(ret, nret);
+    for (i = 0; i < nret; ++i) {
+        SV *attr;
+
+        attr = POPs;
+        PUTBACK;
+
+        PUSHMARK(SP);
+        XPUSHs(attr);
+        PUTBACK;
+        call_method("name", G_SCALAR);
+        SPAGAIN;
+        av_push(ret, POPs);
+        PUTBACK;
+    }
+    LEAVE;
+
+    return ret;
+}
+
 /* }}} */
 /* twigils {{{ */
 
@@ -657,22 +692,6 @@ THX_parse_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 
     *flagsp = CALLPARSER_STATEMENT;
     return ret;
-}
-
-#define current_attributes() THX_current_attributes(aTHX)
-static AV *
-THX_current_attributes(pTHX)
-{
-    return GvAV(gv_fetchpvs("mop::internals::syntax::CURRENT_ATTRIBUTE_NAMES",
-                            GV_ADD, SVt_PVAV));
-}
-
-#define add_attribute(namesv) THX_add_attribute(aTHX_ namesv)
-static void
-THX_add_attribute(pTHX_ SV *namesv)
-{
-    AV *attrs = current_attributes();
-    av_push(attrs, SvREFCNT_inc(namesv));
 }
 
 /* }}} */
@@ -991,8 +1010,6 @@ run_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     OP *o = parse_has(namegv, psobj, flagsp);
     GV *gv = gv_fetchpvs("mop::internals::syntax::add_attribute", 0, SVt_PVCV);
     CV *cv;
-
-    add_attribute(cSVOPx_sv(cUNOPo->op_first->op_sibling));
 
     o = newUNOP(OP_ENTERSUB, OPf_STACKED,
                 op_append_elem(OP_LIST, o,

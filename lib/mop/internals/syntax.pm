@@ -21,10 +21,6 @@ my @available_keywords = qw(class role method has);
 # keep the local metaclass around
 our $CURRENT_META;
 
-# The list of attribute names declared so far during the compilation of a
-# namespace block, used to declare lexicals in methods as they're compiled.
-our @CURRENT_ATTRIBUTE_NAMES;
-
 sub setup_for {
     my ($pkg) = @_;
 
@@ -142,7 +138,6 @@ sub namespace_parser {
     lex_stuff($preamble);
     {
         local $CURRENT_META = $meta;
-        local @CURRENT_ATTRIBUTE_NAMES = ();
         if (my $code = parse_block(1)) {
             run_traits($meta, @traits);
             $meta->FINALIZE;
