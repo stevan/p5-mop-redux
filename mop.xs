@@ -5,13 +5,18 @@
 
 #include "callparser1.h"
 
+/* subname magic {{{ */
+
+static MGVTBL subname_vtbl;
+
+/* }}} */
+/* attribute magic {{{ */
+
 static int mg_attr_get(pTHX_ SV *sv, MAGIC *mg);
 static int mg_attr_set(pTHX_ SV *sv, MAGIC *mg);
 static int mg_err_get(pTHX_ SV *sv, MAGIC *mg);
 static int mg_err_set(pTHX_ SV *sv, MAGIC *mg);
 
-static MGVTBL subname_vtbl;
-static MGVTBL meta_vtbl;
 static MGVTBL attr_vtbl = {
     mg_attr_get,                /* get */
     mg_attr_set,                /* set */
@@ -136,6 +141,31 @@ mg_err_set(pTHX_ SV *sv, MAGIC *mg)
           "without a blessed invocant", SVfARG(mg->mg_obj));
 }
 
+#define set_attr_magic(var, name, meta, self) THX_set_attr_magic(aTHX_ var, name, meta, self)
+static void
+THX_set_attr_magic(pTHX_ SV *var, SV *name, SV *meta, SV *self)
+{
+    SV *svs[3];
+    AV *data;
+    svs[0] = name;
+    svs[1] = meta;
+    svs[2] = self;
+    data = (AV *)sv_2mortal((SV *)av_make(3, svs));
+    sv_magicext(var, (SV *)data, PERL_MAGIC_ext, &attr_vtbl, "attr", 0);
+}
+
+#define set_err_magic(var, name) THX_set_err_magic(aTHX_ var, name)
+static void
+THX_set_err_magic(pTHX_ SV *var, SV *name)
+{
+    sv_magicext(var, name, PERL_MAGIC_ext, &err_vtbl, "err", 0);
+}
+
+/* }}} */
+/* stash magic {{{ */
+
+static MGVTBL meta_vtbl;
+
 #define get_meta(stash) THX_get_meta(aTHX_ stash)
 static SV *
 THX_get_meta(pTHX_ HV *stash)
@@ -163,34 +193,8 @@ THX_unset_meta(pTHX_ HV *stash)
     sv_unmagicext((SV *)stash, PERL_MAGIC_ext, &meta_vtbl);
 }
 
-static OP *
-return_true(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
-{
-    PERL_UNUSED_ARG(namegv);
-    op_free(entersubop);
-    return newSVOP(OP_CONST, 0, &PL_sv_yes);
-}
-
-#define read_tokenish() THX_read_tokenish(aTHX)
-static SV *
-THX_read_tokenish(pTHX)
-{
-    char c;
-    SV *ret = sv_2mortal(newSV(1));
-    SvCUR_set(ret, 0);
-    SvPOK_on(ret);
-
-    if (strchr("$@%!:", lex_peek_unichar(0)) != NULL)
-        sv_catpvf(ret, "%c", lex_read_unichar(0));
-
-    c = lex_peek_unichar(0);
-    while (c != -1 && !isSPACE(c)) {
-        sv_catpvf(ret, "%c", lex_read_unichar(0));
-        c = lex_peek_unichar(0);
-    }
-
-    return ret;
-}
+/* }}} */
+/* lexer helpers {{{ */
 
 #define lex_peek_pv(len, lenp) THX_lex_peek_pv(aTHX_ len, lenp)
 static char *
@@ -230,6 +234,27 @@ THX_lex_peek_pv(pTHX_ STRLEN len, STRLEN *lenp)
 
     *lenp = len;
     return bufptr;
+}
+
+#define read_tokenish() THX_read_tokenish(aTHX)
+static SV *
+THX_read_tokenish(pTHX)
+{
+    char c;
+    SV *ret = sv_2mortal(newSV(1));
+    SvCUR_set(ret, 0);
+    SvPOK_on(ret);
+
+    if (strchr("$@%!:", lex_peek_unichar(0)) != NULL)
+        sv_catpvf(ret, "%c", lex_read_unichar(0));
+
+    c = lex_peek_unichar(0);
+    while (c != -1 && !isSPACE(c)) {
+        sv_catpvf(ret, "%c", lex_read_unichar(0));
+        c = lex_peek_unichar(0);
+    }
+
+    return ret;
 }
 
 #define PARSE_NAME_ALLOW_PACKAGE 1
@@ -289,6 +314,146 @@ THX_parse_name(pTHX_ const char *what, STRLEN whatlen, U32 flags)
     return parse_name_prefix(NULL, 0, what, whatlen, flags);
 }
 
+/* }}} */
+/* other helpers {{{ */
+
+#define syntax_error(err) THX_syntax_error(aTHX_ err)
+static void
+THX_syntax_error(pTHX_ SV *err)
+{
+    dSP;
+    ENTER;
+    PUSHMARK(SP);
+    XPUSHs(err);
+    PUTBACK;
+    call_pv("mop::internals::syntax::syntax_error", G_VOID);
+    PUTBACK;
+    LEAVE;
+}
+
+#define current_meta_name() THX_current_meta_name(aTHX)
+static SV *
+THX_current_meta_name(pTHX)
+{
+    dSP;
+    SV *ret;
+
+    ENTER;
+    PUSHMARK(SP);
+    XPUSHs(get_sv("mop::internals::syntax::CURRENT_META", 0));
+    PUTBACK;
+    call_method("name", G_VOID);
+    SPAGAIN;
+    ret = SvREFCNT_inc(POPs);
+    PUTBACK;
+    LEAVE;
+
+    return ret;
+}
+
+/* }}} */
+/* twigils {{{ */
+
+static Perl_check_t old_rv2sv_checker;
+static SV *twigils_hint_key_sv;
+static U32 twigils_hint_key_hash;
+
+#define intro_twigil_var(namesv) THX_intro_twigil_var(aTHX_ namesv)
+static OP *
+THX_intro_twigil_var(pTHX_ SV *namesv)
+{
+    OP *o = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
+    o->op_targ = pad_add_name_sv(namesv, 0, NULL, NULL);
+    return o;
+}
+
+#define parse_ident(prefix, prefixlen) THX_parse_ident(aTHX_ prefix, prefixlen)
+static SV *
+THX_parse_ident(pTHX_ const char *prefix, STRLEN prefixlen)
+{
+    STRLEN idlen;
+    char *start, *s;
+    char c;
+    SV *sv;
+
+    start = s = PL_parser->bufptr;
+    if (start > SvPVX(PL_parser->linestr) && isSPACE(*(start - 1)))
+        return NULL;
+
+    c = *s;
+    if (!isIDFIRST(c))
+        return NULL;
+
+    do {
+        c = *++s;
+    } while (isALNUM(c));
+
+    lex_read_to(s);
+
+    idlen = s - start;
+    sv = sv_2mortal(newSV(prefixlen + idlen));
+    Copy(prefix, SvPVX(sv), prefixlen, char);
+    Copy(start, SvPVX(sv) + prefixlen, idlen, char);
+    SvPVX(sv)[prefixlen + idlen] = 0;
+    SvCUR_set(sv, prefixlen + idlen);
+    SvPOK_on(sv);
+
+    return sv;
+}
+
+#define twigil_enabled() THX_twigil_enabled(aTHX)
+static bool
+THX_twigil_enabled(pTHX)
+{
+    HE *he = hv_fetch_ent(GvHV(PL_hintgv), twigils_hint_key_sv, 0, twigils_hint_key_hash);
+    return he && SvTRUE(HeVAL(he));
+}
+
+static OP *
+myck_rv2sv_twigils(pTHX_ OP *o)
+{
+    OP *kid, *ret;
+    SV *sv, *name;
+    PADOFFSET offset;
+    char prefix[2];
+
+    if (!(o->op_flags & OPf_KIDS))
+        return old_rv2sv_checker(aTHX_ o);
+
+    kid = cUNOPo->op_first;
+    if (kid->op_type != OP_CONST)
+        return old_rv2sv_checker(aTHX_ o);
+
+    sv = cSVOPx_sv(kid);
+    if (!SvPOK(sv))
+        return old_rv2sv_checker(aTHX_ o);
+
+    if (!twigil_enabled())
+        return old_rv2sv_checker(aTHX_ o);
+
+    if (*SvPVX(sv) != '!')
+        return old_rv2sv_checker(aTHX_ o);
+
+    prefix[0] = '$';
+    prefix[1] = *SvPVX(sv);
+    name = parse_ident(prefix, 2);
+    if (!name)
+        return old_rv2sv_checker(aTHX_ o);
+
+    offset = pad_findmy_sv(name, 0);
+    if (offset == NOT_IN_PAD)
+        croak("No such twigil variable %"SVf, SVfARG(name));
+
+    ret = newOP(OP_PADSV, 0);
+    ret->op_targ = offset;
+
+    op_free(o);
+    return ret;
+}
+
+/* }}} */
+/* keyword modifier parsing {{{ */
+
 #define parse_modifier(modifier, len) THX_parse_modifier(aTHX_ modifier, len)
 static bool
 THX_parse_modifier(pTHX_ const char *modifier, STRLEN len)
@@ -347,24 +512,13 @@ THX_parse_modifier_with_multiple_values(pTHX_ const char *modifier, STRLEN len)
     return ret;
 }
 
+/* }}} */
+/* trait parsing {{{ */
+
 struct mop_trait {
     SV *name;
     OP *params;
 };
-
-#define syntax_error(err) THX_syntax_error(aTHX_ err)
-static void
-THX_syntax_error(pTHX_ SV *err)
-{
-    dSP;
-    ENTER;
-    PUSHMARK(SP);
-    XPUSHs(err);
-    PUTBACK;
-    call_pv("mop::internals::syntax::syntax_error", G_VOID);
-    PUTBACK;
-    LEAVE;
-}
 
 #define parse_traits(ntraitsp) THX_parse_traits(aTHX_ ntraitsp)
 static struct mop_trait **
@@ -444,6 +598,9 @@ THX_gen_traits_ops(pTHX_ OP *append_to, struct mop_trait **traits, UV ntraits)
     return append_to;
 }
 
+/* }}} */
+/* attribute parsing {{{ */
+
 #define parse_has(namegv, psobj, flagsp) THX_parse_has(aTHX_ namegv, psobj, flagsp)
 static OP *
 THX_parse_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
@@ -514,33 +671,8 @@ THX_add_attribute(pTHX_ SV *namesv)
     av_push(attrs, SvREFCNT_inc(namesv));
 }
 
-static OP *
-run_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
-{
-    dSP;
-    I32 floor = start_subparse(0, CVf_ANON);
-    OP *o = parse_has(namegv, psobj, flagsp);
-    GV *gv = gv_fetchpvs("mop::internals::syntax::add_attribute", 0, SVt_PVCV);
-    CV *cv;
-
-    add_attribute(cSVOPx_sv(cUNOPo->op_first->op_sibling));
-
-    o = newUNOP(OP_ENTERSUB, OPf_STACKED,
-                op_append_elem(OP_LIST, o,
-                               newUNOP(OP_RV2CV, 0,
-                                       newGVOP(OP_GV, 0, gv))));
-    cv = newATTRSUB(floor, NULL, NULL, NULL, newSTATEOP(0, NULL, o));
-    if (CvCLONE(cv))
-        cv = cv_clone(cv);
-
-    ENTER;
-    PUSHMARK(SP);
-    PUTBACK;
-    call_sv((SV *)cv, G_VOID);
-    PUTBACK;
-    LEAVE;
-    return newOP(OP_NULL, 0);
-}
+/* }}} */
+/* method parsing {{{ */
 
 struct mop_signature_var {
     SV *name;
@@ -641,7 +773,6 @@ THX_parse_signature(pTHX_ SV *method_name,
     if (!invocant) {
         Newxz(invocant, 1, struct mop_signature_var);
         invocant->name = sv_2mortal(newSVpvs("$self"));
-        /* invocant->default_value = newOP(OP_SHIFT, OPf_WANT_SCALAR | OPf_SPECIAL); */
     }
 
     *invocantp = invocant;
@@ -667,33 +798,20 @@ THX_add_required_method(pTHX_ SV *method_name)
     LEAVE;
 }
 
-#define intro_twigil_var(namesv) THX_intro_twigil_var(aTHX_ namesv)
+#define gen_default_op(padoff, argsoff, o) THX_gen_default_op(aTHX_ padoff, argsoff, o)
 static OP *
-THX_intro_twigil_var(pTHX_ SV *namesv)
+THX_gen_default_op(pTHX_ PADOFFSET padoff, UV argsoff, OP *o)
 {
-    OP *o = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
-    o->op_targ = pad_add_name_sv(namesv, 0, NULL, NULL);
-    return o;
-}
+    OP *padop, *cmpop;
 
-#define set_attr_magic(var, name, meta, self) THX_set_attr_magic(aTHX_ var, name, meta, self)
-static void
-THX_set_attr_magic(pTHX_ SV *var, SV *name, SV *meta, SV *self)
-{
-    SV *svs[3];
-    AV *data;
-    svs[0] = name;
-    svs[1] = meta;
-    svs[2] = self;
-    data = (AV *)sv_2mortal((SV *)av_make(3, svs));
-    sv_magicext(var, (SV *)data, PERL_MAGIC_ext, &attr_vtbl, "attr", 0);
-}
+    padop = newOP(OP_PADSV, OPf_MOD);
+    padop->op_targ = padoff;
 
-#define set_err_magic(var, name) THX_set_err_magic(aTHX_ var, name)
-static void
-THX_set_err_magic(pTHX_ SV *var, SV *name)
-{
-    sv_magicext(var, name, PERL_MAGIC_ext, &err_vtbl, "err", 0);
+    cmpop = newBINOP(OP_LT, 0,
+                     newAVREF(newGVOP(OP_GV, 0, PL_defgv)),
+                     newSVOP(OP_CONST, 0, newSVuv(argsoff + 1)));
+
+    return newCONDOP(0, cmpop, newASSIGNOP(0, padop, 0, o), NULL);
 }
 
 static OP *
@@ -711,42 +829,6 @@ pp_init_attr(pTHX)
     else
         set_err_magic(TARG, attr_name);
     return PL_op->op_next;
-}
-
-#define gen_default_op(padoff, argsoff, o) THX_gen_default_op(aTHX_ padoff, argsoff, o)
-static OP *
-THX_gen_default_op(pTHX_ PADOFFSET padoff, UV argsoff, OP *o)
-{
-    OP *padop, *cmpop;
-
-    padop = newOP(OP_PADSV, OPf_MOD);
-    padop->op_targ = padoff;
-
-    cmpop = newBINOP(OP_LT, 0,
-                     newAVREF(newGVOP(OP_GV, 0, PL_defgv)),
-                     newSVOP(OP_CONST, 0, newSVuv(argsoff + 1)));
-
-    return newCONDOP(0, cmpop, newASSIGNOP(0, padop, 0, o), NULL);
-}
-
-#define current_meta_name() THX_current_meta_name(aTHX)
-static SV *
-THX_current_meta_name(pTHX)
-{
-    dSP;
-    SV *ret;
-
-    ENTER;
-    PUSHMARK(SP);
-    XPUSHs(get_sv("mop::internals::syntax::CURRENT_META", 0));
-    PUTBACK;
-    call_method("name", G_VOID);
-    SPAGAIN;
-    ret = SvREFCNT_inc(POPs);
-    PUTBACK;
-    LEAVE;
-
-    return ret;
 }
 
 #define parse_method(namegv, psobj, flagsp, floor) THX_parse_method(aTHX_ namegv, psobj, flagsp, floor)
@@ -871,6 +953,60 @@ THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp, I32 *floor)
                           traits, numtraits);
 }
 
+/* }}} */
+/* keyword checkers {{{ */
+
+static OP *
+return_true(pTHX_ OP *o, GV *namegv, SV *ckobj)
+{
+    PERL_UNUSED_ARG(namegv);
+    PERL_UNUSED_ARG(ckobj);
+
+    op_free(o);
+    return newSVOP(OP_CONST, 0, &PL_sv_yes);
+}
+
+static OP *
+compile_keyword_away(pTHX_ OP *o, GV *namegv, SV *ckobj)
+{
+    PERL_UNUSED_ARG(namegv);
+    PERL_UNUSED_ARG(ckobj);
+
+    op_free(o);
+    return newOP(OP_NULL, 0);
+}
+
+/* }}} */
+/* keyword parsers {{{ */
+
+static OP *
+run_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
+{
+    dSP;
+    I32 floor = start_subparse(0, CVf_ANON);
+    OP *o = parse_has(namegv, psobj, flagsp);
+    GV *gv = gv_fetchpvs("mop::internals::syntax::add_attribute", 0, SVt_PVCV);
+    CV *cv;
+
+    add_attribute(cSVOPx_sv(cUNOPo->op_first->op_sibling));
+
+    o = newUNOP(OP_ENTERSUB, OPf_STACKED,
+                op_append_elem(OP_LIST, o,
+                               newUNOP(OP_RV2CV, 0,
+                                       newGVOP(OP_GV, 0, gv))));
+    cv = newATTRSUB(floor, NULL, NULL, NULL, newSTATEOP(0, NULL, o));
+    if (CvCLONE(cv))
+        cv = cv_clone(cv);
+
+    ENTER;
+    PUSHMARK(SP);
+    PUTBACK;
+    call_sv((SV *)cv, G_VOID);
+    PUTBACK;
+    LEAVE;
+    return newOP(OP_NULL, 0);
+}
+
 static OP *
 run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
@@ -900,103 +1036,8 @@ run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     return newOP(OP_NULL, 0);
 }
 
-static OP *
-compile_keyword_away(pTHX_ OP *o, GV *namegv, SV *ckobj)
-{
-    PERL_UNUSED_ARG(namegv);
-    PERL_UNUSED_ARG(ckobj);
-
-    op_free(o);
-    return newOP(OP_NULL, 0);
-}
-
-static Perl_check_t old_rv2sv_checker;
-static SV *twigils_hint_key_sv;
-static U32 twigils_hint_key_hash;
-
-#define parse_ident(prefix, prefixlen) THX_parse_ident(aTHX_ prefix, prefixlen)
-static SV *
-THX_parse_ident(pTHX_ const char *prefix, STRLEN prefixlen)
-{
-    STRLEN idlen;
-    char *start, *s;
-    char c;
-    SV *sv;
-
-    start = s = PL_parser->bufptr;
-    if (start > SvPVX(PL_parser->linestr) && isSPACE(*(start - 1)))
-        return NULL;
-
-    c = *s;
-    if (!isIDFIRST(c))
-        return NULL;
-
-    do {
-        c = *++s;
-    } while (isALNUM(c));
-
-    lex_read_to(s);
-
-    idlen = s - start;
-    sv = sv_2mortal(newSV(prefixlen + idlen));
-    Copy(prefix, SvPVX(sv), prefixlen, char);
-    Copy(start, SvPVX(sv) + prefixlen, idlen, char);
-    SvPVX(sv)[prefixlen + idlen] = 0;
-    SvCUR_set(sv, prefixlen + idlen);
-    SvPOK_on(sv);
-
-    return sv;
-}
-
-#define twigil_enabled() THX_twigil_enabled(aTHX)
-static bool
-THX_twigil_enabled(pTHX)
-{
-    HE *he = hv_fetch_ent(GvHV(PL_hintgv), twigils_hint_key_sv, 0, twigils_hint_key_hash);
-    return he && SvTRUE(HeVAL(he));
-}
-
-static OP *
-myck_rv2sv(pTHX_ OP *o)
-{
-    OP *kid, *ret;
-    SV *sv, *name;
-    PADOFFSET offset;
-    char prefix[2];
-
-    if (!(o->op_flags & OPf_KIDS))
-        return old_rv2sv_checker(aTHX_ o);
-
-    kid = cUNOPo->op_first;
-    if (kid->op_type != OP_CONST)
-        return old_rv2sv_checker(aTHX_ o);
-
-    sv = cSVOPx_sv(kid);
-    if (!SvPOK(sv))
-        return old_rv2sv_checker(aTHX_ o);
-
-    if (!twigil_enabled())
-        return old_rv2sv_checker(aTHX_ o);
-
-    if (*SvPVX(sv) != '!')
-        return old_rv2sv_checker(aTHX_ o);
-
-    prefix[0] = '$';
-    prefix[1] = *SvPVX(sv);
-    name = parse_ident(prefix, 2);
-    if (!name)
-        return old_rv2sv_checker(aTHX_ o);
-
-    offset = pad_findmy_sv(name, 0);
-    if (offset == NOT_IN_PAD)
-        croak("No such twigil variable %"SVf, SVfARG(name));
-
-    ret = newOP(OP_PADSV, 0);
-    ret->op_targ = offset;
-
-    op_free(o);
-    return ret;
-}
+/* }}} */
+/* xsubs: mop::internals::util {{{ */
 
 MODULE = mop  PACKAGE = mop::internals::util
 
@@ -1084,6 +1125,9 @@ unset_meta (SV *package)
   CODE:
     unset_meta(gv_stashsv(package, GV_ADD));
 
+# }}}
+# xsubs: mop::internals::syntax {{{
+
 MODULE = mop  PACKAGE = mop::internals::syntax
 
 PROTOTYPES: DISABLE
@@ -1144,5 +1188,7 @@ BOOT:
     twigils_hint_key_hash = SvSHARED_HASH(twigils_hint_key_sv);
 
     old_rv2sv_checker = PL_check[OP_RV2SV];
-    PL_check[OP_RV2SV] = myck_rv2sv;
+    PL_check[OP_RV2SV] = myck_rv2sv_twigils;
 }
+
+# }}}
