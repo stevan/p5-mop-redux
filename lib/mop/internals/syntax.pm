@@ -29,14 +29,14 @@ sub setup_for {
     my ($pkg) = @_;
 
     $^H{__PACKAGE__ . '/twigils'} = 1;
-    mop::_install_sub($pkg, 'mop::internals::syntax', $_)
+    mop::internals::util::install_sub($pkg, 'mop::internals::syntax', $_)
         for @available_keywords;
 }
 
 sub teardown_for {
     my ($pkg) = @_;
 
-    mop::_uninstall_sub($pkg, $_)
+    mop::internals::util::uninstall_sub($pkg, $_)
         for @available_keywords;
 }
 

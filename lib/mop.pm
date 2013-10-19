@@ -54,29 +54,6 @@ sub unimport {
     mop::traits::teardown_for($pkg);
 }
 
-# XXX all of this OVERRIDDEN stuff really needs to go, ideally replaced by
-# lexical exports
-my %OVERRIDDEN;
-
-sub _install_sub {
-    my ($to, $from, $sub) = @_;
-    no strict 'refs';
-    if (defined &{ "${to}::${sub}" }) {
-        push @{ $OVERRIDDEN{$to}{$sub} //= [] }, \&{ "${to}::${sub}" };
-    }
-    no warnings 'redefine';
-    *{ $to . '::' . $sub } = \&{ "${from}::${sub}" };
-}
-
-sub _uninstall_sub {
-    my ($pkg, $sub) = @_;
-    no strict 'refs';
-    delete ${ $pkg . '::' }{$sub};
-    if (my $prev = pop @{ $OVERRIDDEN{$pkg}{$sub} // [] }) {
-        *{ $pkg . '::' . $sub } = $prev;
-    }
-}
-
 sub meta {
     my $pkg = ref($_[0]) || $_[0];
     mop::internals::util::get_meta($pkg);

@@ -21,14 +21,14 @@ our @available_traits = qw[
 sub setup_for {
     my ($pkg) = @_;
 
-    mop::_install_sub($pkg, 'mop::traits', $_)
+    mop::internals::util::install_sub($pkg, 'mop::traits', $_)
         for @available_traits;
 }
 
 sub teardown_for {
     my ($pkg) = @_;
 
-    mop::_uninstall_sub($pkg, $_)
+    mop::internals::util::uninstall_sub($pkg, $_)
         for @available_traits;
 }
 
