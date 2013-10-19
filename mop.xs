@@ -164,13 +164,11 @@ THX_unset_meta(pTHX_ HV *stash)
 }
 
 static OP *
-ck_mop_keyword(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
+return_true(pTHX_ OP *entersubop, GV *namegv, SV *ckobj)
 {
     PERL_UNUSED_ARG(namegv);
     op_free(entersubop);
-    return SvTRUE(ckobj)
-        ? newSVOP(OP_CONST, 0, &PL_sv_yes)
-        : newOP(OP_NULL, 0);
+    return newSVOP(OP_CONST, 0, &PL_sv_yes);
 }
 
 #define read_tokenish() THX_read_tokenish(aTHX)
@@ -1133,8 +1131,8 @@ BOOT:
     has    = get_cv("mop::internals::syntax::has",    0);
     method = get_cv("mop::internals::syntax::method", 0);
 
-    cv_set_call_checker(class,  ck_mop_keyword, &PL_sv_yes);
-    cv_set_call_checker(role,   ck_mop_keyword, &PL_sv_yes);
+    cv_set_call_checker(class,  return_true, &PL_sv_undef);
+    cv_set_call_checker(role,   return_true, &PL_sv_undef);
 
     cv_set_call_parser(has,    run_has,    &PL_sv_undef);
     cv_set_call_parser(method, run_method, &PL_sv_undef);
