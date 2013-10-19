@@ -786,7 +786,7 @@ THX_parse_signature(pTHX_ SV *method_name,
                 Safefree(vars[i]);
                 Safefree(vars);
             }
-        XCPT_RETHROW;
+
             XCPT_RETHROW;
         }
         lex_read_unichar(0);
