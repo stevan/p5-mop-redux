@@ -200,9 +200,9 @@ THX_unset_meta(pTHX_ SV *name)
 /* }}} */
 /* lexer helpers {{{ */
 
-#define lex_peek_pv(len, lenp) THX_lex_peek_pv(aTHX_ len, lenp)
-static char *
-THX_lex_peek_pv(pTHX_ STRLEN len, STRLEN *lenp)
+#define lex_peek_sv(len) THX_lex_peek_sv(aTHX_ len)
+static SV *
+THX_lex_peek_sv(pTHX_ STRLEN len)
 {
     char *bufptr = PL_parser->bufptr;
     char *bufend = PL_parser->bufend;
@@ -226,18 +226,31 @@ THX_lex_peek_pv(pTHX_ STRLEN len, STRLEN *lenp)
 
     if (bufptr == bufend) {
         lex_next_chunk(0);
+        bufptr = PL_parser->bufptr;
         bufend = PL_parser->bufend;
     }
 
-    if (lex_bufutf8())
-        croak("Not yet implemented");
+    if (lex_bufutf8()) {
+        char *end = bufptr;
+        STRLEN i;
 
-    got = bufend - bufptr;
-    if (got < len)
-        len = got;
+        for (i = 0; i < len; ++i) {
+            unsigned char skip = UTF8SKIP(end);
 
-    *lenp = len;
-    return bufptr;
+            if (end - bufptr + skip > bufend - bufptr)
+                break;
+
+            end += UTF8SKIP(end);
+        }
+
+        return sv_2mortal(newSVpvn_utf8(bufptr, end - bufptr, TRUE));
+    }
+    else {
+        got = bufend - bufptr;
+        if (got < len)
+            len = got;
+        return sv_2mortal(newSVpvn(bufptr, len));
+    }
 }
 
 #define read_tokenish() THX_read_tokenish(aTHX)
@@ -269,32 +282,43 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
 {
     char *start, *s;
     STRLEN len;
-    bool saw_idfirst = FALSE;
     SV *sv;
 
     if (flags & ~PARSE_NAME_ALLOW_PACKAGE)
         croak("unknown flags");
 
+    if (PL_parser->bufptr == PL_parser->bufend)
+        lex_next_chunk(0);
+
     start = s = PL_parser->bufptr;
 
-    while (1) {
-        char c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
+    /* copied with a few modifications from parse_ident in toke.c */
+    for (;;) {
+        if (lex_bufutf8() && isIDFIRST_utf8((U8*)s)) {
+             /* The UTF-8 case must come first, otherwise things
+             * like c\N{COMBINING TILDE} would start failing, as the
+             * isWORDCHAR_A case below would gobble the 'c' up.
+             */
 
-        if (saw_idfirst ? isALNUM(c) : (saw_idfirst = TRUE, isIDFIRST(c))) {
-            lex_read_unichar(LEX_KEEP_PREVIOUS); ++s;
+            s += UTF8SKIP(s);
+            while (isIDCONT_utf8((U8*)s))
+                s += UTF8SKIP(s);
         }
-        else if (flags & PARSE_NAME_ALLOW_PACKAGE && c == ':') {
-            lex_read_unichar(0); ++s;
-            if (lex_peek_unichar(0) == ':') { /* TODO: check next != ':' */
-                lex_read_unichar(0); ++s;
+        else if (isWORDCHAR_A(*s)) {
+            do {
+                s++;
+            } while (isWORDCHAR_A(*s));
+        }
+        else if ((flags & PARSE_NAME_ALLOW_PACKAGE) && *s == ':') {
+            if (s[1] == ':') {
+                s += 2;
             }
             else {
-                croak("Invalid identifier: %.*s%"SVf,
-                      s - start, start,
-                      SVfARG(read_tokenish()));
+                croak("Invalid identifier: %"SVf, SVfARG(read_tokenish()));
             }
         }
-        else break;
+        else
+            break;
     }
 
     len = s - start;
@@ -307,6 +331,10 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
     SvPVX(sv)[prefixlen + len] = '\0';
     SvCUR_set(sv, prefixlen + len);
     SvPOK_on(sv);
+    if (lex_bufutf8())
+        SvUTF8_on(sv);
+
+    lex_read_to(s);
 
     return sv;
 }
@@ -497,7 +525,7 @@ static bool
 THX_parse_modifier(pTHX_ const char *modifier, STRLEN len)
 {
     STRLEN got;
-    char *s = lex_peek_pv(len + 1, &got);
+    char *s = SvPV(lex_peek_sv(len + 1), got);
 
     if (got < len)
         return FALSE;
@@ -511,7 +539,7 @@ THX_parse_modifier(pTHX_ const char *modifier, STRLEN len)
             return FALSE;
     }
 
-    lex_read_to(s + len);
+    lex_read_to(PL_parser->bufptr + len);
     return TRUE;
 }
 

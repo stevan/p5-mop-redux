@@ -5,12 +5,6 @@ use Test::More;
 
 use mop;
 
-# the real parser is going to need to have this test pass
-BEGIN {
-    plan skip_all => "Parse::Keyword doesn't handle unicode"
-        if $INC{'Parse/Keyword.pm'};
-}
-
 use utf8;
 
 class Föo {
@@ -23,7 +17,7 @@ my $Föo = mop::meta('Föo');
 is($Föo->name, 'Föo');
 
 my $Àbc = $Föo->get_attribute('$!Àbc');
-is($Àbc->name, 'Àbc');
+is($Àbc->name, '$!Àbc');
 is($Àbc->get_default, 'café');
 
 my $þing = $Föo->get_method('þing');
