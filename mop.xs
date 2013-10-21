@@ -325,12 +325,12 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
                 c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
             } while (isIDCONT_uni(c));
         }
-        else if (isWORDCHAR_A((U8)c)) {
+        else if (isIDFIRST_A((U8)c)) {
             do {
                 ++len;
                 lex_read_unichar(LEX_KEEP_PREVIOUS);
                 c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
-            } while (isWORDCHAR_A((U8)c));
+            } while (isIDCONT_A((U8)c));
         }
         else if ((flags & PARSE_NAME_ALLOW_PACKAGE) && c == ':') {
             ++len;
