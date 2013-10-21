@@ -310,29 +310,31 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
     if (flags & ~PARSE_NAME_ALLOW_PACKAGE)
         croak("unknown flags");
 
-    /* copied with a few modifications from parse_ident in toke.c */
     for (;;) {
-        I32 c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
-        if (lex_bufutf8() && isIDFIRST_uni(c)) {
-             /* The UTF-8 case must come first, otherwise things
-             * like c\N{COMBINING TILDE} would start failing, as the
-             * isWORDCHAR_A case below would gobble the 'c' up.
-             */
+        I32 c;
 
-            do {
-                len += OFFUNISKIP(c);
-                lex_read_unichar(LEX_KEEP_PREVIOUS);
-                c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
-            } while (isIDCONT_uni(c));
+        c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
+
+        if (lex_bufutf8()) {
+            if (isIDFIRST_uni(c)) {
+                do {
+                    len += OFFUNISKIP(c);
+                    lex_read_unichar(LEX_KEEP_PREVIOUS);
+                    c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
+                } while (isIDCONT_uni(c));
+            }
         }
-        else if (isIDFIRST_A((U8)c)) {
-            do {
-                ++len;
-                lex_read_unichar(LEX_KEEP_PREVIOUS);
-                c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
-            } while (isIDCONT_A((U8)c));
+        else {
+            if (isIDFIRST_A((U8)c)) {
+                do {
+                    ++len;
+                    lex_read_unichar(LEX_KEEP_PREVIOUS);
+                    c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
+                } while (isIDCONT_A((U8)c));
+            }
         }
-        else if ((flags & PARSE_NAME_ALLOW_PACKAGE) && c == ':') {
+
+        if ((flags & PARSE_NAME_ALLOW_PACKAGE) && c == ':') {
             ++len;
             lex_read_unichar(LEX_KEEP_PREVIOUS);
             c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
