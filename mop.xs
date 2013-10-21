@@ -223,6 +223,19 @@ THX_unset_meta(pTHX_ SV *name)
 #endif
 #endif
 
+#ifndef isIDCONT_uni
+inline bool is_uni_idcont(pTHX_ UV c) {
+    U8 tmpbuf[UTF8_MAXBYTES+1];
+    uvchr_to_utf8(tmpbuf, c);
+    return is_utf8_idcont(tmpbuf);
+}
+#define isIDCONT_uni(uv) is_uni_idcont(aTHX_ uv)
+#endif
+#ifndef isIDCONT_A
+/* not ideal, but it's just for backcompat anyway */
+#define isIDCONT_A(uv) isIDCONT_uni(uv)
+#endif
+
 #define lex_peek_sv(len) THX_lex_peek_sv(aTHX_ len)
 static SV *
 THX_lex_peek_sv(pTHX_ STRLEN len)
