@@ -200,6 +200,29 @@ THX_unset_meta(pTHX_ SV *name)
 /* }}} */
 /* lexer helpers {{{ */
 
+#ifndef OFFUNISKIP
+#if UVSIZE >= 8
+#  define UTF8_QUAD_MAX UINT64_C(0x1000000000)
+
+/* Input is a true Unicode (not-native) code point */
+#define OFFUNISKIP(uv) ( (uv) < 0x80        ? 1 : \
+		      (uv) < 0x800          ? 2 : \
+		      (uv) < 0x10000        ? 3 : \
+		      (uv) < 0x200000       ? 4 : \
+		      (uv) < 0x4000000      ? 5 : \
+		      (uv) < 0x80000000     ? 6 : \
+                      (uv) < UTF8_QUAD_MAX ? 7 : 13 )
+#else
+/* No, I'm not even going to *TRY* putting #ifdef inside a #define */
+#define OFFUNISKIP(uv) ( (uv) < 0x80        ? 1 : \
+		      (uv) < 0x800          ? 2 : \
+		      (uv) < 0x10000        ? 3 : \
+		      (uv) < 0x200000       ? 4 : \
+		      (uv) < 0x4000000      ? 5 : \
+		      (uv) < 0x80000000     ? 6 : 7 )
+#endif
+#endif
+
 #define lex_peek_sv(len) THX_lex_peek_sv(aTHX_ len)
 static SV *
 THX_lex_peek_sv(pTHX_ STRLEN len)
@@ -262,13 +285,13 @@ THX_read_tokenish(pTHX)
     SvCUR_set(ret, 0);
     SvPOK_on(ret);
 
-    if (strchr("$@%!:", lex_peek_unichar(0)) != NULL)
-        sv_catpvf(ret, "%c", lex_read_unichar(0));
+    if (strchr("$@%!:", lex_peek_unichar(LEX_KEEP_PREVIOUS)) != NULL)
+        sv_catpvf(ret, "%c", lex_read_unichar(LEX_KEEP_PREVIOUS));
 
-    c = lex_peek_unichar(0);
+    c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
     while (c != -1 && !isSPACE(c)) {
-        sv_catpvf(ret, "%c", lex_read_unichar(0));
-        c = lex_peek_unichar(0);
+        sv_catpvf(ret, "%c", lex_read_unichar(LEX_KEEP_PREVIOUS));
+        c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
     }
 
     return ret;
@@ -281,60 +304,67 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
                   const char *what, STRLEN whatlen, U32 flags)
 {
     char *start, *s;
-    STRLEN len;
+    STRLEN len = 0;
     SV *sv;
 
     if (flags & ~PARSE_NAME_ALLOW_PACKAGE)
         croak("unknown flags");
 
-    if (PL_parser->bufptr == PL_parser->bufend)
-        lex_next_chunk(0);
-
-    start = s = PL_parser->bufptr;
-
     /* copied with a few modifications from parse_ident in toke.c */
     for (;;) {
-        if (lex_bufutf8() && isIDFIRST_utf8((U8*)s)) {
+        I32 c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
+        if (lex_bufutf8() && isIDFIRST_uni(c)) {
              /* The UTF-8 case must come first, otherwise things
              * like c\N{COMBINING TILDE} would start failing, as the
              * isWORDCHAR_A case below would gobble the 'c' up.
              */
 
-            s += UTF8SKIP(s);
-            while (isIDCONT_utf8((U8*)s))
-                s += UTF8SKIP(s);
-        }
-        else if (isWORDCHAR_A(*s)) {
             do {
-                s++;
-            } while (isWORDCHAR_A(*s));
+                len += OFFUNISKIP(c);
+                lex_read_unichar(LEX_KEEP_PREVIOUS);
+                c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
+            } while (isIDCONT_uni(c));
         }
-        else if ((flags & PARSE_NAME_ALLOW_PACKAGE) && *s == ':') {
-            if (s[1] == ':') {
-                s += 2;
+        else if (isWORDCHAR_A((U8)c)) {
+            do {
+                ++len;
+                lex_read_unichar(LEX_KEEP_PREVIOUS);
+                c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
+            } while (isWORDCHAR_A((U8)c));
+        }
+        else if ((flags & PARSE_NAME_ALLOW_PACKAGE) && c == ':') {
+            ++len;
+            lex_read_unichar(LEX_KEEP_PREVIOUS);
+            c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
+            if (c == ':') {
+                ++len;
+                lex_read_unichar(LEX_KEEP_PREVIOUS);
+                c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
             }
             else {
-                croak("Invalid identifier: %"SVf, SVfARG(read_tokenish()));
+                SV *buf;
+
+                buf = newSVpvn(PL_parser->bufptr - len, len);
+                croak("Invalid identifier: %"SVf"%"SVf,
+                      SVfARG(buf),
+                      SVfARG(read_tokenish()));
             }
         }
         else
             break;
     }
 
-    len = s - start;
     if (!len)
         croak("%"SVf" is not a valid %.*s name",
               SVfARG(read_tokenish()), whatlen, what);
     sv = sv_2mortal(newSV(prefixlen + len));
     Copy(prefix, SvPVX(sv), prefixlen, char);
-    Copy(start, SvPVX(sv) + prefixlen, len, char);
+    Copy(PL_parser->bufptr - len, SvPVX(sv) + prefixlen, len, char);
     SvPVX(sv)[prefixlen + len] = '\0';
     SvCUR_set(sv, prefixlen + len);
     SvPOK_on(sv);
     if (lex_bufutf8())
         SvUTF8_on(sv);
-
-    lex_read_to(s);
 
     return sv;
 }
