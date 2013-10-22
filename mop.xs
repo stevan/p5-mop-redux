@@ -198,6 +198,154 @@ THX_unset_meta(pTHX_ SV *name)
 }
 
 /* }}} */
+/* version helpers {{{ */
+
+/* modified from prescan_version in core. prescan_version assumes that the
+ * characters following a version number will be either ; or {, which isn't
+ * true for us. */
+#define peek_version(s, errstr) THX_peek_version(aTHX_ s, errstr)
+STRLEN
+THX_peek_version(pTHX_ const char *s, const char **errstr)
+{
+    const char *d = s;
+
+    if (*d == 'v') { /* explicit v-string */
+        d++;
+        if (!isDIGIT(*d)) { /* degenerate v-string */
+            return 0;
+        }
+
+        if (d[0] == '0' && isDIGIT(d[1])) {
+            /* no leading zeros allowed */
+            BADVERSION(0,errstr,"Invalid version format (no leading zeros)");
+        }
+
+        while (isDIGIT(*d))         /* integer part */
+            d++;
+
+        if (*d == '.')
+        {
+            d++;                 /* decimal point */
+        }
+        else
+        {
+            /* require v1.2.3 */
+            BADVERSION(0,errstr,"Invalid version format (dotted-decimal versions require at least three parts)");
+        }
+
+        {
+            int i = 0;
+            int j = 0;
+            while (isDIGIT(*d)) {        /* just keep reading */
+                i++;
+                while (isDIGIT(*d)) {
+                    d++; j++;
+                    /* maximum 3 digits between decimal */
+                    if (j > 3) {
+                        BADVERSION(0,errstr,"Invalid version format (maximum 3 digits between decimals)");
+                    }
+                }
+                if (*d == '_') {
+                    BADVERSION(0,errstr,"Invalid version format (no underscores)");
+                }
+                else if (*d == '.') {
+                    d++;
+                }
+                else if (!isDIGIT(*d)) {
+                    break;
+                }
+                j = 0;
+            }
+
+            if (i < 2) {
+                /* requires v1.2.3 */
+                BADVERSION(0,errstr,"Invalid version format (dotted-decimal versions require at least three parts)");
+            }
+        }
+    }                                         /* end if dotted-decimal */
+    else
+    {                                        /* decimal versions */
+        if (*d == '.') {
+            BADVERSION(0,errstr,"Invalid version format (0 before decimal required)");
+        }
+        if (*d == '0' && isDIGIT(d[1])) {
+            BADVERSION(0,errstr,"Invalid version format (no leading zeros)");
+        }
+
+        /* and we never support negative versions */
+        if ( *d == '-') {
+            BADVERSION(0,errstr,"Invalid version format (negative version number)");
+        }
+
+        /* consume all of the integer part */
+        while (isDIGIT(*d))
+            d++;
+
+        /* look for a fractional part */
+        if (*d == '.') {
+            /* we found it, so consume it */
+            d++;
+        }
+        else if (!*d || isSPACE(*d)) {
+            /* found just an integer (or nothing) */
+            return d - s;
+        }
+        else if ( d == s ) {
+            /* didn't find either integer or period */
+            return 0;
+        }
+        else if (*d == '_') {
+            /* underscore can't come after integer part */
+            BADVERSION(0,errstr,"Invalid version format (no underscores)");
+        }
+        else {
+            /* anything else after integer part is just invalid data */
+            BADVERSION(0,errstr,"Invalid version format (non-numeric data)");
+        }
+
+        /* scan the fractional part after the decimal point*/
+
+        if (!isDIGIT(*d)) {
+            BADVERSION(0,errstr,"Invalid version format (fractional part required)");
+        }
+
+        while (isDIGIT(*d)) {
+            d++;
+            if (*d == '.' && isDIGIT(d[-1])) {
+                BADVERSION(0,errstr,"Invalid version format (dotted-decimal versions must begin with 'v')");
+            }
+            if (*d == '_') {
+                BADVERSION(0,errstr,"Invalid version format (no underscores)");
+            }
+        }
+    }
+
+    return d - s;
+}
+
+static SV *
+parse_version(const char *buf, STRLEN len)
+{
+    dSP;
+    SV *v;
+
+    ENTER;
+
+    PUSHMARK(SP);
+    XPUSHs(sv_2mortal(newSVpvs("version")));
+    XPUSHs(sv_2mortal(newSVpvn(buf, len)));
+    PUTBACK;
+    call_method("parse", G_SCALAR);
+    SPAGAIN;
+    v = POPs;
+    PUTBACK;
+
+    LEAVE;
+
+    return v;
+}
+
+/* }}} */
 /* lexer helpers {{{ */
 
 #ifndef OFFUNISKIP
@@ -1078,10 +1226,10 @@ THX_load_classes(pTHX_ AV *classes)
     SvREFCNT_dec(ref);
 }
 
-#define new_meta(metaclass, name, roles, superclass) \
-    THX_new_meta(aTHX_ metaclass, name, roles, superclass)
+#define new_meta(metaclass, name, version, roles, superclass) \
+    THX_new_meta(aTHX_ metaclass, name, version, roles, superclass)
 static SV *
-THX_new_meta(pTHX_ SV *metaclass, SV *name, AV *roles, SV *superclass)
+THX_new_meta(pTHX_ SV *metaclass, SV *name, SV *version, AV *roles, SV *superclass)
 {
     dSP;
     SV *ret, *roles_ref = newRV_inc((SV *)roles);
@@ -1090,6 +1238,7 @@ THX_new_meta(pTHX_ SV *metaclass, SV *name, AV *roles, SV *superclass)
     PUSHMARK(SP);
     XPUSHs(metaclass);
     XPUSHs(name);
+    XPUSHs(version ? version: &PL_sv_undef);
     XPUSHs(roles_ref);
     if (superclass)
         XPUSHs(superclass);
@@ -1132,13 +1281,13 @@ THX_isa(pTHX_ SV *sv, const char *name)
 static OP *
 THX_parse_namespace(pTHX_ bool is_class, U32 *flagsp, SV **metap, SV **pkgp, OP **traitsopp)
 {
-    SV *name, *extends, *metaclass, *meta;
+    SV *name, *version, *extends, *metaclass, *meta;
     AV *classes_to_load, *with;
     GV *gv;
     struct mop_trait **traits;
     UV ntraits;
-    char *caller;
-    STRLEN callerlen;
+    const char *caller, *err = NULL;
+    STRLEN versionlen, callerlen;
     OP *body;
 
     *flagsp = CALLPARSER_STATEMENT;
@@ -1157,8 +1306,17 @@ THX_parse_namespace(pTHX_ bool is_class, U32 *flagsp, SV **metap, SV **pkgp, OP 
 
     lex_read_space(0);
 
-    /* TODO: version handling */
-    /* version = prescan_version(PL_parser->bufptr, FALSE, &err, NULL, NULL, NULL, NULL); */
+    versionlen = peek_version(PL_parser->bufptr, &err);
+    if (versionlen) {
+        version = parse_version(PL_parser->bufptr, versionlen);
+        lex_read_to(PL_parser->bufptr + versionlen);
+    }
+    else if (err) {
+        syntax_error(newSVpv(err, 0));
+    }
+    else {
+        version = NULL;
+    }
 
     lex_read_space(0);
     classes_to_load = (AV *)sv_2mortal((SV *)newAV());
@@ -1208,8 +1366,7 @@ THX_parse_namespace(pTHX_ bool is_class, U32 *flagsp, SV **metap, SV **pkgp, OP 
     if (!isa(metaclass, is_class ? "mop::class" : "mop::role"))
         syntax_error(sv_2mortal(newSVpvf("The metaclass for %"SVf" (%"SVf") does not inherit from %s", SVfARG(name), SVfARG(metaclass), is_class ? "mop::class" : "mop::role")));
 
-    /* TODO: version */
-    meta = new_meta(metaclass, name, with, is_class ? extends : NULL);
+    meta = new_meta(metaclass, name, version, with, is_class ? extends : NULL);
     *pkgp = name;
 
     /* TODO: Implement without stuffing or B::Hooks::EndOfScope */

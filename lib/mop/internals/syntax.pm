@@ -38,11 +38,11 @@ sub load_classes {
 }
 
 sub new_meta {
-    my ($metaclass, $name, $roles, $superclass) = @_;
+    my ($metaclass, $name, $version, $roles, $superclass) = @_;
 
     $metaclass->new(
         name       => $name,
-        # version    => $version, TODO
+        version    => $version,
         roles      => [map {
             mop::meta($_) or die "Could not find metaclass for role: $_"
           } @{ $roles }],
