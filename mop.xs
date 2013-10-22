@@ -206,20 +206,20 @@ THX_unset_meta(pTHX_ SV *name)
 
 /* Input is a true Unicode (not-native) code point */
 #define OFFUNISKIP(uv) ( (uv) < 0x80        ? 1 : \
-		      (uv) < 0x800          ? 2 : \
-		      (uv) < 0x10000        ? 3 : \
-		      (uv) < 0x200000       ? 4 : \
-		      (uv) < 0x4000000      ? 5 : \
-		      (uv) < 0x80000000     ? 6 : \
+              (uv) < 0x800          ? 2 : \
+              (uv) < 0x10000        ? 3 : \
+              (uv) < 0x200000       ? 4 : \
+              (uv) < 0x4000000      ? 5 : \
+              (uv) < 0x80000000     ? 6 : \
                       (uv) < UTF8_QUAD_MAX ? 7 : 13 )
 #else
 /* No, I'm not even going to *TRY* putting #ifdef inside a #define */
 #define OFFUNISKIP(uv) ( (uv) < 0x80        ? 1 : \
-		      (uv) < 0x800          ? 2 : \
-		      (uv) < 0x10000        ? 3 : \
-		      (uv) < 0x200000       ? 4 : \
-		      (uv) < 0x4000000      ? 5 : \
-		      (uv) < 0x80000000     ? 6 : 7 )
+              (uv) < 0x800          ? 2 : \
+              (uv) < 0x10000        ? 3 : \
+              (uv) < 0x200000       ? 4 : \
+              (uv) < 0x4000000      ? 5 : \
+              (uv) < 0x80000000     ? 6 : 7 )
 #endif
 #endif
 
