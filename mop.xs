@@ -324,16 +324,17 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
         croak("unknown flags");
 
     for (;;) {
-        I32 c;
+        UV c;
 
-        c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
+        /* XXX why does lex_peek_unichar return an I32? */
+        c = (UV)lex_peek_unichar(LEX_KEEP_PREVIOUS);
 
         if (lex_bufutf8()) {
             if (in_fqname ? isIDCONT_uni(c) : isIDFIRST_uni(c)) {
                 do {
                     len += OFFUNISKIP(c);
                     lex_read_unichar(LEX_KEEP_PREVIOUS);
-                    c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
+                    c = (UV)lex_peek_unichar(LEX_KEEP_PREVIOUS);
                 } while (isIDCONT_uni(c));
             }
         }
@@ -342,7 +343,7 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
                 do {
                     ++len;
                     lex_read_unichar(LEX_KEEP_PREVIOUS);
-                    c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
+                    c = (UV)lex_peek_unichar(LEX_KEEP_PREVIOUS);
                 } while (isIDCONT_A((U8)c));
             }
         }
@@ -351,11 +352,11 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
             in_fqname = TRUE;
             ++len;
             lex_read_unichar(LEX_KEEP_PREVIOUS);
-            c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
+            c = (UV)lex_peek_unichar(LEX_KEEP_PREVIOUS);
             if (c == ':') {
                 ++len;
                 lex_read_unichar(LEX_KEEP_PREVIOUS);
-                c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
+                c = (UV)lex_peek_unichar(LEX_KEEP_PREVIOUS);
             }
             else {
                 SV *buf;
