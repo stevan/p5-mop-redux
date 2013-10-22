@@ -1289,7 +1289,7 @@ run_namespace(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     dSP;
     SV *meta;
     CV *cv;
-    I32 floor = start_subparse(0, CVf_ANON);
+    I32 floor = start_subparse(0, 0);
     OP *traitop;
     OP *o = parse_namespace(strnEQ(GvNAME(namegv), "class", sizeof("class")),
                             flagsp, &meta, &traitop);
