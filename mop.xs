@@ -746,11 +746,19 @@ THX_parse_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 
     if (lex_peek_unichar(0) == '=') {
         I32 floor;
+        OP *default_op;
 
         lex_read_unichar(0);
         lex_read_space(0);
         floor = start_subparse(0, CVf_ANON);
-        default_value = newANONSUB(floor, NULL, parse_fullexpr(0));
+        default_op = parse_fullexpr(0);
+        if (default_op->op_type == OP_CONST) {
+            default_value = default_op;
+            LEAVE_SCOPE(floor);
+        }
+        else {
+            default_value = newANONSUB(floor, NULL, default_op);
+        }
         lex_read_space(0);
     }
 

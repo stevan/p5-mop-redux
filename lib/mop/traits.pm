@@ -142,7 +142,7 @@ sub lazy {
         if ( !$attr->has_data_in_slot_for($instance) ) {
             $attr->store_data_in_slot_for($instance, do {
                 local $_ = $instance;
-                $default->()
+                ref($default) ? $default->() : $default
             });
         }
     });
