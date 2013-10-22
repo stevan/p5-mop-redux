@@ -316,7 +316,6 @@ static SV *
 THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
                   const char *what, STRLEN whatlen, U32 flags)
 {
-    char *start, *s;
     STRLEN len = 0;
     SV *sv;
     bool in_fqname = FALSE;
