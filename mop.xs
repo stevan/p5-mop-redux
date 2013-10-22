@@ -467,10 +467,8 @@ THX_current_attributes(pTHX)
 /* twigils {{{ */
 
 static Perl_check_t old_rv2sv_checker;
-static SV *twigils_hint_key_sv, *default_class_metaclass_hint_key_sv,
-    *default_role_metaclass_hint_key_sv;
-static U32 twigils_hint_key_hash, default_class_metaclass_hint_key_hash,
-    default_role_metaclass_hint_key_hash;
+static SV *twigils_hint_key_sv;
+static U32 twigils_hint_key_hash;
 
 #define intro_twigil_var(namesv) THX_intro_twigil_var(aTHX_ namesv)
 static OP *
@@ -1038,17 +1036,12 @@ THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 }
 
 /* }}} */
-/* keyword checkers {{{ */
+/* namespace parsing {{{ */
 
-static OP *
-compile_keyword_away(pTHX_ OP *o, GV *namegv, SV *ckobj)
-{
-    PERL_UNUSED_ARG(namegv);
-    PERL_UNUSED_ARG(ckobj);
-
-    op_free(o);
-    return newOP(OP_NULL, 0);
-}
+static SV *default_class_metaclass_hint_key_sv,
+    *default_role_metaclass_hint_key_sv;
+static U32 default_class_metaclass_hint_key_hash,
+    default_role_metaclass_hint_key_hash;
 
 #define default_metaclass(is_class) THX_default_metaclass(aTHX_ is_class)
 static SV *
@@ -1212,6 +1205,19 @@ THX_parse_namespace(pTHX_ bool is_class, U32 *flagsp, SV **metap, OP **traitsopp
     *metap = meta;
 
     return body;
+}
+
+/* }}} */
+/* keyword checkers {{{ */
+
+static OP *
+compile_keyword_away(pTHX_ OP *o, GV *namegv, SV *ckobj)
+{
+    PERL_UNUSED_ARG(namegv);
+    PERL_UNUSED_ARG(ckobj);
+
+    op_free(o);
+    return newOP(OP_NULL, 0);
 }
 
 /* }}} */
