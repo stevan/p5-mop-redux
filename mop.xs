@@ -1522,7 +1522,7 @@ BOOT:
     default_class_metaclass_hint_key_sv = newSVpvs_share("mop/default_class_metaclass");
     default_class_metaclass_hint_key_hash
         = SvSHARED_HASH(default_class_metaclass_hint_key_sv);
-    default_role_metaclass_hint_key_sv = newSVpvs_share("mop/default/role_metaclass");
+    default_role_metaclass_hint_key_sv = newSVpvs_share("mop/default_role_metaclass");
     default_role_metaclass_hint_key_hash
         = SvSHARED_HASH(default_role_metaclass_hint_key_sv);
 
