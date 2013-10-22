@@ -3,8 +3,6 @@ package mop::internals::syntax;
 use v5.16;
 use warnings;
 
-use Scope::Guard    qw[ guard ];
-
 use B::Hooks::EndOfScope ();
 use Carp              ();
 use Scalar::Util      ();
@@ -57,15 +55,9 @@ sub new_meta {
 sub run_namespace {
     my ($meta, $code, $traits) = @_;
 
-    my $pkg = $meta->name;
-    my $g = guard {
-        mop::remove_meta($pkg);
-    };
-
     # TODO: apply traits
     $meta->FINALIZE;
     $code->();
-    $g->dismiss;
 }
 
 sub add_method {

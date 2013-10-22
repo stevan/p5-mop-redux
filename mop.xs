@@ -1103,10 +1103,10 @@ THX_new_meta(pTHX_ SV *metaclass, SV *name, AV *roles, SV *superclass)
     return sv_2mortal(ret);
 }
 
-#define parse_namespace(is_class, flagsp, metap, traitsopp) \
-    THX_parse_namespace(aTHX_ is_class, flagsp, metap, traitsopp)
+#define parse_namespace(is_class, flagsp, metap, pkgp, traitsopp) \
+    THX_parse_namespace(aTHX_ is_class, flagsp, metap, pkgp, traitsopp)
 static OP *
-THX_parse_namespace(pTHX_ bool is_class, U32 *flagsp, SV **metap, OP **traitsopp)
+THX_parse_namespace(pTHX_ bool is_class, U32 *flagsp, SV **metap, SV **pkgp, OP **traitsopp)
 {
     SV *name, *extends, *metaclass, *meta;
     AV *classes_to_load, *with;
@@ -1181,7 +1181,7 @@ THX_parse_namespace(pTHX_ bool is_class, U32 *flagsp, SV **metap, OP **traitsopp
 
     /* TODO: version */
     meta = new_meta(metaclass, name, with, is_class ? extends : NULL);
-    /* TODO: remove meta guard */
+    *pkgp = name;
 
     /* TODO: Implement without stuffing or B::Hooks::EndOfScope */
     lex_stuff_sv(sv_2mortal(newSVpvf("{ sub __%s__ () { '%"SVf"' }"
@@ -1283,32 +1283,59 @@ run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     return newOP(OP_NULL, 0);
 }
 
+static void
+remove_meta(pTHX_ void *p)
+{
+    SV **pkgp = (SV **)p;
+    if (*pkgp) {
+        SV *pkg = *pkgp;
+
+        {
+            dSP;
+            ENTER;
+            PUSHMARK(SP);
+            XPUSHs(pkg);
+            PUTBACK;
+            call_pv("mop::remove_meta", G_DISCARD);
+            LEAVE;
+        }
+    }
+}
+
 static OP *
 run_namespace(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     dSP;
-    SV *meta;
+    SV *meta, *pkg = NULL;
     CV *cv;
-    I32 floor = start_subparse(0, 0);
-    OP *traitop;
-    OP *o = parse_namespace(strnEQ(GvNAME(namegv), "class", sizeof("class")),
-                            flagsp, &meta, &traitop);
+    I32 floor;
+    OP *traitop, *block;
 
     PERL_UNUSED_ARG(psobj);
 
+    ENTER;
+    SAVEDESTRUCTOR_X(remove_meta, &pkg);
+
+    floor = start_subparse(0, 0);
+
+    block = parse_namespace(strnEQ(GvNAME(namegv), "class", sizeof("class")),
+                            flagsp, &meta, &pkg, &traitop);
+
     /* TODO: construct op tree calling syntax::run_namespace and put traitsop in args */
 
-    cv = newATTRSUB(floor, NULL, NULL, NULL, newSTATEOP(0, NULL, o));
+    cv = newATTRSUB(floor, NULL, NULL, NULL, newSTATEOP(0, NULL, block));
     if (CvCLONE(cv))
         cv = cv_clone(cv);
 
-    ENTER;
     PUSHMARK(SP);
     EXTEND(SP, 2);
     XPUSHs(meta);
     XPUSHs(newRV_noinc((SV *)cv));
     PUTBACK;
     call_pv("mop::internals::syntax::run_namespace", G_VOID);
+
+    pkg = NULL;
+
     LEAVE;
 
     return newOP(OP_NULL, 0);
