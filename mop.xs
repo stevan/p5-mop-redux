@@ -1126,7 +1126,7 @@ THX_parse_namespace(pTHX_ bool is_class, U32 *flagsp, SV **metap, OP **traitsopp
                       PARSE_NAME_ALLOW_PACKAGE);
 
     caller = SvPV(PL_curstname, callerlen);
-    if (!memmem(SvPV_nolen(name), SvCUR(name), "::", sizeof("::") - 1)
+    if (!memchr(SvPV_nolen(name), ':', SvCUR(name))
      && strnNE(caller, "main", sizeof("main") - 1)) {
         name = sv_2mortal(newSVpvf("%.*s::%"SVf, (int)callerlen, caller, SVfARG(name)));
     }
