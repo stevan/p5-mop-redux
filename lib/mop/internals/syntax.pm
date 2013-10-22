@@ -11,11 +11,6 @@ use Scalar::Util      ();
 use version           ();
 use Devel::CallParser ();
 
-use Parse::Keyword {
-    class  => \&namespace_parser,
-    role   => \&namespace_parser,
-};
-
 my @available_keywords = qw(class role method has);
 
 # keep the local metaclass around
@@ -40,113 +35,41 @@ sub class { 1 }
 
 sub role { 1 }
 
-sub namespace_parser {
-    my ($type) = @_;
-
-    lex_read_space;
-
-    my $name   = parse_name($type, 1);
-    my $caller = compiling_package;
-    my $pkg    = $name =~ /::/
-        ? $name =~ s/^:://r
-        : join "::" => ($caller eq 'main' ? () : ($caller)), $name;
-
-    lex_read_space;
-
-    my $version;
-    if (lex_peek(40) =~ / \A ($version::LAX) (?:\s|\{) /x) {
-        lex_read(length($1));
-        $version = version::is_strict($1) ? eval($1) : $1 eq 'undef' ? undef : $1;
-    }
-
-    lex_read_space;
-
-    my @classes_to_load;
-
-    my $extends;
-    if ($type eq 'class') {
-        if ($extends = parse_modifier_with_single_value('extends')) {
-            push @classes_to_load => $extends;
-        }
-        else {
-            $extends = 'mop::object';
-        }
-
-        lex_read_space;
-    }
-    else {
-        if (lex_peek(8) =~ /^extends\b/) {
-            syntax_error("Roles cannot use 'extends'");
-        }
-    }
-
-    my @with;
-    if (@with = parse_modifier_with_multiple_values('with')) {
-        push @classes_to_load => @with;
-    }
-
-    lex_read_space;
-
-    my $metaclass;
-    if ($metaclass = parse_modifier_with_single_value('meta')) {
-        push @classes_to_load => $metaclass;
-    }
-    else {
-        $metaclass = $^H{"mop/default_${type}_metaclass"} // "mop::$type";
-    }
-
-    lex_read_space;
-
-    my @traits = parse_traits();
-
-    lex_read_space;
-
-    for my $class (@classes_to_load) {
+sub load_classes {
+    my ($classes) = @_;
+    for my $class (@{ $classes }) {
         next if mop::meta($class);
         require(($class =~ s{::}{/}gr) . '.pm');
     }
+}
 
-    syntax_error("$type must be followed by a block")
-        unless lex_peek eq '{';
+sub new_meta {
+    my ($metaclass, $name, $roles, $superclass) = @_;
 
-    lex_read;
-
-    die "The metaclass for $pkg ($metaclass) does not inherit from mop::$type"
-        unless $metaclass->isa("mop::$type");
-
-    my $meta = $metaclass->new(
-        name       => $pkg,
-        version    => $version,
-        roles      => [ map { mop::meta($_) or die "Could not find metaclass for role: $_" } @with ],
-        ($type eq 'class'
-            ? (superclass => $extends)
+    $metaclass->new(
+        name       => $name,
+        # version    => $version, TODO
+        roles      => [map {
+            mop::meta($_) or die "Could not find metaclass for role: $_"
+          } @{ $roles }],
+        (defined $superclass
+            ? (superclass => $superclass)
             : ()),
     );
+}
+
+sub run_namespace {
+    my ($meta, $code, $traits) = @_;
+
+    my $pkg = $meta->name;
     my $g = guard {
         mop::remove_meta($pkg);
     };
 
-    my $preamble = '{'
-        . 'sub __' . uc($type) . '__ () { "' . $pkg . '" }'
-        . 'BEGIN {'
-        .     'B::Hooks::EndOfScope::on_scope_end {'
-        .         'no strict "refs";'
-        .         'delete ${__PACKAGE__."::"}{"__' . uc($type) . '__"};'
-        .     '}'
-        . '}';
-
-    lex_stuff($preamble);
-    {
-        local $CURRENT_META = $meta;
-        if (my $code = parse_block(1)) {
-            run_traits($meta, @traits);
-            $meta->FINALIZE;
-            $code->();
-            $g->dismiss;
-        }
-    }
-
-    return (sub { }, 1);
+    # TODO: apply traits
+    $meta->FINALIZE;
+    $code->();
+    $g->dismiss;
 }
 
 sub method { }
@@ -199,91 +122,6 @@ sub add_attribute {
     }
 
     return;
-}
-
-sub parse_traits {
-    return unless lex_peek(3) =~ /^is\b/;
-
-    lex_read(2);
-    lex_read_space;
-
-    my @traits;
-
-    do {
-        my $name = parse_name('trait', 1);
-        my $params;
-        if (lex_peek eq '(') {
-            lex_read;
-            $params = parse_fullexpr;
-            syntax_error("Unterminated parameter list for trait $name")
-                unless lex_peek eq ')';
-            lex_read;
-        }
-        push @traits, { name => $name, params => $params };
-        lex_read_space;
-    } while (lex_peek eq ',' && do { lex_read; lex_read_space; 1 });
-
-    return @traits;
-}
-
-sub run_traits {
-    my ($meta, @traits) = @_;
-
-    my $meta_stuff = stuff_value($meta);
-
-    my $code = '{';
-
-    for my $trait (@traits) {
-        if ($trait->{params}) {
-            $code .= 'mop::traits::util::apply_trait(\&' . $trait->{name} . ', '
-                . "$meta_stuff,"
-                . stuff_value($trait->{params}) . '->()'
-            . ');';
-        }
-        else {
-            $code .= 'mop::traits::util::apply_trait(\&' . $trait->{name} . ", $meta_stuff);";
-        }
-    }
-
-    $code .= '}';
-
-    my $traits_code = parse_stuff_with_values($code, \&parse_block);
-    syntax_error() unless $traits_code;
-    $traits_code->();
-}
-
-# this is a little hack to be able to inject actual values into the thing we
-# want to parse (what we would normally do by inserting OP_CONST nodes into the
-# optree if we were building it manually). we insert a constant sub into a
-# private stash, and return the name of that sub. then, when that sub is
-# parsed, it'll be turned into an OP_CONST during constant folding, at which
-# point we can remove the sub (to avoid issues with holding onto refs longer
-# than we should).
-{
-    my @guards;
-    sub stuff_value {
-        my ($value) = @_;
-        state $index = 1;
-        my $name = "value$index";
-        my $const = "mop::internals::syntax::STUFF::$name";
-        {
-            no strict 'refs';
-            *$const = sub () { $value };
-        }
-        push @guards, guard {
-            delete $mop::internals::syntax::STUFF::{"$name"};
-        };
-        $index++;
-        return $const;
-    }
-
-    sub parse_stuff_with_values {
-        my ($code, $parser) = @_;
-        lex_stuff($code);
-        my $ret = $parser->();
-        @guards = ();
-        $ret;
-    }
 }
 
 sub syntax_error {

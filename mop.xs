@@ -467,8 +467,10 @@ THX_current_attributes(pTHX)
 /* twigils {{{ */
 
 static Perl_check_t old_rv2sv_checker;
-static SV *twigils_hint_key_sv;
-static U32 twigils_hint_key_hash;
+static SV *twigils_hint_key_sv, *default_class_metaclass_hint_key_sv,
+    *default_role_metaclass_hint_key_sv;
+static U32 twigils_hint_key_hash, default_class_metaclass_hint_key_hash,
+    default_role_metaclass_hint_key_hash;
 
 #define intro_twigil_var(namesv) THX_intro_twigil_var(aTHX_ namesv)
 static OP *
@@ -1039,16 +1041,6 @@ THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 /* keyword checkers {{{ */
 
 static OP *
-return_true(pTHX_ OP *o, GV *namegv, SV *ckobj)
-{
-    PERL_UNUSED_ARG(namegv);
-    PERL_UNUSED_ARG(ckobj);
-
-    op_free(o);
-    return newSVOP(OP_CONST, 0, &PL_sv_yes);
-}
-
-static OP *
 compile_keyword_away(pTHX_ OP *o, GV *namegv, SV *ckobj)
 {
     PERL_UNUSED_ARG(namegv);
@@ -1056,6 +1048,170 @@ compile_keyword_away(pTHX_ OP *o, GV *namegv, SV *ckobj)
 
     op_free(o);
     return newOP(OP_NULL, 0);
+}
+
+#define default_metaclass(is_class) THX_default_metaclass(aTHX_ is_class)
+static SV *
+THX_default_metaclass(pTHX_ bool is_class)
+{
+    SV *hint_key_sv = is_class
+        ? default_class_metaclass_hint_key_sv : default_role_metaclass_hint_key_sv;
+    U32 hint_key_hash = is_class
+        ? default_class_metaclass_hint_key_hash : default_role_metaclass_hint_key_hash;
+    HE *he = hv_fetch_ent(GvHV(PL_hintgv), hint_key_sv, 0, hint_key_hash);
+
+    if (!he)
+        return is_class ? newSVpvs_share("mop::class") : newSVpvs_share("mop::role");
+
+    return sv_2mortal(SvREFCNT_inc(HeVAL(he)));
+}
+
+#define load_classes(classes) THX_load_classes(aTHX_ classes)
+static void
+THX_load_classes(pTHX_ AV *classes)
+{
+    dSP;
+    SV *ref = newRV_inc((SV *)classes);
+
+    ENTER;
+    PUSHMARK(SP);
+    XPUSHs(ref);
+    PUTBACK;
+    call_pv("mop::internals::syntax::load_classes", G_VOID);
+    PUTBACK;
+    LEAVE;
+
+    SvREFCNT_dec(ref);
+}
+
+#define new_meta(metaclass, name, roles, superclass) \
+    THX_new_meta(aTHX_ metaclass, name, roles, superclass)
+static SV *
+THX_new_meta(pTHX_ SV *metaclass, SV *name, AV *roles, SV *superclass)
+{
+    dSP;
+    SV *ret, *roles_ref = newRV_inc((SV *)roles);
+
+    ENTER;
+    PUSHMARK(SP);
+    XPUSHs(metaclass);
+    XPUSHs(name);
+    XPUSHs(roles_ref);
+    if (superclass)
+        XPUSHs(superclass);
+    PUTBACK;
+    call_pv("mop::internals::syntax::new_meta", G_SCALAR);
+    SPAGAIN;
+    ret = SvREFCNT_inc(POPs);
+    PUTBACK;
+    LEAVE;
+
+    SvREFCNT_dec(roles_ref);
+    return sv_2mortal(ret);
+}
+
+#define parse_namespace(is_class, flagsp, metap, traitsopp) \
+    THX_parse_namespace(aTHX_ is_class, flagsp, metap, traitsopp)
+static OP *
+THX_parse_namespace(pTHX_ bool is_class, U32 *flagsp, SV **metap, OP **traitsopp)
+{
+    SV *name, *extends, *metaclass, *meta;
+    AV *classes_to_load, *with;
+    GV *gv;
+    struct mop_trait **traits;
+    UV ntraits;
+    char *caller;
+    STRLEN callerlen;
+    OP *body;
+
+    *flagsp = CALLPARSER_STATEMENT;
+
+    lex_read_space(0);
+
+    name = parse_name(is_class ? "class" : "role",
+                      (is_class ? sizeof("class") : sizeof("role")) - 1,
+                      PARSE_NAME_ALLOW_PACKAGE);
+
+    caller = SvPV(PL_curstname, callerlen);
+    if (memmem(caller, callerlen, "::", sizeof("::") - 1)
+     && strnNE(caller, "main", sizeof("main") - 1)) {
+        name = sv_2mortal(newSVpvf("%.*s::%"SVf, (int)callerlen, caller, SVfARG(name)));
+    }
+
+    lex_read_space(0);
+
+    /* TODO: version handling */
+    /* version = prescan_version(PL_parser->bufptr, FALSE, &err, NULL, NULL, NULL, NULL); */
+
+    lex_read_space(0);
+    classes_to_load = (AV *)sv_2mortal((SV *)newAV());
+    if (is_class) {
+        if ((extends = parse_modifier_with_single_value("extends", sizeof("extends") - 1))) {
+            av_push(classes_to_load, SvREFCNT_inc(extends));
+        }
+        else {
+            extends = sv_2mortal(newSVpvs("mop::object"));
+        }
+
+        lex_read_space(0);
+    }
+    else {
+        SV *s = lex_peek_sv(8); /* FIXME */
+
+        if (sv_cmp(s, sv_2mortal(newSVpvs("extends"))) != 0)
+            syntax_error(sv_2mortal(newSVpvs("Roles cannot use 'extends'")));
+    }
+
+    if ((with = parse_modifier_with_multiple_values("with", sizeof("with") - 1))) {
+        I32 i, plen = av_len(classes_to_load) + 1;
+        av_extend(classes_to_load, av_len(classes_to_load) + av_len(with));
+        for (i = 0; i <= av_len(with); i++)
+            av_store(classes_to_load, plen + i, SvREFCNT_inc(*av_fetch(with, i, 0)));
+    }
+    lex_read_space(0);
+
+    if ((metaclass = parse_modifier_with_single_value("meta", sizeof("meta") - 1)))
+        av_push(classes_to_load, SvREFCNT_inc(metaclass));
+    else
+        metaclass = default_metaclass(is_class);
+    lex_read_space(0);
+
+    traits = parse_traits(&ntraits);
+    lex_read_space(0);
+
+    load_classes(classes_to_load);
+
+    if (lex_peek_unichar(0) != '{')
+        syntax_error(sv_2mortal(newSVpvf("%s must be followed by a block",
+                                         is_class ? "class" : "role")));
+    lex_read_unichar(0);
+
+    /* TODO: version */
+    meta = new_meta(metaclass, name, with, is_class ? extends : NULL);
+    /* TODO: remove meta guard */
+
+    /* TODO: Implement without stuffing or B::Hooks::EndOfScope */
+    lex_stuff_sv(sv_2mortal(newSVpvf("{ sub __%s__ () { '%"SVf"' }"
+                                     "BEGIN {"
+                                     "    B::Hooks::EndOfScope::on_scope_end {"
+                                     "        no strict 'refs';"
+                                     "        delete ${__PACKAGE__ . '::'}{__%s__};"
+                                     "    }"
+                                     "}",
+                                     is_class ? "CLASS" : "ROLE",
+                                     SVfARG(name),
+                                     is_class ? "CLASS" : "ROLE")), 0);
+
+    gv = gv_fetchpvs("mop::internals::syntax::CURRENT_META", 0, SVt_NULL);
+    save_scalar(gv);
+    sv_setsv(GvSV(gv), meta);
+    body = parse_block(0);
+
+    *traitsopp = gen_traits_ops(newOP(OP_STUB, 0), traits, ntraits);
+
+    *metap = meta;
+
+    return body;
 }
 
 /* }}} */
@@ -1108,6 +1264,37 @@ run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     PUTBACK;
     call_sv((SV *)cv, G_VOID);
     LEAVE;
+    return newOP(OP_NULL, 0);
+}
+
+static OP *
+run_namespace(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
+{
+    dSP;
+    SV *meta;
+    CV *cv;
+    I32 floor = start_subparse(0, CVf_ANON);
+    OP *traitop;
+    OP *o = parse_namespace(strnEQ(GvNAME(namegv), "class", sizeof("class")),
+                            flagsp, &meta, &traitop);
+
+    PERL_UNUSED_ARG(psobj);
+
+    /* TODO: construct op tree calling syntax::run_namespace and put traitsop in args */
+
+    cv = newATTRSUB(floor, NULL, NULL, NULL, newSTATEOP(0, NULL, o));
+    if (CvCLONE(cv))
+        cv = cv_clone(cv);
+
+    ENTER;
+    PUSHMARK(SP);
+    EXTEND(SP, 2);
+    XPUSHs(meta);
+    XPUSHs(newRV_noinc((SV *)cv));
+    PUTBACK;
+    call_pv("mop::internals::syntax::run_namespace", G_VOID);
+    LEAVE;
+
     return newOP(OP_NULL, 0);
 }
 
@@ -1248,17 +1435,22 @@ BOOT:
     has    = get_cv("mop::internals::syntax::has",    0);
     method = get_cv("mop::internals::syntax::method", 0);
 
-    cv_set_call_checker(class,  return_true, &PL_sv_undef);
-    cv_set_call_checker(role,   return_true, &PL_sv_undef);
-
-    cv_set_call_parser(has,    run_has,    &PL_sv_undef);
-    cv_set_call_parser(method, run_method, &PL_sv_undef);
+    cv_set_call_parser(class,  run_namespace, &PL_sv_undef);
+    cv_set_call_parser(role,   run_namespace, &PL_sv_undef);
+    cv_set_call_parser(has,    run_has,       &PL_sv_undef);
+    cv_set_call_parser(method, run_method,    &PL_sv_undef);
 
     cv_set_call_checker(has,    compile_keyword_away, &PL_sv_undef);
     cv_set_call_checker(method, compile_keyword_away, &PL_sv_undef);
 
     twigils_hint_key_sv = newSVpvs_share("mop::internals::syntax/twigils");
     twigils_hint_key_hash = SvSHARED_HASH(twigils_hint_key_sv);
+    default_class_metaclass_hint_key_sv = newSVpvs_share("mop/default_class_metaclass");
+    default_class_metaclass_hint_key_hash
+        = SvSHARED_HASH(default_class_metaclass_hint_key_sv);
+    default_role_metaclass_hint_key_sv = newSVpvs_share("mop/default/role_metaclass");
+    default_role_metaclass_hint_key_hash
+        = SvSHARED_HASH(default_role_metaclass_hint_key_sv);
 
     old_rv2sv_checker = PL_check[OP_RV2SV];
     PL_check[OP_RV2SV] = myck_rv2sv_twigils;
