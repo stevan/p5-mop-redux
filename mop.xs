@@ -1151,7 +1151,7 @@ THX_parse_namespace(pTHX_ bool is_class, U32 *flagsp, SV **metap, OP **traitsopp
     else {
         SV *s = lex_peek_sv(8); /* FIXME */
 
-        if (sv_cmp(s, sv_2mortal(newSVpvs("extends"))) != 0)
+        if (sv_cmp(s, sv_2mortal(newSVpvs("extends"))) == 0)
             syntax_error(sv_2mortal(newSVpvs("Roles cannot use 'extends'")));
     }
 
