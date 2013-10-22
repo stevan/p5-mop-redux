@@ -36,6 +36,7 @@
             "Path::Class" : "0",
             "Pod::Coverage::TrustPod" : "0",
             "Test::EOL" : "0",
+            "Test::More" : "0",
             "Test::NoTabs" : "0",
             "Test::Pod" : "1.41",
             "Test::Pod::Coverage" : "1.08"
@@ -47,9 +48,7 @@
             "Carp" : "0",
             "Devel::CallParser" : "0",
             "Hash::Util::FieldHash" : "0",
-            "Parse::Keyword" : "0",
             "Scalar::Util" : "0",
-            "Scope::Guard" : "0",
             "XSLoader" : "0",
             "mro" : "0",
             "overload" : "0",
@@ -173,7 +172,7 @@
          {
             "class" : "Dist::Zilla::Plugin::RunExtraTests",
             "name" : "@Filter/RunExtraTests",
-            "version" : "0.011"
+            "version" : "0.013"
          },
          {
             "class" : "Dist::Zilla::Plugin::ExecDir",
@@ -237,8 +236,18 @@
          },
          {
             "class" : "Dist::Zilla::Plugin::NoTabsTests",
+            "config" : {
+               "Dist::Zilla::Plugin::Test::NoTabs" : {
+                  "module_finder" : [
+                     ":InstallModules"
+                  ],
+                  "script_finder" : [
+                     ":ExecFiles"
+                  ]
+               }
+            },
             "name" : "@Filter/NoTabsTests",
-            "version" : "0.01"
+            "version" : "0.05"
          },
          {
             "class" : "Dist::Zilla::Plugin::EOLTests",
@@ -259,7 +268,7 @@
                }
             },
             "name" : "@Filter/Test::Compile",
-            "version" : "2.036"
+            "version" : "2.037"
          },
          {
             "class" : "Dist::Zilla::Plugin::Metadata",
@@ -274,22 +283,22 @@
          {
             "class" : "Dist::Zilla::Plugin::Git::Check",
             "name" : "@Filter/Git::Check",
-            "version" : "2.014"
+            "version" : "2.016"
          },
          {
             "class" : "Dist::Zilla::Plugin::Git::Commit",
             "name" : "@Filter/Git::Commit",
-            "version" : "2.014"
+            "version" : "2.016"
          },
          {
             "class" : "Dist::Zilla::Plugin::Git::Tag",
             "name" : "@Filter/Git::Tag",
-            "version" : "2.014"
+            "version" : "2.016"
          },
          {
             "class" : "Dist::Zilla::Plugin::Git::NextVersion",
             "name" : "@Filter/Git::NextVersion",
-            "version" : "2.014"
+            "version" : "2.016"
          },
          {
             "class" : "Dist::Zilla::Plugin::ContributorsFromGit",

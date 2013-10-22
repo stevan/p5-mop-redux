@@ -28,9 +28,7 @@ my %WriteMakefileArgs = (
     "Carp" => 0,
     "Devel::CallParser" => 0,
     "Hash::Util::FieldHash" => 0,
-    "Parse::Keyword" => 0,
     "Scalar::Util" => 0,
-    "Scope::Guard" => 0,
     "XSLoader" => 0,
     "mro" => 0,
     "overload" => 0,
@@ -94,6 +92,7 @@ if ($ENV{RELEASE_TESTING}) {
     "Path::Class" => 0,
     "Pod::Coverage::TrustPod" => 0,
     "Test::EOL" => 0,
+    "Test::More" => 0,
     "Test::NoTabs" => 0,
     "Test::Pod" => "1.41",
     "Test::Pod::Coverage" => "1.08"
@@ -112,7 +111,6 @@ use File::Spec::Functions 'abs2rel';
     print { $fh } callparser1_h or die $!;
     close $fh or die $!;
 }
-
 my @linkable = map { abs2rel($_) } callparser_linkable;
 unshift @linkable, '$(BASEEXT)$(OBJ_EXT)' if @linkable;
 $WriteMakefileArgs{OBJECT} = join(' ', @linkable) if @linkable;
