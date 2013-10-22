@@ -1220,6 +1220,16 @@ compile_keyword_away(pTHX_ OP *o, GV *namegv, SV *ckobj)
     return newOP(OP_NULL, 0);
 }
 
+static OP *
+return_true(pTHX_ OP *o, GV *namegv, SV *ckobj)
+{
+    PERL_UNUSED_ARG(namegv);
+    PERL_UNUSED_ARG(ckobj);
+
+    op_free(o);
+    return newSVOP(OP_CONST, 0, &PL_sv_yes);
+}
+
 /* }}} */
 /* keyword parsers {{{ */
 
@@ -1436,16 +1446,18 @@ BOOT:
 {
     CV *class, *role, *has, *method;
 
-    class  = get_cv("mop::internals::syntax::class",  0);
-    role   = get_cv("mop::internals::syntax::role",   0);
-    has    = get_cv("mop::internals::syntax::has",    0);
-    method = get_cv("mop::internals::syntax::method", 0);
+    class  = get_cv("mop::internals::syntax::class",  GV_ADD);
+    role   = get_cv("mop::internals::syntax::role",   GV_ADD);
+    has    = get_cv("mop::internals::syntax::has",    GV_ADD);
+    method = get_cv("mop::internals::syntax::method", GV_ADD);
 
     cv_set_call_parser(class,  run_namespace, &PL_sv_undef);
     cv_set_call_parser(role,   run_namespace, &PL_sv_undef);
     cv_set_call_parser(has,    run_has,       &PL_sv_undef);
     cv_set_call_parser(method, run_method,    &PL_sv_undef);
 
+    cv_set_call_checker(class,  return_true,          &PL_sv_undef);
+    cv_set_call_checker(role,   return_true,          &PL_sv_undef);
     cv_set_call_checker(has,    compile_keyword_away, &PL_sv_undef);
     cv_set_call_checker(method, compile_keyword_away, &PL_sv_undef);
 

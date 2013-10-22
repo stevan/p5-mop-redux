@@ -31,10 +31,6 @@ sub teardown_for {
         for @available_keywords;
 }
 
-sub class { 1 }
-
-sub role { 1 }
-
 sub load_classes {
     my ($classes) = @_;
     for my $class (@{ $classes }) {
@@ -72,8 +68,6 @@ sub run_namespace {
     $g->dismiss;
 }
 
-sub method { }
-
 sub add_method {
     my ($name, $body, @traits) = @_;
 
@@ -101,8 +95,6 @@ sub add_method {
 
     return;
 }
-
-sub has { }
 
 sub add_attribute {
     my ($name, $default, @traits) = @_;
