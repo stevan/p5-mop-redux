@@ -1104,6 +1104,29 @@ THX_new_meta(pTHX_ SV *metaclass, SV *name, AV *roles, SV *superclass)
     return sv_2mortal(ret);
 }
 
+#define isa(sv, name) THX_isa(aTHX_ sv, name)
+static bool
+THX_isa(pTHX_ SV *sv, const char *name)
+{
+    dSP;
+    SV *ret;
+
+    ENTER;
+
+    PUSHMARK(SP);
+    XPUSHs(sv);
+    XPUSHs(sv_2mortal(newSVpv(name, 0)));
+    PUTBACK;
+    call_method("isa", G_SCALAR);
+    SPAGAIN;
+    ret = POPs;
+    PUTBACK;
+
+    LEAVE;
+
+    return SvTRUE(ret);
+}
+
 #define parse_namespace(is_class, flagsp, metap, pkgp, traitsopp) \
     THX_parse_namespace(aTHX_ is_class, flagsp, metap, pkgp, traitsopp)
 static OP *
@@ -1179,6 +1202,11 @@ THX_parse_namespace(pTHX_ bool is_class, U32 *flagsp, SV **metap, SV **pkgp, OP 
         syntax_error(sv_2mortal(newSVpvf("%s must be followed by a block",
                                          is_class ? "class" : "role")));
     lex_read_unichar(0);
+
+    /* NOTE: *not* sv_derived_from - that's broken because it doesn't check
+     * for overridden isa methods */
+    if (!isa(metaclass, is_class ? "mop::class" : "mop::role"))
+        syntax_error(sv_2mortal(newSVpvf("The metaclass for %"SVf" (%"SVf") does not inherit from %s", SVfARG(name), SVfARG(metaclass), is_class ? "mop::class" : "mop::role")));
 
     /* TODO: version */
     meta = new_meta(metaclass, name, with, is_class ? extends : NULL);
