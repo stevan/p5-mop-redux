@@ -918,9 +918,9 @@ pp_init_attr(pTHX)
     return PL_op->op_next;
 }
 
-#define parse_method(namegv, psobj, flagsp, floor) THX_parse_method(aTHX_ namegv, psobj, flagsp, floor)
+#define parse_method(namegv, psobj, flagsp) THX_parse_method(aTHX_ namegv, psobj, flagsp)
 static OP *
-THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp, I32 *floor)
+THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     SV *name;
     AV *attrs;
@@ -1092,7 +1092,7 @@ run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     dSP;
     I32 floor = start_subparse(0, CVf_ANON);
-    OP *o = parse_method(namegv, psobj, flagsp, &floor);
+    OP *o = parse_method(namegv, psobj, flagsp);
     GV *gv = gv_fetchpvs("mop::internals::syntax::add_method", 0, SVt_PVCV);
     CV *cv;
 
