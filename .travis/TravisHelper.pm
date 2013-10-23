@@ -62,7 +62,10 @@ sub _each {
 }
 
 sub clone_repos {
-    _system("git", "clone", "--unshallow");
+    chdir '../..';
+    _system(qw(rm -rf), $mop_repo);
+    _system("git", "clone", "git://github.com/$mop_repo", $mop_repo);
+    chdir $mop_repo;
     each_repo {
         _system(
             "git", "clone",
