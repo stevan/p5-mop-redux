@@ -5,7 +5,7 @@ use mro;
 use warnings;
 
 use overload ();
-use Scalar::Util;
+use Scalar::Util ();
 
 our $VERSION   = '0.02';
 our $AUTHORITY = 'cpan:STEVAN';

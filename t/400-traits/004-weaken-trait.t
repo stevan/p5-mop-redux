@@ -5,14 +5,10 @@ use warnings;
 
 use Test::More;
 
-use Scalar::Util qw[ isweak ];
-
 use mop;
 
 class Foo {
     has $!bar is rw;
-
-    #method DEMOLISH { warn "reapin... " }
 }
 
 class Bar {

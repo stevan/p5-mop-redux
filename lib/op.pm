@@ -1,7 +1,6 @@
 package op;
 
 use v5.16;
-use mro;
 use warnings;
 
 require mop;

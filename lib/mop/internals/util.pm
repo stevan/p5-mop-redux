@@ -3,6 +3,8 @@ use v5.16;
 use warnings;
 
 use Hash::Util::FieldHash;
+use mro ();
+use Scalar::Util ();
 
 our $VERSION   = '0.02';
 our $AUTHORITY = 'cpan:STEVAN';
