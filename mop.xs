@@ -1487,13 +1487,11 @@ run_namespace(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     if (CvCLONE(cv))
         cv = cv_clone(cv);
 
-    ENTER;
     PUSHMARK(SP);
     XPUSHs(meta);
     XPUSHs(newRV_noinc((SV *)cv));
     PUTBACK;
     call_pv("mop::internals::syntax::build_meta", G_DISCARD);
-    LEAVE;
 
     pkg = NULL;
 
