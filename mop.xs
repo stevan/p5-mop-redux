@@ -1266,8 +1266,6 @@ THX_parse_namespace(pTHX_ bool is_class, SV **pkgp)
     STRLEN versionlen, callerlen;
     OP *body, *body_ref;
 
-    floor = start_subparse(0, 0);
-
     lex_read_space(0);
 
     name = parse_name(is_class ? "class" : "role",
@@ -1360,6 +1358,8 @@ THX_parse_namespace(pTHX_ bool is_class, SV **pkgp)
     gv = gv_fetchpvs("mop::internals::syntax::CURRENT_META", 0, SVt_NULL);
     save_scalar(gv);
     sv_setsv(GvSV(gv), meta);
+    floor = start_subparse(0, 0);
+
     body = parse_block(0);
 
     body_ref = newANONSUB(floor, NULL, newSTATEOP(0, NULL, body));
