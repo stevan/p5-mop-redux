@@ -4,7 +4,6 @@ use v5.16;
 use warnings;
 
 use B::Hooks::EndOfScope ();
-use Carp              ();
 use Scalar::Util      ();
 use version           ();
 use Devel::CallParser ();
@@ -98,18 +97,6 @@ sub add_attribute {
     }
 
     return;
-}
-
-sub syntax_error {
-    my ($err) = @_;
-    $err //= $@;
-    die $err if ref $err;
-    die(
-        join("",
-            ($err ? ($@ ? $err : Carp::shortmess($err)) : ()),
-            "Execution of $0 aborted due to compilation errors.\n"
-        )
-    );
 }
 
 1;

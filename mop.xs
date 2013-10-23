@@ -531,13 +531,12 @@ THX_parse_name(pTHX_ const char *what, STRLEN whatlen, U32 flags)
 static void
 THX_syntax_error(pTHX_ SV *err)
 {
-    dSP;
-    ENTER;
-    PUSHMARK(SP);
-    XPUSHs(err);
-    PUTBACK;
-    call_pv("mop::internals::syntax::syntax_error", G_VOID);
-    LEAVE;
+    if (!SvOK(err))
+        err = ERRSV;
+
+    PL_parser->error_count++;
+
+    croak_sv(err);
 }
 
 #define current_meta_name() THX_current_meta_name(aTHX)
