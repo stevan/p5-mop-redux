@@ -1251,10 +1251,10 @@ THX_new_meta(pTHX_ SV *metaclass, SV *name, SV *version, AV *roles, SV *supercla
     return sv_2mortal(ret);
 }
 
-#define parse_namespace(is_class, flagsp, metap, pkgp, traitsopp) \
-    THX_parse_namespace(aTHX_ is_class, flagsp, metap, pkgp, traitsopp)
+#define parse_namespace(is_class, metap, pkgp, traitsopp) \
+    THX_parse_namespace(aTHX_ is_class, metap, pkgp, traitsopp)
 static OP *
-THX_parse_namespace(pTHX_ bool is_class, U32 *flagsp, SV **metap, SV **pkgp, OP **traitsopp)
+THX_parse_namespace(pTHX_ bool is_class, SV **metap, SV **pkgp, OP **traitsopp)
 {
     SV *name, *version, *extends, *metaclass, *meta;
     AV *classes_to_load, *with;
@@ -1264,8 +1264,6 @@ THX_parse_namespace(pTHX_ bool is_class, U32 *flagsp, SV **metap, SV **pkgp, OP 
     const char *caller, *err = NULL;
     STRLEN versionlen, callerlen;
     OP *body;
-
-    *flagsp = CALLPARSER_STATEMENT;
 
     lex_read_space(0);
 
@@ -1478,13 +1476,15 @@ run_namespace(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 
     PERL_UNUSED_ARG(psobj);
 
+    *flagsp = CALLPARSER_STATEMENT;
+
     ENTER;
     SAVEDESTRUCTOR_X(remove_meta, &pkg);
 
     floor = start_subparse(0, 0);
 
     block = parse_namespace(strnEQ(GvNAME(namegv), "class", sizeof("class")),
-                            flagsp, &meta, &pkg, &traitop);
+                            &meta, &pkg, &traitop);
 
     /* TODO: construct op tree calling syntax::run_namespace and put traitsop in args */
 
