@@ -1398,9 +1398,9 @@ static OP *
 run_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     dSP;
-    I32 floor = start_subparse(0, CVf_ANON);
-    OP *o = parse_has();
     GV *gv = gv_fetchpvs("mop::internals::syntax::add_attribute", 0, SVt_PVCV);
+    I32 floor;
+    OP *o;
     CV *cv;
 
     PERL_UNUSED_ARG(namegv);
@@ -1408,8 +1408,10 @@ run_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 
     *flagsp = CALLPARSER_STATEMENT;
 
+    floor = start_subparse(0, CVf_ANON);
+
     o = newUNOP(OP_ENTERSUB, OPf_STACKED,
-                op_append_elem(OP_LIST, o,
+                op_append_elem(OP_LIST, parse_has(),
                                newUNOP(OP_RV2CV, 0,
                                        newGVOP(OP_GV, 0, gv))));
     cv = newATTRSUB(floor, NULL, NULL, NULL, newSTATEOP(0, NULL, o));
@@ -1428,9 +1430,9 @@ static OP *
 run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     dSP;
-    I32 floor = start_subparse(0, CVf_ANON);
-    OP *o = parse_method();
     GV *gv = gv_fetchpvs("mop::internals::syntax::add_method", 0, SVt_PVCV);
+    I32 floor;
+    OP *o;
     CV *cv;
 
     PERL_UNUSED_ARG(namegv);
@@ -1438,8 +1440,10 @@ run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 
     *flagsp = CALLPARSER_STATEMENT;
 
+    floor = start_subparse(0, CVf_ANON);
+
     o = newUNOP(OP_ENTERSUB, OPf_STACKED,
-                op_append_elem(OP_LIST, o,
+                op_append_elem(OP_LIST, parse_method(),
                                newUNOP(OP_RV2CV, 0,
                                        newGVOP(OP_GV, 0, gv))));
     cv = newATTRSUB(floor, NULL, NULL, NULL, o);
