@@ -886,17 +886,14 @@ THX_gen_traits_ops(pTHX_ OP *append_to, struct mop_trait **traits, UV ntraits)
 /* }}} */
 /* attribute parsing {{{ */
 
-#define parse_has(namegv, psobj, flagsp) THX_parse_has(aTHX_ namegv, psobj, flagsp)
+#define parse_has() THX_parse_has(aTHX)
 static OP *
-THX_parse_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
+THX_parse_has(pTHX)
 {
     SV *name;
     UV ntraits;
     OP *default_value = NULL, *ret;
     struct mop_trait **traits;
-
-    PERL_UNUSED_ARG(namegv);
-    PERL_UNUSED_ARG(psobj);
 
     lex_read_space(0);
 
@@ -944,7 +941,6 @@ THX_parse_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
                          default_value ? default_value : newSVOP(OP_CONST, 0, &PL_sv_undef));
     ret = gen_traits_ops(ret, traits, ntraits);
 
-    *flagsp = CALLPARSER_STATEMENT;
     return ret;
 }
 
@@ -1090,9 +1086,9 @@ pp_init_attr(pTHX)
     return PL_op->op_next;
 }
 
-#define parse_method(namegv, psobj, flagsp) THX_parse_method(aTHX_ namegv, psobj, flagsp)
+#define parse_method() THX_parse_method(aTHX)
 static OP *
-THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
+THX_parse_method(pTHX)
 {
     SV *name, *meta_name;
     AV *attrs;
@@ -1105,11 +1101,6 @@ THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     OP *body, *body_ref;
     OP *unpackargsop = NULL, *attrintroop = NULL, *attrinitop = NULL;
     U8 errors;
-
-    PERL_UNUSED_ARG(namegv);
-    PERL_UNUSED_ARG(psobj);
-
-    *flagsp = CALLPARSER_STATEMENT;
 
     lex_read_space(0);
     name = parse_name("method", sizeof("method") - 1, 0);
@@ -1408,9 +1399,14 @@ run_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     dSP;
     I32 floor = start_subparse(0, CVf_ANON);
-    OP *o = parse_has(namegv, psobj, flagsp);
+    OP *o = parse_has();
     GV *gv = gv_fetchpvs("mop::internals::syntax::add_attribute", 0, SVt_PVCV);
     CV *cv;
+
+    PERL_UNUSED_ARG(namegv);
+    PERL_UNUSED_ARG(psobj);
+
+    *flagsp = CALLPARSER_STATEMENT;
 
     o = newUNOP(OP_ENTERSUB, OPf_STACKED,
                 op_append_elem(OP_LIST, o,
@@ -1433,9 +1429,14 @@ run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     dSP;
     I32 floor = start_subparse(0, CVf_ANON);
-    OP *o = parse_method(namegv, psobj, flagsp);
+    OP *o = parse_method();
     GV *gv = gv_fetchpvs("mop::internals::syntax::add_method", 0, SVt_PVCV);
     CV *cv;
+
+    PERL_UNUSED_ARG(namegv);
+    PERL_UNUSED_ARG(psobj);
+
+    *flagsp = CALLPARSER_STATEMENT;
 
     o = newUNOP(OP_ENTERSUB, OPf_STACKED,
                 op_append_elem(OP_LIST, o,
