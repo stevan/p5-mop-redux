@@ -1265,7 +1265,6 @@ THX_parse_namespace(pTHX_ bool is_class, SV **pkgp)
     const char *caller, *err = NULL;
     STRLEN versionlen, callerlen;
     OP *body, *body_ref;
-    CV *cv;
 
     floor = start_subparse(0, 0);
 
