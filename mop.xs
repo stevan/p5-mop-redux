@@ -1164,7 +1164,7 @@ THX_parse_method(pTHX)
         OP *initop, *fetchinvocantop, *initopargs;
         initopargs = newSVOP(OP_CONST, 0, SvREFCNT_inc(attr));
         initopargs = op_append_elem(OP_LIST, initopargs,
-                                    newSVOP(OP_CONST, 0, meta_name));
+                                    newSVOP(OP_CONST, 0, newSVsv(meta_name)));
         fetchinvocantop = newOP(OP_PADSV, 0);
         fetchinvocantop->op_targ = pad_findmy_sv(invocant->name, 0);
         initopargs = op_append_elem(OP_LIST, initopargs, fetchinvocantop);
