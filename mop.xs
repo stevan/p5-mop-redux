@@ -1456,17 +1456,9 @@ static void
 remove_meta(pTHX_ void *p)
 {
     SV **pkgp = (SV **)p;
-    if (*pkgp) {
-        dSP;
-        SV *pkg = *pkgp;
 
-        ENTER;
-        PUSHMARK(SP);
-        XPUSHs(pkg);
-        PUTBACK;
-        call_pv("mop::remove_meta", G_DISCARD);
-        LEAVE;
-    }
+    if (*pkgp)
+        unset_meta(*pkgp);
 }
 
 static OP *
