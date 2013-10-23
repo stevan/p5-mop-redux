@@ -27,14 +27,6 @@ sub teardown_for {
         for @available_keywords;
 }
 
-sub load_classes {
-    my ($classes) = @_;
-    for my $class (@{ $classes }) {
-        next if mop::meta($class);
-        require(($class =~ s{::}{/}gr) . '.pm');
-    }
-}
-
 sub new_meta {
     my ($metaclass, $name, $version, $roles, $superclass) = @_;
 

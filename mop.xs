@@ -1194,18 +1194,19 @@ THX_default_metaclass(pTHX_ bool is_class)
 static void
 THX_load_classes(pTHX_ AV *classes)
 {
-    dSP;
-    SV *ref = newRV_inc((SV *)classes);
+    int i;
 
-    ENTER;
-    PUSHMARK(SP);
-    XPUSHs(ref);
-    PUTBACK;
-    call_pv("mop::internals::syntax::load_classes", G_VOID);
-    PUTBACK;
-    LEAVE;
+    for (i = 0; i <= av_len(classes); ++i) {
+        SV *name;
 
-    SvREFCNT_dec(ref);
+        name = *av_fetch(classes, i, FALSE);
+
+        if (SvOK(get_meta(name)))
+            continue;
+
+        /* have to make a copy of name here, because load_module modifies it */
+        load_module(PERL_LOADMOD_NOIMPORT, newSVsv(name), NULL);
+    }
 }
 
 #define new_meta(metaclass, name, version, roles, superclass) \
