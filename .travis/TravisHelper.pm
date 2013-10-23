@@ -62,6 +62,7 @@ sub _each {
 }
 
 sub clone_repos {
+    _system("git", "clone", "--unshallow");
     each_repo {
         _system(
             "git", "clone",
