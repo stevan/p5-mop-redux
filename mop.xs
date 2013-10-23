@@ -1513,12 +1513,18 @@ run_namespace(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     if (CvCLONE(cv))
         cv = cv_clone(cv);
 
+    ENTER;
     PUSHMARK(SP);
-    EXTEND(SP, 2);
     XPUSHs(meta);
-    XPUSHs(newRV_noinc((SV *)cv));
     PUTBACK;
-    call_pv("mop::internals::syntax::run_namespace", G_VOID);
+    call_method("FINALIZE", G_VOID);
+    SPAGAIN;
+    LEAVE;
+
+    ENTER;
+    PUSHMARK(SP);
+    call_sv((SV *)cv, G_VOID);
+    LEAVE;
 
     pkg = NULL;
 

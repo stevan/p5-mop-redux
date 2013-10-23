@@ -52,14 +52,6 @@ sub new_meta {
     );
 }
 
-sub run_namespace {
-    my ($meta, $code, $traits) = @_;
-
-    # TODO: apply traits
-    $meta->FINALIZE;
-    $code->();
-}
-
 sub add_method {
     my ($name, $body, @traits) = @_;
 
