@@ -1094,7 +1094,7 @@ pp_init_attr(pTHX)
 static OP *
 THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
-    SV *name;
+    SV *name, *meta_name;
     AV *attrs;
     UV numvars, numtraits, i;
     IV j;
@@ -1165,6 +1165,7 @@ THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
         unpackargsop = op_append_elem(OP_LINESEQ, unpackargsop, defaultsops);
     }
 
+    meta_name = current_meta_name();
     attrs = current_attributes();
     for (j = 0; j <= av_len(attrs); j++) {
         SV *attr = *av_fetch(attrs, j, 0);
@@ -1172,7 +1173,7 @@ THX_parse_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
         OP *initop, *fetchinvocantop, *initopargs;
         initopargs = newSVOP(OP_CONST, 0, SvREFCNT_inc(attr));
         initopargs = op_append_elem(OP_LIST, initopargs,
-                                    newSVOP(OP_CONST, 0, current_meta_name()));
+                                    newSVOP(OP_CONST, 0, meta_name));
         fetchinvocantop = newOP(OP_PADSV, 0);
         fetchinvocantop->op_targ = pad_findmy_sv(invocant->name, 0);
         initopargs = op_append_elem(OP_LIST, initopargs, fetchinvocantop);
