@@ -594,6 +594,48 @@ THX_current_attributes(pTHX)
     return ret;
 }
 
+#define load_classes(classes) THX_load_classes(aTHX_ classes)
+static void
+THX_load_classes(pTHX_ AV *classes)
+{
+    int i;
+
+    for (i = 0; i <= av_len(classes); ++i) {
+        SV *name;
+
+        name = *av_fetch(classes, i, FALSE);
+
+        if (SvOK(get_meta(name)))
+            continue;
+
+        /* have to make a copy of name here, because load_module modifies it */
+        load_module(PERL_LOADMOD_NOIMPORT, newSVsv(name), NULL);
+    }
+}
+
+#define isa(sv, name) THX_isa(aTHX_ sv, name)
+static bool
+THX_isa(pTHX_ SV *sv, const char *name)
+{
+    dSP;
+    SV *ret;
+
+    ENTER;
+
+    PUSHMARK(SP);
+    XPUSHs(sv);
+    XPUSHs(sv_2mortal(newSVpv(name, 0)));
+    PUTBACK;
+    call_method("isa", G_SCALAR);
+    SPAGAIN;
+    ret = POPs;
+    PUTBACK;
+
+    LEAVE;
+
+    return SvTRUE(ret);
+}
+
 /* }}} */
 /* twigils {{{ */
 
@@ -1190,25 +1232,6 @@ THX_default_metaclass(pTHX_ bool is_class)
     return sv_2mortal(SvREFCNT_inc(HeVAL(he)));
 }
 
-#define load_classes(classes) THX_load_classes(aTHX_ classes)
-static void
-THX_load_classes(pTHX_ AV *classes)
-{
-    int i;
-
-    for (i = 0; i <= av_len(classes); ++i) {
-        SV *name;
-
-        name = *av_fetch(classes, i, FALSE);
-
-        if (SvOK(get_meta(name)))
-            continue;
-
-        /* have to make a copy of name here, because load_module modifies it */
-        load_module(PERL_LOADMOD_NOIMPORT, newSVsv(name), NULL);
-    }
-}
-
 #define new_meta(metaclass, name, version, roles, superclass) \
     THX_new_meta(aTHX_ metaclass, name, version, roles, superclass)
 static SV *
@@ -1234,29 +1257,6 @@ THX_new_meta(pTHX_ SV *metaclass, SV *name, SV *version, AV *roles, SV *supercla
 
     SvREFCNT_dec(roles_ref);
     return sv_2mortal(ret);
-}
-
-#define isa(sv, name) THX_isa(aTHX_ sv, name)
-static bool
-THX_isa(pTHX_ SV *sv, const char *name)
-{
-    dSP;
-    SV *ret;
-
-    ENTER;
-
-    PUSHMARK(SP);
-    XPUSHs(sv);
-    XPUSHs(sv_2mortal(newSVpv(name, 0)));
-    PUTBACK;
-    call_method("isa", G_SCALAR);
-    SPAGAIN;
-    ret = POPs;
-    PUTBACK;
-
-    LEAVE;
-
-    return SvTRUE(ret);
 }
 
 #define parse_namespace(is_class, flagsp, metap, pkgp, traitsopp) \
