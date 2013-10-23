@@ -7,7 +7,6 @@ before_install:
     - perl -I .travis -MTravisHelper -E'exit clone_repos'
 install:
     - yes | perlbrew install-cpanm
-    - cpanm -nq --dev twigils || (cat /home/travis/.cpanm/build.log; false)
     - cpanm -nq Devel::Cover::Report::Coveralls || (cat /home/travis/.cpanm/build.log; false)
     - perl -I .travis -MTravisHelper -E'exit installdeps'
 script:
