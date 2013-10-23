@@ -62,10 +62,8 @@ sub _each {
 }
 
 sub clone_repos {
-    chdir '../..';
-    _system(qw(rm -rf), $mop_repo);
-    _system("git", "clone", "git://github.com/$mop_repo", $mop_repo);
-    chdir $mop_repo;
+    _system(qw(git fetch --depth 9999999));
+    _system(qw(git fetch --tags));
     each_repo {
         _system(
             "git", "clone",
