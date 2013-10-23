@@ -3,7 +3,6 @@ package mop::internals::syntax;
 use v5.16;
 use warnings;
 
-use B::Hooks::EndOfScope ();
 use version           ();
 use Devel::CallParser ();
 

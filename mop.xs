@@ -1251,15 +1251,22 @@ THX_new_meta(pTHX_ SV *metaclass, SV *name, SV *version, AV *roles, SV *supercla
     return sv_2mortal(ret);
 }
 
+static void
+restore_name_keyword(void *p)
+{
+    GV *name_gv = (GV *)p;
+    GvCV_set(name_gv, NULL);
+}
+
 #define parse_namespace(is_class, pkgp) \
     THX_parse_namespace(aTHX_ is_class, pkgp)
 static OP *
 THX_parse_namespace(pTHX_ bool is_class, SV **pkgp)
 {
     I32 floor;
-    SV *name, *version, *extends, *metaclass, *meta;
+    SV *name, *version, *extends, *metaclass, *meta, *name_keyword;
     AV *classes_to_load, *with;
-    GV *gv;
+    GV *name_gv, *meta_gv;
     struct mop_trait **traits;
     UV numtraits;
     const char *caller, *err = NULL;
@@ -1333,7 +1340,6 @@ THX_parse_namespace(pTHX_ bool is_class, SV **pkgp)
     if (lex_peek_unichar(0) != '{')
         syntax_error(sv_2mortal(newSVpvf("%s must be followed by a block",
                                          is_class ? "class" : "role")));
-    lex_read_unichar(0);
 
     /* NOTE: *not* sv_derived_from - that's broken because it doesn't check
      * for overridden isa methods */
@@ -1343,21 +1349,19 @@ THX_parse_namespace(pTHX_ bool is_class, SV **pkgp)
     meta = new_meta(metaclass, name, version, with, is_class ? extends : NULL);
     *pkgp = name;
 
-    /* TODO: Implement without stuffing or B::Hooks::EndOfScope */
-    lex_stuff_sv(sv_2mortal(newSVpvf("{ sub __%s__ () { '%"SVf"' }"
-                                     "BEGIN {"
-                                     "    B::Hooks::EndOfScope::on_scope_end {"
-                                     "        no strict 'refs';"
-                                     "        delete ${__PACKAGE__ . '::'}{__%s__};"
-                                     "    }"
-                                     "}",
-                                     is_class ? "CLASS" : "ROLE",
-                                     SVfARG(name),
-                                     is_class ? "CLASS" : "ROLE")), 0);
+    name_keyword = sv_2mortal(newSVpvf("%s::__%s__",
+                                       caller,
+                                       is_class ? "CLASS" : "ROLE"));
+    name_gv = gv_fetchsv(name_keyword, GV_ADD, SVt_PVCV);
+    /* XXX pretty sure there's a better way to do this than SAVEDESTRUCTOR
+     * (SAVEt_GVSLOT maybe?) but none of the save stack stuff is documented
+     * and this works for now */
+    SAVEDESTRUCTOR(restore_name_keyword, name_gv);
+    GvCV_set(name_gv, newCONSTSUB(NULL, NULL, name));
 
-    gv = gv_fetchpvs("mop::internals::syntax::CURRENT_META", 0, SVt_NULL);
-    save_scalar(gv);
-    sv_setsv(GvSV(gv), meta);
+    meta_gv = gv_fetchpvs("mop::internals::syntax::CURRENT_META", 0, SVt_NULL);
+    save_scalar(meta_gv);
+    sv_setsv(GvSV(meta_gv), meta);
     floor = start_subparse(0, 0);
 
     body = parse_block(0);

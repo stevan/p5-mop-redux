@@ -24,7 +24,6 @@ my %WriteMakefileArgs = (
   "LICENSE" => "perl",
   "NAME" => "mop",
   "PREREQ_PM" => {
-    "B::Hooks::EndOfScope" => 0,
     "Devel::CallParser" => 0,
     "Hash::Util::FieldHash" => 0,
     "Scalar::Util" => 0,
