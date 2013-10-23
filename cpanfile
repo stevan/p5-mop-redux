@@ -1,5 +1,4 @@
 requires "B::Hooks::EndOfScope" => "0";
-requires "Carp" => "0";
 requires "Devel::CallParser" => "0";
 requires "Hash::Util::FieldHash" => "0";
 requires "Scalar::Util" => "0";
