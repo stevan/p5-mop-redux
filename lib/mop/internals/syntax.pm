@@ -42,6 +42,21 @@ sub new_meta {
     );
 }
 
+sub build_meta {
+    my ($meta, $body, @traits) = @_;
+
+    while (@traits) {
+        my ($trait, $args) = splice @traits, 0, 2;
+        mop::traits::util::apply_trait(
+            $trait, $meta, $args ? @$args : (),
+        );
+    }
+
+    $meta->FINALIZE;
+
+    $body->();
+}
+
 sub add_method {
     my ($name, $body, @traits) = @_;
 
