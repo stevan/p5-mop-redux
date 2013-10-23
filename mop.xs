@@ -1251,19 +1251,23 @@ THX_new_meta(pTHX_ SV *metaclass, SV *name, SV *version, AV *roles, SV *supercla
     return sv_2mortal(ret);
 }
 
-#define parse_namespace(is_class, metap, pkgp, traitsopp) \
-    THX_parse_namespace(aTHX_ is_class, metap, pkgp, traitsopp)
+#define parse_namespace(is_class, pkgp) \
+    THX_parse_namespace(aTHX_ is_class, pkgp)
 static OP *
-THX_parse_namespace(pTHX_ bool is_class, SV **metap, SV **pkgp, OP **traitsopp)
+THX_parse_namespace(pTHX_ bool is_class, SV **pkgp)
 {
+    I32 floor;
     SV *name, *version, *extends, *metaclass, *meta;
     AV *classes_to_load, *with;
     GV *gv;
     struct mop_trait **traits;
-    UV ntraits;
+    UV numtraits;
     const char *caller, *err = NULL;
     STRLEN versionlen, callerlen;
-    OP *body;
+    OP *body, *body_ref;
+    CV *cv;
+
+    floor = start_subparse(0, 0);
 
     lex_read_space(0);
 
@@ -1324,7 +1328,7 @@ THX_parse_namespace(pTHX_ bool is_class, SV **metap, SV **pkgp, OP **traitsopp)
         metaclass = default_metaclass(is_class);
     lex_read_space(0);
 
-    traits = parse_traits(&ntraits);
+    traits = parse_traits(&numtraits);
     lex_read_space(0);
 
     load_classes(classes_to_load);
@@ -1359,11 +1363,12 @@ THX_parse_namespace(pTHX_ bool is_class, SV **metap, SV **pkgp, OP **traitsopp)
     sv_setsv(GvSV(gv), meta);
     body = parse_block(0);
 
-    *traitsopp = gen_traits_ops(newOP(OP_STUB, 0), traits, ntraits);
+    body_ref = newANONSUB(floor, NULL, newSTATEOP(0, NULL, body));
 
-    *metap = meta;
-
-    return body;
+    return gen_traits_ops(op_append_elem(OP_LIST,
+                                         newSVOP(OP_CONST, 0, meta),
+                                         body_ref),
+                          traits, numtraits);
 }
 
 /* }}} */
@@ -1469,10 +1474,11 @@ static OP *
 run_namespace(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
     dSP;
-    SV *meta, *pkg = NULL;
-    CV *cv;
+    GV *gv = gv_fetchpvs("mop::internals::syntax::build_meta", 0, SVt_PVCV);
+    SV *pkg = NULL;
     I32 floor;
-    OP *traitop, *block;
+    OP *o;
+    CV *cv;
 
     PERL_UNUSED_ARG(psobj);
 
@@ -1481,22 +1487,20 @@ run_namespace(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     ENTER;
     SAVEDESTRUCTOR_X(remove_meta, &pkg);
 
-    floor = start_subparse(0, 0);
+    floor = start_subparse(0, CVf_ANON);
 
-    block = parse_namespace(strnEQ(GvNAME(namegv), "class", sizeof("class")),
-                            &meta, &pkg, &traitop);
+    o = parse_namespace(strnEQ(GvNAME(namegv), "class", sizeof("class")), &pkg);
+    o = newUNOP(OP_ENTERSUB, OPf_STACKED,
+                op_append_elem(OP_LIST, o,
+                               newUNOP(OP_RV2CV, 0,
+                                       newGVOP(OP_GV, 0, gv))));
 
-    /* TODO: construct op tree calling syntax::run_namespace and put traitsop in args */
-
-    cv = newATTRSUB(floor, NULL, NULL, NULL, newSTATEOP(0, NULL, block));
+    cv = newATTRSUB(floor, NULL, NULL, NULL, o);
     if (CvCLONE(cv))
         cv = cv_clone(cv);
 
     PUSHMARK(SP);
-    XPUSHs(meta);
-    XPUSHs(newRV_noinc((SV *)cv));
-    PUTBACK;
-    call_pv("mop::internals::syntax::build_meta", G_DISCARD);
+    call_sv((SV *)cv, G_VOID);
 
     pkg = NULL;
 
