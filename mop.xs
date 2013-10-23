@@ -15,6 +15,7 @@ static MGVTBL subname_vtbl;
 static int
 mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
 {
+    dSP;
     SV *name, *meta, *self, *attr, *val;
 
     name = *av_fetch((AV *)mg->mg_obj, 0, 0);
@@ -22,35 +23,25 @@ mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
     self = *av_fetch((AV *)mg->mg_obj, 2, 0);
 
     ENTER;
-    {
-        dSP;
+    PUSHMARK(SP);
+    XPUSHs(meta);
+    XPUSHs(name);
+    PUTBACK;
+    call_method("get_attribute", G_SCALAR);
+    SPAGAIN;
+    attr = POPs;
+    PUTBACK;
+    LEAVE;
 
-        PUSHMARK(SP);
-        XPUSHs(meta);
-        XPUSHs(name);
-        PUTBACK;
-
-        call_method("get_attribute", G_SCALAR);
-
-        SPAGAIN;
-        attr = POPs;
-        PUTBACK;
-    }
-
-    {
-        dSP;
-
-        PUSHMARK(SP);
-        XPUSHs(attr);
-        XPUSHs(self);
-        PUTBACK;
-
-        call_method("fetch_data_in_slot_for", G_SCALAR);
-
-        SPAGAIN;
-        val = POPs;
-        PUTBACK;
-    }
+    ENTER;
+    PUSHMARK(SP);
+    XPUSHs(attr);
+    XPUSHs(self);
+    PUTBACK;
+    call_method("fetch_data_in_slot_for", G_SCALAR);
+    SPAGAIN;
+    val = POPs;
+    PUTBACK;
     LEAVE;
 
     sv_setsv(sv, val);
@@ -61,6 +52,7 @@ mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
 static int
 mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
 {
+    dSP;
     SV *name, *meta, *self, *attr;
 
     name = *av_fetch((AV *)mg->mg_obj, 0, 0);
@@ -68,32 +60,23 @@ mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
     self = *av_fetch((AV *)mg->mg_obj, 2, 0);
 
     ENTER;
-    {
-        dSP;
+    PUSHMARK(SP);
+    XPUSHs(meta);
+    XPUSHs(name);
+    PUTBACK;
+    call_method("get_attribute", G_SCALAR);
+    SPAGAIN;
+    attr = POPs;
+    PUTBACK;
+    LEAVE;
 
-        PUSHMARK(SP);
-        XPUSHs(meta);
-        XPUSHs(name);
-        PUTBACK;
-
-        call_method("get_attribute", G_SCALAR);
-
-        SPAGAIN;
-        attr = POPs;
-        PUTBACK;
-    }
-
-    {
-        dSP;
-
-        PUSHMARK(SP);
-        XPUSHs(attr);
-        XPUSHs(self);
-        XPUSHs(sv);
-        PUTBACK;
-
-        call_method("store_data_in_slot_for", G_VOID);
-    }
+    ENTER;
+    PUSHMARK(SP);
+    XPUSHs(attr);
+    XPUSHs(self);
+    XPUSHs(sv);
+    PUTBACK;
+    call_method("store_data_in_slot_for", G_VOID);
     LEAVE;
 
     return 0;
@@ -1474,17 +1457,15 @@ remove_meta(pTHX_ void *p)
 {
     SV **pkgp = (SV **)p;
     if (*pkgp) {
+        dSP;
         SV *pkg = *pkgp;
 
-        {
-            dSP;
-            ENTER;
-            PUSHMARK(SP);
-            XPUSHs(pkg);
-            PUTBACK;
-            call_pv("mop::remove_meta", G_DISCARD);
-            LEAVE;
-        }
+        ENTER;
+        PUSHMARK(SP);
+        XPUSHs(pkg);
+        PUTBACK;
+        call_pv("mop::remove_meta", G_DISCARD);
+        LEAVE;
     }
 }
 
