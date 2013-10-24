@@ -1181,6 +1181,8 @@ THX_parse_method(pTHX)
             attrinitop = op_append_elem(OP_LINESEQ, attrinitop, initop);
         }
     }
+    Safefree(invocant);
+
     attrintroop = newSTATEOP(0, NULL, attrintroop);
 
     body = parse_block(0);
