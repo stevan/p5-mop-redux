@@ -1476,7 +1476,6 @@ remove_meta(pTHX_ void *p)
 static OP *
 run_namespace(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
-    dSP;
     GV *gv = gv_fetchpvs("mop::internals::syntax::build_meta", 0, SVt_PVCV);
     SV *pkg = NULL;
     I32 floor;
@@ -1502,10 +1501,13 @@ run_namespace(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     if (CvCLONE(cv))
         cv = cv_clone(cv);
 
-    ENTER;
-    PUSHMARK(SP);
-    call_sv((SV *)cv, G_VOID);
-    LEAVE;
+    {
+        dSP;
+        ENTER;
+        PUSHMARK(SP);
+        call_sv((SV *)cv, G_VOID);
+        LEAVE;
+    }
 
     pkg = NULL;
 
