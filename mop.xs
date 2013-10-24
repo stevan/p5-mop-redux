@@ -1238,7 +1238,7 @@ THX_new_meta(pTHX_ SV *metaclass, SV *name, SV *version, AV *roles, SV *supercla
     PUSHMARK(SP);
     XPUSHs(metaclass);
     XPUSHs(name);
-    XPUSHs(version ? version: &PL_sv_undef);
+    XPUSHs(version ? version : &PL_sv_undef);
     XPUSHs(roles_ref);
     if (superclass)
         XPUSHs(superclass);
@@ -1428,7 +1428,6 @@ run_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 
     ENTER;
     PUSHMARK(SP);
-    PUTBACK;
     call_sv((SV *)cv, G_VOID);
     LEAVE;
     return newOP(OP_NULL, 0);
@@ -1460,7 +1459,6 @@ run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 
     ENTER;
     PUSHMARK(SP);
-    PUTBACK;
     call_sv((SV *)cv, G_VOID);
     LEAVE;
     return newOP(OP_NULL, 0);
@@ -1504,8 +1502,10 @@ run_namespace(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     if (CvCLONE(cv))
         cv = cv_clone(cv);
 
+    ENTER;
     PUSHMARK(SP);
     call_sv((SV *)cv, G_VOID);
+    LEAVE;
 
     pkg = NULL;
 
