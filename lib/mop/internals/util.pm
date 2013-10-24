@@ -16,7 +16,7 @@ my %OVERRIDDEN;
 sub install_sub {
     my ($to, $from, $sub) = @_;
     no strict 'refs';
-    if (defined &{ "${to}::${sub}" }) {
+    if (*{ "${to}::${sub}" }) {
         push @{ $OVERRIDDEN{$to}{$sub} //= [] }, \&{ "${to}::${sub}" };
     }
     no warnings 'redefine';
