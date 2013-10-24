@@ -1405,7 +1405,6 @@ return_true(pTHX_ OP *o, GV *namegv, SV *ckobj)
 static OP *
 run_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
-    dSP;
     GV *gv = gv_fetchpvs("mop::internals::syntax::add_attribute", 0, SVt_PVCV);
     I32 floor;
     OP *o;
@@ -1426,17 +1425,20 @@ run_has(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     if (CvCLONE(cv))
         cv = cv_clone(cv);
 
-    ENTER;
-    PUSHMARK(SP);
-    call_sv((SV *)cv, G_VOID);
-    LEAVE;
+    {
+        dSP;
+        ENTER;
+        PUSHMARK(SP);
+        call_sv((SV *)cv, G_VOID);
+        LEAVE;
+    }
+
     return newOP(OP_NULL, 0);
 }
 
 static OP *
 run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
 {
-    dSP;
     GV *gv = gv_fetchpvs("mop::internals::syntax::add_method", 0, SVt_PVCV);
     I32 floor;
     OP *o;
@@ -1457,10 +1459,14 @@ run_method(pTHX_ GV *namegv, SV *psobj, U32 *flagsp)
     if (CvCLONE(cv))
         cv = cv_clone(cv);
 
-    ENTER;
-    PUSHMARK(SP);
-    call_sv((SV *)cv, G_VOID);
-    LEAVE;
+    {
+        dSP;
+        ENTER;
+        PUSHMARK(SP);
+        call_sv((SV *)cv, G_VOID);
+        LEAVE;
+    }
+
     return newOP(OP_NULL, 0);
 }
 
