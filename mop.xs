@@ -1093,7 +1093,8 @@ pp_init_attr(pTHX)
 static OP *
 THX_gen_init_attr_op(pTHX_ SV *attr_name, SV *meta_name, SV *invocant_name)
 {
-    OP *introop, *initop, *fetchinvocantop, *initopargs;
+    OP *introop, *fetchinvocantop, *initopargs;
+    UNOP *initop;
 
     introop = intro_twigil_var(attr_name);
 
@@ -1103,14 +1104,15 @@ THX_gen_init_attr_op(pTHX_ SV *attr_name, SV *meta_name, SV *invocant_name)
     fetchinvocantop = newOP(OP_PADSV, 0);
     fetchinvocantop->op_targ = pad_findmy_sv(invocant_name, 0);
     initopargs = op_append_elem(OP_LIST, initopargs, fetchinvocantop);
-    initop = newOP(OP_CUSTOM, OPf_KIDS);
-    cUNOPx(initop)->op_first = newANONLIST(initopargs);
-    initop->op_next = NULL;
+    NewOp(1101, initop, 1, UNOP);
+    initop->op_type = OP_CUSTOM;
+    initop->op_ppaddr = pp_init_attr;
+    initop->op_flags = OPf_KIDS;
     initop->op_private = 1;
     initop->op_targ = introop->op_targ;
-    initop->op_ppaddr = pp_init_attr;
+    initop->op_first = newANONLIST(initopargs);
 
-    return newLISTOP(OP_LINESEQ, 0, introop, initop);
+    return newLISTOP(OP_LINESEQ, 0, introop, (OP *)initop);
 }
 
 #define parse_method() THX_parse_method(aTHX)
