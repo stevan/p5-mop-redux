@@ -1086,6 +1086,28 @@ pp_init_attr(pTHX)
     return PL_op->op_next;
 }
 
+#define gen_init_attr_op(attr_name, meta_name, invocant_name) \
+    THX_gen_init_attr_op(aTHX_ attr_name, meta_name, invocant_name)
+static OP *
+THX_gen_init_attr_op(pTHX_ SV *attr_name, SV *meta_name, SV *invocant_name)
+{
+    OP *introop, *initop, *fetchinvocantop, *initopargs;
+
+    introop = intro_twigil_var(attr_name);
+
+    initopargs = newSVOP(OP_CONST, 0, SvREFCNT_inc(attr_name));
+    initopargs = op_append_elem(OP_LIST, initopargs,
+                                newSVOP(OP_CONST, 0, newSVsv(meta_name)));
+    fetchinvocantop = newOP(OP_PADSV, 0);
+    fetchinvocantop->op_targ = pad_findmy_sv(invocant_name, 0);
+    initopargs = op_append_elem(OP_LIST, initopargs, fetchinvocantop);
+    initop = newUNOP(OP_RAND, 0, newANONLIST(initopargs));
+    initop->op_targ = introop->op_targ;
+    initop->op_ppaddr = pp_init_attr;
+
+    return newLISTOP(OP_LINESEQ, 0, introop, initop);
+}
+
 #define parse_method() THX_parse_method(aTHX)
 static OP *
 THX_parse_method(pTHX)
@@ -1099,7 +1121,7 @@ THX_parse_method(pTHX)
     struct mop_signature_var *invocant;
     struct mop_trait **traits;
     OP *body, *body_ref;
-    OP *unpackargsop = NULL, *attrintroop = NULL, *attrinitop = NULL;
+    OP *unpackargsop = NULL, *attrop = NULL;
     U8 errors;
 
     lex_read_space(0);
@@ -1159,35 +1181,19 @@ THX_parse_method(pTHX)
     meta_name = current_meta_name();
     attrs = current_attributes();
     for (j = 0; j <= av_len(attrs); j++) {
-        SV *attr = *av_fetch(attrs, j, 0);
-        OP *o = intro_twigil_var(attr);
-        OP *initop, *fetchinvocantop, *initopargs;
-        initopargs = newSVOP(OP_CONST, 0, SvREFCNT_inc(attr));
-        initopargs = op_append_elem(OP_LIST, initopargs,
-                                    newSVOP(OP_CONST, 0, newSVsv(meta_name)));
-        fetchinvocantop = newOP(OP_PADSV, 0);
-        fetchinvocantop->op_targ = pad_findmy_sv(invocant->name, 0);
-        initopargs = op_append_elem(OP_LIST, initopargs, fetchinvocantop);
-        initop = newUNOP(OP_RAND, 0, newANONLIST(initopargs));
-        initop->op_targ = o->op_targ;
-        initop->op_ppaddr = pp_init_attr;
+        SV *attr_name = *av_fetch(attrs, j, 0);
 
-        if (!attrintroop) {
-            attrintroop = o;
-            attrinitop = initop;
-        }
-        else {
-            attrintroop = op_append_elem(OP_LINESEQ, attrintroop, o);
-            attrinitop = op_append_elem(OP_LINESEQ, attrinitop, initop);
-        }
+        attrop = op_append_list(OP_LINESEQ,
+                                attrop,
+                                gen_init_attr_op(attr_name, meta_name, invocant->name));
     }
     Safefree(invocant);
 
-    attrintroop = newSTATEOP(0, NULL, attrintroop);
+    /* have to do this before the parse_block call */
+    attrop = newSTATEOP(0, NULL, attrop);
 
     body = parse_block(0);
-    body = op_prepend_elem(OP_LINESEQ, attrinitop, body);
-    body = op_prepend_elem(OP_LINESEQ, attrintroop, body);
+    body = op_prepend_elem(OP_LINESEQ, attrop, body);
     if (unpackargsop)
         body = op_prepend_elem(OP_LINESEQ, newSTATEOP(0, NULL, unpackargsop), body);
 
