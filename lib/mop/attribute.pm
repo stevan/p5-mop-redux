@@ -97,13 +97,13 @@ sub locally_defined { ${ $original_id{ $_[0] } } eq mop::id( $_[0] ) }
 
 sub has_data_in_slot_for {
     my ($self, $instance) = @_;
-    defined ${ ${ $storage{ $self } }->{ $instance } };
+    defined ${ $self->get_slot_for($instance) };
 }
 
 sub fetch_data_in_slot_for {
     my ($self, $instance) = @_;
     $self->fire('before:FETCH_DATA', $instance);
-    my $val = ${ ${ $storage{ $self } }->{ $instance } || \undef };
+    my $val = ${ $self->get_slot_for($instance) };
     $self->fire('after:FETCH_DATA', $instance);
     return $val;
 }
@@ -111,7 +111,7 @@ sub fetch_data_in_slot_for {
 sub store_data_in_slot_for {
     my ($self, $instance, $data) = @_;
     $self->fire('before:STORE_DATA', $instance, \$data);
-    ${ $storage{ $self } }->{ $instance } = \$data;
+    ${ $self->get_slot_for($instance) } = $data;
     $self->fire('after:STORE_DATA', $instance, \$data);
     return;
 }
@@ -126,12 +126,17 @@ sub store_default_in_slot_for {
 
 sub weaken_data_in_slot_for {
     my ($self, $instance) = @_;
-    weaken(${ ${ $storage{ $self } }->{ $instance } });
+    weaken(${ $self->get_slot_for($instance) });
 }
 
 sub is_data_in_slot_weak_for {
     my ($self, $instance) = @_;
-    isweak(${ ${ $storage{ $self } }->{ $instance } });
+    isweak(${ $self->get_slot_for($instance) });
+}
+
+sub get_slot_for {
+    my ($self, $instance) = @_;
+    ${ $storage{ $self } }->{ $instance } //= \(my $slot);
 }
 
 sub __INIT_METACLASS__ {
@@ -187,6 +192,7 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'store_default_in_slot_for', body => \&store_default_in_slot_for ) );
     $METACLASS->add_method( mop::method->new( name => 'weaken_data_in_slot_for',   body => \&weaken_data_in_slot_for   ) );
     $METACLASS->add_method( mop::method->new( name => 'is_data_in_slot_weak_for',  body => \&is_data_in_slot_weak_for  ) );
+    $METACLASS->add_method( mop::method->new( name => 'get_slot_for',              body => \&get_slot_for              ) );
 
     $METACLASS;
 }
