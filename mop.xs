@@ -12,72 +12,183 @@ static MGVTBL subname_vtbl;
 /* }}} */
 /* attribute magic {{{ */
 
+static MGVTBL slot_vtbl;
+
+#define slot_is_cacheable(attr) THX_slot_is_cacheable(aTHX_ attr)
+static bool
+THX_slot_is_cacheable(pTHX_ SV *attr)
+{
+    dSP;
+    SV *ret;
+
+    ENTER;
+
+    PUSHMARK(SP);
+    XPUSHs(attr);
+    PUTBACK;
+    call_method("has_events", G_SCALAR);
+    SPAGAIN;
+    ret = POPs;
+    PUTBACK;
+
+    LEAVE;
+
+    return !SvTRUE(ret);
+}
+
 static int
 mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
 {
-    dSP;
-    SV *name, *meta, *self, *attr, *val;
+    SV *name, *meta, *self, *key, *slot;
+    MAGIC *slot_mg;
+    HV *slots;
+    HE *slot_ent;
 
     name = *av_fetch((AV *)mg->mg_obj, 0, 0);
     meta = *av_fetch((AV *)mg->mg_obj, 1, 0);
     self = *av_fetch((AV *)mg->mg_obj, 2, 0);
 
-    ENTER;
-    PUSHMARK(SP);
-    XPUSHs(meta);
-    XPUSHs(name);
-    PUTBACK;
-    call_method("get_attribute", G_SCALAR);
-    SPAGAIN;
-    attr = POPs;
-    PUTBACK;
-    LEAVE;
+    slot_mg = mg_findext(SvRV(self), PERL_MAGIC_ext, &slot_vtbl);
 
-    ENTER;
-    PUSHMARK(SP);
-    XPUSHs(attr);
-    XPUSHs(self);
-    PUTBACK;
-    call_method("fetch_data_in_slot_for", G_SCALAR);
-    SPAGAIN;
-    val = POPs;
-    PUTBACK;
-    LEAVE;
+    if (slot_mg) {
+        slots = (HV *)slot_mg->mg_obj;
+    }
+    else {
+        slots = newHV();
+        sv_magicext(SvRV(self), (SV *)slots, PERL_MAGIC_ext, &slot_vtbl, "slot", 0);
+    }
 
-    sv_setsv(sv, val);
+    /* can we get the metaclass name instead without requiring a method call? */
+    key = newSVpvf("%"UVuf"::%"SVf, PTR2UV(SvRV(meta)), name);
+
+    slot_ent = hv_fetch_ent(slots, key, 0, 0);
+
+    if (slot_ent) {
+        slot = HeVAL(slot_ent);
+    }
+    else {
+        dSP;
+        SV *attr;
+
+        ENTER;
+        PUSHMARK(SP);
+        XPUSHs(meta);
+        XPUSHs(name);
+        PUTBACK;
+        call_method("get_attribute", G_SCALAR);
+        SPAGAIN;
+        attr = POPs;
+        PUTBACK;
+        LEAVE;
+
+        if (slot_is_cacheable(attr)) {
+            ENTER;
+            PUSHMARK(SP);
+            XPUSHs(attr);
+            XPUSHs(self);
+            PUTBACK;
+            call_method("get_slot_for", G_SCALAR);
+            SPAGAIN;
+            slot = SvRV(POPs);
+            PUTBACK;
+            LEAVE;
+
+            hv_store_ent(slots, key, slot, 0);
+        }
+        else {
+            ENTER;
+            PUSHMARK(SP);
+            XPUSHs(attr);
+            XPUSHs(self);
+            PUTBACK;
+            call_method("fetch_data_in_slot_for", G_SCALAR);
+            SPAGAIN;
+            slot = POPs;
+            PUTBACK;
+            LEAVE;
+        }
+    }
+
+    sv_setsv(sv, slot);
 
     return 0;
 }
 
+/* XXX remove all of this duplication with mg_attr_get */
 static int
 mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
 {
-    dSP;
-    SV *name, *meta, *self, *attr;
+    SV *name, *meta, *self, *key, *slot;
+    MAGIC *slot_mg;
+    HV *slots;
+    HE *slot_ent;
 
     name = *av_fetch((AV *)mg->mg_obj, 0, 0);
     meta = *av_fetch((AV *)mg->mg_obj, 1, 0);
     self = *av_fetch((AV *)mg->mg_obj, 2, 0);
 
-    ENTER;
-    PUSHMARK(SP);
-    XPUSHs(meta);
-    XPUSHs(name);
-    PUTBACK;
-    call_method("get_attribute", G_SCALAR);
-    SPAGAIN;
-    attr = POPs;
-    PUTBACK;
-    LEAVE;
+    slot_mg = mg_findext(SvRV(self), PERL_MAGIC_ext, &slot_vtbl);
 
-    ENTER;
-    PUSHMARK(SP);
-    XPUSHs(attr);
-    XPUSHs(self);
-    XPUSHs(sv);
-    PUTBACK;
-    call_method("store_data_in_slot_for", G_VOID);
-    LEAVE;
+    if (slot_mg) {
+        slots = (HV *)slot_mg->mg_obj;
+    }
+    else {
+        slots = newHV();
+        sv_magicext(SvRV(self), (SV *)slots, PERL_MAGIC_ext, &slot_vtbl, "slot", 0);
+    }
+
+    /* can we get the metaclass name instead without requiring a method call? */
+    key = newSVpvf("%"UVuf"::%"SVf, PTR2UV(SvRV(meta)), name);
+
+    slot_ent = hv_fetch_ent(slots, key, 0, 0);
+
+    if (slot_ent) {
+        slot = HeVAL(slot_ent);
+    }
+    else {
+        dSP;
+        SV *attr;
+
+        ENTER;
+        PUSHMARK(SP);
+        XPUSHs(meta);
+        XPUSHs(name);
+        PUTBACK;
+        call_method("get_attribute", G_SCALAR);
+        SPAGAIN;
+        attr = POPs;
+        PUTBACK;
+        LEAVE;
+
+        if (slot_is_cacheable(attr)) {
+            ENTER;
+            PUSHMARK(SP);
+            XPUSHs(attr);
+            XPUSHs(self);
+            PUTBACK;
+            call_method("get_slot_for", G_SCALAR);
+            SPAGAIN;
+            slot = SvRV(POPs);
+            PUTBACK;
+            LEAVE;
+
+            hv_store_ent(slots, key, slot, 0);
+        }
+        else {
+            ENTER;
+            PUSHMARK(SP);
+            XPUSHs(attr);
+            XPUSHs(self);
+            XPUSHs(sv);
+            PUTBACK;
+            call_method("store_data_in_slot_for", G_VOID);
+            LEAVE;
+
+            return 0;
+        }
+    }
+
+    sv_setsv(slot, sv);
 
     return 0;
 }

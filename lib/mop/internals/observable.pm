@@ -42,7 +42,7 @@ sub fire {
 
 sub has_events {
     my $self = shift;
-    return $callbacks{ $self } && !!%{ ${ $callbacks{ $self } } };
+    return $callbacks{ $self } && ${ $callbacks{ $self } } && !!%{ ${ $callbacks{ $self } } };
 }
 
 sub __INIT_METACLASS__ {
