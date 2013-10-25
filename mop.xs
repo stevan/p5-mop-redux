@@ -1691,8 +1691,7 @@ BOOT:
     default_role_metaclass_hint_key_hash
         = SvSHARED_HASH(default_role_metaclass_hint_key_sv);
 
-    old_rv2sv_checker = PL_check[OP_RV2SV];
-    PL_check[OP_RV2SV] = myck_rv2sv_twigils;
+    wrap_op_checker(OP_RV2SV, myck_rv2sv_twigils, &old_rv2sv_checker);
 
     XopENTRY_set(&init_attr_xop, xop_name, "init_attr");
     XopENTRY_set(&init_attr_xop, xop_desc, "attribute initialization");
