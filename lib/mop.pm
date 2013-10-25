@@ -283,6 +283,13 @@ sub initialize {
     $BOOTSTRAPPED = 1;
 }
 
+# B::Deparse doesn't know what to do with custom ops
+{
+    package
+        B::Deparse;
+    sub pp_init_attr { "INIT_ATTR " . maybe_targmy(@_, \&unop) }
+}
+
 1;
 
 __END__

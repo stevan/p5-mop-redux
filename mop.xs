@@ -952,6 +952,8 @@ struct mop_signature_var {
     OP *default_value;
 };
 
+static XOP init_attr_xop;
+
 #define parse_signature(method_name, invocantp, varsp) THX_parse_signature(aTHX_ method_name, invocantp, varsp)
 static UV
 THX_parse_signature(pTHX_ SV *method_name,
@@ -1101,7 +1103,10 @@ THX_gen_init_attr_op(pTHX_ SV *attr_name, SV *meta_name, SV *invocant_name)
     fetchinvocantop = newOP(OP_PADSV, 0);
     fetchinvocantop->op_targ = pad_findmy_sv(invocant_name, 0);
     initopargs = op_append_elem(OP_LIST, initopargs, fetchinvocantop);
-    initop = newUNOP(OP_RAND, 0, newANONLIST(initopargs));
+    initop = newOP(OP_CUSTOM, OPf_KIDS);
+    cUNOPx(initop)->op_first = newANONLIST(initopargs);
+    initop->op_next = NULL;
+    initop->op_private = 1;
     initop->op_targ = introop->op_targ;
     initop->op_ppaddr = pp_init_attr;
 
@@ -1686,6 +1691,11 @@ BOOT:
 
     old_rv2sv_checker = PL_check[OP_RV2SV];
     PL_check[OP_RV2SV] = myck_rv2sv_twigils;
+
+    XopENTRY_set(&init_attr_xop, xop_name, "init_attr");
+    XopENTRY_set(&init_attr_xop, xop_desc, "attribute initialization");
+    XopENTRY_set(&init_attr_xop, xop_class, OA_UNOP);
+    Perl_custom_op_register(aTHX_ pp_init_attr, &init_attr_xop);
 }
 
 # }}}
