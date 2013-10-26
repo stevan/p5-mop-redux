@@ -8,25 +8,19 @@ use mop;
 
 package Foo::Moose {
     use Moose;
-    has foo => (is => 'rw', isa => 'Str', default => 1);
+    has foo => (is => 'rw', default => 1);
     has bar => (is => 'rw', default => 1);
 }
 
 package Foo::MooseImmutable {
     use Moose;
-    has foo => (is => 'rw', isa => 'Str', default => 1);
+    has foo => (is => 'rw', default => 1);
     has bar => (is => 'rw', default => 1);
     __PACKAGE__->meta->make_immutable;
 }
 
-sub type {
-    my ($attr, $type_name) = @_;
-    my $type = Moose::Util::TypeConstraints::find_type_constraint( $type_name );
-    $attr->bind('before:STORE_DATA' => sub { $type->assert_valid( ${ $_[2] } ) });
-}
-
 class Foo::MOP {
-    has $!foo is type('Str'), rw = 1;
+    has $!foo is rw = 1;
     has $!bar is rw = 1;
 }
 
@@ -42,8 +36,6 @@ package Foo::Raw {
     sub foo {
         my $self = shift;
         if (@_) {
-            my $tc = Moose::Util::TypeConstraints::find_type_constraint('Str');
-            $tc->assert_valid($_[0]);
             $self->{foo} = $_[0];
         }
         $self->{foo};
