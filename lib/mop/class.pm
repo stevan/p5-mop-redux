@@ -217,6 +217,8 @@ Stevan Little <stevan.little@iinteractive.com>
 
 Jesse Luehrs <doy@tozt.net>
 
+Florian Ragwitz <rafl@debian.org>
+
 =head1 COPYRIGHT AND LICENSE
 
 This software is copyright (c) 2013 by Infinity Interactive.

@@ -1,6 +1,13 @@
 Revision history for Perl extension mop
 
 {{$NEXT}}
+    - second TRIAL release to CPAN
+    - All but one dependency removed, the
+      only one left is Devel::CallParser,
+      which we hope can be pushed into
+      the Perl core.
+    - Much of the internals have now been
+      re-written in XS
 
 0.01  2013-10-15
     - first TRAIL release to CPAN

@@ -6,6 +6,9 @@ use warnings;
 use version           ();
 use Devel::CallParser ();
 
+our $VERSION   = '0.02';
+our $AUTHORITY = 'cpan:STEVAN';
+
 my @available_keywords = qw(class role method has);
 
 # keep the local metaclass around
@@ -133,6 +136,8 @@ L<Github|http://www.github.com>.
 Stevan Little <stevan.little@iinteractive.com>
 
 Jesse Luehrs <doy@tozt.net>
+
+Florian Ragwitz <rafl@debian.org>
 
 =head1 COPYRIGHT AND LICENSE
 

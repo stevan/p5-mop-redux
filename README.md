@@ -14,8 +14,6 @@ the start to be compatible with old-style Perl 5 objects and to try
 to lean on existing Perl conventions instead of inventing a bunch of
 new things.
 
-It is still early in the process, but we will see how it goes.
-
 Contributing
 ------------
 
