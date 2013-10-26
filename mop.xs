@@ -10,9 +10,36 @@
 static MGVTBL subname_vtbl;
 
 /* }}} */
-/* attribute magic {{{ */
+/* metaclass magic {{{ */
 
-static MGVTBL slot_vtbl, attr_generation_vtbl;
+static MGVTBL meta_vtbl;
+
+#define set_meta_magic(meta, name) THX_set_meta_magic(aTHX_ meta, name)
+static void
+THX_set_meta_magic(pTHX_ SV *meta, SV *name)
+{
+    MAGIC *mg;
+
+    mg = mg_findext(SvRV(meta), PERL_MAGIC_ext, &meta_vtbl);
+    if (mg) {
+        assert(!sv_cmp(name, mg->mg_obj));
+        return;
+    }
+
+    sv_magicext(SvRV(meta), name, PERL_MAGIC_ext, &meta_vtbl, "metaclass", 0);
+}
+
+#define get_meta_name(meta) THX_get_meta_name(aTHX_ meta)
+static SV *
+THX_get_meta_name(pTHX_ SV *meta)
+{
+    MAGIC *mg;
+
+    mg = mg_findext(SvRV(meta), PERL_MAGIC_ext, &meta_vtbl);
+    assert(mg);
+
+    return mg->mg_obj;
+}
 
 #define get_attr_generation(meta) THX_get_attr_generation(aTHX_ meta)
 static U16
@@ -20,13 +47,10 @@ THX_get_attr_generation(pTHX_ SV *meta)
 {
     MAGIC *mg;
 
-    mg = mg_findext(SvRV(meta), PERL_MAGIC_ext, &attr_generation_vtbl);
-    if (mg) {
-        return mg->mg_private;
-    }
-    else {
-        return 0;
-    }
+    mg = mg_findext(SvRV(meta), PERL_MAGIC_ext, &meta_vtbl);
+    assert(mg);
+
+    return mg->mg_private;
 }
 
 #define incr_attr_generation(meta) THX_incr_attr_generation(aTHX_ meta)
@@ -35,15 +59,16 @@ THX_incr_attr_generation(pTHX_ SV *meta)
 {
     MAGIC *mg;
 
-    mg = mg_findext(SvRV(meta), PERL_MAGIC_ext, &attr_generation_vtbl);
-    if (!mg) {
-        mg = sv_magicext(SvRV(meta), &PL_sv_undef, PERL_MAGIC_ext,
-                         &attr_generation_vtbl, "attribute generation", 0);
-        mg->mg_private = 0;
-    }
+    mg = mg_findext(SvRV(meta), PERL_MAGIC_ext, &meta_vtbl);
+    assert(mg);
 
     mg->mg_private++;
 }
+
+/* }}} */
+/* attribute magic {{{ */
+
+static MGVTBL slot_vtbl;
 
 #define slot_is_cacheable(attr) THX_slot_is_cacheable(aTHX_ attr)
 static bool
@@ -100,7 +125,7 @@ mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
     }
 
     /* can we get the metaclass name instead without requiring a method call? */
-    key = newSVpvf("%"UVuf"::%"SVf, PTR2UV(SvRV(meta)), name);
+    key = newSVpvf("%"SVf"::%"SVf, get_meta_name(meta), name);
 
     slot_ent = hv_fetch_ent(slots, key, 0, 0);
 
@@ -1773,6 +1798,11 @@ set_meta (package, meta)
 void
 unset_meta (package)
     SV *package
+
+void
+set_meta_magic(meta, name)
+    SV *meta
+    SV *name
 
 void
 incr_attr_generation(meta)

@@ -215,6 +215,7 @@ sub FINALIZE {
         *$name = mop::internals::util::subname($name, $body);
     }
 
+    mop::internals::util::set_meta_magic($self, $self->name);
     mop::internals::util::incr_attr_generation($self);
 
     $self->fire('after:FINALIZE');
