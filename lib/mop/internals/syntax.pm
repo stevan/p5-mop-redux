@@ -107,6 +107,14 @@ sub add_attribute {
     return;
 }
 
+# B::Deparse doesn't know what to do with custom ops
+{
+    package
+        B::Deparse;
+    sub pp_init_attr { "INIT_ATTR " . maybe_targmy(@_, \&unop) }
+    sub pp_intro_invocant { "(intro invocant)" }
+}
+
 1;
 
 __END__
