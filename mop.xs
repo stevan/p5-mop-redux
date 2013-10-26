@@ -1888,9 +1888,9 @@ BOOT:
     XopENTRY_set(&init_attr_xop, xop_class, OA_UNOP);
     Perl_custom_op_register(aTHX_ pp_init_attr, &init_attr_xop);
 
-    XopENTRY_set(&init_attr_xop, xop_name, "intro_invocant");
-    XopENTRY_set(&init_attr_xop, xop_desc, "invocant introduction");
-    XopENTRY_set(&init_attr_xop, xop_class, OA_BASEOP);
+    XopENTRY_set(&intro_invocant_xop, xop_name, "intro_invocant");
+    XopENTRY_set(&intro_invocant_xop, xop_desc, "invocant introduction");
+    XopENTRY_set(&intro_invocant_xop, xop_class, OA_BASEOP);
     Perl_custom_op_register(aTHX_ pp_intro_invocant, &intro_invocant_xop);
 }
 

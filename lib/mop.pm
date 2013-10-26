@@ -288,6 +288,7 @@ sub initialize {
     package
         B::Deparse;
     sub pp_init_attr { "INIT_ATTR " . maybe_targmy(@_, \&unop) }
+    sub pp_intro_invocant { "(intro invocant)" }
 }
 
 1;
