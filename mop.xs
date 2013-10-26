@@ -1257,7 +1257,8 @@ pp_init_attr(pTHX)
         set_attr_magic(TARG, attr_name, meta_class, invocant);
     else
         set_err_magic(TARG, attr_name);
-    return PL_op->op_next;
+
+    RETURN;
 }
 
 #define gen_init_attr_op(attr_name, meta_name) \
@@ -1265,10 +1266,8 @@ pp_init_attr(pTHX)
 static OP *
 THX_gen_init_attr_op(pTHX_ SV *attr_name, SV *meta_name)
 {
-    OP *introop, *fetchinvocantop, *initopargs;
+    OP *fetchinvocantop, *initopargs;
     UNOP *initop;
-
-    introop = intro_twigil_var(attr_name);
 
     initopargs = newSVOP(OP_CONST, 0, SvREFCNT_inc(attr_name));
     initopargs = op_append_elem(OP_LIST, initopargs,
@@ -1281,10 +1280,10 @@ THX_gen_init_attr_op(pTHX_ SV *attr_name, SV *meta_name)
     initop->op_ppaddr = pp_init_attr;
     initop->op_flags = OPf_KIDS;
     initop->op_private = 1;
-    initop->op_targ = introop->op_targ;
+    initop->op_targ = pad_findmy_sv(attr_name, 0);
     initop->op_first = newANONLIST(initopargs);
 
-    return newLISTOP(OP_LINESEQ, 0, introop, (OP *)initop);
+    return (OP *)initop;
 }
 
 #define parse_method() THX_parse_method(aTHX)
@@ -1299,8 +1298,7 @@ THX_parse_method(pTHX)
     struct mop_signature_var **vars;
     struct mop_signature_var *invocant;
     struct mop_trait **traits;
-    OP *body, *body_ref;
-    OP *introinvocantop, *invocantop, *unpackargsop, *attrop = NULL;
+    OP *body, *body_ref, *invocantvarop, *invocantop;
     U8 errors;
 
     lex_read_space(0);
@@ -1328,62 +1326,69 @@ THX_parse_method(pTHX)
 
     blk_floor = start_subparse(0, CVf_ANON);
 
-    introinvocantop = gen_intro_invocant_op();
+    body = gen_intro_invocant_op();
+
+    invocantvarop = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
+    invocantvarop->op_targ = pad_add_name_sv(invocant->name, 0, NULL, NULL);
+    Safefree(invocant);
 
     invocantop = newOP(OP_PADSV, 0);
-    invocantop->op_targ = introinvocantop->op_targ;
+    invocantop->op_targ = body->op_targ;
 
-    unpackargsop = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
-    unpackargsop->op_targ = pad_add_name_sv(invocant->name, 0, NULL, NULL);
-    unpackargsop = newSTATEOP(0, NULL,
-                              newLISTOP(OP_LINESEQ, 0,
-                                        introinvocantop,
-                                        newASSIGNOP(OPf_STACKED, unpackargsop,
-                                                    0, invocantop)));
+    body = op_append_list(OP_LINESEQ,
+        body,
+        newSTATEOP(0, NULL,
+                   newASSIGNOP(OPf_STACKED, invocantvarop, 0, invocantop))
+    );
 
     if (numvars) {
         OP *lhsop = newLISTOP(OP_LIST, 0, NULL, NULL);
-        OP *defaultsops = NULL;
 
-        for (i = 0; i < numvars; i++) {
+        for (i = 0; i < numvars; ++i) {
             struct mop_signature_var *var = vars[i];
-            OP *o = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
-            o->op_targ = pad_add_name_sv(var->name, 0, NULL, NULL);
-            lhsop = op_append_elem(OP_LIST, lhsop, o);
+            OP *introop;
 
-            if (var->default_value)
-                defaultsops = op_append_elem(OP_LINESEQ, defaultsops,
-                                             gen_default_op(o->op_targ, i,
-                                                            var->default_value));
+            introop = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
+            introop->op_targ = pad_add_name_sv(var->name, 0, NULL, NULL);
+
+            lhsop = op_append_elem(OP_LIST, lhsop, introop);
         }
-        Safefree(vars);
 
-        unpackargsop = op_append_elem(OP_LINESEQ, unpackargsop,
-                                      newASSIGNOP(OPf_STACKED, lhsop, 0,
-                                                  newAVREF(newGVOP(OP_GV, 0, PL_defgv))));
-        unpackargsop = op_append_elem(OP_LINESEQ, unpackargsop, defaultsops);
+        body = op_append_list(OP_LINESEQ,
+            body,
+            newSTATEOP(0, NULL,
+                       newASSIGNOP(OPf_STACKED, lhsop, 0,
+                                   newAVREF(newGVOP(OP_GV, 0, PL_defgv))))
+        );
+
+        for (i = 0; i < numvars; ++i) {
+            struct mop_signature_var *var = vars[i];
+            if (var->default_value) {
+                OP *defaultop = gen_default_op(
+                    pad_findmy_sv(var->name, 0), i, var->default_value
+                );
+                body = op_append_list(OP_LINESEQ, body, defaultop);
+            }
+        }
     }
+    Safefree(vars);
 
     meta_name = current_meta_name();
     attrs = current_attributes();
     for (j = 0; j <= av_len(attrs); j++) {
         SV *attr_name = *av_fetch(attrs, j, 0);
 
-        attrop = op_append_list(OP_LINESEQ,
-                                attrop,
-                                gen_init_attr_op(attr_name, meta_name));
+        body = op_append_list(OP_LINESEQ,
+            body,
+            newSTATEOP(0, NULL, intro_twigil_var(attr_name))
+        );
+        body = op_append_list(OP_LINESEQ,
+            body,
+            gen_init_attr_op(attr_name, meta_name)
+        );
     }
-    Safefree(invocant);
 
-    /* have to do this before the parse_block call */
-    if (attrop)
-        attrop = newSTATEOP(0, NULL, attrop);
-    unpackargsop = newSTATEOP(0, NULL, unpackargsop);
-
-    body = parse_block(0);
-    if (attrop)
-        body = op_prepend_elem(OP_LINESEQ, attrop, body);
-    body = op_prepend_elem(OP_LINESEQ, unpackargsop, body);
+    body = op_append_list(OP_LINESEQ, body, parse_block(0));
 
     body_ref = newANONSUB(blk_floor, NULL, body);
 
@@ -1562,7 +1567,7 @@ THX_parse_namespace(pTHX_ bool is_class, SV **pkgp)
 
     body = parse_block(0);
 
-    body_ref = newANONSUB(floor, NULL, newSTATEOP(0, NULL, body));
+    body_ref = newANONSUB(floor, NULL, body);
 
     return gen_traits_ops(op_append_elem(OP_LIST,
                                          newSVOP(OP_CONST, 0, meta),
