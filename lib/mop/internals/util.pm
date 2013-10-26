@@ -6,7 +6,7 @@ use Hash::Util::FieldHash;
 use mro ();
 use Scalar::Util ();
 
-our $VERSION   = '0.02';
+our $VERSION   = '0.03';
 our $AUTHORITY = 'cpan:STEVAN';
 
 # XXX all of this OVERRIDDEN stuff really needs to go, ideally replaced by

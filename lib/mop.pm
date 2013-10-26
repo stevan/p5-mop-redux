@@ -7,7 +7,7 @@ use warnings;
 use overload ();
 use Scalar::Util ();
 
-our $VERSION   = '0.02';
+our $VERSION   = '0.03';
 our $AUTHORITY = 'cpan:STEVAN';
 
 our $BOOTSTRAPPED = 0;
@@ -302,7 +302,7 @@ mop - A new object system for Perl 5
 
 =head1 VERSION
 
-version 0.02
+version 0.03
 
 =head1 SYNOPSIS
 
