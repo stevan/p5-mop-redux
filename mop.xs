@@ -790,7 +790,10 @@ static XOP intro_invocant_xop;
 static OP *
 pp_intro_invocant(pTHX)
 {
-    pad_setsv(PL_op->op_targ, av_shift(GvAV(PL_defgv)));
+    SV *invocant;
+
+    invocant = av_shift(GvAV(PL_defgv));
+    PAD_SETSV(PL_op->op_targ, invocant);
 
     return NORMAL;
 }
