@@ -783,6 +783,32 @@ THX_isa(pTHX_ SV *sv, const char *name)
 }
 
 /* }}} */
+/* invocant and attribute custom ops {{{ */
+
+static XOP intro_invocant_xop;
+
+static OP *
+pp_intro_invocant(pTHX)
+{
+    pad_setsv(PL_op->op_targ, av_shift(GvAV(PL_defgv)));
+
+    return NORMAL;
+}
+
+#define gen_intro_invocant_op() THX_gen_intro_invocant_op(aTHX)
+static OP *
+THX_gen_intro_invocant_op(pTHX)
+{
+    OP *o;
+
+    o = newOP(OP_CUSTOM, 0);
+    o->op_ppaddr = pp_intro_invocant;
+    o->op_targ = pad_add_name_pvs("(invocant)", 0, NULL, NULL);
+
+    return o;
+}
+
+/* }}} */
 /* twigils {{{ */
 
 static Perl_check_t old_rv2sv_checker;
@@ -1234,10 +1260,10 @@ pp_init_attr(pTHX)
     return PL_op->op_next;
 }
 
-#define gen_init_attr_op(attr_name, meta_name, invocant_name) \
-    THX_gen_init_attr_op(aTHX_ attr_name, meta_name, invocant_name)
+#define gen_init_attr_op(attr_name, meta_name) \
+    THX_gen_init_attr_op(aTHX_ attr_name, meta_name)
 static OP *
-THX_gen_init_attr_op(pTHX_ SV *attr_name, SV *meta_name, SV *invocant_name)
+THX_gen_init_attr_op(pTHX_ SV *attr_name, SV *meta_name)
 {
     OP *introop, *fetchinvocantop, *initopargs;
     UNOP *initop;
@@ -1248,7 +1274,7 @@ THX_gen_init_attr_op(pTHX_ SV *attr_name, SV *meta_name, SV *invocant_name)
     initopargs = op_append_elem(OP_LIST, initopargs,
                                 newSVOP(OP_CONST, 0, newSVsv(meta_name)));
     fetchinvocantop = newOP(OP_PADSV, 0);
-    fetchinvocantop->op_targ = pad_findmy_sv(invocant_name, 0);
+    fetchinvocantop->op_targ = pad_findmy_pvs("(invocant)", 0);
     initopargs = op_append_elem(OP_LIST, initopargs, fetchinvocantop);
     NewOp(1101, initop, 1, UNOP);
     initop->op_type = OP_CUSTOM;
@@ -1274,7 +1300,7 @@ THX_parse_method(pTHX)
     struct mop_signature_var *invocant;
     struct mop_trait **traits;
     OP *body, *body_ref;
-    OP *unpackargsop = NULL, *attrop = NULL;
+    OP *introinvocantop, *invocantop, *unpackargsop = NULL, *attrop = NULL;
     U8 errors;
 
     lex_read_space(0);
@@ -1302,11 +1328,18 @@ THX_parse_method(pTHX)
 
     blk_floor = start_subparse(0, CVf_ANON);
 
+    introinvocantop = gen_intro_invocant_op();
+
+    invocantop = newOP(OP_PADSV, 0);
+    invocantop->op_targ = introinvocantop->op_targ;
+
     unpackargsop = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
     unpackargsop->op_targ = pad_add_name_sv(invocant->name, 0, NULL, NULL);
     unpackargsop = newSTATEOP(0, NULL,
-                              newASSIGNOP(OPf_STACKED, unpackargsop, 0,
-                                          newOP(OP_SHIFT, OPf_WANT_SCALAR | OPf_SPECIAL)));
+                              newLISTOP(OP_LINESEQ, 0,
+                                        introinvocantop,
+                                        newASSIGNOP(OPf_STACKED, unpackargsop,
+                                                    0, invocantop)));
 
     if (numvars) {
         OP *lhsop = newLISTOP(OP_LIST, 0, NULL, NULL);
@@ -1338,7 +1371,7 @@ THX_parse_method(pTHX)
 
         attrop = op_append_list(OP_LINESEQ,
                                 attrop,
-                                gen_init_attr_op(attr_name, meta_name, invocant->name));
+                                gen_init_attr_op(attr_name, meta_name));
     }
     Safefree(invocant);
 
@@ -1852,6 +1885,11 @@ BOOT:
     XopENTRY_set(&init_attr_xop, xop_desc, "attribute initialization");
     XopENTRY_set(&init_attr_xop, xop_class, OA_UNOP);
     Perl_custom_op_register(aTHX_ pp_init_attr, &init_attr_xop);
+
+    XopENTRY_set(&init_attr_xop, xop_name, "intro_invocant");
+    XopENTRY_set(&init_attr_xop, xop_desc, "invocant introduction");
+    XopENTRY_set(&init_attr_xop, xop_class, OA_BASEOP);
+    Perl_custom_op_register(aTHX_ pp_intro_invocant, &intro_invocant_xop);
 }
 
 # }}}
