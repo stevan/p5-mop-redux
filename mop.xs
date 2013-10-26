@@ -66,6 +66,47 @@ THX_incr_attr_generation(pTHX_ SV *meta)
 }
 
 /* }}} */
+/* stash magic {{{ */
+
+static MGVTBL meta_vtbl;
+
+#define get_meta(name) THX_get_meta(aTHX_ name)
+static SV *
+THX_get_meta(pTHX_ SV *name)
+{
+    MAGIC *mg = NULL;
+    HV *stash;
+
+    stash = gv_stashsv(name, 0);
+
+    if (stash) {
+        mg = mg_findext((SV *)stash, PERL_MAGIC_ext, &meta_vtbl);
+    }
+
+    return mg ? mg->mg_obj : &PL_sv_undef;
+}
+
+#define set_meta(name, meta) THX_set_meta(aTHX_ name, meta)
+static void
+THX_set_meta(pTHX_ SV *name, SV *meta)
+{
+    HV *stash;
+
+    stash = gv_stashsv(name, GV_ADD);
+    sv_magicext((SV *)stash, meta, PERL_MAGIC_ext, &meta_vtbl, "meta", 0);
+}
+
+#define unset_meta(name) THX_unset_meta(aTHX_ name)
+static void
+THX_unset_meta(pTHX_ SV *name)
+{
+    HV *stash;
+
+    stash = gv_stashsv(name, GV_ADD);
+    sv_unmagicext((SV *)stash, PERL_MAGIC_ext, &meta_vtbl);
+}
+
+/* }}} */
 /* attribute magic {{{ */
 
 static MGVTBL slot_vtbl;
@@ -92,54 +133,49 @@ THX_slot_is_cacheable(pTHX_ SV *attr)
     return !SvTRUE(ret);
 }
 
-static int
-mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
+#define get_slot_for(meta, attr_name, self, attrp) \
+    THX_get_slot_for(aTHX_ meta, attr_name, self, attrp)
+static SV *
+THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
 {
-    SV *name, *meta, *self, *key, *slot;
-    MAGIC *slot_mg;
+    U16 generation;
+    MAGIC *mg;
+    SV *key, *attr;
     HV *slots;
     HE *slot_ent;
-    U16 generation;
-
-    name = *av_fetch((AV *)mg->mg_obj, 0, 0);
-    meta = *av_fetch((AV *)mg->mg_obj, 1, 0);
-    self = *av_fetch((AV *)mg->mg_obj, 2, 0);
 
     generation = get_attr_generation(meta);
 
-    slot_mg = mg_findext(SvRV(self), PERL_MAGIC_ext, &slot_vtbl);
-    if (slot_mg && slot_mg->mg_private != generation) {
+    mg = mg_findext(SvRV(self), PERL_MAGIC_ext, &slot_vtbl);
+    if (mg && mg->mg_private != generation) {
         sv_unmagicext(SvRV(self), PERL_MAGIC_ext, &slot_vtbl);
-        slot_mg = NULL;
+        mg = NULL;
     }
 
-    if (slot_mg) {
-        slots = (HV *)slot_mg->mg_obj;
+    if (mg) {
+        slots = (HV *)mg->mg_obj;
     }
     else {
         slots = newHV();
-        slot_mg = sv_magicext(SvRV(self), (SV *)slots, PERL_MAGIC_ext,
-                              &slot_vtbl, "slot", 0);
-        slot_mg->mg_private = generation;
-
+        mg = sv_magicext(SvRV(self), (SV *)slots, PERL_MAGIC_ext,
+                         &slot_vtbl, "slot", 0);
+        mg->mg_private = generation;
     }
 
-    /* can we get the metaclass name instead without requiring a method call? */
-    key = newSVpvf("%"SVf"::%"SVf, get_meta_name(meta), name);
+    key = newSVpvf("%"SVf"::%"SVf, get_meta_name(meta), attr_name);
 
     slot_ent = hv_fetch_ent(slots, key, 0, 0);
 
     if (slot_ent) {
-        slot = HeVAL(slot_ent);
+        return HeVAL(slot_ent);
     }
     else {
         dSP;
-        SV *attr;
 
         ENTER;
         PUSHMARK(SP);
         XPUSHs(meta);
-        XPUSHs(name);
+        XPUSHs(attr_name);
         PUTBACK;
         call_method("get_attribute", G_SCALAR);
         SPAGAIN;
@@ -147,7 +183,12 @@ mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
         PUTBACK;
         LEAVE;
 
+        if (attrp)
+            *attrp = attr;
+
         if (slot_is_cacheable(attr)) {
+            SV *slot;
+
             ENTER;
             PUSHMARK(SP);
             XPUSHs(attr);
@@ -160,19 +201,38 @@ mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
             LEAVE;
 
             hv_store_ent(slots, key, slot, 0);
+
+            return slot;
         }
         else {
-            ENTER;
-            PUSHMARK(SP);
-            XPUSHs(attr);
-            XPUSHs(self);
-            PUTBACK;
-            call_method("fetch_data_in_slot_for", G_SCALAR);
-            SPAGAIN;
-            slot = POPs;
-            PUTBACK;
-            LEAVE;
+            return NULL;
         }
+    }
+}
+
+static int
+mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
+{
+    SV *name, *meta, *self, *slot, *attr;
+
+    name = *av_fetch((AV *)mg->mg_obj, 0, 0);
+    meta = *av_fetch((AV *)mg->mg_obj, 1, 0);
+    self = *av_fetch((AV *)mg->mg_obj, 2, 0);
+
+    slot = get_slot_for(meta, name, self, &attr);
+    if (!slot) {
+        dSP;
+
+        ENTER;
+        PUSHMARK(SP);
+        XPUSHs(attr);
+        XPUSHs(self);
+        PUTBACK;
+        call_method("fetch_data_in_slot_for", G_SCALAR);
+        SPAGAIN;
+        slot = POPs;
+        PUTBACK;
+        LEAVE;
     }
 
     sv_setsv(sv, slot);
@@ -180,81 +240,31 @@ mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
     return 0;
 }
 
-/* XXX remove all of this duplication with mg_attr_get */
 static int
 mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
 {
-    SV *name, *meta, *self, *key, *slot;
-    MAGIC *slot_mg;
-    HV *slots;
-    HE *slot_ent;
+    SV *name, *meta, *self, *slot, *attr;
 
     name = *av_fetch((AV *)mg->mg_obj, 0, 0);
     meta = *av_fetch((AV *)mg->mg_obj, 1, 0);
     self = *av_fetch((AV *)mg->mg_obj, 2, 0);
 
-    slot_mg = mg_findext(SvRV(self), PERL_MAGIC_ext, &slot_vtbl);
-
-    if (slot_mg) {
-        slots = (HV *)slot_mg->mg_obj;
-    }
-    else {
-        slots = newHV();
-        sv_magicext(SvRV(self), (SV *)slots, PERL_MAGIC_ext, &slot_vtbl, "slot", 0);
-    }
-
-    /* can we get the metaclass name instead without requiring a method call? */
-    key = newSVpvf("%"UVuf"::%"SVf, PTR2UV(SvRV(meta)), name);
-
-    slot_ent = hv_fetch_ent(slots, key, 0, 0);
-
-    if (slot_ent) {
-        slot = HeVAL(slot_ent);
+    slot = get_slot_for(meta, name, self, &attr);
+    if (slot) {
+        sv_setsv(slot, sv);
     }
     else {
         dSP;
-        SV *attr;
 
         ENTER;
         PUSHMARK(SP);
-        XPUSHs(meta);
-        XPUSHs(name);
+        XPUSHs(attr);
+        XPUSHs(self);
+        XPUSHs(sv);
         PUTBACK;
-        call_method("get_attribute", G_SCALAR);
-        SPAGAIN;
-        attr = POPs;
-        PUTBACK;
+        call_method("store_data_in_slot_for", G_VOID);
         LEAVE;
-
-        if (slot_is_cacheable(attr)) {
-            ENTER;
-            PUSHMARK(SP);
-            XPUSHs(attr);
-            XPUSHs(self);
-            PUTBACK;
-            call_method("get_slot_for", G_SCALAR);
-            SPAGAIN;
-            slot = SvRV(POPs);
-            PUTBACK;
-            LEAVE;
-
-            hv_store_ent(slots, key, slot, 0);
-        }
-        else {
-            ENTER;
-            PUSHMARK(SP);
-            XPUSHs(attr);
-            XPUSHs(self);
-            XPUSHs(sv);
-            PUTBACK;
-            call_method("store_data_in_slot_for", G_VOID);
-            LEAVE;
-
-            return 0;
-        }
     }
-
-    sv_setsv(slot, sv);
 
     return 0;
 }
@@ -314,47 +324,6 @@ static void
 THX_set_err_magic(pTHX_ SV *var, SV *name)
 {
     sv_magicext(var, name, PERL_MAGIC_ext, &err_vtbl, "err", 0);
-}
-
-/* }}} */
-/* stash magic {{{ */
-
-static MGVTBL meta_vtbl;
-
-#define get_meta(name) THX_get_meta(aTHX_ name)
-static SV *
-THX_get_meta(pTHX_ SV *name)
-{
-    MAGIC *mg = NULL;
-    HV *stash;
-
-    stash = gv_stashsv(name, 0);
-
-    if (stash) {
-        mg = mg_findext((SV *)stash, PERL_MAGIC_ext, &meta_vtbl);
-    }
-
-    return mg ? mg->mg_obj : &PL_sv_undef;
-}
-
-#define set_meta(name, meta) THX_set_meta(aTHX_ name, meta)
-static void
-THX_set_meta(pTHX_ SV *name, SV *meta)
-{
-    HV *stash;
-
-    stash = gv_stashsv(name, GV_ADD);
-    sv_magicext((SV *)stash, meta, PERL_MAGIC_ext, &meta_vtbl, "meta", 0);
-}
-
-#define unset_meta(name) THX_unset_meta(aTHX_ name)
-static void
-THX_unset_meta(pTHX_ SV *name)
-{
-    HV *stash;
-
-    stash = gv_stashsv(name, GV_ADD);
-    sv_unmagicext((SV *)stash, PERL_MAGIC_ext, &meta_vtbl);
 }
 
 /* }}} */
