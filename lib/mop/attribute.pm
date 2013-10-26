@@ -104,7 +104,7 @@ sub fetch_data_in_slot_for {
     my ($self, $instance) = @_;
     $self->fire('before:FETCH_DATA', $instance);
     my $val = ${ $self->get_slot_for($instance) };
-    $self->fire('after:FETCH_DATA', $instance);
+    $self->fire('after:FETCH_DATA', $instance, \$val);
     return $val;
 }
 
