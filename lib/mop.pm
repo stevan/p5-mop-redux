@@ -333,7 +333,7 @@ intent to try and get this into the core of Perl 5. This is being
 released to CPAN so that the community at large can test it out
 and provide feedback.
 
-It can B<not> be overstated that this is a 0.01 prototype, which
+It can B<not> be overstated that this is an early prototype, which
 means that nothing here is final and everything could change.
 That said we are quite happy with the current state and after
 several months of working with it, feel that it is solid enough
