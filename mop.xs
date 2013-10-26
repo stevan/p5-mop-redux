@@ -12,7 +12,38 @@ static MGVTBL subname_vtbl;
 /* }}} */
 /* attribute magic {{{ */
 
-static MGVTBL slot_vtbl;
+static MGVTBL slot_vtbl, attr_generation_vtbl;
+
+#define get_attr_generation(meta) THX_get_attr_generation(aTHX_ meta)
+static U16
+THX_get_attr_generation(pTHX_ SV *meta)
+{
+    MAGIC *mg;
+
+    mg = mg_findext(SvRV(meta), PERL_MAGIC_ext, &attr_generation_vtbl);
+    if (mg) {
+        return mg->mg_private;
+    }
+    else {
+        return 0;
+    }
+}
+
+#define incr_attr_generation(meta) THX_incr_attr_generation(aTHX_ meta)
+static void
+THX_incr_attr_generation(pTHX_ SV *meta)
+{
+    MAGIC *mg;
+
+    mg = mg_findext(SvRV(meta), PERL_MAGIC_ext, &attr_generation_vtbl);
+    if (!mg) {
+        mg = sv_magicext(SvRV(meta), &PL_sv_undef, PERL_MAGIC_ext,
+                         &attr_generation_vtbl, "attribute generation", 0);
+        mg->mg_private = 0;
+    }
+
+    mg->mg_private++;
+}
 
 #define slot_is_cacheable(attr) THX_slot_is_cacheable(aTHX_ attr)
 static bool
@@ -43,19 +74,29 @@ mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
     MAGIC *slot_mg;
     HV *slots;
     HE *slot_ent;
+    U16 generation;
 
     name = *av_fetch((AV *)mg->mg_obj, 0, 0);
     meta = *av_fetch((AV *)mg->mg_obj, 1, 0);
     self = *av_fetch((AV *)mg->mg_obj, 2, 0);
 
+    generation = get_attr_generation(meta);
+
     slot_mg = mg_findext(SvRV(self), PERL_MAGIC_ext, &slot_vtbl);
+    if (slot_mg && slot_mg->mg_private != generation) {
+        sv_unmagicext(SvRV(self), PERL_MAGIC_ext, &slot_vtbl);
+        slot_mg = NULL;
+    }
 
     if (slot_mg) {
         slots = (HV *)slot_mg->mg_obj;
     }
     else {
         slots = newHV();
-        sv_magicext(SvRV(self), (SV *)slots, PERL_MAGIC_ext, &slot_vtbl, "slot", 0);
+        slot_mg = sv_magicext(SvRV(self), (SV *)slots, PERL_MAGIC_ext,
+                              &slot_vtbl, "slot", 0);
+        slot_mg->mg_private = generation;
+
     }
 
     /* can we get the metaclass name instead without requiring a method call? */
@@ -1732,6 +1773,10 @@ set_meta (package, meta)
 void
 unset_meta (package)
     SV *package
+
+void
+incr_attr_generation(meta)
+    SV *meta
 
 # }}}
 # xsubs: mop::internals::syntax {{{
