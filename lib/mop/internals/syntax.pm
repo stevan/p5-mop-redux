@@ -111,7 +111,19 @@ sub add_attribute {
 {
     package
         B::Deparse;
-    sub pp_init_attr { "INIT_ATTR " . maybe_targmy(@_, \&unop) }
+    sub pp_init_attr {
+        # XXX not sure why this doesn't work
+        # "(init_attr " . maybe_targmy(@_, \&listop) . ")";
+        my $self = shift;
+        my ($op) = @_;
+        my $targ = $self->padname($op->targ);
+        return "(init_attr " . $targ . ": "
+            . join(', ', map { $self->deparse($_) }
+                             $op->first,
+                             $op->first->sibling,
+                             $op->first->sibling->sibling)
+            . ")";
+    }
     sub pp_intro_invocant { "(intro invocant)" }
 }
 

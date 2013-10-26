@@ -1247,11 +1247,12 @@ static OP *
 pp_init_attr(pTHX)
 {
     dSP; dTARGET;
-    AV *args = (AV *)SvRV(POPs);
-    SV *attr_name = *av_fetch(args, 0, 0);
-    SV *meta_class_name = *av_fetch(args, 1, 0);
-    SV *invocant = *av_fetch(args, 2, 0);
-    SV *meta_class = get_meta(meta_class_name);
+    SV *attr_name, *meta_class_name, *invocant, *meta_class;
+
+    invocant        = POPs;
+    meta_class_name = POPs;
+    attr_name       = POPs;
+    meta_class      = get_meta(meta_class_name);
 
     if (sv_isobject(invocant))
         set_attr_magic(TARG, attr_name, meta_class, invocant);
@@ -1266,22 +1267,26 @@ pp_init_attr(pTHX)
 static OP *
 THX_gen_init_attr_op(pTHX_ SV *attr_name, SV *meta_name)
 {
-    OP *fetchinvocantop, *initopargs;
-    UNOP *initop;
+    LISTOP *initop;
+    OP *fetchinvocantop;
 
-    initopargs = newSVOP(OP_CONST, 0, SvREFCNT_inc(attr_name));
-    initopargs = op_append_elem(OP_LIST, initopargs,
-                                newSVOP(OP_CONST, 0, newSVsv(meta_name)));
-    fetchinvocantop = newOP(OP_PADSV, 0);
-    fetchinvocantop->op_targ = pad_findmy_pvs("(invocant)", 0);
-    initopargs = op_append_elem(OP_LIST, initopargs, fetchinvocantop);
-    NewOp(1101, initop, 1, UNOP);
+    NewOp(1101, initop, 1, LISTOP);
     initop->op_type = OP_CUSTOM;
     initop->op_ppaddr = pp_init_attr;
-    initop->op_flags = OPf_KIDS;
-    initop->op_private = 1;
     initop->op_targ = pad_findmy_sv(attr_name, 0);
-    initop->op_first = newANONLIST(initopargs);
+
+    op_append_elem(OP_CUSTOM,
+        (OP *)initop,
+        newSVOP(OP_CONST, 0, SvREFCNT_inc(attr_name))
+    );
+    op_append_elem(OP_CUSTOM,
+        (OP *)initop,
+        newSVOP(OP_CONST, 0, SvREFCNT_inc(meta_name))
+    );
+
+    fetchinvocantop = newOP(OP_PADSV, 0);
+    fetchinvocantop->op_targ = pad_findmy_pvs("(invocant)", 0);
+    op_append_elem(OP_CUSTOM, (OP *)initop, fetchinvocantop);
 
     return (OP *)initop;
 }
@@ -1890,7 +1895,7 @@ BOOT:
 
     XopENTRY_set(&init_attr_xop, xop_name, "init_attr");
     XopENTRY_set(&init_attr_xop, xop_desc, "attribute initialization");
-    XopENTRY_set(&init_attr_xop, xop_class, OA_UNOP);
+    XopENTRY_set(&init_attr_xop, xop_class, OA_LISTOP);
     Perl_custom_op_register(aTHX_ pp_init_attr, &init_attr_xop);
 
     XopENTRY_set(&intro_invocant_xop, xop_name, "intro_invocant");
