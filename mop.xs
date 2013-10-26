@@ -1300,7 +1300,7 @@ THX_parse_method(pTHX)
     struct mop_signature_var *invocant;
     struct mop_trait **traits;
     OP *body, *body_ref;
-    OP *introinvocantop, *invocantop, *unpackargsop = NULL, *attrop = NULL;
+    OP *introinvocantop, *invocantop, *unpackargsop, *attrop = NULL;
     U8 errors;
 
     lex_read_space(0);
@@ -1376,12 +1376,14 @@ THX_parse_method(pTHX)
     Safefree(invocant);
 
     /* have to do this before the parse_block call */
-    attrop = newSTATEOP(0, NULL, attrop);
+    if (attrop)
+        attrop = newSTATEOP(0, NULL, attrop);
+    unpackargsop = newSTATEOP(0, NULL, unpackargsop);
 
     body = parse_block(0);
-    body = op_prepend_elem(OP_LINESEQ, attrop, body);
-    if (unpackargsop)
-        body = op_prepend_elem(OP_LINESEQ, newSTATEOP(0, NULL, unpackargsop), body);
+    if (attrop)
+        body = op_prepend_elem(OP_LINESEQ, attrop, body);
+    body = op_prepend_elem(OP_LINESEQ, unpackargsop, body);
 
     body_ref = newANONSUB(blk_floor, NULL, body);
 
