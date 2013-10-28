@@ -1487,6 +1487,7 @@ THX_parse_namespace(pTHX_ bool is_class, SV **pkgp)
     const char *caller, *err = NULL;
     STRLEN versionlen, callerlen;
     OP *body, *body_ref;
+    U8 errors;
 
     lex_read_space(0);
 
@@ -1577,11 +1578,17 @@ THX_parse_namespace(pTHX_ bool is_class, SV **pkgp)
     meta_gv = gv_fetchpvs("mop::internals::syntax::CURRENT_META", 0, SVt_NULL);
     save_scalar(meta_gv);
     sv_setsv(GvSV(meta_gv), meta);
+
+    errors = PL_parser->error_count;
+
     floor = start_subparse(0, 0);
 
     body = parse_block(0);
 
     body_ref = newANONSUB(floor, NULL, body);
+
+    if (PL_parser->error_count > errors)
+        syntax_error(&PL_sv_undef);
 
     return gen_traits_ops(op_append_elem(OP_LIST,
                                          newSVOP(OP_CONST, 0, meta),

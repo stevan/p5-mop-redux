@@ -27,4 +27,11 @@ eval '
 ';
 like($@, qr/^method must be called from within a class or role block/, '\'method...\' outside of Class has a good error');
 
+eval '
+class Baz {
+    method {}
+}
+';
+like($@, qr/^{} is not a valid method name/, "syntax errors in class blocks are propagated properly");
+
 done_testing;
