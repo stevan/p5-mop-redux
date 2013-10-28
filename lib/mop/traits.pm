@@ -306,8 +306,8 @@ This will throw an exception if it is applied to attributes or methods.
 
 When applied to a class this will use the specified C<$ref_type>
 as the underlying instance type for all instances of the class.
-Currently supported reference types as SCALAR, ARRAY, HASH and
-GLOB, and must be passed as those literal string. If a CODE
+Currently supported reference types are SCALAR, ARRAY, HASH and
+GLOB, and must be passed as a string literal. If a CODE
 reference is passed, it will be directly used by the mop to
 generate new instances.
 
