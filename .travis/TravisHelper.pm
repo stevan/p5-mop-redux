@@ -31,6 +31,7 @@ my @repos = (
     [ 'dams/Action-Retry',                  'experimental/p5-mop' ],
     [ 'stevan/react',                       'master'              ],
     [ 'zakame/hashids.pm',                  'p5-mop'              ],
+    [ 'PWBENNETT/Net-IPAddress-Util',       'master'              ],
 );
 my @dirs = ($mop_repo, (map { $_->[0] } @repos));
 
