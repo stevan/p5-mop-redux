@@ -319,6 +319,11 @@ version 0.03
         }
     }
 
+    my $p = Point3D->new(x => 4, y => 2, z => 8);
+
+    # "x: 4, y: 2, z: 8"
+    printf("x: %d, y: %d, z: %d\n", $p->x, $p->y, $p->z);
+
 =head1 STATEMENT OF INTENT
 
 This is a prototype for a new object system for Perl 5, it is our
