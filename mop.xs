@@ -1070,6 +1070,9 @@ THX_parse_has(pTHX)
     OP *default_value = NULL, *ret;
     struct mop_trait **traits;
 
+    if (!SvOK(get_sv("mop::internals::syntax::CURRENT_META", 0)))
+        syntax_error(sv_2mortal(newSVpvs("has must be called from within a class or role block")));
+
     lex_read_space(0);
 
     if (lex_peek_unichar(0) != '$')
@@ -1308,6 +1311,9 @@ THX_parse_method(pTHX)
     struct mop_trait **traits;
     OP *body, *body_ref, *invocantvarop, *invocantop;
     U8 errors;
+
+    if (!SvOK(get_sv("mop::internals::syntax::CURRENT_META", 0)))
+        syntax_error(sv_2mortal(newSVpvs("method must be called from within a class or role block")));
 
     lex_read_space(0);
     name = parse_name("method", sizeof("method") - 1, 0);
