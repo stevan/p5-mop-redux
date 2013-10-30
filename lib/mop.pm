@@ -157,7 +157,7 @@ sub dump_object {
                 } else {
                     return $data;
                 }
-            }->( $attr->fetch_data_in_slot_for( $obj ) );
+            }->(${ $attr->get_slot_for($obj) });
         }
     }
 
