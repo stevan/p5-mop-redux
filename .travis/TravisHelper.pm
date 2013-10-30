@@ -26,7 +26,7 @@ my @repos = (
     [ 'stevan/http-headers-actionpack',     'p5-mop'              ],
     [ 'stevan/BreadBoard',                  'p5-mop'              ],
     [ 'iinteractive/promises-perl',         'p5-mop'              ],
-    [ 'perigrin/http-thin-useragent',       'p5-mop-redux'        ],
+    # [ 'perigrin/http-thin-useragent',       'p5-mop-redux'        ],
     [ 'doy/reply',                          'p5-mop'              ],
     [ 'dams/Action-Retry',                  'experimental/p5-mop' ],
     [ 'stevan/react',                       'master'              ],
