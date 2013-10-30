@@ -79,8 +79,8 @@ sub installdeps {
     each_dir {
         my $failed = 0;
         if (-e 'dist.ini' && !/Plack/) {
-            $failed ||= _cpanm(qw(cpanm -q --notest Dist::Zilla)) ||
-            $failed ||= _cpanm("dzil authordeps --missing | cpanm -q --notest") ||
+            $failed ||= _cpanm(qw(cpanm -q --notest Dist::Zilla));
+            $failed ||= _cpanm("dzil authordeps --missing | cpanm -q --notest");
             $failed ||= _cpanm("dzil listdeps --author --missing | grep -v 'find abstract in' | grep -v '^mop\$' | cpanm -q --notest");
         }
         elsif (-e 'Makefile.PL' || -e 'Build.PL') {
