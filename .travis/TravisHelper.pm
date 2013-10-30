@@ -91,7 +91,7 @@ sub installdeps {
             warn "Continuing, but this probably won't work";
             return 0;
         }
-    }
+    };
 
     # make sure blib is set up for subsequent tests
     chdir $mop_dir;
