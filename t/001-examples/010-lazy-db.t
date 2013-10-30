@@ -44,10 +44,7 @@ class MyObjectDB {
         if (defined $data->{class}) {
             my $class = mop::meta($data->{class});
 
-            # XXX need to provide a way to create a plain, empty instance
-            $obj = $class->create_fresh_instance_structure;
-            bless $obj, $data->{class};
-            mop::internals::util::register_object($obj);
+            $obj = $class->new_fresh_instance;
 
             for my $attr (keys %{ $data->{instance} }) {
                 my ($type, $value) = @{ $data->{instance}{$attr} };

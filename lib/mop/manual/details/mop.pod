@@ -148,7 +148,7 @@ of the MOP written using the MOP itself.
         method clone_instance { ... }
 
         method set_instance_generator ($generator) { ... }
-        method create_fresh_instance_structure { ... }
+        method new_fresh_instance { ... }
     }
 
 =head2 BOOTSTRAPPING GOALS

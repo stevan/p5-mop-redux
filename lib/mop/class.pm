@@ -59,7 +59,12 @@ sub BUILD {
     }
 }
 
-sub create_fresh_instance_structure { (shift)->instance_generator->() }
+sub new_fresh_instance {
+    my $self = shift;
+    my $instance = bless $self->instance_generator->(), $self->name;
+    mop::internals::util::register_object($instance);
+    return $instance;
+}
 
 sub new_instance {
     my $self = shift;
@@ -68,8 +73,7 @@ sub new_instance {
     die 'Cannot instantiate abstract class (' . $self->name . ')'
         if $self->is_abstract;
 
-    my $instance = bless $self->create_fresh_instance_structure, $self->name;
-    mop::internals::util::register_object($instance);
+    my $instance = $self->new_fresh_instance;
 
     my %attributes = map {
         if (my $m = mop::meta($_)) {
@@ -149,9 +153,9 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method( mop::method->new( name => 'is_abstract',         body => \&is_abstract         ) );
     $METACLASS->add_method( mop::method->new( name => 'make_class_abstract', body => \&make_class_abstract ) );
 
-    $METACLASS->add_method( mop::method->new( name => 'instance_generator',              body => \&instance_generator              ) );
-    $METACLASS->add_method( mop::method->new( name => 'set_instance_generator',          body => \&set_instance_generator          ) );
-    $METACLASS->add_method( mop::method->new( name => 'create_fresh_instance_structure', body => \&create_fresh_instance_structure ) );
+    $METACLASS->add_method( mop::method->new( name => 'instance_generator',     body => \&instance_generator     ) );
+    $METACLASS->add_method( mop::method->new( name => 'set_instance_generator', body => \&set_instance_generator ) );
+    $METACLASS->add_method( mop::method->new( name => 'new_fresh_instance',     body => \&new_fresh_instance     ) );
 
     $METACLASS->add_method( mop::method->new( name => 'new_instance',   body => \&new_instance   ) );
     $METACLASS->add_method( mop::method->new( name => 'clone_instance', body => \&clone_instance ) );
@@ -189,7 +193,7 @@ TODO
 
 =item C<set_instance_generator($generator)>
 
-=item C<create_fresh_instance_structure>
+=item C<new_fresh_instance>
 
 =item C<new_instance(%args)>
 
