@@ -76,27 +76,29 @@ sub clone_repos {
 }
 
 sub installdeps {
-    # make sure blib is set up for subsequent tests
-    my $failed = _system("perl Makefile.PL && make");
-
-    $failed ||= each_dir {
+    each_dir {
+        my $failed = 0;
         if (-e 'dist.ini' && !/Plack/) {
-            _cpanm(qw(cpanm -q --notest Dist::Zilla)) ||
-            _cpanm("dzil authordeps --missing | cpanm -q --notest") ||
-            _cpanm("dzil listdeps --author --missing | grep -v 'find abstract in' | grep -v '^mop\$' | cpanm -q --notest");
+            $failed ||= _cpanm(qw(cpanm -q --notest Dist::Zilla)) ||
+            $failed ||= _cpanm("dzil authordeps --missing | cpanm -q --notest") ||
+            $failed ||= _cpanm("dzil listdeps --author --missing | grep -v 'find abstract in' | grep -v '^mop\$' | cpanm -q --notest");
         }
         elsif (-e 'Makefile.PL' || -e 'Build.PL') {
-            _cpanm(qw(cpanm --installdeps -q --notest --with-develop .));
+            $failed ||= _cpanm(qw(cpanm --installdeps -q --notest --with-develop .));
         }
         else {
             warn "Don't know how to install deps";
             warn "Cannot find any of Build.PL, Makefile.PL, or dist.ini";
             warn "Continuing, but this probably won't work";
-            return 0;
         }
-    };
 
-    $failed;
+        # make sure blib is set up for subsequent tests
+        if ($_ eq $mop_repo) {
+            $failed ||= _system("perl Makefile.PL && make");
+        }
+
+        return $failed;
+    };
 }
 
 sub test {
