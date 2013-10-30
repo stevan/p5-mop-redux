@@ -31,7 +31,7 @@ my @repos = (
     [ 'dams/Action-Retry',                  'experimental/p5-mop' ],
     [ 'stevan/react',                       'master'              ],
     [ 'zakame/hashids.pm',                  'p5-mop'              ],
-    # [ 'PWBENNETT/Net-IPAddress-Util',       'master'              ],
+    [ 'PWBENNETT/Net-IPAddress-Util',       'master'              ],
 );
 my @dirs = ($mop_repo, (map { $_->[0] } @repos));
 
@@ -76,7 +76,7 @@ sub clone_repos {
 }
 
 sub installdeps {
-    each_dir {
+    my $failed = each_dir {
         if (-e 'dist.ini' && !/Plack/) {
             _cpanm(qw(cpanm -q --notest Dist::Zilla)) ||
             _cpanm("dzil authordeps --missing | cpanm -q --notest") ||
@@ -92,6 +92,12 @@ sub installdeps {
             return 0;
         }
     }
+
+    # make sure blib is set up for subsequent tests
+    chdir $mop_dir;
+    $failed ||= _system("perl Makefile.PL && make");
+
+    $failed;
 }
 
 sub test {
@@ -120,11 +126,6 @@ sub test {
 
         if (-e 'xt' && !-e 'dist.ini') {
             $failed ||= _system("prove -lr xt");
-        }
-
-        # make sure blib is set up for subsequent tests
-        if ($_ eq $mop_repo) {
-            $failed ||= _system("perl Makefile.PL && make");
         }
 
         return $failed;
