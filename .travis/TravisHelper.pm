@@ -76,7 +76,10 @@ sub clone_repos {
 }
 
 sub installdeps {
-    my $failed = each_dir {
+    # make sure blib is set up for subsequent tests
+    my $failed = _system("perl Makefile.PL && make");
+
+    $failed ||= each_dir {
         if (-e 'dist.ini' && !/Plack/) {
             _cpanm(qw(cpanm -q --notest Dist::Zilla)) ||
             _cpanm("dzil authordeps --missing | cpanm -q --notest") ||
@@ -92,10 +95,6 @@ sub installdeps {
             return 0;
         }
     };
-
-    # make sure blib is set up for subsequent tests
-    chdir $mop_dir;
-    $failed ||= _system("perl Makefile.PL && make");
 
     $failed;
 }
