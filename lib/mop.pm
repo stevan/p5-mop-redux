@@ -80,6 +80,31 @@ sub apply_metaclass {
     return;
 }
 
+sub apply_metarole {
+    my ($instance, $new_metarole) = @_;
+
+    my $meta      = mop::meta($instance);
+    my $meta_name = Scalar::Util::blessed($meta);
+    my $role_name = Scalar::Util::blessed($new_metarole) // $new_metarole;
+    my $metarole  = mop::meta($role_name);
+
+    die "Could not find metaclass for role: $_"
+        unless $metarole;
+
+    my $new_meta_name = "mop::metarole::${meta_name}::${role_name}";
+    my $new_meta;
+    if (!($new_meta = mop::meta($new_meta_name))) {
+        $new_meta = $meta_name->new(
+            name       => $new_meta_name,
+            superclass => $meta->name,
+            roles      => [$metarole],
+        );
+        $new_meta->FINALIZE;
+    }
+
+    apply_metaclass($instance, $new_meta->name);
+}
+
 sub rebless {
     my ($object, $into) = @_;
 

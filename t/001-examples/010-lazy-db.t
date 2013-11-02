@@ -16,7 +16,7 @@ class MyObjectDB::Thunk {
     }
 }
 
-class MyObjectDB::Lazy extends mop::attribute {
+role MyObjectDB::Lazy {
     method get_slot_for ($obj) {
         my $slot = $self->next::method($obj);
         if (ref($$slot) eq 'MyObjectDB::Thunk') {
@@ -28,7 +28,7 @@ class MyObjectDB::Lazy extends mop::attribute {
 
 sub db_lazy {
     my ($attr) = @_;
-    mop::apply_metaclass($attr, 'MyObjectDB::Lazy');
+    mop::apply_metarole($attr, 'MyObjectDB::Lazy');
 }
 
 # handling cyclic graphs is left as an exercise for the reader
@@ -97,7 +97,7 @@ class MyObjectDB {
                         if (ref($val)) {
                             my $id = mop::id($val) // 0+$val;
                             $self->insert($id, $val);
-                            if (grep { $_->{trait} == \&db_lazy } mop::traits::util::applied_traits($attr)) {
+                            if ($attr->does('MyObjectDB::Lazy')) {
                                 ($attr->name => [ 'thunk' => $id ])
                             }
                             else {
