@@ -12,6 +12,8 @@ install:
 script:
     - perl -I .travis -MTravisHelper -E'exit test'
 after_success:
+    - perl Makefile.PL
+    - make
     - cover -test
     - cover -report coveralls
 notifications:
