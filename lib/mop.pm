@@ -517,6 +517,13 @@ Given an instance and a class name, this will perform all
 the necessary metaclass compatibility checks and then
 rebless the instance accordingly.
 
+=head2 apply_metarole($obj, $metarole_name_or_instance)
+
+Given an instance and a role name, this creates a new
+metaclass which extends C<$obj>'s metaclass and does the
+given role, and then calls C<apply_metaclass> on C<$obj> and
+the new class.
+
 =head2 rebless($obj, $class_name)
 
 Given an instance and a class name, this will handle
