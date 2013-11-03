@@ -587,7 +587,33 @@ THX_read_tokenish(pTHX)
     return ret;
 }
 
+/* if we're currently parsing a string (for instance, if we're reading a
+ * variable name that's being interpolated), we can't read the next chunk at
+ * all, because it'll read the next real chunk into the sublex buffer */
+#define lex_peek_unichar_safe(no_read) THX_lex_peek_unichar_safe(aTHX_ no_read)
+static I32
+THX_lex_peek_unichar_safe(pTHX_ bool no_read)
+{
+    return (no_read && (PL_parser->bufptr == PL_parser->bufend))
+        ? -1
+        : lex_peek_unichar(LEX_KEEP_PREVIOUS);
+}
+
+#define lex_read_unichar_safe(no_read) THX_lex_read_unichar_safe(aTHX_ no_read)
+static I32
+THX_lex_read_unichar_safe(pTHX_ bool no_read)
+{
+    if (no_read && (PL_parser->bufptr == PL_parser->bufend)) {
+        return -1;
+    }
+    else {
+        lex_read_unichar(LEX_KEEP_PREVIOUS);
+        return lex_peek_unichar_safe(no_read);
+    }
+}
+
 #define PARSE_NAME_ALLOW_PACKAGE 1
+#define PARSE_NAME_NO_READ 2
 #define parse_name_prefix(prefix, prefixlen, what, whatlen, flags) THX_parse_name_prefix(aTHX_ prefix, prefixlen, what, whatlen, flags)
 static SV *
 THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
@@ -595,23 +621,22 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
 {
     STRLEN len = 0;
     SV *sv;
-    bool in_fqname = FALSE;
+    bool in_fqname = FALSE, no_read = flags & PARSE_NAME_NO_READ;
 
-    if (flags & ~PARSE_NAME_ALLOW_PACKAGE)
+    if (flags & ~(PARSE_NAME_ALLOW_PACKAGE | PARSE_NAME_NO_READ))
         croak("unknown flags");
 
     for (;;) {
         UV c;
 
         /* XXX why does lex_peek_unichar return an I32? */
-        c = (UV)lex_peek_unichar(LEX_KEEP_PREVIOUS);
+        c = (UV)lex_peek_unichar_safe(no_read);
 
         if (lex_bufutf8()) {
             if (in_fqname ? isIDCONT_uni(c) : isIDFIRST_uni(c)) {
                 do {
                     len += OFFUNISKIP(c);
-                    lex_read_unichar(LEX_KEEP_PREVIOUS);
-                    c = (UV)lex_peek_unichar(LEX_KEEP_PREVIOUS);
+                    c = (UV)lex_read_unichar_safe(no_read);
                 } while (isIDCONT_uni(c));
             }
         }
@@ -619,8 +644,7 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
             if (in_fqname ? isIDCONT_A((U8)c) : isIDFIRST_A((U8)c)) {
                 do {
                     ++len;
-                    lex_read_unichar(LEX_KEEP_PREVIOUS);
-                    c = (UV)lex_peek_unichar(LEX_KEEP_PREVIOUS);
+                    c = (UV)lex_read_unichar_safe(no_read);
                 } while (isIDCONT_A((U8)c));
             }
         }
@@ -628,12 +652,10 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
         if ((flags & PARSE_NAME_ALLOW_PACKAGE) && c == ':') {
             in_fqname = TRUE;
             ++len;
-            lex_read_unichar(LEX_KEEP_PREVIOUS);
-            c = (UV)lex_peek_unichar(LEX_KEEP_PREVIOUS);
+            c = (UV)lex_read_unichar_safe(no_read);
             if (c == ':') {
                 ++len;
-                lex_read_unichar(LEX_KEEP_PREVIOUS);
-                c = (UV)lex_peek_unichar(LEX_KEEP_PREVIOUS);
+                c = (UV)lex_read_unichar_safe(no_read);
             }
             else {
                 SV *buf;
@@ -827,40 +849,6 @@ THX_intro_twigil_var(pTHX_ SV *namesv)
     return o;
 }
 
-#define parse_ident(prefix, prefixlen) THX_parse_ident(aTHX_ prefix, prefixlen)
-static SV *
-THX_parse_ident(pTHX_ const char *prefix, STRLEN prefixlen)
-{
-    STRLEN idlen;
-    char *start, *s;
-    char c;
-    SV *sv;
-
-    start = s = PL_parser->bufptr;
-    if (start > SvPVX(PL_parser->linestr) && isSPACE(*(start - 1)))
-        return NULL;
-
-    c = *s;
-    if (!isIDFIRST(c))
-        return NULL;
-
-    do {
-        c = *++s;
-    } while (isALNUM(c));
-
-    lex_read_to(s);
-
-    idlen = s - start;
-    sv = sv_2mortal(newSV(prefixlen + idlen));
-    Copy(prefix, SvPVX(sv), prefixlen, char);
-    Copy(start, SvPVX(sv) + prefixlen, idlen, char);
-    SvPVX(sv)[prefixlen + idlen] = 0;
-    SvCUR_set(sv, prefixlen + idlen);
-    SvPOK_on(sv);
-
-    return sv;
-}
-
 #define twigil_enabled() THX_twigil_enabled(aTHX)
 static bool
 THX_twigil_enabled(pTHX)
@@ -896,7 +884,7 @@ myck_rv2sv_twigils(pTHX_ OP *o)
 
     prefix[0] = '$';
     prefix[1] = *SvPVX(sv);
-    name = parse_ident(prefix, 2);
+    name = parse_name_prefix(prefix, 2, "attribute", sizeof("attribute"), PARSE_NAME_NO_READ);
     if (!name)
         return old_rv2sv_checker(aTHX_ o);
 
