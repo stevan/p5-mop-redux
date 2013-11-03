@@ -875,7 +875,7 @@ myck_rv2sv_twigils(pTHX_ OP *o)
     OP *kid, *ret;
     SV *sv, *name;
     PADOFFSET offset;
-    char prefix[2];
+    char prefix[2], *next;
 
     if (!(o->op_flags & OPf_KIDS))
         return old_rv2sv_checker(aTHX_ o);
@@ -899,6 +899,16 @@ myck_rv2sv_twigils(pTHX_ OP *o)
     name = parse_ident(prefix, 2);
     if (!name)
         return old_rv2sv_checker(aTHX_ o);
+
+    /* this is gross, but this is how perl's yylex handles this too. it checks
+     * intuit_more before doing it, but intuit_more is static, so we can't. */
+    next = PL_parser->bufptr;
+    while (next != PL_parser->bufend && isSPACE(*next))
+        ++next;
+    if (*next == '[')
+        SvPVX(name)[0] = '@';
+    if (*next == '{')
+        SvPVX(name)[0] = '%';
 
     offset = pad_findmy_sv(name, 0);
     if (offset == NOT_IN_PAD)
