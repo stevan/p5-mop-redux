@@ -801,24 +801,11 @@ THX_syntax_error(pTHX_ SV *err)
     croak_sv(err);
 }
 
-#define current_meta_name() THX_current_meta_name(aTHX)
+#define current_meta() THX_current_meta(aTHX)
 static SV *
-THX_current_meta_name(pTHX)
+THX_current_meta(pTHX)
 {
-    dSP;
-    SV *ret;
-
-    ENTER;
-    PUSHMARK(SP);
-    XPUSHs(get_sv("mop::internals::syntax::CURRENT_META", 0));
-    PUTBACK;
-    call_method("name", G_SCALAR);
-    SPAGAIN;
-    ret = SvREFCNT_inc(POPs);
-    PUTBACK;
-    LEAVE;
-
-    return ret;
+    return get_sv("mop::internals::syntax::CURRENT_META", 0);
 }
 
 #define current_attributes() THX_current_attributes(aTHX)
@@ -831,7 +818,7 @@ THX_current_attributes(pTHX)
 
     ENTER;
     PUSHMARK(SP);
-    XPUSHs(get_sv("mop::internals::syntax::CURRENT_META", 0));
+    XPUSHs(current_meta());
     PUTBACK;
     nret = call_method("attributes", G_ARRAY);
     SPAGAIN;
@@ -916,7 +903,7 @@ THX_isa(pTHX_ SV *sv, const char *name)
 /* }}} */
 /* invocant and attribute custom ops {{{ */
 
-static XOP intro_invocant_xop;
+static XOP intro_invocant_xop, attrsv_xop;
 
 static OP *
 pp_intro_invocant(pTHX)
@@ -929,17 +916,59 @@ pp_intro_invocant(pTHX)
     return NORMAL;
 }
 
+static OP *
+pp_attrsv(pTHX)
+{
+    dSP;
+    SV *meta, *name, *self, *slot, *attr;
+
+    meta = PAD_SV(pad_findmy_pv("(meta)", 0));
+    name = POPs;
+    self = PAD_SV(pad_findmy_pv("(invocant)", 0));
+
+    slot = get_slot_for(meta, name, self, &attr);
+
+    if (!slot)
+        croak("attributes with hooks nyi");
+
+    PUSHs(slot);
+
+    RETURN;
+}
+
 #define gen_intro_invocant_op() THX_gen_intro_invocant_op(aTHX)
 static OP *
 THX_gen_intro_invocant_op(pTHX)
 {
     OP *o;
+    PADOFFSET off;
 
     o = newOP(OP_CUSTOM, 0);
     o->op_ppaddr = pp_intro_invocant;
     o->op_targ = pad_add_name_pvs("(invocant)", 0, NULL, NULL);
 
+    off = pad_add_name_pvs("(meta)", 0, NULL, NULL);
+    PAD_SETSV(off, current_meta()); /* ??? */
+
     return o;
+}
+
+#define gen_attrsv_op(name) THX_gen_attrsv_op(aTHX_ name)
+static OP *
+THX_gen_attrsv_op(pTHX_ SV *name)
+{
+    UNOP *o;
+
+    NewOp(1101, o, 1, UNOP);
+    o->op_type    = OP_VEC; /* op_lvalue dies on OP_CUSTOM */
+    o->op_ppaddr  = pp_attrsv;
+    o->op_flags   = OPf_KIDS;
+    o->op_private = 1;
+    o->op_targ    = pad_findmy_pvs("(meta)", 0);
+
+    o->op_first = newSVOP(OP_CONST, 0, SvREFCNT_inc(name));
+
+    return (OP *)o;
 }
 
 /* }}} */
@@ -948,15 +977,6 @@ THX_gen_intro_invocant_op(pTHX)
 static Perl_check_t old_rv2sv_checker;
 static SV *twigils_hint_key_sv;
 static U32 twigils_hint_key_hash;
-
-#define intro_twigil_var(namesv) THX_intro_twigil_var(aTHX_ namesv)
-static OP *
-THX_intro_twigil_var(pTHX_ SV *namesv)
-{
-    OP *o = newOP(OP_PADSV, (OPpLVAL_INTRO << 8) | OPf_MOD);
-    o->op_targ = pad_add_name_sv(namesv, 0, NULL, NULL);
-    return o;
-}
 
 #define twigil_enabled() THX_twigil_enabled(aTHX)
 static bool
@@ -969,10 +989,11 @@ THX_twigil_enabled(pTHX)
 static OP *
 myck_rv2sv_twigils(pTHX_ OP *o)
 {
-    OP *kid, *ret;
+    OP *kid;
     SV *sv, *name;
-    PADOFFSET offset;
     char prefix[2], *next;
+    AV *attrs;
+    I32 attr_len, i;
 
     if (!(o->op_flags & OPf_KIDS))
         return old_rv2sv_checker(aTHX_ o);
@@ -997,6 +1018,8 @@ myck_rv2sv_twigils(pTHX_ OP *o)
     if (!name)
         return old_rv2sv_checker(aTHX_ o);
 
+    op_free(o);
+
     /* this is gross, but this is how perl's yylex handles this too. it checks
      * intuit_more before doing it, but intuit_more is static, so we can't. */
     next = PL_parser->bufptr;
@@ -1007,15 +1030,16 @@ myck_rv2sv_twigils(pTHX_ OP *o)
     if (*next == '{')
         SvPVX(name)[0] = '%';
 
-    offset = pad_findmy_sv(name, 0);
-    if (offset == NOT_IN_PAD)
-        croak("No such twigil variable %"SVf, SVfARG(name));
+    attrs = current_attributes();
+    attr_len = av_len(attrs);
+    for (i = 0; i <= attr_len; ++i) {
+        SV *attr_name = *av_fetch(attrs, i, 0);
+        if (!sv_cmp(name, attr_name)) {
+            return gen_attrsv_op(name);
+        }
+    }
 
-    ret = newOP(OP_PADSV, 0);
-    ret->op_targ = offset;
-
-    op_free(o);
-    return ret;
+    croak("No such twigil variable %"SVf, SVfARG(name));
 }
 
 /* }}} */
@@ -1178,7 +1202,7 @@ THX_parse_has(pTHX)
     OP *default_value = NULL, *ret;
     struct mop_trait **traits;
 
-    if (!SvOK(get_sv("mop::internals::syntax::CURRENT_META", 0)))
+    if (!SvOK(current_meta()))
         syntax_error(sv_2mortal(newSVpvs("has must be called from within a class or role block")));
 
     lex_read_space(0);
@@ -1237,8 +1261,6 @@ struct mop_signature_var {
     SV *name;
     OP *default_value;
 };
-
-static XOP init_attr_xop;
 
 #define parse_signature(method_name, invocantp, varsp) THX_parse_signature(aTHX_ method_name, invocantp, varsp)
 static UV
@@ -1357,62 +1379,12 @@ THX_gen_default_op(pTHX_ PADOFFSET padoff, UV argsoff, OP *o)
     return newCONDOP(0, cmpop, newASSIGNOP(0, padop, 0, o), NULL);
 }
 
-static OP *
-pp_init_attr(pTHX)
-{
-    dSP; dTARGET;
-    SV *attr_name, *meta_class_name, *invocant, *meta_class;
-
-    invocant        = POPs;
-    meta_class_name = POPs;
-    attr_name       = POPs;
-    meta_class      = get_meta(meta_class_name);
-
-    if (sv_isobject(invocant))
-        set_attr_magic(TARG, attr_name, meta_class, invocant);
-    else
-        set_err_magic(TARG, attr_name);
-
-    RETURN;
-}
-
-#define gen_init_attr_op(attr_name, meta_name) \
-    THX_gen_init_attr_op(aTHX_ attr_name, meta_name)
-static OP *
-THX_gen_init_attr_op(pTHX_ SV *attr_name, SV *meta_name)
-{
-    LISTOP *initop;
-    OP *fetchinvocantop;
-
-    NewOp(1101, initop, 1, LISTOP);
-    initop->op_type = OP_CUSTOM;
-    initop->op_ppaddr = pp_init_attr;
-    initop->op_targ = pad_findmy_sv(attr_name, 0);
-
-    op_append_elem(OP_CUSTOM,
-        (OP *)initop,
-        newSVOP(OP_CONST, 0, SvREFCNT_inc(attr_name))
-    );
-    op_append_elem(OP_CUSTOM,
-        (OP *)initop,
-        newSVOP(OP_CONST, 0, SvREFCNT_inc(meta_name))
-    );
-
-    fetchinvocantop = newOP(OP_PADSV, 0);
-    fetchinvocantop->op_targ = pad_findmy_pvs("(invocant)", 0);
-    op_append_elem(OP_CUSTOM, (OP *)initop, fetchinvocantop);
-
-    return (OP *)initop;
-}
-
 #define parse_method() THX_parse_method(aTHX)
 static OP *
 THX_parse_method(pTHX)
 {
-    SV *name, *meta_name;
-    AV *attrs;
+    SV *name;
     UV numvars, numtraits, i;
-    I32 j, attr_len;
     int blk_floor;
     struct mop_signature_var **vars;
     struct mop_signature_var *invocant;
@@ -1420,7 +1392,7 @@ THX_parse_method(pTHX)
     OP *body, *body_ref, *invocantvarop, *invocantop;
     U8 errors;
 
-    if (!SvOK(get_sv("mop::internals::syntax::CURRENT_META", 0)))
+    if (!SvOK(current_meta()))
         syntax_error(sv_2mortal(newSVpvs("method must be called from within a class or role block")));
 
     lex_read_space(0);
@@ -1494,22 +1466,6 @@ THX_parse_method(pTHX)
         }
     }
     Safefree(vars);
-
-    meta_name = current_meta_name();
-    attrs = current_attributes();
-    attr_len = av_len(attrs);
-    for (j = 0; j <= attr_len; j++) {
-        SV *attr_name = *av_fetch(attrs, j, 0);
-
-        body = op_append_list(OP_LINESEQ,
-            body,
-            newSTATEOP(0, NULL, intro_twigil_var(attr_name))
-        );
-        body = op_append_list(OP_LINESEQ,
-            body,
-            gen_init_attr_op(attr_name, meta_name)
-        );
-    }
 
     body = op_append_list(OP_LINESEQ, body, parse_block(0));
 
@@ -1984,15 +1940,15 @@ BOOT:
 
     wrap_op_checker(OP_RV2SV, myck_rv2sv_twigils, &old_rv2sv_checker);
 
-    XopENTRY_set(&init_attr_xop, xop_name, "init_attr");
-    XopENTRY_set(&init_attr_xop, xop_desc, "attribute initialization");
-    XopENTRY_set(&init_attr_xop, xop_class, OA_LISTOP);
-    Perl_custom_op_register(aTHX_ pp_init_attr, &init_attr_xop);
-
     XopENTRY_set(&intro_invocant_xop, xop_name, "intro_invocant");
     XopENTRY_set(&intro_invocant_xop, xop_desc, "invocant introduction");
     XopENTRY_set(&intro_invocant_xop, xop_class, OA_BASEOP);
     Perl_custom_op_register(aTHX_ pp_intro_invocant, &intro_invocant_xop);
+
+    XopENTRY_set(&attrsv_xop, xop_name, "attrsv");
+    XopENTRY_set(&attrsv_xop, xop_desc, "scalar attribute");
+    XopENTRY_set(&attrsv_xop, xop_class, OA_UNOP);
+    Perl_custom_op_register(aTHX_ pp_attrsv, &attrsv_xop);
 }
 
 # }}}
