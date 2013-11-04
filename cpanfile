@@ -16,6 +16,7 @@ on 'test' => sub {
   requires "FindBin" => "0";
   requires "IO::Handle" => "0";
   requires "IPC::Open3" => "0";
+  requires "JSON::PP" => "0";
   requires "Test::More" => "0.88";
   requires "if" => "0";
   requires "lib" => "0";
@@ -38,4 +39,6 @@ on 'develop' => sub {
   requires "Test::NoTabs" => "0";
   requires "Test::Pod" => "1.41";
   requires "Test::Pod::Coverage" => "1.08";
+  requires "Type::Tiny" => "0";
+  requires "autovivification" => "0";
 };

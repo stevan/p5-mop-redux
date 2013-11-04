@@ -41,6 +41,7 @@ my %WriteMakefileArgs = (
     "FindBin" => 0,
     "IO::Handle" => 0,
     "IPC::Open3" => 0,
+    "JSON::PP" => 0,
     "Test::More" => "0.88",
     "if" => 0,
     "lib" => 0
@@ -93,7 +94,9 @@ if ($ENV{RELEASE_TESTING}) {
     "Test::More" => 0,
     "Test::NoTabs" => 0,
     "Test::Pod" => "1.41",
-    "Test::Pod::Coverage" => "1.08"
+    "Test::Pod::Coverage" => "1.08",
+    "Type::Tiny" => 0,
+    "autovivification" => 0
   );
 
   $WriteMakefileArgs{BUILD_REQUIRES} = {
