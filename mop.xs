@@ -1941,40 +1941,6 @@ MODULE = mop  PACKAGE = mop::internals::syntax
 
 PROTOTYPES: DISABLE
 
-SV *
-parse_name (what, flags=0)
-    const char *what
-    U32 flags
-  C_ARGS:
-    what, SvCUR(ST(0)), flags
-  POSTCALL:
-    SvREFCNT_inc(RETVAL); /* parse_name mortalises, which is what we want when
-                             we start using it from C code */
-
-SV *
-read_tokenish ()
-  POSTCALL:
-    SvREFCNT_inc(RETVAL); /* As above. */
-
-SV *
-parse_modifier_with_single_value (modifier)
-    char *modifier
-  C_ARGS:
-    modifier, SvCUR(ST(0))
-  POSTCALL:
-    SvREFCNT_inc(RETVAL); /* As above. */
-
-void
-parse_modifier_with_multiple_values (modifier)
-    char *modifier
-  PREINIT:
-    AV *names;
-    I32 i;
-  PPCODE:
-    names = parse_modifier_with_multiple_values(modifier, SvCUR(ST(0)));
-    for (i = 0; i <= av_len(names); i++)
-        PUSHs(*av_fetch(names, i, 0));
-
 BOOT:
 {
     CV *class, *role, *has, *method;
