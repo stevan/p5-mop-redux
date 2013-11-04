@@ -590,7 +590,7 @@ inline bool is_uni_idcont(pTHX_ UV c) {
 #endif
 #ifndef isIDCONT_A
 /* not ideal, but it's just for backcompat anyway */
-#define isIDCONT_A(uv) isIDCONT_uni(uv)
+#define isIDCONT_A(uv) ((uv) < 128 && isIDCONT_uni(uv))
 #endif
 
 #define lex_peek_sv(len) THX_lex_peek_sv(aTHX_ len)
