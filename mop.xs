@@ -903,17 +903,23 @@ THX_isa(pTHX_ SV *sv, const char *name)
 /* }}} */
 /* invocant and attribute custom ops {{{ */
 
-static XOP intro_invocant_xop, attrsv_xop;
+static XOP intro_invocant_xop, attrsv_xop, invocant_xop;
+
+static SV *PL_invocant, *PL_current_meta;
 
 static OP *
 pp_intro_invocant(pTHX)
 {
-    SV *invocant;
+    dSP;
 
-    invocant = av_shift(GvAV(PL_defgv));
-    PAD_SETSV(PL_op->op_targ, invocant);
+    SAVEGENERICSV(PL_invocant);
+    SAVEGENERICSV(PL_current_meta);
+    PL_invocant = av_shift(GvAV(PL_defgv));
+    PL_current_meta = POPs;
+    assert(sv_isobject(PL_current_meta));
+    assert(!SvROK(PL_invocant) || sv_isobject(PL_invocant));
 
-    return NORMAL;
+    RETURN;
 }
 
 static OP *
@@ -922,16 +928,34 @@ pp_attrsv(pTHX)
     dSP;
     SV *meta, *name, *self, *slot, *attr;
 
-    meta = PAD_SV(pad_findmy_pv("(meta)", 0));
+    meta = PL_current_meta;
     name = POPs;
-    self = PAD_SV(pad_findmy_pv("(invocant)", 0));
+    self = PL_invocant;
 
+    assert(sv_isobject(meta));
+    assert(name && SvPOK(name));
+    assert(!SvROK(self) || sv_isobject(self));
+
+    PUTBACK;
     slot = get_slot_for(meta, name, self, &attr);
 
     if (!slot)
         croak("attributes with hooks nyi");
 
+    SPAGAIN;
     PUSHs(slot);
+
+    RETURN;
+}
+
+static OP *
+pp_invocant(pTHX)
+{
+    dSP;
+
+    assert(!SvROK(PL_invocant) || sv_isobject(PL_invocant));
+
+    XPUSHs(PL_invocant);
 
     RETURN;
 }
@@ -940,17 +964,20 @@ pp_attrsv(pTHX)
 static OP *
 THX_gen_intro_invocant_op(pTHX)
 {
-    OP *o;
-    PADOFFSET off;
+    UNOP *o;
+    SV *meta;
 
-    o = newOP(OP_CUSTOM, 0);
-    o->op_ppaddr = pp_intro_invocant;
-    o->op_targ = pad_add_name_pvs("(invocant)", 0, NULL, NULL);
+    NewOp(1101, o, 1, UNOP);
+    o->op_type    = OP_CUSTOM;
+    o->op_ppaddr  = pp_intro_invocant;
+    o->op_flags   = OPf_KIDS;
+    o->op_private = 1;
 
-    off = pad_add_name_pvs("(meta)", 0, NULL, NULL);
-    PAD_SETSV(off, current_meta()); /* ??? */
+    meta = current_meta();
+    assert(sv_isobject(meta));
+    o->op_first = newSVOP(OP_CONST, 0, SvREFCNT_inc(meta));
 
-    return o;
+    return (OP *)o;
 }
 
 #define gen_attrsv_op(name) THX_gen_attrsv_op(aTHX_ name)
@@ -959,16 +986,29 @@ THX_gen_attrsv_op(pTHX_ SV *name)
 {
     UNOP *o;
 
+    assert(name && SvPOK(name));
+
     NewOp(1101, o, 1, UNOP);
     o->op_type    = OP_VEC; /* op_lvalue dies on OP_CUSTOM */
     o->op_ppaddr  = pp_attrsv;
     o->op_flags   = OPf_KIDS;
     o->op_private = 1;
-    o->op_targ    = pad_findmy_pvs("(meta)", 0);
 
     o->op_first = newSVOP(OP_CONST, 0, SvREFCNT_inc(name));
 
     return (OP *)o;
+}
+
+#define gen_invocant_op() THX_gen_invocant_op(aTHX)
+static OP *
+THX_gen_invocant_op(pTHX)
+{
+    OP *o;
+
+    o = newOP(OP_CUSTOM, 0);
+    o->op_ppaddr = pp_invocant;
+
+    return o;
 }
 
 /* }}} */
@@ -1426,8 +1466,7 @@ THX_parse_method(pTHX)
     invocantvarop->op_targ = pad_add_name_sv(invocant->name, 0, NULL, NULL);
     Safefree(invocant);
 
-    invocantop = newOP(OP_PADSV, 0);
-    invocantop->op_targ = body->op_targ;
+    invocantop = gen_invocant_op();
 
     body = op_append_list(OP_LINESEQ,
         body,
@@ -1949,6 +1988,11 @@ BOOT:
     XopENTRY_set(&attrsv_xop, xop_desc, "scalar attribute");
     XopENTRY_set(&attrsv_xop, xop_class, OA_UNOP);
     Perl_custom_op_register(aTHX_ pp_attrsv, &attrsv_xop);
+
+    XopENTRY_set(&invocant_xop, xop_name, "invocant");
+    XopENTRY_set(&invocant_xop, xop_desc, "invocant");
+    XopENTRY_set(&invocant_xop, xop_class, OA_BASEOP);
+    Perl_custom_op_register(aTHX_ pp_invocant, &invocant_xop);
 }
 
 # }}}
