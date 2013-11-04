@@ -20,6 +20,9 @@ THX_set_meta_magic(pTHX_ SV *meta, SV *name)
 {
     MAGIC *mg;
 
+    assert(sv_isobject(meta));
+    assert(name && SvPOK(name));
+
     mg = mg_findext(SvRV(meta), PERL_MAGIC_ext, &meta_vtbl);
     if (mg) {
         assert(!sv_cmp(name, mg->mg_obj));
@@ -35,6 +38,8 @@ THX_get_meta_name(pTHX_ SV *meta)
 {
     MAGIC *mg;
 
+    assert(sv_isobject(meta));
+
     mg = mg_findext(SvRV(meta), PERL_MAGIC_ext, &meta_vtbl);
     assert(mg);
 
@@ -47,6 +52,8 @@ THX_get_attr_generation(pTHX_ SV *meta)
 {
     MAGIC *mg;
 
+    assert(sv_isobject(meta));
+
     mg = mg_findext(SvRV(meta), PERL_MAGIC_ext, &meta_vtbl);
     assert(mg);
 
@@ -58,6 +65,8 @@ static void
 THX_incr_attr_generation(pTHX_ SV *meta)
 {
     MAGIC *mg;
+
+    assert(sv_isobject(meta));
 
     mg = mg_findext(SvRV(meta), PERL_MAGIC_ext, &meta_vtbl);
     assert(mg);
@@ -77,6 +86,8 @@ THX_get_meta(pTHX_ SV *name)
     MAGIC *mg = NULL;
     HV *stash;
 
+    assert(name && SvPOK(name));
+
     stash = gv_stashsv(name, 0);
 
     if (stash) {
@@ -92,7 +103,11 @@ THX_set_meta(pTHX_ SV *name, SV *meta)
 {
     HV *stash;
 
+    assert(name && SvPOK(name));
+    assert(sv_isobject(meta));
+
     stash = gv_stashsv(name, GV_ADD);
+    assert(stash);
     sv_magicext((SV *)stash, meta, PERL_MAGIC_ext, &meta_vtbl, "meta", 0);
 }
 
@@ -102,7 +117,10 @@ THX_unset_meta(pTHX_ SV *name)
 {
     HV *stash;
 
+    assert(name && SvPOK(name));
+
     stash = gv_stashsv(name, GV_ADD);
+    assert(stash);
     sv_unmagicext((SV *)stash, PERL_MAGIC_ext, &meta_vtbl);
 }
 
@@ -117,13 +135,17 @@ THX_slot_is_cacheable(pTHX_ SV *attr)
 {
     dSP;
     SV *ret;
+    I32 nret;
+
+    assert(sv_isobject(attr));
 
     ENTER;
 
     PUSHMARK(SP);
     XPUSHs(attr);
     PUTBACK;
-    call_method("has_events", G_SCALAR);
+    nret = call_method("has_events", G_SCALAR);
+    assert(nret == 1);
     SPAGAIN;
     ret = POPs;
     PUTBACK;
@@ -143,6 +165,12 @@ THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
     SV *key, *attr;
     HV *slots;
     HE *slot_ent;
+    I32 nret;
+
+    assert(sv_isobject(meta));
+    assert(attr_name && SvPOK(attr_name));
+    assert(sv_isobject(self));
+    assert(attrp);
 
     generation = get_attr_generation(meta);
 
@@ -154,6 +182,7 @@ THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
 
     if (mg) {
         slots = (HV *)mg->mg_obj;
+        assert(slots);
     }
     else {
         slots = newHV();
@@ -177,29 +206,33 @@ THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
         XPUSHs(meta);
         XPUSHs(attr_name);
         PUTBACK;
-        call_method("get_attribute", G_SCALAR);
+        nret = call_method("get_attribute", G_SCALAR);
+        assert(nret == 1);
         SPAGAIN;
         attr = POPs;
+        assert(sv_isobject(attr));
         PUTBACK;
         LEAVE;
 
-        if (attrp)
-            *attrp = attr;
+        *attrp = attr;
 
         if (slot_is_cacheable(attr)) {
-            SV *slot;
+            SV *slot, *slotp;
 
             ENTER;
             PUSHMARK(SP);
             XPUSHs(attr);
             XPUSHs(self);
             PUTBACK;
-            call_method("get_slot_for", G_SCALAR);
+            nret = call_method("get_slot_for", G_SCALAR);
+            assert(nret == 1);
             SPAGAIN;
-            slot = SvRV(POPs);
+            slotp = POPs;
+            assert(SvROK(slotp));
             PUTBACK;
             LEAVE;
 
+            slot = SvRV(slotp);
             hv_store_ent(slots, key, slot, 0);
 
             return slot;
@@ -213,22 +246,39 @@ THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
 static int
 mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
 {
+    SV **namep, **metap, **selfp;
     SV *name, *meta, *self, *slot, *attr;
 
-    name = *av_fetch((AV *)mg->mg_obj, 0, 0);
-    meta = *av_fetch((AV *)mg->mg_obj, 1, 0);
-    self = *av_fetch((AV *)mg->mg_obj, 2, 0);
+    assert(SvTYPE(mg->mg_obj) == SVt_PVAV);
+
+    namep = av_fetch((AV *)mg->mg_obj, 0, 0);
+    metap = av_fetch((AV *)mg->mg_obj, 1, 0);
+    selfp = av_fetch((AV *)mg->mg_obj, 2, 0);
+
+    assert(namep);
+    assert(metap);
+    assert(selfp);
+
+    name = *namep;
+    meta = *metap;
+    self = *selfp;
+
+    assert(name && SvPOK(name));
+    assert(sv_isobject(meta));
+    assert(sv_isobject(self));
 
     slot = get_slot_for(meta, name, self, &attr);
     if (!slot) {
         dSP;
+        I32 nret;
 
         ENTER;
         PUSHMARK(SP);
         XPUSHs(attr);
         XPUSHs(self);
         PUTBACK;
-        call_method("fetch_data_in_slot_for", G_SCALAR);
+        nret = call_method("fetch_data_in_slot_for", G_SCALAR);
+        assert(nret == 1);
         SPAGAIN;
         slot = POPs;
         PUTBACK;
@@ -243,11 +293,26 @@ mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
 static int
 mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
 {
+    SV **namep, **metap, **selfp;
     SV *name, *meta, *self, *slot, *attr;
 
-    name = *av_fetch((AV *)mg->mg_obj, 0, 0);
-    meta = *av_fetch((AV *)mg->mg_obj, 1, 0);
-    self = *av_fetch((AV *)mg->mg_obj, 2, 0);
+    assert(SvTYPE(mg->mg_obj) == SVt_PVAV);
+
+    namep = av_fetch((AV *)mg->mg_obj, 0, 0);
+    metap = av_fetch((AV *)mg->mg_obj, 1, 0);
+    selfp = av_fetch((AV *)mg->mg_obj, 2, 0);
+
+    assert(namep);
+    assert(metap);
+    assert(selfp);
+
+    name = *namep;
+    meta = *metap;
+    self = *selfp;
+
+    assert(name && SvPOK(name));
+    assert(sv_isobject(meta));
+    assert(sv_isobject(self));
 
     slot = get_slot_for(meta, name, self, &attr);
     if (slot) {
@@ -255,6 +320,7 @@ mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
     }
     else {
         dSP;
+        I32 nret;
 
         ENTER;
         PUSHMARK(SP);
@@ -262,7 +328,8 @@ mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
         XPUSHs(self);
         XPUSHs(sv);
         PUTBACK;
-        call_method("store_data_in_slot_for", G_VOID);
+        nret = call_method("store_data_in_slot_for", G_VOID);
+        assert(nret == 0);
         LEAVE;
     }
 
@@ -273,6 +340,9 @@ static int
 mg_err_get(pTHX_ SV *sv, MAGIC *mg)
 {
     PERL_UNUSED_ARG(sv);
+
+    assert(mg->mg_obj && SvPOK(mg->mg_obj));
+
     croak("Cannot access the attribute:(%"SVf") in a method "
           "without a blessed invocant", SVfARG(mg->mg_obj));
 }
@@ -281,6 +351,9 @@ static int
 mg_err_set(pTHX_ SV *sv, MAGIC *mg)
 {
     PERL_UNUSED_ARG(sv);
+
+    assert(mg->mg_obj && SvPOK(mg->mg_obj));
+
     croak("Cannot assign to the attribute:(%"SVf") in a method "
           "without a blessed invocant", SVfARG(mg->mg_obj));
 }
@@ -337,6 +410,8 @@ STRLEN
 THX_peek_version(pTHX_ const char *s, const char **errstr)
 {
     const char *d = s;
+
+    assert(s);
 
     if (*d == 'v') { /* explicit v-string */
         d++;
@@ -457,6 +532,9 @@ parse_version(const char *buf, STRLEN len)
 {
     dSP;
     SV *v;
+    I32 nret;
+
+    assert(buf);
 
     ENTER;
 
@@ -464,9 +542,11 @@ parse_version(const char *buf, STRLEN len)
     XPUSHs(sv_2mortal(newSVpvs("version")));
     XPUSHs(sv_2mortal(newSVpvn(buf, len)));
     PUTBACK;
-    call_method("parse", G_SCALAR);
+    nret = call_method("parse", G_SCALAR);
+    assert(nret == 1);
     SPAGAIN;
     v = POPs;
+    assert(sv_isobject(v));
     PUTBACK;
 
     LEAVE;
@@ -623,8 +703,8 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
     SV *sv;
     bool in_fqname = FALSE, no_read = flags & PARSE_NAME_NO_READ;
 
-    if (flags & ~(PARSE_NAME_ALLOW_PACKAGE | PARSE_NAME_NO_READ))
-        croak("unknown flags");
+    assert(what);
+    assert(!(flags & ~(PARSE_NAME_ALLOW_PACKAGE | PARSE_NAME_NO_READ)));
 
     for (;;) {
         UV c;
@@ -699,6 +779,8 @@ THX_parse_name(pTHX_ const char *what, STRLEN whatlen, U32 flags)
 static void
 THX_syntax_error(pTHX_ SV *err)
 {
+    assert(err);
+
     if (!SvOK(err))
         err = ERRSV;
 
@@ -744,7 +826,8 @@ THX_current_attributes(pTHX)
     ret = newAV();
     av_extend(ret, nret);
     for (i = 0; i < nret; ++i) {
-        SV *attr;
+        SV *attr, *attr_name;
+        I32 name_nret;
 
         attr = POPs;
         PUTBACK;
@@ -752,9 +835,12 @@ THX_current_attributes(pTHX)
         PUSHMARK(SP);
         XPUSHs(attr);
         PUTBACK;
-        call_method("name", G_SCALAR);
+        name_nret = call_method("name", G_SCALAR);
+        assert(name_nret == 1);
         SPAGAIN;
-        av_push(ret, POPs);
+        attr_name = POPs;
+        assert(attr_name && SvPOK(attr_name));
+        av_push(ret, attr_name);
         PUTBACK;
     }
     LEAVE;
@@ -768,10 +854,16 @@ THX_load_classes(pTHX_ AV *classes)
 {
     int i;
 
+    assert(SvTYPE((SV*)classes) == SVt_PVAV);
+
     for (i = 0; i <= av_len(classes); ++i) {
+        SV **namep;
         SV *name;
 
-        name = *av_fetch(classes, i, FALSE);
+        namep = av_fetch(classes, i, FALSE);
+        assert(namep);
+        name = *namep;
+        assert(name && SvPOK(name));
 
         if (SvOK(get_meta(name)))
             continue;
@@ -787,6 +879,10 @@ THX_isa(pTHX_ SV *sv, const char *name)
 {
     dSP;
     SV *ret;
+    I32 nret;
+
+    assert(!SvROK(sv) || sv_isobject(sv));
+    assert(name);
 
     ENTER;
 
@@ -794,7 +890,8 @@ THX_isa(pTHX_ SV *sv, const char *name)
     XPUSHs(sv);
     XPUSHs(sv_2mortal(newSVpv(name, 0)));
     PUTBACK;
-    call_method("isa", G_SCALAR);
+    nret = call_method("isa", G_SCALAR);
+    assert(nret == 1);
     SPAGAIN;
     ret = POPs;
     PUTBACK;
