@@ -1399,7 +1399,7 @@ THX_parse_method(pTHX)
     SV *name, *meta_name;
     AV *attrs;
     UV numvars, numtraits, i;
-    IV j;
+    I32 j, attr_len;
     int blk_floor;
     struct mop_signature_var **vars;
     struct mop_signature_var *invocant;
@@ -1484,7 +1484,8 @@ THX_parse_method(pTHX)
 
     meta_name = current_meta_name();
     attrs = current_attributes();
-    for (j = 0; j <= av_len(attrs); j++) {
+    attr_len = av_len(attrs);
+    for (j = 0; j <= attr_len; j++) {
         SV *attr_name = *av_fetch(attrs, j, 0);
 
         body = op_append_list(OP_LINESEQ,
