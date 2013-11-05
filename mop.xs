@@ -693,7 +693,8 @@ THX_lex_read_unichar_safe(pTHX_ bool no_read)
 }
 
 #define PARSE_NAME_ALLOW_PACKAGE 1
-#define PARSE_NAME_NO_READ 2
+#define PARSE_NAME_NO_READ       2
+#define PARSE_NAME_NO_CROAK      4
 #define parse_name_prefix(prefix, prefixlen, what, whatlen, flags) THX_parse_name_prefix(aTHX_ prefix, prefixlen, what, whatlen, flags)
 static SV *
 THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
@@ -704,7 +705,7 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
     bool in_fqname = FALSE, no_read = flags & PARSE_NAME_NO_READ;
 
     assert(what);
-    assert(!(flags & ~(PARSE_NAME_ALLOW_PACKAGE | PARSE_NAME_NO_READ)));
+    assert(!(flags & ~(PARSE_NAME_ALLOW_PACKAGE | PARSE_NAME_NO_READ | PARSE_NAME_NO_CROAK)));
 
     for (;;) {
         UV c;
@@ -750,9 +751,14 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
             break;
     }
 
-    if (!len)
-        croak("%"SVf" is not a valid %.*s name",
-              SVfARG(read_tokenish()), whatlen, what);
+    if (!len) {
+        if (flags & PARSE_NAME_NO_CROAK)
+            return NULL;
+        else
+            croak("%"SVf" is not a valid %.*s name",
+                  SVfARG(read_tokenish()), whatlen, what);
+    }
+
     sv = sv_2mortal(newSV(prefixlen + len));
     Copy(prefix, SvPVX(sv), prefixlen, char);
     Copy(PL_parser->bufptr - len, SvPVX(sv) + prefixlen, len, char);
@@ -981,7 +987,7 @@ myck_rv2sv_twigils(pTHX_ OP *o)
 
     prefix[0] = '$';
     prefix[1] = *SvPVX(sv);
-    name = parse_name_prefix(prefix, 2, "attribute", sizeof("attribute"), PARSE_NAME_NO_READ);
+    name = parse_name_prefix(prefix, 2, "attribute", sizeof("attribute"), PARSE_NAME_NO_READ | PARSE_NAME_NO_CROAK);
     if (!name)
         return old_rv2sv_checker(aTHX_ o);
 
