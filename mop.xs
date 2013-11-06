@@ -877,15 +877,9 @@ THX_isa(pTHX_ SV *sv, const char *name)
 /* }}} */
 /* invocant and attribute custom ops {{{ */
 
-static XOP intro_invocant_xop, attrsv_xop, invocant_xop;
+static XOP intro_invocant_xop, attrsv_xop;
 
-static SV *PL_invocant, *PL_current_meta;
-
-static void
-restore_invocant(pTHX_ const void *p)
-{
-    PL_invocant = (SV *)p;
-}
+static SV *PL_current_meta;
 
 static void
 restore_current_meta(pTHX_ const void *p)
@@ -897,13 +891,16 @@ static OP *
 pp_intro_invocant(pTHX)
 {
     dSP;
+    SV *invocant;
 
-    SAVEDESTRUCTOR_X(restore_invocant, PL_invocant);
     SAVEDESTRUCTOR_X(restore_current_meta, PL_current_meta);
-    PL_invocant = av_shift(GvAV(PL_defgv));
     PL_current_meta = POPs;
     assert(sv_isobject(PL_current_meta));
-    assert(!SvROK(PL_invocant) || sv_isobject(PL_invocant));
+    PUTBACK;
+
+    invocant = av_shift(GvAV(PL_defgv));
+    assert(!SvROK(invocant) || sv_isobject(invocant));
+    PAD_SETSV(PL_op->op_targ, invocant);
 
     RETURN;
 }
@@ -912,41 +909,31 @@ static OP *
 pp_attrsv(pTHX)
 {
     dSP;
-    SV *name, *slot;
+    SV *invocant, *name, *slot;
+
+    invocant = PAD_SV(PL_op->op_targ);
+    assert(!SvROK(invocant) || sv_isobject(invocant));
+
+    assert(sv_isobject(PL_current_meta));
 
     name = POPs;
+    assert(name && SvPOK(name));
 
     PUTBACK;
 
-    assert(sv_isobject(PL_current_meta));
-    assert(name && SvPOK(name));
-    assert(!SvROK(PL_invocant) || sv_isobject(PL_invocant));
-
-    if (!sv_isobject(PL_invocant))
+    if (!sv_isobject(invocant))
         croak("Cannot access the attribute:(%"SVf") in a method "
               "without a blessed invocant", SVfARG(name));
 
-    slot = get_slot_for(PL_current_meta, name, PL_invocant, NULL);
+    slot = get_slot_for(PL_current_meta, name, invocant, NULL);
 
     if (!slot) {
         slot = newSV(0);
-        set_attr_magic(slot, name, PL_current_meta, PL_invocant);
+        set_attr_magic(slot, name, PL_current_meta, invocant);
     }
 
     SPAGAIN;
     PUSHs(slot);
-
-    RETURN;
-}
-
-static OP *
-pp_invocant(pTHX)
-{
-    dSP;
-
-    assert(!SvROK(PL_invocant) || sv_isobject(PL_invocant));
-
-    XPUSHs(PL_invocant);
 
     RETURN;
 }
@@ -963,6 +950,7 @@ THX_gen_intro_invocant_op(pTHX)
     o->op_ppaddr  = pp_intro_invocant;
     o->op_flags   = OPf_KIDS;
     o->op_private = 1;
+    o->op_targ    = pad_add_name_pvs("(invocant)", 0, NULL, NULL);
 
     meta = current_meta();
     assert(sv_isobject(meta));
@@ -980,26 +968,15 @@ THX_gen_attrsv_op(pTHX_ SV *name)
     assert(name && SvPOK(name));
 
     NewOp(1101, o, 1, UNOP);
-    o->op_type    = OP_VEC; /* op_lvalue dies on OP_CUSTOM */
+    o->op_type    = OP_PADSV; /* op_lvalue dies on OP_CUSTOM */
     o->op_ppaddr  = pp_attrsv;
     o->op_flags   = OPf_KIDS;
     o->op_private = 1;
+    o->op_targ    = pad_findmy_pvs("(invocant)", 0);
 
     o->op_first = newSVOP(OP_CONST, 0, SvREFCNT_inc(name));
 
     return (OP *)o;
-}
-
-#define gen_invocant_op() THX_gen_invocant_op(aTHX)
-static OP *
-THX_gen_invocant_op(pTHX)
-{
-    OP *o;
-
-    o = newOP(OP_CUSTOM, 0);
-    o->op_ppaddr = pp_invocant;
-
-    return o;
 }
 
 /* }}} */
@@ -1457,7 +1434,8 @@ THX_parse_method(pTHX)
     invocantvarop->op_targ = pad_add_name_sv(invocant->name, 0, NULL, NULL);
     Safefree(invocant);
 
-    invocantop = gen_invocant_op();
+    invocantop = newOP(OP_PADSV, 0);
+    invocantop->op_targ = body->op_targ;
 
     body = op_append_list(OP_LINESEQ,
         body,
@@ -1979,11 +1957,6 @@ BOOT:
     XopENTRY_set(&attrsv_xop, xop_desc, "scalar attribute");
     XopENTRY_set(&attrsv_xop, xop_class, OA_UNOP);
     Perl_custom_op_register(aTHX_ pp_attrsv, &attrsv_xop);
-
-    XopENTRY_set(&invocant_xop, xop_name, "invocant");
-    XopENTRY_set(&invocant_xop, xop_desc, "invocant");
-    XopENTRY_set(&invocant_xop, xop_class, OA_BASEOP);
-    Perl_custom_op_register(aTHX_ pp_invocant, &invocant_xop);
 }
 
 # }}}
