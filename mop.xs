@@ -336,41 +336,9 @@ mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
     return 0;
 }
 
-static int
-mg_err_get(pTHX_ SV *sv, MAGIC *mg)
-{
-    PERL_UNUSED_ARG(sv);
-
-    assert(mg->mg_obj && SvPOK(mg->mg_obj));
-
-    croak("Cannot access the attribute:(%"SVf") in a method "
-          "without a blessed invocant", SVfARG(mg->mg_obj));
-}
-
-static int
-mg_err_set(pTHX_ SV *sv, MAGIC *mg)
-{
-    PERL_UNUSED_ARG(sv);
-
-    assert(mg->mg_obj && SvPOK(mg->mg_obj));
-
-    croak("Cannot assign to the attribute:(%"SVf") in a method "
-          "without a blessed invocant", SVfARG(mg->mg_obj));
-}
-
 static MGVTBL attr_vtbl = {
     mg_attr_get,                /* get */
     mg_attr_set,                /* set */
-    0,                          /* len */
-    0,                          /* clear */
-    0,                          /* free */
-    0,                          /* copy */
-    0,                          /* dup */
-    0,                          /* local */
-};
-static MGVTBL err_vtbl = {
-    mg_err_get,                 /* get */
-    mg_err_set,                 /* set */
     0,                          /* len */
     0,                          /* clear */
     0,                          /* free */
@@ -390,13 +358,6 @@ THX_set_attr_magic(pTHX_ SV *var, SV *name, SV *meta, SV *self)
     svs[2] = self;
     data = (AV *)sv_2mortal((SV *)av_make(3, svs));
     sv_magicext(var, (SV *)data, PERL_MAGIC_ext, &attr_vtbl, "attr", 0);
-}
-
-#define set_err_magic(var, name) THX_set_err_magic(aTHX_ var, name)
-static void
-THX_set_err_magic(pTHX_ SV *var, SV *name)
-{
-    sv_magicext(var, name, PERL_MAGIC_ext, &err_vtbl, "err", 0);
 }
 
 /* }}} */
@@ -949,6 +910,11 @@ pp_attrsv(pTHX)
     assert(!SvROK(self) || sv_isobject(self));
 
     PUTBACK;
+
+    if (!sv_isobject(self))
+        croak("Cannot access the attribute:(%"SVf") in a method "
+              "without a blessed invocant", SVfARG(name));
+
     slot = get_slot_for(meta, name, self, &attr);
 
     if (!slot)

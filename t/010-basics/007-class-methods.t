@@ -19,7 +19,7 @@ class Foo {
 eval { Foo->bar(10) };
 like(
     $@,
-    qr/^Cannot assign to the attribute\:\(\$!bar\) in a method without a blessed invocant/,
+    qr/^Cannot access the attribute\:\(\$!bar\) in a method without a blessed invocant/,
     '... got the error we expected'
 );
 
