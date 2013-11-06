@@ -313,7 +313,6 @@ THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
     assert(sv_isobject(meta));
     assert(attr_name && SvPOK(attr_name));
     assert(sv_isobject(self));
-    assert(attrp);
 
     generation = get_attr_generation(meta);
 
@@ -343,7 +342,8 @@ THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
     }
     else {
         attr = get_attribute(meta, attr_name);
-        *attrp = attr;
+        if (attrp)
+            *attrp = attr;
 
         if (slot_is_cacheable(attr)) {
             dSP;
@@ -912,27 +912,25 @@ static OP *
 pp_attrsv(pTHX)
 {
     dSP;
-    SV *meta, *name, *self, *slot, *attr;
+    SV *name, *slot;
 
-    meta = PL_current_meta;
     name = POPs;
-    self = PL_invocant;
-
-    assert(sv_isobject(meta));
-    assert(name && SvPOK(name));
-    assert(!SvROK(self) || sv_isobject(self));
 
     PUTBACK;
 
-    if (!sv_isobject(self))
+    assert(sv_isobject(PL_current_meta));
+    assert(name && SvPOK(name));
+    assert(!SvROK(PL_invocant) || sv_isobject(PL_invocant));
+
+    if (!sv_isobject(PL_invocant))
         croak("Cannot access the attribute:(%"SVf") in a method "
               "without a blessed invocant", SVfARG(name));
 
-    slot = get_slot_for(meta, name, self, &attr);
+    slot = get_slot_for(PL_current_meta, name, PL_invocant, NULL);
 
     if (!slot) {
         slot = newSV(0);
-        set_attr_magic(slot, name, meta, self);
+        set_attr_magic(slot, name, PL_current_meta, PL_invocant);
     }
 
     SPAGAIN;
