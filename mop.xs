@@ -907,13 +907,25 @@ static XOP intro_invocant_xop, attrsv_xop, invocant_xop;
 
 static SV *PL_invocant, *PL_current_meta;
 
+static void
+restore_invocant(pTHX_ const void *p)
+{
+    PL_invocant = (SV *)p;
+}
+
+static void
+restore_current_meta(pTHX_ const void *p)
+{
+    PL_current_meta = (SV *)p;
+}
+
 static OP *
 pp_intro_invocant(pTHX)
 {
     dSP;
 
-    SAVEGENERICSV(PL_invocant);
-    SAVEGENERICSV(PL_current_meta);
+    SAVEDESTRUCTOR_X(restore_invocant, PL_invocant);
+    SAVEDESTRUCTOR_X(restore_current_meta, PL_current_meta);
     PL_invocant = av_shift(GvAV(PL_defgv));
     PL_current_meta = POPs;
     assert(sv_isobject(PL_current_meta));
