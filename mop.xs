@@ -125,7 +125,150 @@ THX_unset_meta(pTHX_ SV *name)
 }
 
 /* }}} */
-/* attribute magic {{{ */
+/* attribute hook magic {{{ */
+
+#define get_attribute(meta, name) THX_get_attribute(aTHX_ meta, name)
+static SV *
+THX_get_attribute(pTHX_ SV *meta, SV *name)
+{
+    dSP;
+    I32 nret;
+    SV *attr;
+
+    ENTER;
+    PUSHMARK(SP);
+    XPUSHs(meta);
+    XPUSHs(name);
+    PUTBACK;
+    nret = call_method("get_attribute", G_SCALAR);
+    assert(nret == 1);
+    SPAGAIN;
+    attr = POPs;
+    assert(sv_isobject(attr));
+    PUTBACK;
+    LEAVE;
+
+    return attr;
+}
+
+static int
+mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
+{
+    SV **namep, **metap, **selfp;
+    SV *name, *meta, *self, *slot, *attr;
+
+    assert(SvTYPE(mg->mg_obj) == SVt_PVAV);
+
+    namep = av_fetch((AV *)mg->mg_obj, 0, 0);
+    metap = av_fetch((AV *)mg->mg_obj, 1, 0);
+    selfp = av_fetch((AV *)mg->mg_obj, 2, 0);
+
+    assert(namep);
+    assert(metap);
+    assert(selfp);
+
+    name = *namep;
+    meta = *metap;
+    self = *selfp;
+
+    assert(name && SvPOK(name));
+    assert(sv_isobject(meta));
+    assert(sv_isobject(self));
+
+    attr = get_attribute(meta, name);
+
+    {
+        dSP;
+        I32 nret;
+
+        ENTER;
+        PUSHMARK(SP);
+        XPUSHs(attr);
+        XPUSHs(self);
+        PUTBACK;
+        nret = call_method("fetch_data_in_slot_for", G_SCALAR);
+        assert(nret == 1);
+        SPAGAIN;
+        slot = POPs;
+        PUTBACK;
+        LEAVE;
+    }
+
+    sv_setsv(sv, slot);
+
+    return 0;
+}
+
+static int
+mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
+{
+    SV **namep, **metap, **selfp;
+    SV *name, *meta, *self, *attr;
+
+    assert(SvTYPE(mg->mg_obj) == SVt_PVAV);
+
+    namep = av_fetch((AV *)mg->mg_obj, 0, 0);
+    metap = av_fetch((AV *)mg->mg_obj, 1, 0);
+    selfp = av_fetch((AV *)mg->mg_obj, 2, 0);
+
+    assert(namep);
+    assert(metap);
+    assert(selfp);
+
+    name = *namep;
+    meta = *metap;
+    self = *selfp;
+
+    assert(name && SvPOK(name));
+    assert(sv_isobject(meta));
+    assert(sv_isobject(self));
+
+    attr = get_attribute(meta, name);
+
+    {
+        dSP;
+        I32 nret;
+
+        ENTER;
+        PUSHMARK(SP);
+        XPUSHs(attr);
+        XPUSHs(self);
+        XPUSHs(sv);
+        PUTBACK;
+        nret = call_method("store_data_in_slot_for", G_VOID);
+        assert(nret == 0);
+        LEAVE;
+    }
+
+    return 0;
+}
+
+static MGVTBL attr_vtbl = {
+    mg_attr_get,                /* get */
+    mg_attr_set,                /* set */
+    0,                          /* len */
+    0,                          /* clear */
+    0,                          /* free */
+    0,                          /* copy */
+    0,                          /* dup */
+    0,                          /* local */
+};
+
+#define set_attr_magic(var, name, meta, self) THX_set_attr_magic(aTHX_ var, name, meta, self)
+static void
+THX_set_attr_magic(pTHX_ SV *var, SV *name, SV *meta, SV *self)
+{
+    SV *svs[3];
+    AV *data;
+    svs[0] = name;
+    svs[1] = meta;
+    svs[2] = self;
+    data = (AV *)sv_2mortal((SV *)av_make(3, svs));
+    sv_magicext(var, (SV *)data, PERL_MAGIC_ext, &attr_vtbl, "attr", 0);
+}
+
+/* }}} */
+/* attribute slot magic {{{ */
 
 static MGVTBL slot_vtbl;
 
@@ -199,24 +342,11 @@ THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
         return HeVAL(slot_ent);
     }
     else {
-        dSP;
-
-        ENTER;
-        PUSHMARK(SP);
-        XPUSHs(meta);
-        XPUSHs(attr_name);
-        PUTBACK;
-        nret = call_method("get_attribute", G_SCALAR);
-        assert(nret == 1);
-        SPAGAIN;
-        attr = POPs;
-        assert(sv_isobject(attr));
-        PUTBACK;
-        LEAVE;
-
+        attr = get_attribute(meta, attr_name);
         *attrp = attr;
 
         if (slot_is_cacheable(attr)) {
+            dSP;
             SV *slot, *slotp;
 
             ENTER;
@@ -241,123 +371,6 @@ THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
             return NULL;
         }
     }
-}
-
-static int
-mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
-{
-    SV **namep, **metap, **selfp;
-    SV *name, *meta, *self, *slot, *attr;
-
-    assert(SvTYPE(mg->mg_obj) == SVt_PVAV);
-
-    namep = av_fetch((AV *)mg->mg_obj, 0, 0);
-    metap = av_fetch((AV *)mg->mg_obj, 1, 0);
-    selfp = av_fetch((AV *)mg->mg_obj, 2, 0);
-
-    assert(namep);
-    assert(metap);
-    assert(selfp);
-
-    name = *namep;
-    meta = *metap;
-    self = *selfp;
-
-    assert(name && SvPOK(name));
-    assert(sv_isobject(meta));
-    assert(sv_isobject(self));
-
-    slot = get_slot_for(meta, name, self, &attr);
-    if (!slot) {
-        dSP;
-        I32 nret;
-
-        ENTER;
-        PUSHMARK(SP);
-        XPUSHs(attr);
-        XPUSHs(self);
-        PUTBACK;
-        nret = call_method("fetch_data_in_slot_for", G_SCALAR);
-        assert(nret == 1);
-        SPAGAIN;
-        slot = POPs;
-        PUTBACK;
-        LEAVE;
-    }
-
-    sv_setsv(sv, slot);
-
-    return 0;
-}
-
-static int
-mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
-{
-    SV **namep, **metap, **selfp;
-    SV *name, *meta, *self, *slot, *attr;
-
-    assert(SvTYPE(mg->mg_obj) == SVt_PVAV);
-
-    namep = av_fetch((AV *)mg->mg_obj, 0, 0);
-    metap = av_fetch((AV *)mg->mg_obj, 1, 0);
-    selfp = av_fetch((AV *)mg->mg_obj, 2, 0);
-
-    assert(namep);
-    assert(metap);
-    assert(selfp);
-
-    name = *namep;
-    meta = *metap;
-    self = *selfp;
-
-    assert(name && SvPOK(name));
-    assert(sv_isobject(meta));
-    assert(sv_isobject(self));
-
-    slot = get_slot_for(meta, name, self, &attr);
-    if (slot) {
-        sv_setsv(slot, sv);
-    }
-    else {
-        dSP;
-        I32 nret;
-
-        ENTER;
-        PUSHMARK(SP);
-        XPUSHs(attr);
-        XPUSHs(self);
-        XPUSHs(sv);
-        PUTBACK;
-        nret = call_method("store_data_in_slot_for", G_VOID);
-        assert(nret == 0);
-        LEAVE;
-    }
-
-    return 0;
-}
-
-static MGVTBL attr_vtbl = {
-    mg_attr_get,                /* get */
-    mg_attr_set,                /* set */
-    0,                          /* len */
-    0,                          /* clear */
-    0,                          /* free */
-    0,                          /* copy */
-    0,                          /* dup */
-    0,                          /* local */
-};
-
-#define set_attr_magic(var, name, meta, self) THX_set_attr_magic(aTHX_ var, name, meta, self)
-static void
-THX_set_attr_magic(pTHX_ SV *var, SV *name, SV *meta, SV *self)
-{
-    SV *svs[3];
-    AV *data;
-    svs[0] = name;
-    svs[1] = meta;
-    svs[2] = self;
-    data = (AV *)sv_2mortal((SV *)av_make(3, svs));
-    sv_magicext(var, (SV *)data, PERL_MAGIC_ext, &attr_vtbl, "attr", 0);
 }
 
 /* }}} */
@@ -917,8 +930,10 @@ pp_attrsv(pTHX)
 
     slot = get_slot_for(meta, name, self, &attr);
 
-    if (!slot)
-        croak("attributes with hooks nyi");
+    if (!slot) {
+        slot = newSV(0);
+        set_attr_magic(slot, name, meta, self);
+    }
 
     SPAGAIN;
     PUSHs(slot);
