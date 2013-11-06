@@ -755,8 +755,8 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
         if (flags & PARSE_NAME_NO_CROAK)
             return NULL;
         else
-            croak("%"SVf" is not a valid %.*s name",
-                  SVfARG(read_tokenish()), whatlen, what);
+            croak("%.*s%"SVf" is not a valid %.*s name",
+                  prefixlen, prefix, SVfARG(read_tokenish()), whatlen, what);
     }
 
     sv = sv_2mortal(newSV(prefixlen + len));
