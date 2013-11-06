@@ -1104,6 +1104,7 @@ THX_parse_traits(pTHX_ UV *ntraitsp)
             trait->name = parse_name("trait", sizeof("trait") - 1,
                                      PARSE_NAME_ALLOW_PACKAGE);
 
+            lex_read_space(0);
             if (lex_peek_unichar(0) == '(') {
                 lex_read_unichar(0);
                 trait->params = newANONLIST(parse_fullexpr(0));
