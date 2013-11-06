@@ -79,6 +79,9 @@ sub new_instance {
         if (my $m = mop::meta($_)) {
             %{ $m->attribute_map }
         }
+        else {
+            ()
+        }
     } reverse @{ mro::get_linear_isa($self->name) };
 
     foreach my $attr (values %attributes) {
