@@ -286,6 +286,24 @@ class MyObjectDB::TraceLookups extends MyObjectDB {
         $db->lookups([]);
         my $foo = $db->lookup('eager_foo');
         is_deeply($db->lookups, ['eager_foo', $eager_baz_id, $eager_baz_hash_id]);
+        my $dump = mop::dump_object($foo);
+        my $baz = delete $dump->{'$!baz'}{__SELF__};
+        isa_ok($baz, 'Baz');
+        is(delete $dump->{'$!baz'}{__ID__}, mop::id($baz));
+        is_deeply(
+            $dump,
+            {
+                __CLASS__    => 'Foo',
+                __ID__       => mop::id($foo),
+                __SELF__     => $foo,
+                '$!bar' => undef,
+                '$!baz' => {
+                    __CLASS__ => 'Baz',
+                    '$!hash' => { i => 3 },
+                },
+            }
+        );
+        is_deeply($db->lookups, ['eager_foo', $eager_baz_id, $eager_baz_hash_id]);
     }
 
     {
