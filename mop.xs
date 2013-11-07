@@ -655,11 +655,8 @@ THX_read_tokenish(pTHX)
     SvCUR_set(ret, 0);
     SvPOK_on(ret);
 
-    if (strchr("$@%!:", lex_peek_unichar(LEX_KEEP_PREVIOUS)) != NULL)
-        sv_catpvf(ret, "%c", lex_read_unichar(LEX_KEEP_PREVIOUS));
-
     c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
-    while (c != -1 && !isSPACE(c)) {
+    while (c != -1 && (isWORDCHAR(c) || strchr("$@%!:\"'", c))) {
         sv_catpvf(ret, "%c", lex_read_unichar(LEX_KEEP_PREVIOUS));
         c = lex_peek_unichar(LEX_KEEP_PREVIOUS);
     }
@@ -752,11 +749,20 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
     }
 
     if (!len) {
-        if (flags & PARSE_NAME_NO_CROAK)
+        if (flags & PARSE_NAME_NO_CROAK) {
             return NULL;
-        else
-            croak("%.*s%"SVf" is not a valid %.*s name",
-                  prefixlen, prefix, SVfARG(read_tokenish()), whatlen, what);
+        }
+        else {
+            SV *name;
+
+            name = read_tokenish();
+
+            if (prefixlen || SvCUR(name))
+                croak("%.*s%"SVf" is not a valid %.*s name",
+                      prefixlen, prefix, SVfARG(name), whatlen, what);
+            else
+                croak("No %.*s name found", whatlen, what);
+        }
     }
 
     sv = sv_2mortal(newSV(prefixlen + len));

@@ -35,7 +35,7 @@ like($@, qr/^"bah" is not a valid trait name/);
 eval '
 class Bar { method cat($4) { } }
 ';
-like($@, qr/^\$4\) is not a valid argument name/);
+like($@, qr/^\$4 is not a valid argument name/);
 
 eval '
     has $!x
@@ -52,6 +52,6 @@ class Baz {
     method {}
 }
 ';
-like($@, qr/^{} is not a valid method name/, "syntax errors in class blocks are propagated properly");
+like($@, qr/^No method name found/, "syntax errors in class blocks are propagated properly");
 
 done_testing;
