@@ -928,7 +928,7 @@ pp_attrsv(pTHX)
     slot = get_slot_for(PL_current_meta, name, invocant, NULL);
 
     if (!slot) {
-        slot = newSV(0);
+        slot = sv_2mortal(newSV(0));
         set_attr_magic(slot, name, PL_current_meta, invocant);
     }
 
