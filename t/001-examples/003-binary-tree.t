@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use Scalar::Util 'weaken';
 
 use mop;
 
@@ -69,14 +68,5 @@ class MyBinaryTree extends BinaryTree {}
     ok($t->has_left, '... left node has now been created');
     ok($t->has_right, '... right node has now been created');
 }
-
-my $weak_t;
-{
-    my $t = MyBinaryTree->new;
-    weaken($weak_t = $t);
-    $t->has_parent;
-    is($weak_t, $t);
-}
-is($weak_t, undef);
 
 done_testing;
