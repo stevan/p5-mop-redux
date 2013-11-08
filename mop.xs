@@ -954,7 +954,7 @@ THX_gen_intro_invocant_op(pTHX)
 
     meta = current_meta();
     assert(sv_isobject(meta));
-    o->op_first = newSVOP(OP_CONST, 0, SvREFCNT_inc(meta));
+    o->op_first = newSVOP(OP_CONST, 0, newSVsv(meta));
 
     return (OP *)o;
 }
@@ -1664,7 +1664,7 @@ THX_parse_namespace(pTHX_ bool is_class, SV **pkgp)
         syntax_error(&PL_sv_undef);
 
     return gen_traits_ops(op_append_elem(OP_LIST,
-                                         newSVOP(OP_CONST, 0, meta),
+                                         newSVOP(OP_CONST, 0, newSVsv(meta)),
                                          body_ref),
                           traits, numtraits);
 }
