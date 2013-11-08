@@ -62,16 +62,6 @@ class MyBinaryTree extends BinaryTree {}
     ok(!$t->has_left, '... left node has not been created yet');
     ok(!$t->has_right, '... right node has not been created yet');
 
-    # NOTE:
-    # this next thing illustrates that $class is not
-    # virtual, meaning that it fixed to be the class
-    # it is defined in, and not the class of the
-    # invocant itself.
-    # This deviates from the older prototype, but it
-    # perhaps feels more correct and is similar to
-    # how __PACKAGE__ works.
-    # - SL
-
     ok($t->left->isa('BinaryTree'), '... left is a BinaryTree object');
     ok($t->right->isa('BinaryTree'), '... right is a BinaryTree object');
 
