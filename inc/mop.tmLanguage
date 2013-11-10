@@ -14,13 +14,18 @@
                 <key>applyEndPatternLast</key>
                 <integer>1</integer>
                 <key>begin</key>
-                <string>^\s*(class|role|trait)\s+([^;\s]+)</string>
+                <string>^\s*(class|role)\s+([^;\s]+)</string>
                 <key>end</key>
                 <string>^\s*\}$\n?</string>
                 <key>name</key>
                 <string>meta.class.mop</string>
                 <key>beginCaptures</key>
                 <dict>
+                    <key>0</key>
+                    <dict>
+                        <key>name</key>
+                        <string>source.mop</string>
+                    </dict>
                     <key>1</key>
                     <dict>
                         <key>name</key>
@@ -36,53 +41,127 @@
                 <array>
                     <dict>
                         <key>include</key>
+                        <string>#subclass</string>
+                    </dict>
+                    <dict>
+                        <key>include</key>
                         <string>#is</string>
                     </dict>
                     <dict>
-                        <key>match</key>
-                        <string>^\s*(method)\s+([-a-zA-Z0-9_]+)\s*(\([\$\@\*;]*\))?</string>
-                        <key>name</key>
-                        <string>meta.function.mop</string>
-                        <key>captures</key>
+                        <key>include</key>
+                        <string>#method</string>
+                    </dict>
+                    <dict>
+                        <key>include</key>
+                        <string>#attribute</string>
+                    </dict>
+                    <dict>
+                        <key>begin</key>
+                        <string>"</string>
+                        <key>beginCaptures</key>
                         <dict>
-                            <key>1</key>
+                            <key>0</key>
                             <dict>
                                 <key>name</key>
-                                <string>storage.type.sub.mop</string>
-                            </dict>
-                            <key>2</key>
-                            <dict>
-                                <key>name</key>
-                                <string>entity.name.function.mop</string>
-                            </dict>
-                            <key>3</key>
-                            <dict>
-                                <key>name</key>
-                                <string>variable.parameter.function.mop</string>
+                                <string>punctuation.definition.string.begin.perl</string>
                             </dict>
                         </dict>
+                        <key>end</key>
+                        <string>"</string>
+                        <key>endCaptures</key>
+                        <dict>
+                            <key>0</key>
+                            <dict>
+                                <key>name</key>
+                                <string>punctuation.definition.string.end.perl</string>
+                            </dict>
+                        </dict>
+                        <key>name</key>
+                        <string>string.quoted.double.perl</string>
+                        <key>patterns</key>
+                        <array>
+                            <dict>
+                                <key>include</key>
+                                <string>#escaped_char</string>
+                            </dict>
+                            <dict>
+                                <key>include</key>
+                                <string>#attribute</string>
+                            </dict>
+                            <dict>
+                                <key>include</key>
+                                <string>source.perl</string>
+                            </dict>
+                        </array>
+                    </dict>
+                    <dict>
+                        <key>begin</key>
+                        <string>`</string>
+                        <key>beginCaptures</key>
+                        <dict>
+                            <key>0</key>
+                            <dict>
+                                <key>name</key>
+                                <string>punctuation.definition.string.begin.perl</string>
+                            </dict>
+                        </dict>
+                        <key>end</key>
+                        <string>`</string>
+                        <key>endCaptures</key>
+                        <dict>
+                            <key>0</key>
+                            <dict>
+                                <key>name</key>
+                                <string>punctuation.definition.string.end.perl</string>
+                            </dict>
+                        </dict>
+                        <key>name</key>
+                        <string>string.interpolated.perl</string>
+                        <key>patterns</key>
+                        <array>
+                            <dict>
+                                <key>include</key>
+                                <string>#escaped_char</string>
+                            </dict>
+                            <dict>
+                                <key>include</key>
+                                <string>#attribute</string>
+                            </dict>
+                            <dict>
+                                <key>include</key>
+                                <string>source.perl</string>
+                            </dict>
+                        </array>
+                    </dict>
+                    <dict>
+                        <key>match</key>
+                        <string>\b(has)\b</string>
+                        <key>name</key>
+                        <string>storage.modifier.mop</string>
                     </dict>
                     <dict>
                         <key>include</key>
                         <string>source.perl</string>
                     </dict>
+                </array>
+            </dict>
+        </array>
+        <key>repository</key>
+        <dict>
+            <key>escaped_char</key>
+            <dict>
+                <key>match</key>
+                <string>\\.</string>
+                <key>name</key>
+                <string>constant.character.escape.perl</string>
+            </dict>
+            <key>attribute</key>
+            <dict>
+                <key>patterns</key>
+                <array>
                     <dict>
                         <key>match</key>
-                        <string>\b(extends|with|does)\s+([^;\s]+)</string>
-                        <key>name</key>
-                        <string>keyword.control.mop</string>
-                        <key>captures</key>
-                        <dict>
-                            <key>2</key>
-                            <dict>
-                                <key>name</key>
-                                <string>entity.name.type.class.mop</string>
-                            </dict>
-                        </dict>
-                    </dict>
-                    <dict>
-                        <key>match</key>
-                        <string>(\$!)[A-Za-z_][A-Za-z0-9_]*\b</string>
+                        <string>([\$\%\@\*]*\$)(!)[A-Za-z_][A-Za-z0-9_]*\b</string>
                         <key>name</key>
                         <string>punctuation.definition.variable.perl</string>
                         <key>captures</key>
@@ -92,19 +171,54 @@
                                 <key>name</key>
                                 <string>punctuation.definition.variable.perl</string>
                             </dict>
+                            <key>2</key>
+                            <dict>
+                                <key>name</key>
+                                <string>keyword.operator.mop</string>
+                            </dict>
                         </dict>
                     </dict>
                     <dict>
                         <key>match</key>
-                        <string>\b(has)\b</string>
+                        <string>([\$\%\@\*]\{\s*\$)(!)[A-Za-z_][A-Za-z0-9_]*(\s*\})\b</string>
                         <key>name</key>
-                        <string>storage.modifier.mop</string>
+                        <string>punctuation.definition.variable.perl</string>
+                        <key>captures</key>
+                        <dict>
+                            <key>1</key>
+                            <dict>
+                                <key>name</key>
+                                <string>punctuation.definition.variable.perl</string>
+                            </dict>
+                            <key>2</key>
+                            <dict>
+                                <key>name</key>
+                                <string>keyword.operator.mop</string>
+                            </dict>
+                            <key>3</key>
+                            <dict>
+                                <key>name</key>
+                                <string>punctuation.definition.variable.perl</string>
+                            </dict>
+                        </dict>
                     </dict>
                 </array>
             </dict>
-        </array>
-        <key>repository</key>
-        <dict>
+            <key>subclass</key>
+            <dict>
+                <key>match</key>
+                <string>\b(extends|with|meta)\s+([^;\s]+)</string>
+                <key>name</key>
+                <string>keyword.control.mop</string>
+                <key>captures</key>
+                <dict>
+                    <key>2</key>
+                    <dict>
+                        <key>name</key>
+                        <string>entity.name.type.class.mop</string>
+                    </dict>
+                </dict>
+            </dict>
             <key>is</key>
             <dict>
                 <key>match</key>
@@ -126,7 +240,51 @@
                 <array>
                     <dict>
                         <key>match</key>
-                        <string>\((.+)\)</string>
+                        <string>\((.*)\)</string>
+                        <key>captures</key>
+                        <dict>
+                            <key>0</key>
+                            <dict>
+                                <key>name</key>
+                                <string>punctuation.perl</string>
+                            </dict>
+                            <key>1</key>
+                            <dict>
+                                <key>name</key>
+                                <string>text.perl.embedded.mop</string>
+                            </dict>
+                        </dict>
+                    </dict>
+                    <dict>
+                        <key>include</key>
+                        <string>source.perl</string>
+                    </dict>
+                </array>
+            </dict>
+            <key>method</key>
+            <dict>
+                <key>match</key>
+                <string>(method)\s+([^;\(\s]+)</string>
+                <key>name</key>
+                <string>meta.function.mop</string>
+                <key>captures</key>
+                <dict>
+                    <key>1</key>
+                    <dict>
+                        <key>name</key>
+                        <string>storage.type.sub.mop</string>
+                    </dict>
+                    <key>2</key>
+                    <dict>
+                        <key>name</key>
+                        <string>entity.name.function.mop</string>
+                    </dict>
+                </dict>
+                <key>patterns</key>
+                <array>
+                    <dict>
+                        <key>match</key>
+                        <string>\((.*)\)</string>
                         <key>captures</key>
                         <dict>
                             <key>0</key>
