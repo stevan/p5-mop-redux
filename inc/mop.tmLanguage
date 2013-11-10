@@ -14,7 +14,7 @@
                 <key>applyEndPatternLast</key>
                 <integer>1</integer>
                 <key>begin</key>
-                <string>^\s*(class|role)\s+([^;\s]+)</string>
+                <string>^\s*(class|role|trait)\s+([^;\s]+)</string>
                 <key>end</key>
                 <string>^\s*\}$\n?</string>
                 <key>name</key>
@@ -34,6 +34,10 @@
                 </dict>
                 <key>patterns</key>
                 <array>
+                    <dict>
+                        <key>include</key>
+                        <string>#is</string>
+                    </dict>
                     <dict>
                         <key>match</key>
                         <string>^\s*(method)\s+([-a-zA-Z0-9_]+)\s*(\([\$\@\*;]*\))?</string>
@@ -64,7 +68,7 @@
                     </dict>
                     <dict>
                         <key>match</key>
-                        <string>\b(extends|with|is|does)\s+([^;\s]+)</string>
+                        <string>\b(extends|with|does)\s+([^;\s]+)</string>
                         <key>name</key>
                         <string>keyword.control.mop</string>
                         <key>captures</key>
@@ -99,6 +103,51 @@
                 </array>
             </dict>
         </array>
+        <key>repository</key>
+        <dict>
+            <key>is</key>
+            <dict>
+                <key>match</key>
+                <string>\s(is)\s+([^;\(\s]+)</string>
+                <key>captures</key>
+                <dict>
+                    <key>1</key>
+                    <dict>
+                        <key>name</key>
+                        <string>keyword.control.mop</string>
+                    </dict>
+                    <key>2</key>
+                    <dict>
+                        <key>name</key>
+                        <string>entity.name.function.mop</string>
+                    </dict>
+                </dict>
+                <key>patterns</key>
+                <array>
+                    <dict>
+                        <key>match</key>
+                        <string>\((.+)\)</string>
+                        <key>captures</key>
+                        <dict>
+                            <key>0</key>
+                            <dict>
+                                <key>name</key>
+                                <string>punctuation.perl</string>
+                            </dict>
+                            <key>1</key>
+                            <dict>
+                                <key>name</key>
+                                <string>text.perl.embedded.mop</string>
+                            </dict>
+                        </dict>
+                    </dict>
+                    <dict>
+                        <key>include</key>
+                        <string>source.perl</string>
+                    </dict>
+                </array>
+            </dict>
+        </dict>
         <key>scopeName</key>
         <string>source.mop</string>
         <key>uuid</key>
