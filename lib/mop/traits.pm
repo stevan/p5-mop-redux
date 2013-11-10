@@ -18,6 +18,8 @@ our @available_traits = qw[
     repr
 ];
 
+require Carp;
+
 sub setup_for {
     my ($pkg) = @_;
 
@@ -80,7 +82,7 @@ sub required {
       . "'required' trait is incompatible with default value"
         if $attr->has_default;
 
-    $attr->set_default(sub { die "'" . $attr->name . "' is required" });
+    $attr->set_default(sub { Carp::croak("'" . $attr->name . "' is required") });
 }
 
 sub abstract {

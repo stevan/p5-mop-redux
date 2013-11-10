@@ -28,6 +28,21 @@ use mop::internals::util;
 use mop::traits;
 use mop::traits::util;
 
+$Carp::Internal{$_}++ for qw/
+  op
+  mop
+  mop::attribute
+  mop::class
+  mop::internals::observable
+  mop::internals::syntax
+  mop::internals::util
+  mop::method
+  mop::object
+  mop::role
+  mop::traits
+  mop::traits::util
+  /;
+
 sub import {
     shift;
     my $pkg = caller;
