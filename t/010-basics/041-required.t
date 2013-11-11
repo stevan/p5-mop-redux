@@ -33,6 +33,17 @@ like( $@,
       'missing required attribute throws an exception'
 );
 
+{
+    eval { Foo->new };
+    my $local_file = __FILE__;
+    my $line       = __LINE__ - 2;
+    like(
+        $@,
+        qr/^'\$!bar' is required at $local_file line $line/,
+        'exception should correcly locate the source'
+    );
+}
+
 eval 'class Bar { has $!baz is required = "DBAZ" })';
 like $@,  qr/in '\$!baz' attribute definition: 'required' trait is incompatible with default value/;
 
