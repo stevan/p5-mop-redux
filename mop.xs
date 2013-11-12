@@ -233,7 +233,7 @@ THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
             LEAVE;
 
             slot = SvRV(slotp);
-            hv_store_ent(slots, key, slot, 0);
+            (void)hv_store_ent(slots, key, slot, 0);
 
             return slot;
         }
@@ -759,9 +759,9 @@ THX_parse_name_prefix(pTHX_ const char *prefix, STRLEN prefixlen,
 
             if (prefixlen || SvCUR(name))
                 croak("%.*s%"SVf" is not a valid %.*s name",
-                      prefixlen, prefix, SVfARG(name), whatlen, what);
+                      prefixlen, prefix, SVfARG(name), (int)whatlen, what);
             else
-                croak("No %.*s name found", whatlen, what);
+                croak("No %.*s name found", (int)whatlen, what);
         }
     }
 
