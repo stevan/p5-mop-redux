@@ -1,0 +1,1 @@
+/home/ti/.vim/syntax/perl.vim
