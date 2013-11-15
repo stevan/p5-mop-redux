@@ -949,6 +949,7 @@ static Perl_check_t old_rv2sv_checker;
 static SV *twigils_hint_key_sv;
 static U32 twigils_hint_key_hash;
 static HV *used_attrs;
+static bool all_attrs_used;
 
 #define intro_twigil_var(namesv) THX_intro_twigil_var(aTHX_ namesv)
 static OP *
@@ -1241,7 +1242,15 @@ struct mop_signature_var {
     OP *default_value;
 };
 
+static Perl_check_t old_entereval_checker;
 static XOP init_attr_xop;
+
+static OP *
+myck_entereval_attrs(pTHX_ OP *o)
+{
+    all_attrs_used = TRUE;
+    return old_entereval_checker(aTHX_ o);
+}
 
 #define parse_signature(method_name, invocantp, varsp) THX_parse_signature(aTHX_ method_name, invocantp, varsp)
 static UV
@@ -1515,7 +1524,9 @@ THX_parse_method(pTHX)
     }
 
     SAVEGENERICSV(used_attrs);
+    SAVEBOOL(all_attrs_used);
     used_attrs = newHV();
+    all_attrs_used = FALSE;
 
     body = op_append_list(OP_LINESEQ, body, parse_block(0));
 
@@ -1718,6 +1729,9 @@ static void
 init_attr_cpeep(pTHX_ OP *o, OP *oldop)
 {
     SV *name;
+
+    if (all_attrs_used)
+        return;
 
     assert(cLISTOPo->op_first);
     assert(cLISTOPo->op_first->op_type == OP_CONST);
@@ -2007,6 +2021,7 @@ BOOT:
         = SvSHARED_HASH(default_role_metaclass_hint_key_sv);
 
     wrap_op_checker(OP_RV2SV, myck_rv2sv_twigils, &old_rv2sv_checker);
+    wrap_op_checker(OP_ENTEREVAL, myck_entereval_attrs, &old_entereval_checker);
 
     XopENTRY_set(&init_attr_xop, xop_name, "init_attr");
     XopENTRY_set(&init_attr_xop, xop_desc, "attribute initialization");
