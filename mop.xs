@@ -1466,6 +1466,22 @@ THX_parse_method(pTHX)
                    newASSIGNOP(OPf_STACKED, invocantvarop, 0, invocantop))
     );
 
+    meta_name = current_meta_name();
+    attrs = current_attributes();
+    attr_len = av_len(attrs);
+    for (j = 0; j <= attr_len; j++) {
+        SV *attr_name = *av_fetch(attrs, j, 0);
+
+        body = op_append_list(OP_LINESEQ,
+            body,
+            newSTATEOP(0, NULL, intro_twigil_var(attr_name))
+        );
+        body = op_append_list(OP_LINESEQ,
+            body,
+            gen_init_attr_op(attr_name, meta_name)
+        );
+    }
+
     if (numvars) {
         OP *lhsop = newLISTOP(OP_LIST, 0, NULL, NULL);
 
@@ -1497,22 +1513,6 @@ THX_parse_method(pTHX)
         }
     }
     Safefree(vars);
-
-    meta_name = current_meta_name();
-    attrs = current_attributes();
-    attr_len = av_len(attrs);
-    for (j = 0; j <= attr_len; j++) {
-        SV *attr_name = *av_fetch(attrs, j, 0);
-
-        body = op_append_list(OP_LINESEQ,
-            body,
-            newSTATEOP(0, NULL, intro_twigil_var(attr_name))
-        );
-        body = op_append_list(OP_LINESEQ,
-            body,
-            gen_init_attr_op(attr_name, meta_name)
-        );
-    }
 
     SAVEGENERICSV(used_attrs);
     SAVEBOOL(all_attrs_used);

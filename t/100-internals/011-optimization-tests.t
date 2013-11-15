@@ -22,6 +22,8 @@ class Foo {
     method bar { $!bar }
 
     method const { 2 }
+
+    method with_params ($x, $y = time + rand(1) / 256) { 56 }
 }
 
 {
@@ -46,6 +48,7 @@ class Foo {
     optree_ok($Foo->get_method('bar')->body, '$!bar');
     optree_ok($Foo->get_method('load_stuff')->body, '$!foo');
     optree_ok($Foo->get_method('const')->body);
+    optree_ok($Foo->get_method('with_params')->body);
 }
 
 {
