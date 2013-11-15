@@ -1725,22 +1725,57 @@ THX_parse_namespace(pTHX_ bool is_class, SV **pkgp)
 /* }}} */
 /* custom peep {{{ */
 
+static peep_t prev_peepp;
+
 static void
-init_attr_cpeep(pTHX_ OP *o, OP *oldop)
+my_peep(pTHX_ OP *root)
 {
-    SV *name;
+    OP *o, *old, *start;
 
     if (all_attrs_used)
-        return;
+        return prev_peepp(aTHX_ root);
 
-    assert(cLISTOPo->op_first);
-    assert(cLISTOPo->op_first->op_type == OP_CONST);
-    name = cSVOPx(cLISTOPo->op_first)->op_sv;
-
-    if (!hv_exists_ent(used_attrs, name, 0)) {
-        oldop->op_next = o->op_next;
-        op_null(o);
+    for (o = root; o; o = o->op_next) {
+        if (o->op_ppaddr == pp_intro_invocant)
+            break;
     }
+
+    if (!o || o->op_ppaddr != pp_intro_invocant)
+        return prev_peepp(aTHX_ root);
+
+    old   = o->op_sibling->op_sibling;
+    start = old->op_sibling;
+
+    while (start
+        && start->op_type == OP_NEXTSTATE
+        && start->op_sibling
+        && start->op_sibling->op_type == OP_PADSV
+        && start->op_sibling->op_sibling
+        && start->op_sibling->op_sibling->op_ppaddr == pp_init_attr) {
+        OP *init_attr_op = start->op_sibling->op_sibling;
+        SV *name;
+
+        assert(cLISTOPx(init_attr_op)->op_first);
+        assert(cLISTOPx(init_attr_op)->op_first->op_type == OP_CONST);
+        name = cSVOPx(cLISTOPx(init_attr_op)->op_first)->op_sv;
+
+        if (hv_exists_ent(used_attrs, name, 0)) {
+            old = init_attr_op;
+            start = old->op_sibling;
+        }
+        else {
+            old->op_next = init_attr_op->op_sibling;
+            op_null(start);
+            op_null(start->op_sibling);
+            op_null(init_attr_op);
+            op_null(cLISTOPx(init_attr_op)->op_first);
+            op_null(cLISTOPx(init_attr_op)->op_first->op_sibling);
+            op_null(cLISTOPx(init_attr_op)->op_first->op_sibling->op_sibling);
+            start = init_attr_op->op_sibling;
+        }
+    }
+
+    return prev_peepp(aTHX_ root);
 }
 
 /* }}} */
@@ -2026,13 +2061,15 @@ BOOT:
     XopENTRY_set(&init_attr_xop, xop_name, "init_attr");
     XopENTRY_set(&init_attr_xop, xop_desc, "attribute initialization");
     XopENTRY_set(&init_attr_xop, xop_class, OA_LISTOP);
-    XopENTRY_set(&init_attr_xop, xop_peep, init_attr_cpeep);
     Perl_custom_op_register(aTHX_ pp_init_attr, &init_attr_xop);
 
     XopENTRY_set(&intro_invocant_xop, xop_name, "intro_invocant");
     XopENTRY_set(&intro_invocant_xop, xop_desc, "invocant introduction");
     XopENTRY_set(&intro_invocant_xop, xop_class, OA_BASEOP);
     Perl_custom_op_register(aTHX_ pp_intro_invocant, &intro_invocant_xop);
+
+    prev_peepp = PL_peepp;
+    PL_peepp = my_peep;
 }
 
 # }}}
