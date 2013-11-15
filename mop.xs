@@ -1731,12 +1731,21 @@ static void
 my_peep(pTHX_ OP *root)
 {
     OP *o, *old, *start;
+    int i = 0;
 
     if (all_attrs_used)
         return prev_peepp(aTHX_ root);
 
     for (o = root; o; o = o->op_next) {
         if (o->op_ppaddr == pp_intro_invocant)
+            break;
+        /* this will be near the start of the method - we need to limit how far
+         * we search because optrees aren't actually trees, they can contain
+         * cycles */
+        /* XXX probably eventually skip over the exact ops that will be at the
+         * head of the method before the intro_invocant op, but this is more
+         * flexible for now in case we change around the optree structure */
+        if (i++ > 10)
             break;
     }
 
