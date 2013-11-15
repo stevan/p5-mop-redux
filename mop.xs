@@ -948,6 +948,7 @@ THX_gen_intro_invocant_op(pTHX)
 static Perl_check_t old_rv2sv_checker;
 static SV *twigils_hint_key_sv;
 static U32 twigils_hint_key_hash;
+static HV *used_attrs;
 
 #define intro_twigil_var(namesv) THX_intro_twigil_var(aTHX_ namesv)
 static OP *
@@ -1010,6 +1011,8 @@ myck_rv2sv_twigils(pTHX_ OP *o)
     offset = pad_findmy_sv(name, 0);
     if (offset == NOT_IN_PAD)
         croak("No such twigil variable %"SVf, SVfARG(name));
+
+    (void)hv_store_ent(used_attrs, name, &PL_sv_undef, 0);
 
     ret = newOP(OP_PADSV, 0);
     ret->op_targ = offset;
@@ -1511,6 +1514,9 @@ THX_parse_method(pTHX)
         );
     }
 
+    SAVEGENERICSV(used_attrs);
+    used_attrs = newHV();
+
     body = op_append_list(OP_LINESEQ, body, parse_block(0));
 
     body_ref = newANONSUB(blk_floor, NULL, body);
@@ -1703,6 +1709,24 @@ THX_parse_namespace(pTHX_ bool is_class, SV **pkgp)
                                          newSVOP(OP_CONST, 0, meta),
                                          body_ref),
                           traits, numtraits);
+}
+
+/* }}} */
+/* custom peep {{{ */
+
+static void
+init_attr_cpeep(pTHX_ OP *o, OP *oldop)
+{
+    SV *name;
+
+    assert(cLISTOPo->op_first);
+    assert(cLISTOPo->op_first->op_type == OP_CONST);
+    name = cSVOPx(cLISTOPo->op_first)->op_sv;
+
+    if (!hv_exists_ent(used_attrs, name, 0)) {
+        oldop->op_next = o->op_next;
+        op_null(o);
+    }
 }
 
 /* }}} */
@@ -1987,6 +2011,7 @@ BOOT:
     XopENTRY_set(&init_attr_xop, xop_name, "init_attr");
     XopENTRY_set(&init_attr_xop, xop_desc, "attribute initialization");
     XopENTRY_set(&init_attr_xop, xop_class, OA_LISTOP);
+    XopENTRY_set(&init_attr_xop, xop_peep, init_attr_cpeep);
     Perl_custom_op_register(aTHX_ pp_init_attr, &init_attr_xop);
 
     XopENTRY_set(&intro_invocant_xop, xop_name, "intro_invocant");
