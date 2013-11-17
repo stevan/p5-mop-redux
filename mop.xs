@@ -1528,7 +1528,7 @@ THX_parse_method(pTHX)
     used_attrs = newHV();
     all_attrs_used = FALSE;
 
-    body = op_append_list(OP_LINESEQ, body, parse_block(0));
+    body = op_append_list(OP_LINESEQ, body, newSTATEOP(0, NULL, parse_block(0)));
 
     body_ref = newANONSUB(blk_floor, NULL, body);
 
