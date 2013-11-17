@@ -25,6 +25,8 @@ class Foo {
 
     method bar { 'BAR' }
 
+    method bar_with_empty_body {}
+
     method bar_w_implicit_params { join ', ' => 'BAR', @_ }
 
     method bar_w_explicit_params (@args) { join ', ' => 'BAR', @args }
@@ -46,6 +48,11 @@ is($foo->bar_w_implicit_params(1, 2), 'BAR, 1, 2', '... got the expected return 
 
 is($foo->bar_w_explicit_params, 'BAR', '... got the expected return value');
 is($foo->bar_w_explicit_params(1, 2), 'BAR, 1, 2', '... got the expected return value');
+
+my $result = $foo->bar_with_empty_body;
+ok !defined $result, 'empty method bodies should not return a defined value';
+my @result = $foo->bar_with_empty_body;
+ok !defined $result[0], '... even if they are called in list context';
 
 {
     # NOTE:
