@@ -5,6 +5,12 @@
 
 #include "callparser1.h"
 
+#ifdef DEBUGGING
+#  define ASSERT_NRETVAL(n, e) assert((n) == (e))
+#else
+#  define ASSERT_NRETVAL(n, e) (e)
+#endif
+
 /* subname magic {{{ */
 
 static MGVTBL subname_vtbl;
@@ -135,7 +141,6 @@ THX_slot_is_cacheable(pTHX_ SV *attr)
 {
     dSP;
     SV *ret;
-    I32 nret;
 
     assert(sv_isobject(attr));
 
@@ -144,8 +149,7 @@ THX_slot_is_cacheable(pTHX_ SV *attr)
     PUSHMARK(SP);
     XPUSHs(attr);
     PUTBACK;
-    nret = call_method("has_events", G_SCALAR);
-    assert(nret == 1);
+    ASSERT_NRETVAL(1, call_method("has_events", G_SCALAR));
     SPAGAIN;
     ret = POPs;
     PUTBACK;
@@ -165,7 +169,6 @@ THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
     SV *key, *attr;
     HV *slots;
     HE *slot_ent;
-    I32 nret;
 
     assert(sv_isobject(meta));
     assert(attr_name && SvPOK(attr_name));
@@ -206,8 +209,7 @@ THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
         XPUSHs(meta);
         XPUSHs(attr_name);
         PUTBACK;
-        nret = call_method("get_attribute", G_SCALAR);
-        assert(nret == 1);
+        ASSERT_NRETVAL(1, call_method("get_attribute", G_SCALAR));
         SPAGAIN;
         attr = POPs;
         assert(sv_isobject(attr));
@@ -224,8 +226,7 @@ THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
             XPUSHs(attr);
             XPUSHs(self);
             PUTBACK;
-            nret = call_method("get_slot_for", G_SCALAR);
-            assert(nret == 1);
+            ASSERT_NRETVAL(1, call_method("get_slot_for", G_SCALAR));
             SPAGAIN;
             slotp = POPs;
             assert(SvROK(slotp));
@@ -270,15 +271,13 @@ mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
     slot = get_slot_for(meta, name, self, &attr);
     if (!slot) {
         dSP;
-        I32 nret;
 
         ENTER;
         PUSHMARK(SP);
         XPUSHs(attr);
         XPUSHs(self);
         PUTBACK;
-        nret = call_method("fetch_data_in_slot_for", G_SCALAR);
-        assert(nret == 1);
+        ASSERT_NRETVAL(1, call_method("fetch_data_in_slot_for", G_SCALAR));
         SPAGAIN;
         slot = POPs;
         PUTBACK;
@@ -320,7 +319,6 @@ mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
     }
     else {
         dSP;
-        I32 nret;
 
         ENTER;
         PUSHMARK(SP);
@@ -328,8 +326,7 @@ mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
         XPUSHs(self);
         XPUSHs(sv);
         PUTBACK;
-        nret = call_method("store_data_in_slot_for", G_VOID);
-        assert(nret == 0);
+        ASSERT_NRETVAL(0, call_method("store_data_in_slot_for", G_VOID));
         LEAVE;
     }
 
@@ -532,7 +529,6 @@ parse_version(const char *buf, STRLEN len)
 {
     dSP;
     SV *v;
-    I32 nret;
 
     assert(buf);
 
@@ -542,8 +538,7 @@ parse_version(const char *buf, STRLEN len)
     XPUSHs(sv_2mortal(newSVpvs("version")));
     XPUSHs(sv_2mortal(newSVpvn(buf, len)));
     PUTBACK;
-    nret = call_method("parse", G_SCALAR);
-    assert(nret == 1);
+    ASSERT_NRETVAL(1, call_method("parse", G_SCALAR));
     SPAGAIN;
     v = POPs;
     assert(sv_isobject(v));
@@ -827,19 +822,18 @@ THX_current_attributes(pTHX)
 {
     dSP;
     AV *ret;
-    int nret, i;
+    int nattrs, i;
 
     ENTER;
     PUSHMARK(SP);
     XPUSHs(get_sv("mop::internals::syntax::CURRENT_META", 0));
     PUTBACK;
-    nret = call_method("attributes", G_ARRAY);
+    nattrs = call_method("attributes", G_ARRAY);
     SPAGAIN;
     ret = newAV();
-    av_extend(ret, nret);
-    for (i = 0; i < nret; ++i) {
+    av_extend(ret, nattrs);
+    for (i = 0; i < nattrs; ++i) {
         SV *attr, *attr_name;
-        I32 name_nret;
 
         attr = POPs;
         PUTBACK;
@@ -847,8 +841,7 @@ THX_current_attributes(pTHX)
         PUSHMARK(SP);
         XPUSHs(attr);
         PUTBACK;
-        name_nret = call_method("name", G_SCALAR);
-        assert(name_nret == 1);
+        ASSERT_NRETVAL(1, call_method("name", G_SCALAR));
         SPAGAIN;
         attr_name = POPs;
         assert(attr_name && SvPOK(attr_name));
@@ -891,7 +884,6 @@ THX_isa(pTHX_ SV *sv, const char *name)
 {
     dSP;
     SV *ret;
-    I32 nret;
 
     assert(!SvROK(sv) || sv_isobject(sv));
     assert(name);
@@ -902,8 +894,7 @@ THX_isa(pTHX_ SV *sv, const char *name)
     XPUSHs(sv);
     XPUSHs(sv_2mortal(newSVpv(name, 0)));
     PUTBACK;
-    nret = call_method("isa", G_SCALAR);
-    assert(nret == 1);
+    ASSERT_NRETVAL(1, call_method("isa", G_SCALAR));
     SPAGAIN;
     ret = POPs;
     PUTBACK;
