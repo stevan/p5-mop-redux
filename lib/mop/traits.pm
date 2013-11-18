@@ -3,6 +3,8 @@ package mop::traits;
 use v5.16;
 use warnings;
 
+use Scalar::Util 'blessed';
+
 our $VERSION   = '0.03';
 our $AUTHORITY = 'cpan:STEVAN';
 
@@ -38,7 +40,7 @@ sub rw {
     my ($attr) = @_;
 
     die "rw trait is only valid on attributes"
-        unless $attr->isa('mop::attribute');
+        unless blessed($attr) && $attr->isa('mop::attribute');
 
     my $meta = $attr->associated_meta;
     $meta->add_method(
@@ -57,7 +59,7 @@ sub ro {
     my ($attr) = @_;
 
     die "ro trait is only valid on attributes"
-        unless $attr->isa('mop::attribute');
+        unless blessed($attr) && $attr->isa('mop::attribute');
 
     my $meta = $attr->associated_meta;
     $meta->add_method(
@@ -76,7 +78,7 @@ sub required {
     my ($attr) = @_;
 
     die "required trait is only valid on attributes"
-        unless $attr->isa('mop::attribute');
+        unless blessed($attr) && $attr->isa('mop::attribute');
 
     die "in '" . $attr->name . "' attribute definition: "
       . "'required' trait is incompatible with default value"
@@ -89,7 +91,7 @@ sub abstract {
     my ($class) = @_;
 
     die "abstract trait is only valid on classes"
-        unless $class->isa('mop::class');
+        unless blessed($class) && $class->isa('mop::class');
 
     $class->make_class_abstract;
 }
@@ -98,7 +100,7 @@ sub overload {
     my ($method, $operator) = @_;
 
     die "overload trait is only valid on methods"
-        unless $method->isa('mop::method');
+        unless blessed($method) && $method->isa('mop::method');
 
     my $method_name = $method->name;
 
@@ -124,7 +126,7 @@ sub weak_ref {
     my ($attr) = @_;
 
     die "weak_ref trait is only valid on attributes"
-        unless $attr->isa('mop::attribute');
+        unless blessed($attr) && $attr->isa('mop::attribute');
 
     $attr->bind('after:STORE_DATA' => sub {
         my (undef, $instance) = @_;
@@ -136,7 +138,7 @@ sub lazy {
     my ($attr) = @_;
 
     die "lazy trait is only valid on attributes"
-        unless $attr->isa('mop::attribute');
+        unless blessed($attr) && $attr->isa('mop::attribute');
 
     my $default = $attr->clear_default;
     $attr->bind('before:FETCH_DATA' => sub {
@@ -154,7 +156,7 @@ sub extending_non_mop {
     my ($class, $constructor_name) = @_;
 
     die "extending_non_mop trait is only valid on classes"
-        unless $class->isa('mop::class');
+        unless blessed($class) && $class->isa('mop::class');
 
     $constructor_name //= 'new';
     my $super_constructor = join '::' => $class->superclass, $constructor_name;
@@ -192,7 +194,7 @@ sub repr {
     my ($class, $instance) = @_;
 
     die "repr trait is only valid on classes"
-        unless $class->isa('mop::class');
+        unless blessed($class) && $class->isa('mop::class');
 
     my $generator;
     if (ref $instance && ref $instance eq 'CODE') {
