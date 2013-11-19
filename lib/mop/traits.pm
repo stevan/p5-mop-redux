@@ -3,7 +3,7 @@ package mop::traits;
 use v5.16;
 use warnings;
 
-use Scalar::Util 'blessed';
+use Scalar::Util 'blessed', 'weaken';
 
 our $VERSION   = '0.03';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -43,13 +43,14 @@ sub rw {
         unless blessed($attr) && $attr->isa('mop::attribute');
 
     my $meta = $attr->associated_meta;
+    weaken(my $weak_attr = $attr);
     $meta->add_method(
         $meta->method_class->new(
             name => $attr->key_name,
             body => sub {
                 my $self = shift;
-                $attr->store_data_in_slot_for($self, shift) if @_;
-                $attr->fetch_data_in_slot_for($self);
+                $weak_attr->store_data_in_slot_for($self, shift) if @_;
+                $weak_attr->fetch_data_in_slot_for($self);
             }
         )
     );
@@ -62,13 +63,14 @@ sub ro {
         unless blessed($attr) && $attr->isa('mop::attribute');
 
     my $meta = $attr->associated_meta;
+    weaken(my $weak_attr = $attr);
     $meta->add_method(
         $meta->method_class->new(
             name => $attr->key_name,
             body => sub {
                 my $self = shift;
                 die "Cannot assign to a read-only accessor" if @_;
-                $attr->fetch_data_in_slot_for($self);
+                $weak_attr->fetch_data_in_slot_for($self);
             }
         )
     );
@@ -84,7 +86,10 @@ sub required {
       . "'required' trait is incompatible with default value"
         if $attr->has_default;
 
-    $attr->set_default(sub { Carp::croak("'" . $attr->name . "' is required") });
+    weaken(my $weak_attr = $attr);
+    $attr->set_default(sub {
+        Carp::croak("'" . $weak_attr->name . "' is required")
+    });
 }
 
 sub abstract {
@@ -128,9 +133,10 @@ sub weak_ref {
     die "weak_ref trait is only valid on attributes"
         unless blessed($attr) && $attr->isa('mop::attribute');
 
+    weaken(my $weak_attr = $attr);
     $attr->bind('after:STORE_DATA' => sub {
         my (undef, $instance) = @_;
-        $attr->weaken_data_in_slot_for($instance);
+        $weak_attr->weaken_data_in_slot_for($instance);
     });
 }
 
@@ -141,10 +147,11 @@ sub lazy {
         unless blessed($attr) && $attr->isa('mop::attribute');
 
     my $default = $attr->clear_default;
+    weaken(my $weak_attr = $attr);
     $attr->bind('before:FETCH_DATA' => sub {
         my (undef, $instance) = @_;
-        if ( !$attr->has_data_in_slot_for($instance) ) {
-            $attr->store_data_in_slot_for($instance, do {
+        if ( !$weak_attr->has_data_in_slot_for($instance) ) {
+            $weak_attr->store_data_in_slot_for($instance, do {
                 local $_ = $instance;
                 ref($default) ? $default->() : $default
             });
