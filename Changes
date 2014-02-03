@@ -1,6 +1,21 @@
 Revision history for Perl extension mop
 
 {{$NEXT}}
+    - Number of core improvements
+      made, such as:
+        - custom opcode to handle
+          invocant naming
+        - improved attribute caching
+        - apply_metarole added
+        - several new tests added
+        - improved error handling
+        - improved twigil parsing
+        - some minor optimization
+          for unused attributes
+    - syntax highlighters added
+        - vim
+        - Textmate
+        - emacs
 
 0.02  2013-10-25
     - second TRIAL release to CPAN
