@@ -16,6 +16,8 @@ Revision history for Perl extension mop
         - vim
         - Textmate
         - emacs
+    - some doc fixes and other release
+      engineering nonsense as well
 
 0.02  2013-10-25
     - second TRIAL release to CPAN
