@@ -68,7 +68,7 @@ sub install_meta {
 
     set_meta($name, $meta);
 
-    $INC{ ($name =~ s{::}{/}gr) . '.pm' } //= '(mop)';
+    $INC{ ($name =~ s{::}{/}gr) . '.pm' } //= '(mop)'; #'syntax highlighting sucks
 }
 
 sub apply_all_roles {
