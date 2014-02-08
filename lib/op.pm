@@ -19,7 +19,7 @@ op - syntactic sugar to make mop one-liners easier
 
 =head1 VERSION
 
-0.02
+0.03
 
 =head1 SYNOPSIS
 
@@ -44,7 +44,7 @@ Matthew Horsfall (alh) <wolfsage@gmail.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by Infinity Interactive.
+This software is copyright (c) 2013-2014 by Infinity Interactive.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
