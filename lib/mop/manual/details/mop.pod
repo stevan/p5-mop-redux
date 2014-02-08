@@ -51,11 +51,13 @@ of the MOP written using the MOP itself.
         method conflicts_with  ($attr) { ... }
         method locally_defined ($attr) { ... }
 
+        method has_data_in_slot_for      ($instance) { ... }
         method fetch_data_in_slot_for    ($instance) { ... }
         method store_data_in_slot_for    ($instance, $data) { ... }
         method store_default_in_slot_for ($instance) { ... }
         method weaken_data_in_slot_for   ($instance) { ... }
         method is_data_in_slot_weak_for  ($instance) { ... }
+        method get_slot_for              ($instance) { ... }
 
         method bind   ($event_name, $cb) { ... }
         method unbind ($event_name, $cb) { ... }
@@ -106,18 +108,20 @@ of the MOP written using the MOP itself.
         method attributes { ... }
         method attribute_map { ... }
 
-        method add_attribute ($attr) { ... }
-        method get_attribute ($name) { ... }
-        method has_attribute ($name) { ... }
+        method add_attribute    ($attr) { ... }
+        method get_attribute    ($name) { ... }
+        method has_attribute    ($name) { ... }
+        method remove_attribute ($name) { ... }
 
         method method_class { 'mop::method' }
 
         method methods { ... }
         method method_map { ... }
 
-        method add_method ($attr) { ... }
-        method get_method ($name) { ... }
-        method has_method ($name) { ... }
+        method add_method    ($attr) { ... }
+        method get_method    ($name) { ... }
+        method has_method    ($name) { ... }
+        method remove_method ($name) { ... }
 
         method required_methods { ... }
         method required_method_map { ... }
@@ -133,22 +137,24 @@ of the MOP written using the MOP itself.
         sub FINALIZE { ... }
     }
 
-    # 'with mop::role' is odd because mop::role is a class, but it works as
-    # you would expect
+    # 'with mop::role' is odd because mop::role is
+    # an instance of a class, but it works as you
+    # would expect
+
     class mop::class extends mop::object with mop::role {
-        has $!superclass is ro;
-        has $!is_abstract is ro;
+        has $!superclass         is ro;
+        has $!is_abstract        is ro = 0;
         has $!instance_generator is ro = sub { \(my $anon) };
 
         method BUILD { ... }
 
         method make_class_abstract { ... }
 
-        method new_instance { ... }
+        method new_instance   { ... }
         method clone_instance { ... }
 
         method set_instance_generator ($generator) { ... }
-        method new_fresh_instance { ... }
+        method new_fresh_instance                  { ... }
     }
 
 =head2 BOOTSTRAPPING GOALS
