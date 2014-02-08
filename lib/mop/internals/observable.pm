@@ -2,6 +2,8 @@ package mop::internals::observable;
 
 use v5.16;
 use warnings;
+use feature 'signatures';
+no warnings 'experimental::signatures';
 
 use Scalar::Util qw[ refaddr ];
 
@@ -12,8 +14,7 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 mop::internals::util::init_attribute_storage(my %callbacks);
 
-sub bind {
-    my ($self, $event_name, $callback) = @_;
+sub bind ($self, $event_name, $callback) {
     $callbacks{ $self } = \{}
         unless $callbacks{ $self };
     ${$callbacks{ $self }}->{ $event_name } = []
@@ -22,8 +23,7 @@ sub bind {
     $self;
 }
 
-sub unbind {
-    my ($self, $event_name, $callback) = @_;
+sub unbind ($self, $event_name, $callback) {
     return $self unless $callbacks{ $self };
     return $self unless ${$callbacks{ $self }}->{ $event_name };
     @{ ${$callbacks{ $self }}->{ $event_name } } = grep {
@@ -32,16 +32,14 @@ sub unbind {
     $self;
 }
 
-sub fire {
-    my ($self, $event_name, @args) = @_;
+sub fire ($self, $event_name, @args) {
     return $self unless $callbacks{ $self };
     return $self unless ${$callbacks{ $self }}->{ $event_name };
     $self->$_( @args ) foreach @{ ${$callbacks{ $self }}->{ $event_name } };
     return $self;
 }
 
-sub has_events {
-    my $self = shift;
+sub has_events ($self) {
     return $callbacks{ $self } && ${ $callbacks{ $self } } && !!%{ ${ $callbacks{ $self } } };
 }
 

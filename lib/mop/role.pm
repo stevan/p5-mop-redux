@@ -2,6 +2,8 @@ package mop::role;
 
 use v5.16;
 use warnings;
+use feature 'signatures';
+no warnings 'experimental::signatures';
 
 use mop::internals::util;
 
@@ -18,20 +20,18 @@ mop::internals::util::init_attribute_storage(my %attributes);
 mop::internals::util::init_attribute_storage(my %methods);
 mop::internals::util::init_attribute_storage(my %required_methods);
 
-sub name                { ${ $name{ $_[0] }             // \undef } }
-sub version             { ${ $version{ $_[0] }          // \undef } }
-sub authority           { ${ $authority{ $_[0] }        // \undef } }
-sub roles               { ${ $roles{ $_[0] }            // \undef } }
-sub attribute_map       { ${ $attributes{ $_[0] }       // \undef } }
-sub method_map          { ${ $methods{ $_[0] }          // \undef } }
-sub required_method_map { ${ $required_methods{ $_[0] } // \undef } }
+sub name                ($self) { ${ $name{ $self }             // \undef } }
+sub version             ($self) { ${ $version{ $self }          // \undef } }
+sub authority           ($self) { ${ $authority{ $self }        // \undef } }
+sub roles               ($self) { ${ $roles{ $self }            // \undef } }
+sub attribute_map       ($self) { ${ $attributes{ $self }       // \undef } }
+sub method_map          ($self) { ${ $methods{ $self }          // \undef } }
+sub required_method_map ($self) { ${ $required_methods{ $self } // \undef } }
 
 # temporary, for bootstrapping
-sub new {
-    my $class = shift;
-    my %args  = @_;
+sub new ($class, %args) {
 
-    my $self = $class->SUPER::new( @_ );
+    my $self = $class->SUPER::new( %args );
 
     $name{ $self }      = \($args{'name'});
     $version{ $self }   = \($args{'version'});
@@ -45,8 +45,7 @@ sub new {
     $self;
 }
 
-sub BUILD {
-    my $self = shift;
+sub BUILD ($self, $) {
 
     mop::internals::util::install_meta($self);
 
@@ -55,9 +54,7 @@ sub BUILD {
     }
 }
 
-sub clone {
-    my $self = shift;
-    my (%args) = @_;
+sub clone ($self, %args) {
 
     die "You must specify a name when cloning a metaclass"
         unless $args{name};
@@ -85,13 +82,11 @@ sub clone {
     return $clone;
 }
 
-sub add_role {
-    my ($self, $role) = @_;
+sub add_role ($self, $role) {
     push @{ $self->roles } => $role;
 }
 
-sub does_role {
-    my ($self, $name) = @_;
+sub does_role ($self, $name) {
     foreach my $role ( @{ $self->roles } ) {
         return 1 if $role->name eq $name
                  || $role->does_role( $name );
@@ -101,74 +96,62 @@ sub does_role {
 
 sub attribute_class { 'mop::attribute' }
 
-sub attributes { values %{ $_[0]->attribute_map } }
+sub attributes ($self) { values %{ $self->attribute_map } }
 
-sub add_attribute {
-    my ($self, $attr) = @_;
+sub add_attribute ($self, $attr) {
     $self->attribute_map->{ $attr->name } = $attr;
     $attr->set_associated_meta($self);
 }
 
-sub get_attribute {
-    my ($self, $name) = @_;
+sub get_attribute ($self, $name) {
     $self->attribute_map->{ $name }
 }
 
-sub has_attribute {
-    my ($self, $name) = @_;
+sub has_attribute ($self, $name) {
     exists $self->attribute_map->{ $name };
 }
 
-sub remove_attribute {
-    my ($self, $name) = @_;
+sub remove_attribute ($self, $name) {
     delete $self->attribute_map->{ $name };
 }
 
 sub method_class { 'mop::method' }
 
-sub methods { values %{ $_[0]->method_map } }
+sub methods ($self) { values %{ $self->method_map } }
 
-sub add_method {
-    my ($self, $method) = @_;
+sub add_method ($self, $method) {
     $self->method_map->{ $method->name } = $method;
     $method->set_associated_meta($self);
     $self->remove_required_method($method->name);
 }
 
-sub get_method {
-    my ($self, $name) = @_;
+sub get_method ($self, $name) {
     $self->method_map->{ $name }
 }
 
-sub has_method {
-    my ($self, $name) = @_;
+sub has_method ($self, $name) {
     exists $self->method_map->{ $name };
 }
 
-sub remove_method {
-    my ($self, $name) = @_;
+sub remove_method ($self, $name) {
     delete $self->method_map->{ $name };
 }
 
-sub required_methods { keys %{ $_[0]->required_method_map } }
+sub required_methods ($self) { keys %{ $self->required_method_map } }
 
-sub add_required_method {
-    my ($self, $name) = @_;
+sub add_required_method ($self, $name) {
     $self->required_method_map->{ $name } = 1;
 }
 
-sub remove_required_method {
-    my ($self, $name) = @_;
+sub remove_required_method ($self, $name) {
     delete $self->required_method_map->{ $name };
 }
 
-sub requires_method {
-    my ($self, $name) = @_;
+sub requires_method ($self, $name) {
     defined $self->required_method_map->{ $name };
 }
 
-sub FINALIZE {
-    my $self = shift;
+sub FINALIZE ($self) {
 
     mop::internals::util::apply_all_roles($self, @{ $self->roles })
         if @{ $self->roles };

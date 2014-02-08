@@ -2,6 +2,8 @@ package mop::traits::util;
 
 use v5.16;
 use warnings;
+use feature 'signatures';
+no warnings 'experimental::signatures';
 
 use Hash::Util::FieldHash qw[ fieldhash ];
 
@@ -10,8 +12,7 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 fieldhash my %TRAIT_REGISTRATION;
 
-sub apply_trait {
-    my ($trait, $meta, @args) = @_;
+sub apply_trait ($trait, $meta, @args) {
 
     $trait->( $meta, @args );
 
@@ -23,8 +24,7 @@ sub apply_trait {
     };
 }
 
-sub applied_traits {
-    my ($meta) = @_;
+sub applied_traits ($meta) {
     return () unless exists $TRAIT_REGISTRATION{ $meta };
     return @{ $TRAIT_REGISTRATION{ $meta } };
 }

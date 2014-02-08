@@ -2,6 +2,8 @@ package op;
 
 use v5.16;
 use warnings;
+use feature 'signatures';
+no warnings 'experimental::signatures';
 
 require mop;
 *import = \&mop::import;

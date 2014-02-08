@@ -2,6 +2,8 @@ package mop::attribute;
 
 use v5.16;
 use warnings;
+use feature 'signatures';
+no warnings 'experimental::signatures';
 
 use Scalar::Util qw[ weaken isweak ];
 use mop::internals::util;
@@ -17,19 +19,16 @@ mop::internals::util::init_attribute_storage(my %associated_meta);
 mop::internals::util::init_attribute_storage(my %original_id);
 mop::internals::util::init_attribute_storage(my %storage);
 
-sub name            { ${ $name{ $_[0] }            // \undef } }
-sub associated_meta { ${ $associated_meta{ $_[0] } // \undef } }
+sub name            ($self) { ${ $name{ $self }            // \undef } }
+sub associated_meta ($self) { ${ $associated_meta{ $self } // \undef } }
 
-sub set_associated_meta {
-    my ($self, $meta) = @_;
+sub set_associated_meta ($self, $meta) {
     $associated_meta{ $self } = \$meta;
     weaken(${ $associated_meta{ $self } });
 }
 
 # temporary, for bootstrapping
-sub new {
-    my $class = shift;
-    my %args  = @_;
+sub new ($class, %args) {
     my $self = $class->SUPER::new;
     $name{ $self }    = \($args{'name'});
     $default{ $self } = \($args{'default'}) if exists $args{'default'};
@@ -45,8 +44,7 @@ sub new {
     $self
 }
 
-sub BUILD {
-    my $self = shift;
+sub BUILD ($self, $) {
     return unless $default{ $self };
     my $value = ${ $default{ $self } };
     if ( ref $value && ref $value ne 'CODE' ) {
@@ -55,8 +53,7 @@ sub BUILD {
 }
 
 # temporary, for bootstrapping
-sub clone {
-    my $self = shift;
+sub clone ($self, %) {
     return ref($self)->new(
         name => $self->name,
         default => ${ $default{ $self } },
@@ -64,26 +61,22 @@ sub clone {
     );
 }
 
-sub key_name {
-    my $self = shift;
+sub key_name ($self) {
     substr( $self->name, 2, length $self->name )
 }
 
-sub has_default { defined( ${ $default{ $_[0] } } ) }
+sub has_default ($self) { defined( ${ $default{ $self } } ) }
 
-sub set_default   {
-    my $self = shift;
-    my ($value) = @_;
+sub set_default ($self, $value) {
     if ( ref $value && ref $value ne 'CODE' ) {
         die "References of type (" . ref($value) . ") are not supported as attribute defaults (in attribute " . $self->name . ($self->associated_meta ? " in class " . $self->associated_meta->name : "") . ")";
     }
     $default{ $self } = \$value
 }
 
-sub clear_default { ${ delete $default{ $_[0] } } }
+sub clear_default ($self) { ${ delete $default{ $self } } }
 
-sub get_default {
-    my $self  = shift;
+sub get_default ($self) {
     my $value = ${ $default{ $self } };
     if ( ref $value && ref $value eq 'CODE' ) {
         $value = $value->();
@@ -91,51 +84,48 @@ sub get_default {
     $value
 }
 
-sub conflicts_with { ${ $original_id{ $_[0] } } ne ${ $original_id{ $_[1] } } }
+sub conflicts_with ($self, $other) {
+    ${ $original_id{ $self } } ne ${ $original_id{ $other } }
+}
 
-sub locally_defined { ${ $original_id{ $_[0] } } eq mop::id( $_[0] ) }
+sub locally_defined ($self) {
+    ${ $original_id{ $self } } eq mop::id( $self )
+}
 
-sub has_data_in_slot_for {
-    my ($self, $instance) = @_;
+sub has_data_in_slot_for ($self, $instance) {
     defined ${ $self->get_slot_for($instance) };
 }
 
-sub fetch_data_in_slot_for {
-    my ($self, $instance) = @_;
+sub fetch_data_in_slot_for ($self, $instance) {
     $self->fire('before:FETCH_DATA', $instance);
     my $val = ${ $self->get_slot_for($instance) };
     $self->fire('after:FETCH_DATA', $instance, \$val);
     return $val;
 }
 
-sub store_data_in_slot_for {
-    my ($self, $instance, $data) = @_;
+sub store_data_in_slot_for ($self, $instance, $data) {
     $self->fire('before:STORE_DATA', $instance, \$data);
     ${ $self->get_slot_for($instance) } = $data;
     $self->fire('after:STORE_DATA', $instance, \$data);
     return;
 }
 
-sub store_default_in_slot_for {
-    my ($self, $instance) = @_;
+sub store_default_in_slot_for ($self, $instance) {
     $self->store_data_in_slot_for($instance, do {
         local $_ = $instance;
         $self->get_default;
     }) if $self->has_default;
 }
 
-sub weaken_data_in_slot_for {
-    my ($self, $instance) = @_;
+sub weaken_data_in_slot_for ($self, $instance) {
     weaken(${ $self->get_slot_for($instance) });
 }
 
-sub is_data_in_slot_weak_for {
-    my ($self, $instance) = @_;
+sub is_data_in_slot_weak_for ($self, $instance) {
     isweak(${ $self->get_slot_for($instance) });
 }
 
-sub get_slot_for {
-    my ($self, $instance) = @_;
+sub get_slot_for ($self, $instance) {
     ${ $storage{ $self } }->{ $instance } //= \(my $slot);
 }
 

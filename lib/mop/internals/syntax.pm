@@ -2,6 +2,8 @@ package mop::internals::syntax;
 
 use v5.16;
 use warnings;
+use feature 'signatures';
+no warnings 'experimental::signatures';
 
 use version           ();
 use Devel::CallParser ();
@@ -14,23 +16,20 @@ my @available_keywords = qw(class role method has);
 # keep the local metaclass around
 our $CURRENT_META;
 
-sub setup_for {
-    my ($pkg) = @_;
+sub setup_for ($pkg) {
 
     $^H{__PACKAGE__ . '/twigils'} = 1;
     mop::internals::util::install_sub($pkg, 'mop::internals::syntax', $_)
         for @available_keywords;
 }
 
-sub teardown_for {
-    my ($pkg) = @_;
+sub teardown_for ($pkg) {
 
     mop::internals::util::uninstall_sub($pkg, $_)
         for @available_keywords;
 }
 
-sub new_meta {
-    my ($metaclass, $name, $version, $roles, $superclass) = @_;
+sub new_meta ($metaclass, $name, $version, $roles, $superclass = undef) {
 
     $metaclass->new(
         name       => $name,
@@ -44,8 +43,7 @@ sub new_meta {
     );
 }
 
-sub build_meta {
-    my ($meta, $body, @traits) = @_;
+sub build_meta ($meta, $body, @traits) {
 
     while (@traits) {
         my ($trait, $args) = splice @traits, 0, 2;
@@ -59,8 +57,7 @@ sub build_meta {
     $body->();
 }
 
-sub add_method {
-    my ($name, $body, @traits) = @_;
+sub add_method ($name, $body = undef, @traits) {
 
     if ($body) {
         $CURRENT_META->add_method(
@@ -87,8 +84,7 @@ sub add_method {
     return;
 }
 
-sub add_attribute {
-    my ($name, $default, @traits) = @_;
+sub add_attribute ($name, $default, @traits) {
 
     $CURRENT_META->add_attribute(
         $CURRENT_META->attribute_class->new(

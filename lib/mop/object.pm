@@ -2,14 +2,15 @@ package mop::object;
 
 use v5.16;
 use warnings;
+use feature 'signatures';
+no warnings 'experimental::signatures';
 
 use mop::internals::util;
 
 our $VERSION   = '0.03';
 our $AUTHORITY = 'cpan:STEVAN';
 
-sub new {
-    my $class = shift;
+sub new ($class, %) {
 
     # NOTE:
     # prior to the bootstrapping being
@@ -26,23 +27,19 @@ sub new {
     return $self;
 }
 
-sub clone {
-    my ($self, %args) = @_;
+sub clone ($self, %args) {
     return mop::meta($self)->clone_instance($self, %args);
 }
 
-sub does {
-    my ($self, $role) = @_;
+sub does ($self, $role) {
     scalar grep { mop::meta($_)->does_role($role) } @{ mro::get_linear_isa(ref($self) || $self) }
 }
 
-sub DOES {
-    my ($self, $role) = @_;
+sub DOES ($self, $role) {
     $self->does($role) or $self->UNIVERSAL::DOES($role);
 }
 
-sub DESTROY {
-    my $self = shift;
+sub DESTROY ($self) {
     foreach my $class (@{ mro::get_linear_isa(ref $self) }) {
         if (my $m = mop::meta($class)) {
             $m->get_method('DEMOLISH')->execute($self, [])
@@ -61,9 +58,8 @@ sub __INIT_METACLASS__ {
     $METACLASS->add_method(
         mop::method->new(
             name => 'new',
-            body => sub {
-                my $class = shift;
-                my (%args) = @_ == 1 && ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
+            body => sub ($class, @args) {
+                my (%args) = @args == 1 && ref $args[0] eq 'HASH' ? %{$args[0]} : @args;
                 mop::internals::util::find_or_inflate_meta($class)->new_instance(%args);
             }
         )

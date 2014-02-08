@@ -2,6 +2,8 @@ package mop::traits;
 
 use v5.16;
 use warnings;
+use feature 'signatures';
+no warnings 'experimental::signatures';
 
 use Scalar::Util 'blessed', 'weaken';
 
@@ -22,22 +24,19 @@ our @available_traits = qw[
 
 require Carp;
 
-sub setup_for {
-    my ($pkg) = @_;
+sub setup_for ($pkg) {
 
     mop::internals::util::install_sub($pkg, 'mop::traits', $_)
         for @available_traits;
 }
 
-sub teardown_for {
-    my ($pkg) = @_;
+sub teardown_for ($pkg) {
 
     mop::internals::util::uninstall_sub($pkg, $_)
         for @available_traits;
 }
 
-sub rw {
-    my ($attr) = @_;
+sub rw ($attr) {
 
     die "rw trait is only valid on attributes"
         unless blessed($attr) && $attr->isa('mop::attribute');
@@ -56,8 +55,7 @@ sub rw {
     );
 }
 
-sub ro {
-    my ($attr) = @_;
+sub ro ($attr) {
 
     die "ro trait is only valid on attributes"
         unless blessed($attr) && $attr->isa('mop::attribute');
@@ -76,8 +74,7 @@ sub ro {
     );
 }
 
-sub required {
-    my ($attr) = @_;
+sub required ($attr) {
 
     die "required trait is only valid on attributes"
         unless blessed($attr) && $attr->isa('mop::attribute');
@@ -92,8 +89,7 @@ sub required {
     });
 }
 
-sub abstract {
-    my ($class) = @_;
+sub abstract ($class) {
 
     die "abstract trait is only valid on classes"
         unless blessed($class) && $class->isa('mop::class');
@@ -101,8 +97,7 @@ sub abstract {
     $class->make_class_abstract;
 }
 
-sub overload {
-    my ($method, $operator) = @_;
+sub overload ($method, $operator) {
 
     die "overload trait is only valid on methods"
         unless blessed($method) && $method->isa('mop::method');
@@ -127,8 +122,7 @@ sub overload {
     );
 }
 
-sub weak_ref {
-    my ($attr) = @_;
+sub weak_ref ($attr) {
 
     die "weak_ref trait is only valid on attributes"
         unless blessed($attr) && $attr->isa('mop::attribute');
@@ -140,8 +134,7 @@ sub weak_ref {
     });
 }
 
-sub lazy {
-    my ($attr) = @_;
+sub lazy ($attr) {
 
     die "lazy trait is only valid on attributes"
         unless blessed($attr) && $attr->isa('mop::attribute');
@@ -159,13 +152,11 @@ sub lazy {
     });
 }
 
-sub extending_non_mop {
-    my ($class, $constructor_name) = @_;
+sub extending_non_mop ($class, $constructor_name = 'new') {
 
     die "extending_non_mop trait is only valid on classes"
         unless blessed($class) && $class->isa('mop::class');
 
-    $constructor_name //= 'new';
     my $super_constructor = join '::' => $class->superclass, $constructor_name;
 
     $class->add_method(
@@ -197,8 +188,7 @@ sub extending_non_mop {
     );
 }
 
-sub repr {
-    my ($class, $instance) = @_;
+sub repr ($class, $instance) {
 
     die "repr trait is only valid on classes"
         unless blessed($class) && $class->isa('mop::class');

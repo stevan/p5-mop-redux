@@ -2,6 +2,8 @@ package mop::class;
 
 use v5.16;
 use warnings;
+use feature 'signatures';
+no warnings 'experimental::signatures';
 
 use mop::internals::util;
 
@@ -14,19 +16,18 @@ mop::internals::util::init_attribute_storage(my %superclass);
 mop::internals::util::init_attribute_storage(my %is_abstract);
 mop::internals::util::init_attribute_storage(my %instance_generator);
 
-sub superclass         { ${ $superclass{ $_[0] }         // \undef } }
-sub is_abstract        { ${ $is_abstract{ $_[0] }        // \undef } }
-sub instance_generator { ${ $instance_generator{ $_[0] } // \undef } }
+sub superclass         ($self) { ${ $superclass{ $self }         // \undef } }
+sub is_abstract        ($self) { ${ $is_abstract{ $self }        // \undef } }
+sub instance_generator ($self) { ${ $instance_generator{ $self } // \undef } }
 
-sub make_class_abstract    { $is_abstract{ $_[0] }        = \1     }
-sub set_instance_generator { $instance_generator{ $_[0] } = \$_[1] }
+sub make_class_abstract    ($self) { $is_abstract{ $self } = \1 }
+sub set_instance_generator ($self, $generator) {
+    $instance_generator{ $self } = \$generator
+}
 
 # temporary, for bootstrapping
-sub new {
-    my $class = shift;
-    my %args  = @_;
-
-    my $self = $class->SUPER::new( @_ );
+sub new ($class, %args) {
+    my $self = $class->SUPER::new( %args );
 
     $is_abstract{ $self }        = \($args{'is_abstract'} // 0);
     $superclass{ $self }         = \($args{'superclass'});
@@ -35,8 +36,7 @@ sub new {
     $self;
 }
 
-sub BUILD {
-    my $self = shift;
+sub BUILD ($self, $) {
 
     mop::internals::util::install_meta($self);
 
@@ -59,16 +59,13 @@ sub BUILD {
     }
 }
 
-sub new_fresh_instance {
-    my $self = shift;
+sub new_fresh_instance ($self) {
     my $instance = bless $self->instance_generator->(), $self->name;
     mop::internals::util::register_object($instance);
     return $instance;
 }
 
-sub new_instance {
-    my $self = shift;
-    my (%args) = @_;
+sub new_instance ($self, %args) {
 
     die 'Cannot instantiate abstract class (' . $self->name . ')'
         if $self->is_abstract;
@@ -97,9 +94,7 @@ sub new_instance {
     return $instance;
 }
 
-sub clone_instance {
-    my $self = shift;
-    my ($instance, %args) = @_;
+sub clone_instance ($self, $instance, %args) {
 
     my $attributes = {
         map {

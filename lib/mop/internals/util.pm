@@ -1,6 +1,9 @@
 package mop::internals::util;
+
 use v5.16;
 use warnings;
+use feature 'signatures';
+no warnings 'experimental::signatures';
 
 use Hash::Util::FieldHash;
 use mro ();
@@ -13,8 +16,7 @@ our $AUTHORITY = 'cpan:STEVAN';
 # lexical exports
 my %OVERRIDDEN;
 
-sub install_sub {
-    my ($to, $from, $sub) = @_;
+sub install_sub ($to, $from, $sub) {
     no strict 'refs';
     if (*{ "${to}::${sub}" }) {
         push @{ $OVERRIDDEN{$to}{$sub} //= [] }, \&{ "${to}::${sub}" };
@@ -23,8 +25,7 @@ sub install_sub {
     *{ $to . '::' . $sub } = \&{ "${from}::${sub}" };
 }
 
-sub uninstall_sub {
-    my ($pkg, $sub) = @_;
+sub uninstall_sub ($pkg, $sub) {
     no strict 'refs';
     delete ${ $pkg . '::' }{$sub};
     if (my $prev = pop @{ $OVERRIDDEN{$pkg}{$sub} // [] }) {
@@ -32,30 +33,27 @@ sub uninstall_sub {
     }
 }
 
-sub init_attribute_storage (\%) {
+sub init_attribute_storage :prototype(\%) {
     &Hash::Util::FieldHash::fieldhash( $_[0] )
 }
 
-sub register_object {
-    Hash::Util::FieldHash::register( $_[0] )
+sub register_object ($object) {
+    Hash::Util::FieldHash::register( $object )
 }
 
 {
     my %NONMOP_CLASSES;
 
-    sub mark_nonmop_class {
-        my ($class) = @_;
+    sub mark_nonmop_class ($class) {
         $NONMOP_CLASSES{$class} = 1;
     }
 
-    sub is_nonmop_class {
-        my ($class) = @_;
+    sub is_nonmop_class ($class) {
         $NONMOP_CLASSES{$class};
     }
 }
 
-sub install_meta {
-    my ($meta) = @_;
+sub install_meta ($meta) {
 
     my $name = $meta->name;
 
@@ -71,8 +69,7 @@ sub install_meta {
     $INC{ ($name =~ s{::}{/}gr) . '.pm' } //= '(mop)'; #'syntax highlighting sucks
 }
 
-sub apply_all_roles {
-    my ($to, @roles) = @_;
+sub apply_all_roles ($to, @roles) {
 
     unapply_all_roles($to);
 
@@ -117,8 +114,7 @@ sub apply_all_roles {
     $to->fire('after:CONSUME' => $composite);
 }
 
-sub unapply_all_roles {
-    my ($meta) = @_;
+sub unapply_all_roles ($meta) {
 
     for my $attr ($meta->attributes) {
         $meta->remove_attribute($attr->name)
@@ -141,8 +137,7 @@ sub unapply_all_roles {
 # does. in that case, we need to inflate a basic metaclass for that class in
 # order to be able to instantiate new instances via new_instance. see
 # mop::object::new.
-sub find_or_inflate_meta {
-    my ($class) = @_;
+sub find_or_inflate_meta ($class) {
 
     if (my $meta = mop::meta($class)) {
         return $meta;
@@ -152,8 +147,7 @@ sub find_or_inflate_meta {
     }
 }
 
-sub inflate_meta {
-    my ($class) = @_;
+sub inflate_meta ($class) {
 
     my $name      = $class;
     my $version   = do { no strict 'refs'; ${ *{ $class . '::VERSION' }{SCALAR} } };
@@ -183,8 +177,7 @@ sub inflate_meta {
     return $new_meta;
 }
 
-sub fix_metaclass_compatibility {
-    my ($meta, $super) = @_;
+sub fix_metaclass_compatibility ($meta, $super) {
 
     my $meta_name  = Scalar::Util::blessed($meta) // $meta;
     return $meta_name if !defined $super; # non-mop inheritance
@@ -206,8 +199,7 @@ sub fix_metaclass_compatibility {
     die "Can't fix metaclass compatibility between $meta_desc and $super_desc";
 }
 
-sub rebase_metaclasses {
-    my ($meta_name, $super_name) = @_;
+sub rebase_metaclasses ($meta_name, $super_name) {
 
     my $common_base = find_common_base($meta_name, $super_name);
     return unless $common_base;
@@ -254,8 +246,7 @@ sub rebase_metaclasses {
     return $current;
 }
 
-sub find_common_base {
-    my ($meta_name, $super_name) = @_;
+sub find_common_base ($meta_name, $super_name) {
 
     my %meta_ancestors =
         map { $_ => 1 } @{ mro::get_linear_isa($meta_name) };
@@ -267,8 +258,7 @@ sub find_common_base {
     return;
 }
 
-sub create_composite_role {
-    my (@roles) = @_;
+sub create_composite_role (@roles) {
 
     @roles = map { ref($_) ? $_ : mop::meta($_) } @roles;
 
@@ -348,8 +338,7 @@ sub create_composite_role {
     return $composite;
 }
 
-sub buildall {
-    my ($instance, @args) = @_;
+sub buildall ($instance, @args) {
 
     foreach my $class (reverse @{ mro::get_linear_isa(ref $instance) }) {
         if (my $m = mop::meta($class)) {

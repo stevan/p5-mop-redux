@@ -2,6 +2,8 @@ package mop::method;
 
 use v5.16;
 use warnings;
+use feature 'signatures';
+no warnings 'experimental::signatures';
 
 use Scalar::Util qw[ weaken ];
 use mop::internals::util;
@@ -16,20 +18,17 @@ mop::internals::util::init_attribute_storage(my %body);
 mop::internals::util::init_attribute_storage(my %associated_meta);
 mop::internals::util::init_attribute_storage(my %original_id);
 
-sub name            { ${ $name{ $_[0] }            // \undef } }
-sub body            { ${ $body{ $_[0] }            // \undef } }
-sub associated_meta { ${ $associated_meta{ $_[0] } // \undef } }
+sub name            ($self) { ${ $name{ $self }            // \undef } }
+sub body            ($self) { ${ $body{ $self }            // \undef } }
+sub associated_meta ($self) { ${ $associated_meta{ $self } // \undef } }
 
-sub set_associated_meta {
-    my ($self, $meta) = @_;
+sub set_associated_meta ($self, $meta) {
     $associated_meta{ $self } = \$meta;
     weaken(${ $associated_meta{ $self } });
 }
 
 # temporary, for bootstrapping
-sub new {
-    my $class = shift;
-    my %args  = @_;
+sub new ($class, %args) {
     my $self = $class->SUPER::new;
     $name{ $self } = \($args{'name'});
     $body{ $self } = \($args{'body'});
@@ -45,13 +44,11 @@ sub new {
 }
 
 # temporary, for bootstrapping
-sub clone {
-    my $self = shift;
+sub clone ($self, %) {
     return ref($self)->new(name => $self->name, body => $self->body);
 }
 
-sub execute {
-    my ($self, $invocant, $args) = @_;
+sub execute ($self, $invocant, $args) {
 
     $self->fire('before:EXECUTE' => $invocant, $args);
 
@@ -70,9 +67,13 @@ sub execute {
     return $wantarray ? @result : $result[0];
 }
 
-sub conflicts_with { ${ $original_id{ $_[0] } } ne ${ $original_id{ $_[1] } } }
+sub conflicts_with ($self, $other) {
+    ${ $original_id{ $self } } ne ${ $original_id{ $other } }
+}
 
-sub locally_defined { ${ $original_id{ $_[0] } } eq mop::id( $_[0] ) }
+sub locally_defined ($self) {
+    ${ $original_id{ $self } } eq mop::id( $self )
+}
 
 sub __INIT_METACLASS__ {
     my $METACLASS = mop::class->new(

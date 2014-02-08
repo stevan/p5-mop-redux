@@ -3,6 +3,8 @@ package mop;
 use v5.16;
 use mro;
 use warnings;
+use feature 'signatures';
+no warnings 'experimental::signatures';
 
 use overload ();
 use Scalar::Util ();
@@ -28,25 +30,23 @@ use mop::internals::util;
 use mop::traits;
 use mop::traits::util;
 
-$Carp::Internal{$_}++ for qw/
-  op
-  mop
-  mop::attribute
-  mop::class
-  mop::internals::observable
-  mop::internals::syntax
-  mop::internals::util
-  mop::method
-  mop::object
-  mop::role
-  mop::traits
-  mop::traits::util
-  /;
+$Carp::Internal{$_}++ for qw[
+    op
+    mop
+    mop::attribute
+    mop::class
+    mop::internals::observable
+    mop::internals::syntax
+    mop::internals::util
+    mop::method
+    mop::object
+    mop::role
+    mop::traits
+    mop::traits::util
+];
 
-sub import {
-    shift;
+sub import ($, %opts) {
     my $pkg = caller;
-    my %opts = @_;
 
     initialize();
     mop::internals::syntax::setup_for($pkg);
@@ -69,20 +69,18 @@ sub unimport {
     mop::traits::teardown_for($pkg);
 }
 
-sub meta {
-    my $pkg = ref($_[0]) || $_[0];
-    mop::internals::util::get_meta($pkg);
+sub meta ($class_or_pkg) {
+    mop::internals::util::get_meta( ref($class_or_pkg) || $class_or_pkg );
 }
 
-sub remove_meta {
-    my $pkg = ref($_[0]) || $_[0];
-    mop::internals::util::unset_meta($pkg);
+sub remove_meta ($class_or_pkg) {
+    mop::internals::util::unset_meta( ref($class_or_pkg) || $class_or_pkg );
 }
 
-sub id { Hash::Util::FieldHash::id( $_[0] ) }
+sub id  ($id) { Hash::Util::FieldHash::id( $id ) }
 
-sub is_mop_object {
-    defined Hash::Util::FieldHash::id_2obj( id( $_[0] ) );
+sub is_mop_object ($object) {
+    defined Hash::Util::FieldHash::id_2obj( id( $object ) );
 }
 
 sub apply_metaclass {
@@ -95,8 +93,7 @@ sub apply_metaclass {
     return;
 }
 
-sub apply_metarole {
-    my ($instance, $new_metarole) = @_;
+sub apply_metarole ($instance, $new_metarole) {
 
     my $meta      = mop::meta($instance);
     my $meta_name = Scalar::Util::blessed($meta);
@@ -120,8 +117,7 @@ sub apply_metarole {
     apply_metaclass($instance, $new_meta->name);
 }
 
-sub rebless {
-    my ($object, $into) = @_;
+sub rebless ($object, $into) {
 
     my $from = Scalar::Util::blessed($object);
     my $common_base = mop::internals::util::find_common_base($from, $into);
@@ -153,8 +149,7 @@ sub rebless {
     $object
 }
 
-sub dump_object {
-    my ($obj) = @_;
+sub dump_object ($obj) {
 
     return $obj unless is_mop_object($obj);
 
