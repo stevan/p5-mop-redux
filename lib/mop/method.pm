@@ -75,7 +75,7 @@ sub locally_defined ($self) {
     ${ $original_id{ $self } } eq mop::id( $self )
 }
 
-sub __INIT_METACLASS__ {
+sub __INIT_METACLASS__ ($) {
     my $METACLASS = mop::class->new(
         name       => 'mop::method',
         version    => $VERSION,

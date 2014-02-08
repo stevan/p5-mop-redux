@@ -33,8 +33,8 @@ sub uninstall_sub ($pkg, $sub) {
     }
 }
 
-sub init_attribute_storage :prototype(\%) {
-    &Hash::Util::FieldHash::fieldhash( $_[0] )
+sub init_attribute_storage :prototype(\%) ($data) {
+    &Hash::Util::FieldHash::fieldhash( $data )
 }
 
 sub register_object ($object) {

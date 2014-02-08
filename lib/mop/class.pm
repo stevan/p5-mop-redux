@@ -121,7 +121,7 @@ sub clone_instance ($self, $instance, %args) {
     return $clone;
 }
 
-sub __INIT_METACLASS__ {
+sub __INIT_METACLASS__ ($) {
     my $METACLASS = mop::class->new(
         name       => 'mop::class',
         version    => $VERSION,

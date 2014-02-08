@@ -204,7 +204,7 @@ sub FINALIZE ($self) {
     $self->fire('after:FINALIZE');
 }
 
-sub __INIT_METACLASS__ {
+sub __INIT_METACLASS__ ($) {
     my $METACLASS = mop::class->new(
         name       => 'mop::role',
         version    => $VERSION,

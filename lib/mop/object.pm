@@ -48,7 +48,7 @@ sub DESTROY ($self) {
     }
 }
 
-sub __INIT_METACLASS__ {
+sub __INIT_METACLASS__ ($) {
     my $METACLASS = mop::class->new(
         name      => 'mop::object',
         version   => $VERSION,

@@ -129,7 +129,7 @@ sub get_slot_for ($self, $instance) {
     ${ $storage{ $self } }->{ $instance } //= \(my $slot);
 }
 
-sub __INIT_METACLASS__ {
+sub __INIT_METACLASS__ ($) {
     my $METACLASS = mop::class->new(
         name       => 'mop::attribute',
         version    => $VERSION,
