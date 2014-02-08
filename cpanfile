@@ -1,3 +1,4 @@
+requires "Carp" => "0";
 requires "Devel::CallParser" => "0";
 requires "Hash::Util::FieldHash" => "0";
 requires "Scalar::Util" => "0";
@@ -11,6 +12,7 @@ requires "version" => "0";
 requires "warnings" => "0";
 
 on 'test' => sub {
+  requires "B" => "0";
   requires "B::Deparse" => "0";
   requires "File::Spec" => "0";
   requires "FindBin" => "0";
