@@ -133,16 +133,43 @@ THX_unset_meta(pTHX_ SV *name)
 /* }}} */
 /* attribute magic {{{ */
 
+/*
+ *    +-----+   +-------+  +---+-------+
+ *    | $!v |-->| MAGIC |->| 0 | $name |
+ *    +-----+   +-------+  +---+-------+
+ *                         | 1 | $meta |
+ *   +-------+  +-------+  +---+-------+
+ *   | $slot |<-| MAGIC |<-| 2 | $self |
+ *   +-------+  +-------+  +---+-------+
+ *
+ */
+
 static MGVTBL slot_vtbl;
 
 #define slot_is_cacheable(attr) THX_slot_is_cacheable(aTHX_ attr)
 static bool
 THX_slot_is_cacheable(pTHX_ SV *attr)
 {
+    /* *****************************************************
+     * This function is given an attribute object ($attr)
+     * and it checkes to see if there are any events attached
+     * to the given attribute, this is used to determine if
+     * the attribute's slots are cachable.
+     * ***************************************************** */
+
     dSP;
     SV *ret;
 
     assert(sv_isobject(attr));
+
+    /* ************************************* */
+     * This roughly is equivalent to the
+     * following perl code:
+     *
+     *   my $ret = $attr->has_events;
+     *   return !!$ret;
+     *
+     *************************************** */
 
     ENTER;
 
@@ -159,67 +186,152 @@ THX_slot_is_cacheable(pTHX_ SV *attr)
     return !SvTRUE(ret);
 }
 
-#define get_slot_for(meta, attr_name, self, attrp) \
+#define get_slot_for(meta, attr_name, self, attrp) \π
     THX_get_slot_for(aTHX_ meta, attr_name, self, attrp)
 static SV *
 THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
 {
+    /* *****************************************************
+     * This function is given a $meta object, an attribute
+     * name ($attr_name), an invocant ($self) and a pointer
+     * to an SV object where we can place the attribute
+     * when we look it up, and return the SV pointer to the
+     * particular slot held in the slots cache inside the
+     * magic associated with $self
+     * ***************************************************** */
+
+    // NOTE:
+    // the **attrp pointer thing is really an
+    // example of an OUT parameter, this may
+    // seem awkward for those less familiar
+    // with C idioms.
+    // - SL
+
     U16 generation;
     MAGIC *mg;
     SV *key, *attr;
     HV *slots;
     HE *slot_ent;
+                                           // Roughly the equivalent Perl:
+    assert(sv_isobject(meta));             // $meta->isa('UNIVERSAL')
+    assert(attr_name && SvPOK(attr_name)); // defined $attr_name && !!$attr_name
+    assert(sv_isobject(self));             // $self->isa('UNIVERSAL')
+    assert(attrp);                         // make sure the attr pointer is not null
 
-    assert(sv_isobject(meta));
-    assert(attr_name && SvPOK(attr_name));
-    assert(sv_isobject(self));
-    assert(attrp);
-
+    // Attribute generations is a simple
+    // number that gets incremented if the
+    // meta-layer is touched, so we must
+    // check it here
     generation = get_attr_generation(meta);
 
+    // we then need to extract the magic
+    // for $self, and compare its generation
+    // number against the one we just fetched
+    // from the attribute
     mg = mg_findext(SvRV(self), PERL_MAGIC_ext, &slot_vtbl);
     if (mg && mg->mg_private != generation) {
+
+        // if the generations don't match
+        // then we need to blow the cache
         sv_unmagicext(SvRV(self), PERL_MAGIC_ext, &slot_vtbl);
         mg = NULL;
     }
 
+    // if the attr & self generation doesn't
+    // line up then mg is NULL, otherwise it
+    // contains a MAGIC variable, we are
+    // using this to find our slot cache
+    // which is an HV attached to the $self
+    // via MAGIC
+
     if (mg) {
+
+        // get slot cache ...
         slots = (HV *)mg->mg_obj;
         assert(slots);
     }
     else {
+
+        // create new slot cache for
+        // this generation
         slots = newHV();
+
+        // set it to MAGIC in the
+        // current $self and inherit
+        // the generation from the
+        // attribute check way above
         mg = sv_magicext(SvRV(self), (SV *)slots, PERL_MAGIC_ext,
                          &slot_vtbl, "slot", 0);
         mg->mg_private = generation;
     }
 
+    // make a key for our slot cache
     key = newSVpvf("%"SVf"::%"SVf, get_meta_name(meta), attr_name);
 
+    // fetch the slot entry out of the
+    // slot cache using this key
     slot_ent = hv_fetch_ent(slots, key, 0, 0);
 
     if (slot_ent) {
+
+        // if there is a slot entry to
+        // be found there, wrap it in HE
         return HeVAL(slot_ent);
     }
     else {
+
+        // if there is not a slot entry, then
+        // we need to extract it, this only
+        // happens if we haven't yet grabbed
+        // an entry (cache miss) or had to
+        // create a new slot cache because
+        // the generations did not match.
+
+        // Here is the equivalent Perl code ...
+        /*
+
+            my $attr = $meta->get_attribute( $attr_name );
+
+            if ( $attr->has_events ) { # see slot_is_cacheable
+                my $slot = $attr->get_slot_for( $self );
+                # In XS ...
+                # > $slot is a SCALAR ref, deref it
+                # > then store the slot in the internal
+                #   slot cache (the one that is
+                #   associated, via MAGIC, to the $self)
+                # > then return the slot
+            }
+
+        */
+
         dSP;
 
-        ENTER;
-        PUSHMARK(SP);
-        XPUSHs(meta);
-        XPUSHs(attr_name);
-        PUTBACK;
-        ASSERT_NRETVAL(1, call_method("get_attribute", G_SCALAR));
-        SPAGAIN;
-        attr = POPs;
-        assert(sv_isobject(attr));
-        PUTBACK;
-        LEAVE;
+        /* ********************************************
+         * NOTE:
+         * These docs are here to roughly document this
+         * pattern, which comes up regularly.  - SL
+         * ******************************************** */
+
+        ENTER;                     // enter a new context
+        PUSHMARK(SP);              // create new stack pointer for a new env
+        XPUSHs(meta);              // add `meta` scalar to the stack
+        XPUSHs(attr_name);         // add `attr_namt` scalar to the stack
+        PUTBACK;                   // close the stack before we call the method
+        ASSERT_NRETVAL(1, call_method("get_attribute", G_SCALAR)); // call method
+        SPAGAIN;                   // pull back our old stack back into local context
+        attr = POPs;               // grab the return value of method call
+        assert(sv_isobject(attr)); // asset that it is an object
+        PUTBACK;                   // close the stack again
+        LEAVE;                     // leave the new context
 
         *attrp = attr;
 
         if (slot_is_cacheable(attr)) {
             SV *slot, *slotp;
+
+            // ... see the docs for this
+            // whole pattern specified
+            // above for explaintation
 
             ENTER;
             PUSHMARK(SP);
@@ -233,6 +345,10 @@ THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
             PUTBACK;
             LEAVE;
 
+            // store the slot we just retrieved
+            // to our instance specific slot
+            // cache
+
             slot = SvRV(slotp);
             (void)hv_store_ent(slots, key, slot, 0);
 
@@ -244,33 +360,68 @@ THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)
     }
 }
 
+/* *****************************************************
+ * The next four functions are used for the get/set
+ * magic callbacks for the attributes inside a method
+ * body. The first two are for when you have a valid
+ * invocant, the last two that are the error cases.
+ *
+ * The error condition is when we do not have a blessed
+ * invocant, where as the valid condition is when you
+ * have a blessed invocant and can get the attribute
+ * stashed value.
+ * ***************************************************** */
+
 static int
 mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
 {
+    /* *****************************************************
+     * This is the magic `get` callback attached to the sv
+     * ***************************************************** */
+
     SV **namep, **metap, **selfp;
     SV *name, *meta, *self, *slot, *attr;
 
+    // in the magic ($mg) we store an AV
+    // check for that here ...
+
     assert(SvTYPE(mg->mg_obj) == SVt_PVAV);
+
+    // now pull pointers to attr name,
+    // attr meta object and current instance
+    // from the magic AV
 
     namep = av_fetch((AV *)mg->mg_obj, 0, 0);
     metap = av_fetch((AV *)mg->mg_obj, 1, 0);
     selfp = av_fetch((AV *)mg->mg_obj, 2, 0);
 
+    // make sure have them all ...
     assert(namep);
     assert(metap);
     assert(selfp);
 
+    // now dereference all the pointers
     name = *namep;
     meta = *metap;
     self = *selfp;
 
-    assert(name && SvPOK(name));
-    assert(sv_isobject(meta));
-    assert(sv_isobject(self));
+    // do some checks on the SVs
+    assert(name && SvPOK(name));  // defined $name && !!$name
+    assert(sv_isobject(meta));    // $meta->isa('UNIVERSAL')
+    assert(sv_isobject(self));    // $meta->isa('UNIVERSAL')
 
+    // call get_slot_for and pass in the
+    // empty &attr pointer, which will get
+    // populated, and will also return the
+    // slot for usage later on
     slot = get_slot_for(meta, name, self, &attr);
     if (!slot) {
         dSP;
+
+        // if we couldn't get a slot for some reason
+        // then we need to fetch the data for the slot
+        // manually via the perl space method on the
+        // attribute object.
 
         ENTER;
         PUSHMARK(SP);
@@ -284,6 +435,11 @@ mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
         LEAVE;
     }
 
+    // set the SV (passed in as $sv arg) to
+    // hold the slot (retrieved from the
+    // cache) so that reading from and
+    // assigning to that SV all read/write
+    // to the underlying value in the SV
     sv_setsv(sv, slot);
 
     return 0;
@@ -292,33 +448,57 @@ mg_attr_get(pTHX_ SV *sv, MAGIC *mg)
 static int
 mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
 {
+    /* *****************************************************
+     * This is the magic `set` callback attached to the sv
+     * ***************************************************** */
+
     SV **namep, **metap, **selfp;
     SV *name, *meta, *self, *slot, *attr;
 
+    // make sure we have magic
     assert(SvTYPE(mg->mg_obj) == SVt_PVAV);
+
+    // now pull pointers to attr name,
+    // attr meta object and current instance
+    // from the magic AV
 
     namep = av_fetch((AV *)mg->mg_obj, 0, 0);
     metap = av_fetch((AV *)mg->mg_obj, 1, 0);
     selfp = av_fetch((AV *)mg->mg_obj, 2, 0);
 
+    // make sure none are NULL
     assert(namep);
     assert(metap);
     assert(selfp);
 
+    // dereference the pointers
     name = *namep;
     meta = *metap;
     self = *selfp;
 
-    assert(name && SvPOK(name));
-    assert(sv_isobject(meta));
-    assert(sv_isobject(self));
+    // do some checks on the SVs
+    assert(name && SvPOK(name));  // defined $name && !!$name
+    assert(sv_isobject(meta));    // $meta->isa('UNIVERSAL')
+    assert(sv_isobject(self));    // $meta->isa('UNIVERSAL')
 
+    // call get_slot_for and pass in the
+    // empty &attr pointer, which will get
+    // populated, and will also return the
+    // slot for usage later on
     slot = get_slot_for(meta, name, self, &attr);
     if (slot) {
+
+        // if we have a slot,
+        // set the sv into it
         sv_setsv(slot, sv);
     }
     else {
         dSP;
+
+        // if we couldn't get a slot for some reason
+        // then we need to store the data in the slot
+        // manually via the perl space method on the
+        // attribute object.
 
         ENTER;
         PUSHMARK(SP);
@@ -336,6 +516,11 @@ mg_attr_set(pTHX_ SV *sv, MAGIC *mg)
 static int
 mg_err_get(pTHX_ SV *sv, MAGIC *mg)
 {
+    /* *****************************************************
+     * This is the magic `set` callback attached to the sv
+     * but it is only for error conditions
+     * ***************************************************** */
+
     PERL_UNUSED_ARG(sv);
 
     assert(mg->mg_obj && SvPOK(mg->mg_obj));
@@ -347,6 +532,11 @@ mg_err_get(pTHX_ SV *sv, MAGIC *mg)
 static int
 mg_err_set(pTHX_ SV *sv, MAGIC *mg)
 {
+    /* *****************************************************
+     * This is the magic `set` callback attached to the sv
+     * but it is only for error conditions
+     * ***************************************************** */
+
     PERL_UNUSED_ARG(sv);
 
     assert(mg->mg_obj && SvPOK(mg->mg_obj));
@@ -354,6 +544,11 @@ mg_err_set(pTHX_ SV *sv, MAGIC *mg)
     croak("Cannot assign to the attribute:(%"SVf") in a method "
           "without a blessed invocant", SVfARG(mg->mg_obj));
 }
+
+/* *****************************************************
+ * Some quick vtables for the Magic callback set
+ * ***************************************************** */
+
 
 static MGVTBL attr_vtbl = {
     mg_attr_get,                /* get */
