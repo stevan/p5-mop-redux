@@ -1,6 +1,8 @@
 Revision history for Perl extension mop
 
 {{$NEXT}}
+
+0.03  2014-02-09
     - Number of core improvements
       made, such as:
         - custom opcode to handle
