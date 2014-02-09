@@ -134,13 +134,24 @@ THX_unset_meta(pTHX_ SV *name)
 /* attribute magic {{{ */
 
 /*
- *    +-----+   +-------+  +---+-------+
- *    | $!v |-->| MAGIC |->| 0 | $name |
- *    +-----+   +-------+  +---+-------+
- *                         | 1 | $meta |
- *   +-------+  +-------+  +---+-------+
- *   | $slot |<-| MAGIC |<-| 2 | $self |
- *   +-------+  +-------+  +---+-------+
+ * This diagram attempts to give a view of
+ * how the magic is attached to the attribute
+ * variables inside of method bodies. First
+ * is an array with the name of the attribute,
+ * the class meta object associated with the
+ * invocant, and lastly the invocant.
+ *
+ * From there the invocant itself will have
+ * a slot cache associated with it via magic
+ * as well.
+ *
+ *   +-----+     +-------+   +---+-------+
+ *   | $!v |---->| MAGIC |-->| 0 | $name |
+ *   +-----+     +-------+   +---+-------+
+ *                           | 1 | $meta |
+ *  +--------+   +-------+   +---+-------+
+ *  | $slots |<--| MAGIC |<--| 2 | $self |
+ *  +--------+   +-------+   +---+-------+
  *
  */
 
