@@ -11,6 +11,42 @@
 #  define ASSERT_NRETVAL(n, e) (e)
 #endif
 
+/*
+ * This diagram attempts to give a view of
+ * how the magic is attached to the attribute
+ * variables inside of method bodies. First
+ * is an array with the name of the attribute,
+ * the class meta object associated with the
+ * invocant, and lastly the invocant.
+ *
+ * From the class meta object we can check the
+ * metaclass "attribute generation" via magic.
+ *
+ * From there the invocant itself will have
+ * a slot cache associated with it via magic
+ * as well. And compare this with the attribute
+ * generation to deterime if the cache is
+ * still valid or not.
+ *
+ *   +-----+
+ *   | $!v |
+ *   +-----+
+ *      |
+ *      v
+ *  +-------+   +---+-------+
+ *  | MAGIC |-->| 0 | $name |
+ *  +-------+   +---+-------+    +-------+   +-------+
+ *              | 1 | $meta |--->| MAGIC |-->| $name |
+ *              +---+-------+    +-------+   +-------+
+ *              | 2 | $self |-+
+ *              +---+-------+ |  +-------+   +--------+
+ *                            +->| MAGIC |-->| $slots |
+ *                               +---+---+   +--------+
+ *
+ *
+ *
+ */
+
 /* subname magic {{{ */
 
 // no idea what this is for
@@ -21,6 +57,22 @@ static MGVTBL subname_vtbl;
 
 /* }}} */
 /* metaclass magic {{{ */
+
+/*
+ * So this section is used for two things, the
+ * first is for associating the name of a given
+ * class to the associated metaclass object via
+ * the "data" section of it's MAGIC. This is
+ * mostly just an optimization (according to Jesse)
+ * because we need to access the name so frequently.
+ *
+ * The second purpose of this group of functions
+ * is to manage the attribute generation number
+ * which is incremented every time that the class's
+ * attribute list changes and is used to invalidate
+ * the slot cache associated with instances of
+ * that class.
+ */
 
 static MGVTBL meta_vtbl;
 
@@ -46,6 +98,13 @@ THX_set_meta_magic(pTHX_ SV *meta, SV *name)
 static SV *
 THX_get_meta_name(pTHX_ SV *meta)
 {
+
+    /*
+     * <doy> the get_meta_name thing is just an optimization
+     * <doy> because we need the metaclass name a lot
+     * <doy> and having a method call for it every time would be really slow
+     */
+
     MAGIC *mg;
 
     assert(sv_isobject(meta));
@@ -86,6 +145,14 @@ THX_incr_attr_generation(pTHX_ SV *meta)
 
 /* }}} */
 /* stash magic {{{ */
+
+/*
+ * These are literally the same as the old
+ * $Foo::META variable we had in the early
+ * prototype, this is basically just associating
+ * the metaclass object to the given package
+ * stash.
+ */
 
 static MGVTBL meta_vtbl;
 
@@ -138,24 +205,28 @@ THX_unset_meta(pTHX_ SV *name)
 /* attribute magic {{{ */
 
 /*
- * This diagram attempts to give a view of
- * how the magic is attached to the attribute
- * variables inside of method bodies. First
- * is an array with the name of the attribute,
- * the class meta object associated with the
- * invocant, and lastly the invocant.
+ * So I asked Jesse about how this works ...
  *
- * From there the invocant itself will have
- * a slot cache associated with it via magic
- * as well.
+ * <stevan> so slot cache is (HV cache, Int generation)?
+ * <doy>    yeah
+ * <doy>    the metaclass object has the actual slots in storage,
+ *          and it has a generation number that is incremented
+ *          whenever the attribute list changes
+ * <stevan> ok
+ * <stevan> so mg_obj and mg_private
+ * <stevan> how does this translate into Variable::Magic stuff?
+ * <stevan> is mg_obj the data?
+ * <doy>    mg_obj is data
+ * <doy>    and mg_private is just an extra 16-bit integer that
+ *          can be used for whatever, i don't think variable::magic
+ *          exposes it
  *
- *   +-----+     +-------+   +---+-------+
- *   | $!v |---->| MAGIC |-->| 0 | $name |
- *   +-----+     +-------+   +---+-------+
- *                           | 1 | $meta |
- *  +--------+   +-------+   +---+-------+
- *  | $slots |<--| MAGIC |<--| 2 | $self |
- *  +--------+   +-------+   +---+-------+
+ * So for the magic associated with $self we have the
+ * slots cache (represented as an HV) stored in the
+ * "data" section of the MAGIC, and we have the attribute
+ * generation number stored in the private section of
+ * the MAGIC, which is the cache generation from when
+ * the slots were first initialized.
  *
  */
 
