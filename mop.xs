@@ -13,6 +13,10 @@
 
 /* subname magic {{{ */
 
+// no idea what this is for
+// it is used by the (mostly)
+// inlined version of the
+// Sub::Name module
 static MGVTBL subname_vtbl;
 
 /* }}} */
