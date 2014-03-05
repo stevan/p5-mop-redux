@@ -2312,21 +2312,30 @@ BOOT:
 {
     CV *class, *role, *has, *method;
 
+    // creating all the CVs we need ...
     class  = get_cv("mop::internals::syntax::class",  GV_ADD);
     role   = get_cv("mop::internals::syntax::role",   GV_ADD);
     has    = get_cv("mop::internals::syntax::has",    GV_ADD);
     method = get_cv("mop::internals::syntax::method", GV_ADD);
 
+    // setting up call-parser, this is what
+    // handles the new syntax
     cv_set_call_parser(class,  run_namespace, &PL_sv_undef);
     cv_set_call_parser(role,   run_namespace, &PL_sv_undef);
     cv_set_call_parser(has,    run_has,       &PL_sv_undef);
     cv_set_call_parser(method, run_method,    &PL_sv_undef);
 
+    // setting up call-checkers, this controls
+    // the behavior of these syntactic constructs
+    // in the context of the other code, it
+    // basically (seems to) do some simple op-tree
+    // trickery, but I am not 100% sure - SL
     cv_set_call_checker(class,  return_true,          &PL_sv_undef);
     cv_set_call_checker(role,   return_true,          &PL_sv_undef);
     cv_set_call_checker(has,    compile_keyword_away, &PL_sv_undef);
     cv_set_call_checker(method, compile_keyword_away, &PL_sv_undef);
 
+    // setting up hints I guess ...
     twigils_hint_key_sv = newSVpvs_share("mop::internals::syntax/twigils");
     twigils_hint_key_hash = SvSHARED_HASH(twigils_hint_key_sv);
     default_class_metaclass_hint_key_sv = newSVpvs_share("mop/default_class_metaclass");
@@ -2336,19 +2345,27 @@ BOOT:
     default_role_metaclass_hint_key_hash
         = SvSHARED_HASH(default_role_metaclass_hint_key_sv);
 
+    //  some op tree checkers, I assume
     wrap_op_checker(OP_RV2SV, myck_rv2sv_twigils, &old_rv2sv_checker);
     wrap_op_checker(OP_ENTEREVAL, myck_entereval_attrs, &old_entereval_checker);
 
+    // registering the new Ops
+
+    // this inits the attributes
+    // inside a method body
     XopENTRY_set(&init_attr_xop, xop_name, "init_attr");
     XopENTRY_set(&init_attr_xop, xop_desc, "attribute initialization");
     XopENTRY_set(&init_attr_xop, xop_class, OA_LISTOP);
     Perl_custom_op_register(aTHX_ pp_init_attr, &init_attr_xop);
 
+    // this creates the invocant
+    // inside a method body
     XopENTRY_set(&intro_invocant_xop, xop_name, "intro_invocant");
     XopENTRY_set(&intro_invocant_xop, xop_desc, "invocant introduction");
     XopENTRY_set(&intro_invocant_xop, xop_class, OA_BASEOP);
     Perl_custom_op_register(aTHX_ pp_intro_invocant, &intro_invocant_xop);
 
+    // no idea ... - SL
     prev_peepp = PL_peepp;
     PL_peepp = my_peep;
 }
