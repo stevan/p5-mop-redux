@@ -248,7 +248,7 @@ THX_slot_is_cacheable(pTHX_ SV *attr)
 
     assert(sv_isobject(attr));
 
-    /* ************************************* */
+    /* *************************************
      * This roughly is equivalent to the
      * following perl code:
      *
@@ -272,7 +272,7 @@ THX_slot_is_cacheable(pTHX_ SV *attr)
     return !SvTRUE(ret);
 }
 
-#define get_slot_for(meta, attr_name, self, attrp) \π
+#define get_slot_for(meta, attr_name, self, attrp) \
     THX_get_slot_for(aTHX_ meta, attr_name, self, attrp)
 static SV *
 THX_get_slot_for(pTHX_ SV *meta, SV *attr_name, SV *self, SV **attrp)

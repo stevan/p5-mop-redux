@@ -1,6 +1,6 @@
 package mop;
 
-use v5.16;
+use v5.19;
 use mro;
 use warnings;
 use feature 'signatures';
@@ -63,7 +63,7 @@ sub import ($, %opts) {
     }
 }
 
-sub unimport {
+sub unimport ($) {
     my $pkg = caller;
     mop::internals::syntax::teardown_for($pkg);
     mop::traits::teardown_for($pkg);

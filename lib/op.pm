@@ -1,6 +1,6 @@
 package op;
 
-use v5.16;
+use v5.19;
 use warnings;
 use feature 'signatures';
 no warnings 'experimental::signatures';

@@ -1,5 +1,5 @@
 package Flack;
-use v5.16;
+use v5.19;
 use warnings;
 use mop;
 
