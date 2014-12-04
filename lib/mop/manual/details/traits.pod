@@ -13,7 +13,7 @@ mop::manual::details::traits - A manual for p5-mop
 
 Traits are the preferred method of extension for the mop.
 A trait is simply a subroutine which is in scope at the
-time of class creation. The subroutine accepts as it's first
+time of class creation. The subroutine accepts as its first
 argument the meta-object it is being invoked upon, followed
 by any remaining arguments that are passed.
 
