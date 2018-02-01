@@ -1,3 +1,5 @@
+# THIS PROJECT IS DEPRECATED
+
 [![Build Status](https://travis-ci.org/stevan/p5-mop-redux.png?branch=master)](https://travis-ci.org/stevan/p5-mop-redux)
 [![Coverage Status](https://coveralls.io/repos/stevan/p5-mop-redux/badge.png?branch=master)](https://coveralls.io/r/stevan/p5-mop-redux?branch=master)
 
